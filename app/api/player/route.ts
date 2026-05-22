@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
+  // 🚨 아마 충돌 고치다가 이 두 줄이 날아갔을 거야!
   const { searchParams } = new URL(request.url);
-  const tag = searchParams.get("tag");
+  const playerTag = searchParams.get("tag");
 
   let isError = false;
   if (!playerTag) {
@@ -20,13 +21,11 @@ export async function GET(request: Request) {
     );
   }
 
-  // 네가 작성한 환경변수 이름 그대로 살렸어! (Vercel 세팅이랑 이름 똑같은지 꼭 확인해!)
   const apiKey = process.env.BRAWL_STARS_API_KEY;
 
   const tagString = playerTag ? playerTag : "";
   const cleanTag = tagString.replace("#", "").toUpperCase();
 
-  // 🚨 핵심: 공식 API 대신 RoyaleAPI 프록시 서버 주소로 변경!
   const url = `https://bsproxy.royaleapi.dev/v1/players/%23${cleanTag}`;
 
   const response = await fetch(url, {

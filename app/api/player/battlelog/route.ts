@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const tag = searchParams.get("tag");
+  const playerTag = searchParams.get("tag");
 
   let isError = false;
   if (!playerTag) {
@@ -25,7 +25,6 @@ export async function GET(request: Request) {
   const tagString = playerTag ? playerTag : "";
   const cleanTag = tagString.replace("#", "").toUpperCase();
 
-  // 🚨 핵심: 전투 기록 역시 프록시 서버 주소로 변경!
   const url = `https://bsproxy.royaleapi.dev/v1/players/%23${cleanTag}/battlelog`;
 
   const response = await fetch(url, {

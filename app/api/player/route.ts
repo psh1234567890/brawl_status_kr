@@ -1,43 +1,41 @@
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const playerTag = searchParams.get("tag");
+export async function GET(request: Request) 
+{
+    const { searchParams } = new URL(request.url);
+    const tag = searchParams.get("tag");
 
-  if (!playerTag) {
-    return NextResponse.json(
-      {
-        error: "플레이어 태그가 필요합니다.",
-      },
-      {
-        status: 400,
-      },
-    );
-  }
+    let isError = false;
+    if (!tag) 
+    {
+        isError = true;
+    }
 
-  const apiKey = process.env.BRAWL_STARS_API_KEY;
+    if (isError) 
+    {
+        return NextResponse.json({ error: "태그가 없습니다." }, { status: 400 });
+    }
 
-  // 유저가 '#'을 빼거나 소문자로 입력해도 알아서 처리되게끔 다듬기
-  const cleanTag = playerTag.replace("#", "").toUpperCase();
-  const url = `https://api.brawlstars.com/v1/players/%23${cleanTag}`;
+    const tagString = tag ? tag : "";
+    const cleanTag = tagString.replace("#", "");
+    const apiKey = process.env.BRAWL_API_KEY;
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-  });
+    try 
+    {
+        const res = await fetch(`https://api.brawlstars.com/v1/players/%23${cleanTag}`, 
+        {
+            headers: 
+            {
+                Authorization: `Bearer ${apiKey}`
+            },
+            cache: "no-store"
+        });
 
-  if (!response.ok) {
-    return NextResponse.json(
-      {
-        error: "플레이어 정보를 찾을 수 없습니다. 태그를 확인해주세요.",
-      },
-      {
-        status: 404,
-      },
-    );
-  }
-
-  const data = await response.json();
-  return NextResponse.json(data);
+        const data = await res.json();
+        return NextResponse.json(data, { status: res.status });
+    } 
+    catch (err) 
+    {
+        return NextResponse.json({ error: "서버 오류가 발생했습니다." }, { status: 500 });
+    }
 }

@@ -201,9 +201,7 @@ export default function Home() {
         localStorage.setItem("recentTags", JSON.stringify(newRecent));
       }
 
-      const battleResponse = await fetch(
-        `/api/player/battlelog?tag=${safeTag}`,
-      );
+      const battleResponse = await fetch(`/api/player/matches?tag=${safeTag}`);
       const battleData = await battleResponse.json();
 
       if (battleResponse.ok) {
@@ -348,7 +346,8 @@ export default function Home() {
           const yyyy = match.battleTime.substring(0, 4);
           const mm = match.battleTime.substring(4, 6);
           const dd = match.battleTime.substring(6, 8);
-          const dateStr = yyyy + "-" + mm + "-" + dd;
+          // 🟢 변경: 아이폰 사파리 호환성을 위해 슬래시로 변경!
+          const dateStr = yyyy + "/" + mm + "/" + dd;
 
           let isDuplicate = false;
           uniqueDates.forEach((d) => {

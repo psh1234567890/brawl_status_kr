@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-// ❌ 기존: import { db } from "../../../../db";
-// 🟢 변경: 폴더 4칸 밖으로 나가서 'src' 폴더 안의 'db'로 들어가기!
-import { db } from "../../../../src/db";
-import { battleLogs } from "../../../../src/db/schema";
+// 🟢 정답: 4칸 밖으로 나가면 거기가 바로 src 폴더 안이니까, 바로 db로 진입!
+import { db } from "../../../../db";
+import { battleLogs } from "../../../../db/schema";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

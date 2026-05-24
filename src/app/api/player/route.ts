@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../db";
-import { battleLogs } from "../../../../db/schema";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

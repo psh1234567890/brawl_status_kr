@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../db"; // 방금 만든 DB 연결 파일 불러오기
-import { battleLogs } from "../../../../db/schema"; // 우리가 짠 설계도 불러오기
+// ❌ 기존: import { db } from "../../../../db";
+// 🟢 변경: 폴더 4칸 밖으로 나가서 'src' 폴더 안의 'db'로 들어가기!
+import { db } from "../../../../src/db";
+import { battleLogs } from "../../../../src/db/schema";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

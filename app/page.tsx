@@ -7,7 +7,7 @@ const mapDict: any = {
 };
 
 const rankDict: any = {
-  //
+  // 나중에 채워 넣기!
 };
 
 const modeDict: any = {
@@ -142,6 +142,7 @@ export default function Home() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   const [selectedBrawler, setSelectedBrawler] = useState<any>(null);
+  const [selectedBattle, setSelectedBattle] = useState<any>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("recentTags");
@@ -219,7 +220,7 @@ export default function Home() {
 
   let playTotalHours = 0;
   let playMinutes = 0;
-  let nameColorStr = "#1f2937"; // 기본 텍스트 색상 (gray-800)
+  let nameColorStr = "#1f2937";
 
   if (playerData !== null) {
     const totalVictories =
@@ -238,17 +239,103 @@ export default function Home() {
     playMinutes = Math.floor(totalMins % 60);
 
     if (playerData.nameColor) {
-      // API가 주는 '0xffff0000' 형태를 HTML 컬러 코드인 '#ffff0000'로 변환
       nameColorStr = playerData.nameColor.replace("0x", "#");
     }
   }
+
+  // ✨ 정확한 경쟁전 판단 로직으로 수정!
+  const checkIsRanked = (match: any) => {
+    let isRanked = false;
+    if (match.battle.type) {
+      // API에서 경쟁전은 soloRanked 또는 teamRanked로 줌
+      if (match.battle.type === "soloRanked") {
+        isRanked = true;
+      } else if (match.battle.type === "teamRanked") {
+        isRanked = true;
+      }
+    }
+    return isRanked;
+  };
+
+  const getBattleResultInfo = (match: any) => {
+    let isWin = false;
+    let isDraw = false;
+    let isLoss = false;
+
+    let resultText = "무승부";
+    let resultColor = "text-gray-500";
+    let bgColor = "bg-white border-gray-400";
+
+    if (match.battle.result) {
+      if (match.battle.result === "victory") {
+        isWin = true;
+      } else if (match.battle.result === "defeat") {
+        isLoss = true;
+      } else {
+        isDraw = true;
+      }
+    }
+
+    if (match.event.mode === "soloShowdown") {
+      if (match.battle.rank) {
+        if (match.battle.rank <= 4) {
+          isWin = true;
+          isLoss = false;
+          isDraw = false;
+        } else {
+          isLoss = true;
+          isWin = false;
+          isDraw = false;
+        }
+      }
+    }
+
+    if (match.event.mode === "duoShowdown") {
+      if (match.battle.rank) {
+        if (match.battle.rank <= 2) {
+          isWin = true;
+          isLoss = false;
+          isDraw = false;
+        } else {
+          isLoss = true;
+          isWin = false;
+          isDraw = false;
+        }
+      }
+    }
+
+    if (match.event.mode === "trioShowdown") {
+      if (match.battle.rank) {
+        if (match.battle.rank <= 2) {
+          isWin = true;
+          isLoss = false;
+          isDraw = false;
+        } else {
+          isLoss = true;
+          isWin = false;
+          isDraw = false;
+        }
+      }
+    }
+
+    if (isWin) {
+      resultText = "승리";
+      resultColor = "text-blue-500";
+      bgColor = "bg-white border-blue-500";
+    } else if (isLoss) {
+      resultText = "패배";
+      resultColor = "text-red-500";
+      bgColor = "bg-white border-red-500";
+    }
+
+    return { resultText, resultColor, bgColor, isWin, isLoss, isDraw };
+  };
 
   let recentWins = 0;
   let recentDefeats = 0;
   let recentDraws = 0;
   let bestMode = "데이터 부족";
   let maxModeWins = 0;
-
   let streakCount = 0;
 
   if (battleLog !== null) {
@@ -276,7 +363,9 @@ export default function Home() {
         }
 
         if (match.battle) {
-          if (match.battle.result === "victory") {
+          const info = getBattleResultInfo(match);
+
+          if (info.isWin) {
             recentWins = recentWins + 1;
 
             const mode = match.event.mode;
@@ -289,7 +378,7 @@ export default function Home() {
               maxModeWins = modeStats[mode];
               bestMode = mode;
             }
-          } else if (match.battle.result === "defeat") {
+          } else if (info.isLoss) {
             recentDefeats = recentDefeats + 1;
           } else {
             recentDraws = recentDraws + 1;
@@ -363,7 +452,9 @@ export default function Home() {
 
           if (isMyBrawler) {
             plays = plays + 1;
-            if (match.battle.result === "victory") {
+            const info = getBattleResultInfo(match);
+
+            if (info.isWin) {
               wins = wins + 1;
             }
 
@@ -451,7 +542,6 @@ export default function Home() {
         <div className="flex flex-col items-center w-full max-w-5xl animate-fade-in-up">
           <div className="bg-white/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full text-black border border-white mb-10 transition-transform hover:-translate-y-1">
             <div className="flex flex-col items-center border-b-2 border-gray-100 pb-8 mb-8">
-              {/* ✨ 프로필 아이콘과 닉네임 컬러 적용 */}
               <div className="flex items-center gap-4 mb-2">
                 {playerData.icon ? (
                   <img
@@ -561,8 +651,6 @@ export default function Home() {
                     : "기록 없음"}
                 </span>
               </div>
-
-              {/* ✨ 레거시(옛날) 데이터 & 기타 기록 추가 구간 */}
               <div className="flex justify-between bg-indigo-50 border-l-4 border-indigo-400 p-5 rounded-r-xl shadow-sm">
                 <span>🤖 로보 럼블 최고 기록:</span>
                 <span className="font-black text-indigo-700 text-xl">
@@ -589,7 +677,7 @@ export default function Home() {
           {battleLog !== null ? (
             <div className="w-full mb-12">
               <h3 className="text-2xl font-black mb-6 text-indigo-900 border-l-8 border-indigo-500 pl-4">
-                📊 최근 25전 승률 분석
+                📊 전체 기록 분석 ({battleLog.items.length}전)
               </h3>
               <div className="bg-white p-8 rounded-3xl shadow-xl w-full border border-gray-100 mb-10 flex flex-col md:flex-row justify-around items-center gap-6 transition-transform hover:-translate-y-1">
                 <div className="text-center">
@@ -616,56 +704,73 @@ export default function Home() {
                 </div>
               </div>
 
-              <h3 className="text-2xl font-black mb-6 text-indigo-900 border-l-8 border-indigo-500 pl-4">
-                ⚔️ 최근 전투 기록 (최대 5게임)
-              </h3>
-              <div className="flex flex-col gap-4 mb-10">
-                {battleLog.items
-                  .slice(0, 5)
-                  .map((match: any, index: number) => {
-                    return (
-                      <div
-                        key={index}
-                        className={`p-6 rounded-2xl shadow-md border-l-8 flex justify-between items-center transition-transform hover:-translate-x-1 ${
-                          match.battle.result === "victory"
-                            ? "bg-white border-blue-500"
-                            : match.battle.result === "defeat"
-                              ? "bg-white border-red-500"
-                              : "bg-white border-gray-400"
-                        }`}
-                      >
-                        <div className="flex flex-col">
-                          <span className="font-black text-gray-800 text-xl mb-1">
-                            {modeDict[match.event.mode]
-                              ? modeDict[match.event.mode]
-                              : match.event.mode}{" "}
-                            -{" "}
-                            {mapDict[match.event.map]
-                              ? mapDict[match.event.map]
-                              : match.event.map}
-                          </span>
-                          <span className="text-sm text-gray-500 font-bold bg-gray-100 px-2 py-1 rounded-md w-max">
-                            {match.battle.type}
-                          </span>
-                        </div>
-                        <div className="text-3xl font-black">
-                          {match.battle.result === "victory" ? (
-                            <span className="text-blue-500 drop-shadow-sm">
-                              승리
-                            </span>
-                          ) : match.battle.result === "defeat" ? (
-                            <span className="text-red-500 drop-shadow-sm">
-                              패배
+              <div className="flex justify-between items-end mb-6 border-l-8 border-indigo-500 pl-4">
+                <h3 className="text-2xl font-black text-indigo-900">
+                  ⚔️ 모든 전투 기록 (최대 25게임)
+                </h3>
+                <span className="text-sm text-gray-500 font-bold bg-gray-200 px-3 py-1 rounded-full">
+                  👆 클릭해서 상세표 보기
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-4 mb-10 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                {battleLog.items.map((match: any, index: number) => {
+                  const info = getBattleResultInfo(match);
+                  const isRanked = checkIsRanked(match);
+
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => setSelectedBattle(match)}
+                      className={`p-6 rounded-2xl shadow-md border-l-8 flex justify-between items-center transition-transform hover:-translate-x-1 cursor-pointer ${info.bgColor}`}
+                    >
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                          {isRanked ? (
+                            <span className="text-[10px] font-black text-white bg-red-500 px-2 py-0.5 rounded-full">
+                              🔴 경쟁전
                             </span>
                           ) : (
-                            <span className="text-gray-500 drop-shadow-sm">
-                              무승부
+                            <span className="text-[10px] font-black text-white bg-green-500 px-2 py-0.5 rounded-full">
+                              🟢 일반 모드
                             </span>
                           )}
                         </div>
+                        <span className="font-black text-gray-800 text-xl mb-1">
+                          {modeDict[match.event.mode]
+                            ? modeDict[match.event.mode]
+                            : match.event.mode}{" "}
+                          -{" "}
+                          {mapDict[match.event.map]
+                            ? mapDict[match.event.map]
+                            : match.event.map}
+                        </span>
                       </div>
-                    );
-                  })}
+                      <div className="flex items-center gap-4">
+                        {match.battle.trophyChange ? (
+                          isRanked ? null : (
+                            <span
+                              className={`text-xl font-black ${match.battle.trophyChange > 0 ? "text-yellow-500" : "text-red-500"}`}
+                            >
+                              {match.battle.trophyChange > 0 ? "+" : ""}
+                              {match.battle.trophyChange}🏆
+                            </span>
+                          )
+                        ) : null}
+                        <div
+                          className={`text-3xl font-black ${info.resultColor} drop-shadow-sm`}
+                        >
+                          {info.resultText}
+                          {match.battle.rank ? (
+                            <span className="text-lg ml-1">
+                              ({match.battle.rank}등)
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : null}
@@ -679,7 +784,6 @@ export default function Home() {
                 👆 클릭해서 아이템 확인
               </span>
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
               {[...playerData.brawlers]
                 .sort((a: any, b: any) => {
@@ -728,6 +832,7 @@ export default function Home() {
         </div>
       ) : null}
 
+      {/* ✨ 브롤러 상세 아이템 모달 */}
       {selectedBrawler !== null ? (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -771,7 +876,7 @@ export default function Home() {
                             className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm"
                           >
                             <img
-                              src={`https://cdn.brawlify.com/gadgets/${g.id}.png`}
+                              src={`https://cdn.brawlify.com/gadgets/regular/${g.id}.png`}
                               alt={g.name}
                               className="w-8 h-8 rounded-md bg-green-50"
                               onError={(e) => {
@@ -812,7 +917,7 @@ export default function Home() {
                             className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm"
                           >
                             <img
-                              src={`https://cdn.brawlify.com/star-powers/${sp.id}.png`}
+                              src={`https://cdn.brawlify.com/star-powers/regular/${sp.id}.png`}
                               alt={sp.name}
                               className="w-8 h-8 rounded-md bg-yellow-50"
                               onError={(e) => {
@@ -851,7 +956,7 @@ export default function Home() {
                             className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm"
                           >
                             <img
-                              src={`https://cdn.brawlify.com/gears/${gr.id}.png`}
+                              src={`https://cdn.brawlify.com/gears/regular/${gr.id}.png`}
                               alt={gr.name}
                               className="w-8 h-8 rounded-md bg-gray-100"
                               onError={(e) => {
@@ -924,6 +1029,200 @@ export default function Home() {
                   );
                 }
               })()}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ✨ 전투 기록 상세 대진표 모달 */}
+      {selectedBattle !== null ? (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in-up overflow-y-auto">
+          <div className="bg-[#a5add6] rounded-xl w-full max-w-4xl shadow-2xl relative overflow-hidden border-4 border-black my-8">
+            <button
+              onClick={() => setSelectedBattle(null)}
+              className="absolute top-2 right-4 text-white text-3xl font-black drop-shadow-md hover:text-gray-300 z-10"
+            >
+              ✕
+            </button>
+
+            <div className="flex justify-between items-center bg-[#8f98c6] p-4 border-b-4 border-black">
+              <div className="flex flex-col">
+                <span className="text-2xl font-black text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                  {modeDict[selectedBattle.event.mode]
+                    ? modeDict[selectedBattle.event.mode]
+                    : selectedBattle.event.mode}
+                </span>
+                <span className="text-md font-bold text-gray-200">
+                  {mapDict[selectedBattle.event.map]
+                    ? mapDict[selectedBattle.event.map]
+                    : selectedBattle.event.map}
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center">
+                {(() => {
+                  const info = getBattleResultInfo(selectedBattle);
+                  return (
+                    <span
+                      className={`text-4xl font-black drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] ${
+                        info.isWin
+                          ? "text-green-400"
+                          : info.isLoss
+                            ? "text-red-500"
+                            : "text-gray-300"
+                      }`}
+                    >
+                      {info.resultText}
+                    </span>
+                  );
+                })()}
+              </div>
+
+              <div className="flex flex-col items-end">
+                {selectedBattle.battle.duration ? (
+                  <span className="text-xl font-black text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                    {Math.floor(selectedBattle.battle.duration / 60)}분{" "}
+                    {selectedBattle.battle.duration % 60}초
+                  </span>
+                ) : (
+                  <span className="text-xl font-black text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                    시간 불명
+                  </span>
+                )}
+                {selectedBattle.battle.trophyChange ? (
+                  checkIsRanked(selectedBattle) ? null : (
+                    <span className="text-2xl font-black text-yellow-400 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mt-1">
+                      {selectedBattle.battle.trophyChange > 0 ? "+" : ""}
+                      {selectedBattle.battle.trophyChange} 🏆
+                    </span>
+                  )
+                ) : checkIsRanked(selectedBattle) ? (
+                  <span className="text-sm font-black text-red-300 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] mt-1">
+                    (경쟁전 점수 증감 미제공)
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="p-6">
+              {selectedBattle.battle.teams ? (
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                  <div className="flex gap-2">
+                    {selectedBattle.battle.teams[0].map(
+                      (p: any, idx: number) => {
+                        return (
+                          <div
+                            key={idx}
+                            className="flex flex-col items-center relative w-24"
+                          >
+                            {selectedBattle.battle.starPlayer ? (
+                              selectedBattle.battle.starPlayer.tag === p.tag ? (
+                                <div className="absolute -top-3 bg-yellow-400 text-black text-[10px] font-black px-2 py-0.5 rounded-sm z-10 border-2 border-black whitespace-nowrap">
+                                  스타 플레이어
+                                </div>
+                              ) : null
+                            ) : null}
+
+                            <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]">
+                              <span className="absolute top-0 left-0 bg-black/60 text-yellow-400 text-xs font-black px-1 rounded-br-md z-10">
+                                {checkIsRanked(selectedBattle)
+                                  ? "🏅 픽"
+                                  : `🏆 ${p.brawler.trophies}`}
+                              </span>
+                              <img
+                                src={`https://cdn.brawlify.com/brawlers/borders/${p.brawler.id}.png`}
+                                alt={p.brawler.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                }}
+                              />
+                            </div>
+                            <span className="text-white font-bold text-sm mt-2 truncate w-full text-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                              {p.name}
+                            </span>
+                          </div>
+                        );
+                      },
+                    )}
+                  </div>
+
+                  <div className="text-6xl font-black text-white italic drop-shadow-[4px_4px_0_rgba(0,0,0,0.8)] px-4">
+                    VS
+                  </div>
+
+                  <div className="flex gap-2">
+                    {selectedBattle.battle.teams[1].map(
+                      (p: any, idx: number) => {
+                        return (
+                          <div
+                            key={idx}
+                            className="flex flex-col items-center relative w-24"
+                          >
+                            {selectedBattle.battle.starPlayer ? (
+                              selectedBattle.battle.starPlayer.tag === p.tag ? (
+                                <div className="absolute -top-3 bg-yellow-400 text-black text-[10px] font-black px-2 py-0.5 rounded-sm z-10 border-2 border-black whitespace-nowrap">
+                                  스타 플레이어
+                                </div>
+                              ) : null
+                            ) : null}
+
+                            <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]">
+                              <span className="absolute top-0 left-0 bg-black/60 text-yellow-400 text-xs font-black px-1 rounded-br-md z-10">
+                                {checkIsRanked(selectedBattle)
+                                  ? "🏅 픽"
+                                  : `🏆 ${p.brawler.trophies}`}
+                              </span>
+                              <img
+                                src={`https://cdn.brawlify.com/brawlers/borders/${p.brawler.id}.png`}
+                                alt={p.brawler.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display =
+                                    "none";
+                                }}
+                              />
+                            </div>
+                            <span className="text-white font-bold text-sm mt-2 truncate w-full text-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                              {p.name}
+                            </span>
+                          </div>
+                        );
+                      },
+                    )}
+                  </div>
+                </div>
+              ) : selectedBattle.battle.players ? (
+                <div className="flex flex-wrap justify-center gap-4">
+                  {selectedBattle.battle.players.map((p: any, idx: number) => {
+                    return (
+                      <div
+                        key={idx}
+                        className="flex flex-col items-center relative w-24"
+                      >
+                        <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]">
+                          <span className="absolute top-0 left-0 bg-black/60 text-yellow-400 text-xs font-black px-1 rounded-br-md z-10">
+                            🏆 {p.brawler.trophies}
+                          </span>
+                          <img
+                            src={`https://cdn.brawlify.com/brawlers/borders/${p.brawler.id}.png`}
+                            alt={p.brawler.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <span className="text-white font-bold text-sm mt-2 truncate w-full text-center">
+                          {p.name}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center text-white font-bold py-10">
+                  표시할 수 없는 기록입니다.
+                </div>
+              )}
             </div>
           </div>
         </div>

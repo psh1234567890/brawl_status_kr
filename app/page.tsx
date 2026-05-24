@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from "react";
 
+const mapDict: any = {
+  "Hard Rock Mine": "암석 광산",
+};
+
+const rankDict: any = {
+  //
+};
+
 const modeDict: any = {
   brawlBall: "브롤 볼",
   gemGrab: "젬 그랩",
@@ -133,7 +141,6 @@ export default function Home() {
   const [error, setError] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
-  // ✨ 모달을 위한 새로운 상태 변수들
   const [selectedBrawler, setSelectedBrawler] = useState<any>(null);
 
   useEffect(() => {
@@ -212,6 +219,7 @@ export default function Home() {
 
   let playTotalHours = 0;
   let playMinutes = 0;
+  let nameColorStr = "#1f2937"; // 기본 텍스트 색상 (gray-800)
 
   if (playerData !== null) {
     const totalVictories =
@@ -228,6 +236,11 @@ export default function Home() {
 
     playTotalHours = Math.floor(totalMins / 60);
     playMinutes = Math.floor(totalMins % 60);
+
+    if (playerData.nameColor) {
+      // API가 주는 '0xffff0000' 형태를 HTML 컬러 코드인 '#ffff0000'로 변환
+      nameColorStr = playerData.nameColor.replace("0x", "#");
+    }
   }
 
   let recentWins = 0;
@@ -236,7 +249,6 @@ export default function Home() {
   let bestMode = "데이터 부족";
   let maxModeWins = 0;
 
-  // ✨ 스트릭(연속 플레이) 계산 로직
   let streakCount = 0;
 
   if (battleLog !== null) {
@@ -245,7 +257,6 @@ export default function Home() {
       const uniqueDates: string[] = [];
 
       battleLog.items.forEach((match: any) => {
-        // 스트릭 계산용 날짜 추출 (YYYY-MM-DD)
         if (match.battleTime) {
           const yyyy = match.battleTime.substring(0, 4);
           const mm = match.battleTime.substring(4, 6);
@@ -286,7 +297,6 @@ export default function Home() {
         }
       });
 
-      // 연속 일수 계산 (최근 날짜부터 역순 확인)
       if (uniqueDates.length > 0) {
         streakCount = 1;
         let lastDateObj = new Date(uniqueDates[0]);
@@ -313,7 +323,6 @@ export default function Home() {
     recentWinRate = Math.floor((recentWins / totalRecent) * 100);
   }
 
-  // ✨ 모달창 내에서 선택된 브롤러의 최근 기록을 분석하는 함수
   const getBrawlerStats = (brawlerName: string) => {
     let plays = 0;
     let wins = 0;
@@ -326,7 +335,6 @@ export default function Home() {
         battleLog.items.forEach((match: any) => {
           let isMyBrawler = false;
 
-          // 쇼다운 같은 개인/듀오전
           if (match.battle.players) {
             match.battle.players.forEach((p: any) => {
               const cleanP = p.tag.replace("#", "");
@@ -339,7 +347,6 @@ export default function Home() {
             });
           }
 
-          // 3v3 팀전
           if (match.battle.teams) {
             match.battle.teams.forEach((team: any) => {
               team.forEach((p: any) => {
@@ -444,11 +451,26 @@ export default function Home() {
         <div className="flex flex-col items-center w-full max-w-5xl animate-fade-in-up">
           <div className="bg-white/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full text-black border border-white mb-10 transition-transform hover:-translate-y-1">
             <div className="flex flex-col items-center border-b-2 border-gray-100 pb-8 mb-8">
-              <h2 className="text-5xl font-black text-gray-800 mb-2">
-                {playerData.name}
-              </h2>
+              {/* ✨ 프로필 아이콘과 닉네임 컬러 적용 */}
+              <div className="flex items-center gap-4 mb-2">
+                {playerData.icon ? (
+                  <img
+                    src={`https://cdn.brawlify.com/profile/${playerData.icon.id}.png`}
+                    alt="profile icon"
+                    className="w-16 h-16 rounded-full shadow-md border-2 border-indigo-200"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : null}
+                <h2
+                  className="text-5xl font-black drop-shadow-sm"
+                  style={{ color: nameColorStr }}
+                >
+                  {playerData.name}
+                </h2>
+              </div>
 
-              {/* ✨ 스트릭 배지 추가 */}
               {streakCount > 0 ? (
                 <div className="mt-4 flex items-center bg-orange-100 border border-orange-300 px-6 py-2 rounded-full shadow-sm animate-pulse">
                   <span className="text-orange-600 font-black text-lg">
@@ -472,7 +494,6 @@ export default function Home() {
               )}
             </div>
 
-            {/* 기존 통계 카드 영역 유지 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg font-medium">
               <div className="flex justify-between bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-xl shadow-sm">
                 <span>🏆 현재 트로피:</span>
@@ -493,7 +514,7 @@ export default function Home() {
                 </span>
               </div>
               <div className="flex justify-between bg-gray-50 p-5 rounded-xl shadow-sm">
-                <span>📈 경험치 레벨 (API 기준):</span>
+                <span>📈 경험치 레벨:</span>
                 <span className="font-bold text-xl">{playerData.expLevel}</span>
               </div>
               <div className="flex justify-between bg-gray-50 p-5 rounded-xl shadow-sm">
@@ -517,8 +538,10 @@ export default function Home() {
               <div className="flex justify-between bg-pink-50 border-l-4 border-pink-500 p-5 rounded-r-xl shadow-sm">
                 <span>🎖️ 역대 최고 랭크:</span>
                 <span className="font-black text-pink-700 text-xl">
-                  {playerData.highestAllTimeRankedElo
-                    ? playerData.highestAllTimeRankedRankName +
+                  {playerData.highestAllTimeRankedRankName
+                    ? (rankDict[playerData.highestAllTimeRankedRankName]
+                        ? rankDict[playerData.highestAllTimeRankedRankName]
+                        : playerData.highestAllTimeRankedRankName) +
                       " (" +
                       playerData.highestAllTimeRankedElo +
                       "점)"
@@ -528,16 +551,124 @@ export default function Home() {
               <div className="flex justify-between bg-pink-50 border-l-4 border-pink-500 p-5 rounded-r-xl shadow-sm">
                 <span>🔥 현재 랭크:</span>
                 <span className="font-black text-pink-700 text-xl">
-                  {playerData.rankedElo
-                    ? playerData.rankedRankName +
+                  {playerData.rankedRankName
+                    ? (rankDict[playerData.rankedRankName]
+                        ? rankDict[playerData.rankedRankName]
+                        : playerData.rankedRankName) +
                       " (" +
                       playerData.rankedElo +
                       "점)"
                     : "기록 없음"}
                 </span>
               </div>
+
+              {/* ✨ 레거시(옛날) 데이터 & 기타 기록 추가 구간 */}
+              <div className="flex justify-between bg-indigo-50 border-l-4 border-indigo-400 p-5 rounded-r-xl shadow-sm">
+                <span>🤖 로보 럼블 최고 기록:</span>
+                <span className="font-black text-indigo-700 text-xl">
+                  {playerData.bestRoboRumbleTime}
+                </span>
+              </div>
+              <div className="flex justify-between bg-teal-50 border-l-4 border-teal-400 p-5 rounded-r-xl shadow-sm">
+                <span>🦖 빅 브롤러 최고 기록:</span>
+                <span className="font-black text-teal-700 text-xl">
+                  {playerData.bestTimeAsBigBrawler}
+                </span>
+              </div>
+              <div className="flex justify-between bg-orange-50 border-l-4 border-orange-400 p-5 rounded-r-xl shadow-sm md:col-span-2">
+                <span>🏆 챔피언십 챌린지 예선:</span>
+                <span className="font-black text-orange-700 text-xl">
+                  {playerData.isQualifiedFromChampionshipChallenge
+                    ? "통과 🎉"
+                    : "미통과"}
+                </span>
+              </div>
             </div>
           </div>
+
+          {battleLog !== null ? (
+            <div className="w-full mb-12">
+              <h3 className="text-2xl font-black mb-6 text-indigo-900 border-l-8 border-indigo-500 pl-4">
+                📊 최근 25전 승률 분석
+              </h3>
+              <div className="bg-white p-8 rounded-3xl shadow-xl w-full border border-gray-100 mb-10 flex flex-col md:flex-row justify-around items-center gap-6 transition-transform hover:-translate-y-1">
+                <div className="text-center">
+                  <span className="block text-gray-500 font-bold mb-2 text-lg">
+                    최근 승률
+                  </span>
+                  <span className="text-5xl font-black text-indigo-600 drop-shadow-sm">
+                    {recentWinRate}%
+                  </span>
+                  <span className="block text-md text-gray-400 mt-3 font-bold bg-gray-100 px-3 py-1 rounded-full">
+                    {totalRecent}전 {recentWins}승 {recentDefeats}패
+                  </span>
+                </div>
+                <div className="text-center border-t-2 md:border-t-0 md:border-l-2 border-gray-200 pt-6 md:pt-0 md:pl-10">
+                  <span className="block text-gray-500 font-bold mb-2 text-lg">
+                    가장 잘 나가는 모드
+                  </span>
+                  <span className="text-4xl font-black text-gray-800">
+                    {modeDict[bestMode] ? modeDict[bestMode] : bestMode}
+                  </span>
+                  <span className="block text-md text-indigo-500 mt-3 font-bold">
+                    이 모드에서만 {maxModeWins}승 달성! 🔥
+                  </span>
+                </div>
+              </div>
+
+              <h3 className="text-2xl font-black mb-6 text-indigo-900 border-l-8 border-indigo-500 pl-4">
+                ⚔️ 최근 전투 기록 (최대 5게임)
+              </h3>
+              <div className="flex flex-col gap-4 mb-10">
+                {battleLog.items
+                  .slice(0, 5)
+                  .map((match: any, index: number) => {
+                    return (
+                      <div
+                        key={index}
+                        className={`p-6 rounded-2xl shadow-md border-l-8 flex justify-between items-center transition-transform hover:-translate-x-1 ${
+                          match.battle.result === "victory"
+                            ? "bg-white border-blue-500"
+                            : match.battle.result === "defeat"
+                              ? "bg-white border-red-500"
+                              : "bg-white border-gray-400"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-black text-gray-800 text-xl mb-1">
+                            {modeDict[match.event.mode]
+                              ? modeDict[match.event.mode]
+                              : match.event.mode}{" "}
+                            -{" "}
+                            {mapDict[match.event.map]
+                              ? mapDict[match.event.map]
+                              : match.event.map}
+                          </span>
+                          <span className="text-sm text-gray-500 font-bold bg-gray-100 px-2 py-1 rounded-md w-max">
+                            {match.battle.type}
+                          </span>
+                        </div>
+                        <div className="text-3xl font-black">
+                          {match.battle.result === "victory" ? (
+                            <span className="text-blue-500 drop-shadow-sm">
+                              승리
+                            </span>
+                          ) : match.battle.result === "defeat" ? (
+                            <span className="text-red-500 drop-shadow-sm">
+                              패배
+                            </span>
+                          ) : (
+                            <span className="text-gray-500 drop-shadow-sm">
+                              무승부
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          ) : null}
 
           <div className="w-full">
             <div className="flex justify-between items-end mb-6 border-l-8 border-indigo-500 pl-4">
@@ -545,7 +676,7 @@ export default function Home() {
                 보유 브롤러 상세 정보 ({playerData.brawlers.length}개)
               </h3>
               <span className="text-sm text-gray-500 font-bold bg-gray-200 px-3 py-1 rounded-full">
-                👆 클릭해서 상세 분석 보기
+                👆 클릭해서 아이템 확인
               </span>
             </div>
 
@@ -585,9 +716,6 @@ export default function Home() {
                           ⭐{" "}
                           {brawler.starPowers ? brawler.starPowers.length : 0}
                         </span>
-                        <span>
-                          ⚙️ {brawler.gears ? brawler.gears.length : 0}
-                        </span>
                       </div>
                       <span className="text-yellow-600 font-black text-xl">
                         🏆 {brawler.trophies}
@@ -600,10 +728,9 @@ export default function Home() {
         </div>
       ) : null}
 
-      {/* ✨ 브롤러 상세 분석 모달 창 */}
       {selectedBrawler !== null ? (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in-up">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setSelectedBrawler(null)}
               className="absolute top-4 right-4 bg-gray-100 hover:bg-gray-200 text-gray-800 w-10 h-10 rounded-full font-black text-xl flex items-center justify-center transition-colors"
@@ -627,42 +754,135 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="bg-gray-50 p-5 rounded-2xl mb-6">
-              <h4 className="font-black text-gray-700 mb-3 border-b pb-2">
-                📦 보유 장비 상태
+            <div className="bg-gray-50 p-5 rounded-2xl mb-6 flex flex-col gap-4">
+              <h4 className="font-black text-gray-700 border-b pb-2">
+                📦 실제 보유 장비 목록
               </h4>
-              <ul className="text-sm font-bold text-gray-600 flex flex-col gap-2">
-                <li className="flex justify-between">
-                  <span>🟢 가젯 (Gadgets)</span>
-                  <span>
-                    {selectedBrawler.gadgets
-                      ? selectedBrawler.gadgets.length
-                      : 0}
-                    개
+
+              <div className="flex flex-col gap-2">
+                <span className="font-bold text-gray-600 text-sm">🟢 가젯</span>
+                {selectedBrawler.gadgets ? (
+                  selectedBrawler.gadgets.length > 0 ? (
+                    <div className="flex flex-col gap-2">
+                      {selectedBrawler.gadgets.map((g: any) => {
+                        return (
+                          <div
+                            key={g.id}
+                            className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm"
+                          >
+                            <img
+                              src={`https://cdn.brawlify.com/gadgets/${g.id}.png`}
+                              alt={g.name}
+                              className="w-8 h-8 rounded-md bg-green-50"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                            <span className="text-sm font-bold text-green-800">
+                              {g.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">
+                      보유한 가젯이 없습니다.
+                    </span>
+                  )
+                ) : (
+                  <span className="text-xs text-gray-400">
+                    보유한 가젯이 없습니다.
                   </span>
-                </li>
-                <li className="flex justify-between">
-                  <span>⭐ 스타파워 (Star Powers)</span>
-                  <span>
-                    {selectedBrawler.starPowers
-                      ? selectedBrawler.starPowers.length
-                      : 0}
-                    개
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="font-bold text-gray-600 text-sm">
+                  ⭐ 스타파워
+                </span>
+                {selectedBrawler.starPowers ? (
+                  selectedBrawler.starPowers.length > 0 ? (
+                    <div className="flex flex-col gap-2">
+                      {selectedBrawler.starPowers.map((sp: any) => {
+                        return (
+                          <div
+                            key={sp.id}
+                            className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm"
+                          >
+                            <img
+                              src={`https://cdn.brawlify.com/star-powers/${sp.id}.png`}
+                              alt={sp.name}
+                              className="w-8 h-8 rounded-md bg-yellow-50"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                            <span className="text-sm font-bold text-yellow-800">
+                              {sp.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">
+                      보유한 스타파워가 없습니다.
+                    </span>
+                  )
+                ) : (
+                  <span className="text-xs text-gray-400">
+                    보유한 스타파워가 없습니다.
                   </span>
-                </li>
-                <li className="flex justify-between">
-                  <span>⚙️ 기어 (Gears)</span>
-                  <span>
-                    {selectedBrawler.gears ? selectedBrawler.gears.length : 0}개
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="font-bold text-gray-600 text-sm">⚙️ 기어</span>
+                {selectedBrawler.gears ? (
+                  selectedBrawler.gears.length > 0 ? (
+                    <div className="flex flex-col gap-2">
+                      {selectedBrawler.gears.map((gr: any) => {
+                        return (
+                          <div
+                            key={gr.id}
+                            className="flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-sm"
+                          >
+                            <img
+                              src={`https://cdn.brawlify.com/gears/${gr.id}.png`}
+                              alt={gr.name}
+                              className="w-8 h-8 rounded-md bg-gray-100"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display =
+                                  "none";
+                              }}
+                            />
+                            <span className="text-sm font-bold text-gray-800">
+                              {gr.name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">
+                      보유한 기어가 없습니다.
+                    </span>
+                  )
+                ) : (
+                  <span className="text-xs text-gray-400">
+                    보유한 기어가 없습니다.
                   </span>
-                </li>
-              </ul>
+                )}
+              </div>
             </div>
 
-            <div className="bg-blue-50 p-5 rounded-2xl mb-6">
+            <div className="bg-blue-50 p-5 rounded-2xl mb-2">
               <div className="flex justify-between items-center mb-3 border-b border-blue-200 pb-2">
                 <h4 className="font-black text-blue-900">
-                  📊 최근 25전 분석 데이터
+                  📊 최근 25전 내 분석
                 </h4>
               </div>
 

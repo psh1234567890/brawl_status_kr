@@ -2,11 +2,72 @@
 
 import { useState, useEffect } from "react";
 
+// 1. 맵 이름 한국어 번역 사전
 const mapDict: any = 
 {
     "Hard Rock Mine": "암석 광산",
     "Minecart Madness": "광산 열차",
-    // 기장님이 맵 계속 추가하기!
+    "Sneaky Fields": "스니키 필드",
+    "Triple Dribble": "트리플 드리블",
+    "Pit Stop": "피트 스톱",
+    "Bridge Too Far": "브릿지 투 파",
+    "Shooting Star": "슈팅 스타",
+    "Snake Prairie": "뱀의 초원",
+    "Dueling Beetles": "불타는 비틀즈",
+    "Ring of Fire": "불의 고리",
+    "Goldarm Gulch": "골드암 갱도",
+    "Flaring Phoenix": "불타는 피닉스",
+    "Out in the Open": "아웃 인 더 오픈",
+    "Belle's Rock": "벨의 바위",
+    "Safe Zone": "안전 지대",
+    "Kaboom Canyon": "카붐 캐년",
+    "Double Swoosh": "이중 곡선",
+    "Undermine": "언더마인",
+    "Center Stage": "센터 스테이지",
+    "Super Beach": "슈퍼 해변",
+    "Canal Grande": "대운하",
+    "Excel": "엑셀",
+    "Parallel Plays": "평행선",
+    "Split": "분할",
+    "Feast or Famine": "모 아니면 도",
+    "Skull Creek": "해골 천천"
+};
+
+// 2. ✨ [핵심 해결책] 외부 API를 믿지 않고, 확실한 맵-모드 분류 사전을 하드코딩으로 박아버림!
+const mapToModeDict: any = 
+{
+    "Hard Rock Mine": "젬 그랩",
+    "Minecart Madness": "젬 그랩",
+    "Double Swoosh": "젬 그랩",
+    "Undermine": "젬 그랩",
+    
+    "Sneaky Fields": "브롤 볼",
+    "Triple Dribble": "브롤 볼",
+    "Center Stage": "브롤 볼",
+    "Super Beach": "브롤 볼",
+    
+    "Pit Stop": "하이스트",
+    "Bridge Too Far": "하이스트",
+    "Safe Zone": "하이스트",
+    "Kaboom Canyon": "하이스트",
+    
+    "Shooting Star": "바운티",
+    "Snake Prairie": "바운티",
+    "Canal Grande": "바운티",
+    "Excel": "바운티",
+    
+    "Dueling Beetles": "핫 존",
+    "Ring of Fire": "핫 존",
+    "Parallel Plays": "핫 존",
+    "Split": "핫 존",
+    
+    "Goldarm Gulch": "녹아웃",
+    "Flaring Phoenix": "녹아웃",
+    "Out in the Open": "녹아웃",
+    "Belle's Rock": "녹아웃",
+    
+    "Feast or Famine": "쇼다운",
+    "Skull Creek": "쇼다운"
 };
 
 const brawlerDict: any = 
@@ -122,9 +183,13 @@ const brawlerDict: any =
 export default function MetaDashboard() 
 {
     const [realData, setRealData] = useState<any>(null);
-    const [imageDict, setImageDict] = useState<any>({}); // ✨ 브롤러 고유 ID 매핑 사전!
+    const [imageDict, setImageDict] = useState<any>({});
+    
+    const [selectedMode, setSelectedMode] = useState<string>("젬 그랩");
     const [selectedMap, setSelectedMap] = useState<string>("");
     const [loading, setLoading] = useState(true);
+
+    const modeList = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
 
     useEffect(() => 
     {
@@ -132,7 +197,7 @@ export default function MetaDashboard()
         {
             try 
             {
-                // 1. ✨ BrawlAPI에서 브롤러 고유 ID 리스트 가져오기 (이름으로 추측하지 않기 위해!)
+                // 1. 브롤러 ID는 사진을 위해 계속 BrawlAPI에서 가져옴
                 try 
                 {
                     const brawlerRes = await fetch("https://api.brawlapi.com/v1/brawlers");
@@ -149,12 +214,12 @@ export default function MetaDashboard()
                     }
                     setImageDict(idMap);
                 } 
-                catch (metaError) 
+                catch (error) 
                 {
-                    console.error("BrawlAPI 호출 에러:", metaError);
+                    console.error("브롤러 API 에러:", error);
                 }
 
-                // 2. 우리 백엔드 서버에서 메타 통계 가져오기
+                // 2. 우리 DB 통계 가져오기
                 const res = await fetch("/api/meta");
                 const json = await res.json();
                 
@@ -163,7 +228,40 @@ export default function MetaDashboard()
                 const keys = Object.keys(json);
                 if (keys.length > 0) 
                 {
-                    setSelectedMap(keys[0]);
+                    let isFound = false;
+                    for (let i = 0; i < keys.length; i = i + 1)
+                    {
+                        const mName = keys[i];
+                        
+                        // ✨ 정규화나 외부 API 없이 우리가 만든 확실한 사전에서 모드 찾기!
+                        let mMode = "기타";
+                        if (mapToModeDict[mName])
+                        {
+                            mMode = mapToModeDict[mName];
+                        }
+                        
+                        if (mMode === "젬 그랩")
+                        {
+                            if (!isFound)
+                            {
+                                setSelectedMap(mName);
+                                isFound = true;
+                            }
+                        }
+                    }
+                    
+                    // 만약 젬 그랩 맵이 아예 없으면 첫번째 맵 강제 선택
+                    if (!isFound)
+                    {
+                        setSelectedMap(keys[0]);
+                        
+                        let fallbackMode = "기타";
+                        if (mapToModeDict[keys[0]])
+                        {
+                            fallbackMode = mapToModeDict[keys[0]];
+                        }
+                        setSelectedMode(fallbackMode);
+                    }
                 }
                 
                 setLoading(false);
@@ -178,12 +276,63 @@ export default function MetaDashboard()
         fetchData();
     }, []);
 
-    let mapList: string[] = [];
-    if (realData !== null) 
+    // 탭 클릭했을 때 동작하는 로직
+    const handleModeClick = (modeName: string) =>
     {
-        mapList = Object.keys(realData);
+        setSelectedMode(modeName);
+        
+        let targetMap = "";
+        if (realData !== null)
+        {
+            const keys = Object.keys(realData);
+            let isFound = false;
+            
+            for (let i = 0; i < keys.length; i = i + 1)
+            {
+                const mName = keys[i];
+                
+                let mMode = "기타";
+                if (mapToModeDict[mName])
+                {
+                    mMode = mapToModeDict[mName];
+                }
+                
+                if (mMode === modeName)
+                {
+                    if (!isFound)
+                    {
+                        targetMap = mName;
+                        isFound = true;
+                    }
+                }
+            }
+        }
+        setSelectedMap(targetMap);
+    };
+
+    // 현재 선택된 모드에 해당하는 맵만 걸러내기
+    const filteredMaps: string[] = [];
+    if (realData !== null)
+    {
+        const allMaps = Object.keys(realData);
+        for (let i = 0; i < allMaps.length; i = i + 1)
+        {
+            const mName = allMaps[i];
+            
+            let mMode = "기타";
+            if (mapToModeDict[mName])
+            {
+                mMode = mapToModeDict[mName];
+            }
+            
+            if (mMode === selectedMode)
+            {
+                filteredMaps.push(mName);
+            }
+        }
     }
 
+    // 선택된 맵의 브롤러 통계 정제 (Unknown 제거)
     let currentData = [];
     if (realData !== null)
     {
@@ -225,36 +374,69 @@ export default function MetaDashboard()
                     데이터베이스에서 글로벌 통계를 가져오는 중... 🚀
                 </div>
             ) : (
-                <div className="w-full flex flex-col items-center">
-                    <div className="flex gap-4 mb-10 bg-white p-2 rounded-full shadow-md flex-wrap justify-center max-w-4xl">
-                        {mapList.map((mapName) => 
+                <div className="w-full flex flex-col items-center max-w-4xl">
+                    
+                    {/* 상단 모드 선택 탭 */}
+                    <div className="flex gap-3 mb-6 bg-white/60 p-2 rounded-2xl shadow-sm overflow-x-auto w-full justify-start sm:justify-center no-scrollbar">
+                        {modeList.map((modeName) => 
                         {
-                            let isSelected = false;
-                            if (mapName === selectedMap) 
+                            let isModeSelected = false;
+                            if (modeName === selectedMode)
                             {
-                                isSelected = true;
-                            }
-
-                            let displayMapName = mapName;
-                            if (mapDict[mapName])
-                            {
-                                displayMapName = mapDict[mapName];
+                                isModeSelected = true;
                             }
 
                             return (
                                 <button
-                                    key={mapName}
-                                    onClick={() => setSelectedMap(mapName)}
-                                    className={`px-8 py-3 rounded-full font-black text-lg transition-colors ${
-                                        isSelected ? "bg-indigo-600 text-white shadow-md" : "bg-transparent text-gray-500 hover:bg-gray-100"
+                                    key={modeName}
+                                    onClick={() => handleModeClick(modeName)}
+                                    className={`px-6 py-2.5 rounded-xl font-black text-sm whitespace-nowrap transition-all ${
+                                        isModeSelected ? "bg-indigo-600 text-white shadow-md scale-105" : "bg-white text-gray-500 hover:bg-gray-100"
                                     }`}
                                 >
-                                    {displayMapName}
+                                    {modeName}
                                 </button>
                             );
                         })}
                     </div>
 
+                    {/* 선택된 모드의 맵 리스트 버튼들 */}
+                    <div className="flex gap-3 mb-10 flex-wrap justify-center w-full">
+                        {filteredMaps.length > 0 ? (
+                            filteredMaps.map((mapName) => 
+                            {
+                                let isMapSelected = false;
+                                if (mapName === selectedMap) 
+                                {
+                                    isMapSelected = true;
+                                }
+
+                                let displayMapName = mapName;
+                                if (mapDict[mapName])
+                                {
+                                    displayMapName = mapDict[mapName];
+                                }
+
+                                return (
+                                    <button
+                                        key={mapName}
+                                        onClick={() => setSelectedMap(mapName)}
+                                        className={`px-6 py-2.5 rounded-full font-bold text-md border transition-all ${
+                                            isMapSelected ? "bg-white border-2 border-indigo-500 text-indigo-600 shadow-sm font-black" : "bg-white/80 border-gray-200 text-gray-500 hover:bg-white"
+                                        }`}
+                                    >
+                                        {displayMapName}
+                                    </button>
+                                );
+                            })
+                        ) : (
+                            <div className="text-gray-400 font-bold text-sm bg-white/40 px-6 py-2 rounded-full border border-dashed border-gray-300">
+                                현재 이 모드에 저장된 맵 데이터가 없어!
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 추천 브롤러 결과 리스트 */}
                     {currentData.length > 0 ? (
                         <div className="w-full max-w-3xl bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white">
                             <h2 className="text-2xl font-black mb-6 border-b-2 border-indigo-100 pb-4 flex justify-between items-end">
@@ -273,13 +455,11 @@ export default function MetaDashboard()
                                         displayBrawlerName = brawlerDict[brawler.name];
                                     }
 
-                                    // ✨ 이름 텍스트로 추측하지 않고, 100% 정확한 고유 ID로 사진 가져오기!
                                     const brawlerId = imageDict[brawler.name];
                                     let imgSrc = "";
                                     
                                     if (brawlerId)
                                     {
-                                        // 메인 화면과 똑같이 테두리 있는 예쁜 사진 폴더(borders) 사용
                                         imgSrc = `https://cdn.brawlify.com/brawlers/borders/${brawlerId}.png`;
                                     }
                                     else
@@ -297,7 +477,6 @@ export default function MetaDashboard()
                                                     #{index + 1}
                                                 </div>
                                                 <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
-                                                    {/* ✨ 100% 정확한 ID 기반 이미지 연동 */}
                                                     <img 
                                                         src={imgSrc} 
                                                         alt={brawler.name}
@@ -332,8 +511,8 @@ export default function MetaDashboard()
                             </div>
                         </div>
                     ) : (
-                        <div className="text-gray-500 font-bold text-xl mt-10 bg-white px-8 py-4 rounded-full shadow-md">
-                            이 맵은 아직 누적된 데이터가 없어!
+                        <div className="text-gray-500 font-bold text-xl mt-10 bg-white px-8 py-4 rounded-full shadow-md text-center w-full max-w-3xl">
+                            선택된 맵은 아직 누적된 전투 기록이 없어! 😢
                         </div>
                     )}
                 </div>

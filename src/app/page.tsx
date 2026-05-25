@@ -1109,10 +1109,28 @@ export default function Home() {
                   <div className="flex gap-2">
                     {selectedBattle.battle.teams[0].map(
                       (p: any, idx: number) => {
+                        // ✨ 프론트엔드 방어막: 브롤러 데이터가 없을 경우 배열에서 첫 번째 브롤러 가져오기
+                        let safeBrawler = {
+                          id: 0,
+                          name: "Unknown",
+                          trophies: 0,
+                        };
+                        if (p.brawler) {
+                          safeBrawler = p.brawler;
+                        } else if (p.brawlers) {
+                          if (p.brawlers.length > 0) {
+                            safeBrawler = p.brawlers[0];
+                          }
+                        }
+
                         return (
                           <div
                             key={idx}
-                            className="flex flex-col items-center relative w-24"
+                            onClick={() => {
+                              setSelectedBattle(null);
+                              handleSearch(p.tag);
+                            }}
+                            className="flex flex-col items-center relative w-24 cursor-pointer transition-transform hover:-translate-y-2 hover:brightness-110 group"
                           >
                             {selectedBattle.battle.starPlayer ? (
                               selectedBattle.battle.starPlayer.tag === p.tag ? (
@@ -1122,15 +1140,15 @@ export default function Home() {
                               ) : null
                             ) : null}
 
-                            <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]">
+                            <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] group-hover:border-yellow-300 transition-colors">
                               <span className="absolute top-0 left-0 bg-black/60 text-yellow-400 text-xs font-black px-1 rounded-br-md z-10">
                                 {checkIsRanked(selectedBattle)
                                   ? "🏅 픽"
-                                  : `🏆 ${p.brawler.trophies}`}
+                                  : `🏆 ${safeBrawler.trophies}`}
                               </span>
                               <img
-                                src={`https://cdn.brawlify.com/brawlers/borders/${p.brawler.id}.png`}
-                                alt={p.brawler.name}
+                                src={`https://cdn.brawlify.com/brawlers/borders/${safeBrawler.id}.png`}
+                                alt={safeBrawler.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display =
@@ -1138,7 +1156,7 @@ export default function Home() {
                                 }}
                               />
                             </div>
-                            <span className="text-white font-bold text-sm mt-2 truncate w-full text-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                            <span className="text-white font-bold text-sm mt-2 truncate w-full text-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] group-hover:text-yellow-300 group-hover:underline">
                               {p.name}
                             </span>
                           </div>
@@ -1154,10 +1172,27 @@ export default function Home() {
                   <div className="flex gap-2">
                     {selectedBattle.battle.teams[1].map(
                       (p: any, idx: number) => {
+                        let safeBrawler = {
+                          id: 0,
+                          name: "Unknown",
+                          trophies: 0,
+                        };
+                        if (p.brawler) {
+                          safeBrawler = p.brawler;
+                        } else if (p.brawlers) {
+                          if (p.brawlers.length > 0) {
+                            safeBrawler = p.brawlers[0];
+                          }
+                        }
+
                         return (
                           <div
                             key={idx}
-                            className="flex flex-col items-center relative w-24"
+                            onClick={() => {
+                              setSelectedBattle(null);
+                              handleSearch(p.tag);
+                            }}
+                            className="flex flex-col items-center relative w-24 cursor-pointer transition-transform hover:-translate-y-2 hover:brightness-110 group"
                           >
                             {selectedBattle.battle.starPlayer ? (
                               selectedBattle.battle.starPlayer.tag === p.tag ? (
@@ -1167,15 +1202,15 @@ export default function Home() {
                               ) : null
                             ) : null}
 
-                            <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]">
+                            <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] group-hover:border-yellow-300 transition-colors">
                               <span className="absolute top-0 left-0 bg-black/60 text-yellow-400 text-xs font-black px-1 rounded-br-md z-10">
                                 {checkIsRanked(selectedBattle)
                                   ? "🏅 픽"
-                                  : `🏆 ${p.brawler.trophies}`}
+                                  : `🏆 ${safeBrawler.trophies}`}
                               </span>
                               <img
-                                src={`https://cdn.brawlify.com/brawlers/borders/${p.brawler.id}.png`}
-                                alt={p.brawler.name}
+                                src={`https://cdn.brawlify.com/brawlers/borders/${safeBrawler.id}.png`}
+                                alt={safeBrawler.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display =
@@ -1183,7 +1218,7 @@ export default function Home() {
                                 }}
                               />
                             </div>
-                            <span className="text-white font-bold text-sm mt-2 truncate w-full text-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                            <span className="text-white font-bold text-sm mt-2 truncate w-full text-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] group-hover:text-yellow-300 group-hover:underline">
                               {p.name}
                             </span>
                           </div>
@@ -1195,22 +1230,39 @@ export default function Home() {
               ) : selectedBattle.battle.players ? (
                 <div className="flex flex-wrap justify-center gap-4">
                   {selectedBattle.battle.players.map((p: any, idx: number) => {
+                    let safeBrawler = { id: 0, name: "Unknown", trophies: 0 };
+                    if (p.brawler) {
+                      safeBrawler = p.brawler;
+                    } else if (p.brawlers) {
+                      if (p.brawlers.length > 0) {
+                        safeBrawler = p.brawlers[0];
+                      }
+                    }
+
                     return (
                       <div
                         key={idx}
-                        className="flex flex-col items-center relative w-24"
+                        onClick={() => {
+                          setSelectedBattle(null);
+                          handleSearch(p.tag);
+                        }}
+                        className="flex flex-col items-center relative w-24 cursor-pointer transition-transform hover:-translate-y-2 hover:brightness-110 group"
                       >
-                        <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)]">
+                        <div className="relative border-4 border-black bg-gray-800 rounded-md overflow-hidden w-20 h-20 shadow-[4px_4px_0_0_rgba(0,0,0,0.5)] group-hover:border-yellow-300 transition-colors">
                           <span className="absolute top-0 left-0 bg-black/60 text-yellow-400 text-xs font-black px-1 rounded-br-md z-10">
-                            🏆 {p.brawler.trophies}
+                            🏆 {safeBrawler.trophies}
                           </span>
                           <img
-                            src={`https://cdn.brawlify.com/brawlers/borders/${p.brawler.id}.png`}
-                            alt={p.brawler.name}
+                            src={`https://cdn.brawlify.com/brawlers/borders/${safeBrawler.id}.png`}
+                            alt={safeBrawler.name}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                "none";
+                            }}
                           />
                         </div>
-                        <span className="text-white font-bold text-sm mt-2 truncate w-full text-center">
+                        <span className="text-white font-bold text-sm mt-2 truncate w-full text-center group-hover:text-yellow-300 group-hover:underline">
                           {p.name}
                         </span>
                       </div>

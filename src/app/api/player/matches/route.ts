@@ -50,7 +50,14 @@ export async function GET(request: Request) {
             team.forEach((p: any) => {
               const pTag = p.tag.replace("#", "");
               if (pTag === cleanTag) {
-                myBrawlerName = p.brawler.name;
+                // ✨ 방어 로직: brawler가 있으면 그거 쓰고, 없으면 brawlers 배열 검사
+                if (p.brawler) {
+                  myBrawlerName = p.brawler.name;
+                } else if (p.brawlers) {
+                  if (p.brawlers.length > 0) {
+                    myBrawlerName = p.brawlers[0].name;
+                  }
+                }
               }
             });
           });
@@ -60,7 +67,14 @@ export async function GET(request: Request) {
           match.battle.players.forEach((p: any) => {
             const pTag = p.tag.replace("#", "");
             if (pTag === cleanTag) {
-              myBrawlerName = p.brawler.name;
+              // ✨ 쇼다운 모드 등에서도 똑같이 방어!
+              if (p.brawler) {
+                myBrawlerName = p.brawler.name;
+              } else if (p.brawlers) {
+                if (p.brawlers.length > 0) {
+                  myBrawlerName = p.brawlers[0].name;
+                }
+              }
             }
           });
         }
@@ -90,10 +104,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
-    // 🚨 Vercel 로그(블랙박스)에 진짜 에러 원인을 빨간 글씨로 강제 출력!
     console.error("=== 🚨 [DB 에러 상세 원인] 🚨 ===");
     console.error(error);
-
     return NextResponse.json(
       { error: "서버 DB 저장 중 에러 발생" },
       { status: 500 },

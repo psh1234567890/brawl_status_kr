@@ -489,6 +489,15 @@ export default function Home() {
         <p className="text-md text-gray-500 font-bold bg-white px-4 py-1 rounded-full shadow-sm inline-block">
           ※ 영어 대소문자 상관 없음
         </p>
+        {/* ✨ 여기에 메타 통계방으로 가는 화려한 버튼 추가! */}
+        <div>
+          <a 
+            href="/meta"
+            className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black text-xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-transform border-4 border-white"
+          >
+            📊 빅데이터 맵별 1티어 추천 보기
+          </a>
+        </div>
       </div>
 
       <div className="flex flex-col items-center gap-4 mb-10 w-full max-w-md">

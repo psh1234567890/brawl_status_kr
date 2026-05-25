@@ -1,0 +1,343 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
+const mapDict: any = 
+{
+    "Hard Rock Mine": "암석 광산",
+    "Minecart Madness": "광산 열차",
+    // 기장님이 맵 계속 추가하기!
+};
+
+const brawlerDict: any = 
+{
+    SHELLY: "쉘리",
+    NITA: "니타",
+    COLT: "콜트",
+    BULL: "불",
+    BROCK: "브록",
+    "EL PRIMO": "엘 프리모",
+    BARLEY: "발리",
+    POCO: "포코",
+    ROSA: "로사",
+    JESSIE: "제시",
+    DYNAMIKE: "다이너마이크",
+    TICK: "틱",
+    "8-BIT": "8비트",
+    RICO: "리코",
+    DARRYL: "대릴",
+    PENNY: "페니",
+    CARL: "칼",
+    JACKY: "재키",
+    PIPER: "파이퍼",
+    PAM: "팸",
+    FRANK: "프랭크",
+    BIBI: "비비",
+    BEA: "비",
+    NANI: "나니",
+    EDGAR: "에드거",
+    GRIFF: "그리프",
+    GROM: "그롬",
+    MORTIS: "모티스",
+    TARA: "타라",
+    GENE: "진",
+    MAX: "맥스",
+    "MR. P": "미스터 P",
+    SPROUT: "스프라우트",
+    BYRON: "바이런",
+    SQUEAK: "스퀴크",
+    SPIKE: "스파이크",
+    CROW: "크로우",
+    LEON: "레온",
+    SANDY: "샌디",
+    AMBER: "앰버",
+    MEG: "메그",
+    SURGE: "서지",
+    COLETTE: "콜레트",
+    LOU: "루",
+    RUFFS: "러프스",
+    BELLE: "벨",
+    BUZZ: "버즈",
+    ASH: "애쉬",
+    LOLA: "롤라",
+    FANG: "팽",
+    EVE: "이브",
+    JANET: "자넷",
+    OTIS: "오티스",
+    SAM: "샘",
+    BUSTER: "버스터",
+    MANDY: "맨디",
+    "R-T": "R-T",
+    WILLOW: "윌로우",
+    MAISIE: "메이지",
+    HANK: "행크",
+    CORDELIUS: "코델리우스",
+    DOUG: "더그",
+    PEARL: "펄",
+    CHUCK: "척",
+    CHARLIE: "찰리",
+    MICO: "미코",
+    KIT: "키트",
+    "LARRY & LAWRIE": "래리 & 로리",
+    MELODIE: "멜로디",
+    ANGELO: "안젤로",
+    LILY: "릴리",
+    DRACO: "드라코",
+    BERRY: "베리",
+    CLANCY: "클랜시",
+    MOE: "모",
+    KENJI: "켄지",
+    JUJU: "주주",
+    SHADE: "셰이드",
+    GALE: "게일",
+    CHESTER: "체스터",
+    BO: "보",
+    EMZ: "엠즈",
+    STU: "스튜",
+    DEMIAN: "데미안",
+    DAMIAN: "데미안",
+    LUMI: "루미",
+    "STARR Nova": "스타 노바",
+    BOLT: "볼트",
+    PIERCE: "피어스",
+    MINA: "미나",
+    MEEPLE: "미플",
+    ZIGGY: "지기",
+    OLLIE: "올리",
+    GLOWY: "글로이",
+    GLOWBERT: "글로버트",
+    TRUNK: "트렁크",
+    ALLI: "알리",
+    FINX: "핑스",
+    "JAE-YONG": "재용",
+    GIGI: "지지",
+    KAZE: "카제",
+    NAJIA: "나지아",
+    SIRIUS: "시리우스",
+    BONNIE: "보니",
+    GRAY: "그레이",
+    GUS: "거스",
+};
+
+export default function MetaDashboard() 
+{
+    const [realData, setRealData] = useState<any>(null);
+    const [imageDict, setImageDict] = useState<any>({}); // ✨ 브롤러 고유 ID 매핑 사전!
+    const [selectedMap, setSelectedMap] = useState<string>("");
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => 
+    {
+        const fetchData = async () => 
+        {
+            try 
+            {
+                // 1. ✨ BrawlAPI에서 브롤러 고유 ID 리스트 가져오기 (이름으로 추측하지 않기 위해!)
+                try 
+                {
+                    const brawlerRes = await fetch("https://api.brawlapi.com/v1/brawlers");
+                    const brawlerJson = await brawlerRes.json();
+                    
+                    const idMap: any = {};
+                    if (brawlerJson.list) 
+                    {
+                        for (let i = 0; i < brawlerJson.list.length; i = i + 1)
+                        {
+                            const b = brawlerJson.list[i];
+                            idMap[b.name.toUpperCase()] = b.id;
+                        }
+                    }
+                    setImageDict(idMap);
+                } 
+                catch (metaError) 
+                {
+                    console.error("BrawlAPI 호출 에러:", metaError);
+                }
+
+                // 2. 우리 백엔드 서버에서 메타 통계 가져오기
+                const res = await fetch("/api/meta");
+                const json = await res.json();
+                
+                setRealData(json);
+                
+                const keys = Object.keys(json);
+                if (keys.length > 0) 
+                {
+                    setSelectedMap(keys[0]);
+                }
+                
+                setLoading(false);
+            } 
+            catch (error) 
+            {
+                console.error("에러 발생", error);
+                setLoading(false);
+            }
+        };
+        
+        fetchData();
+    }, []);
+
+    let mapList: string[] = [];
+    if (realData !== null) 
+    {
+        mapList = Object.keys(realData);
+    }
+
+    let currentData = [];
+    if (realData !== null)
+    {
+        if (selectedMap !== "")
+        {
+            const rawData = realData[selectedMap];
+            if (rawData)
+            {
+                currentData = [];
+                for (let i = 0; i < rawData.length; i = i + 1)
+                {
+                    if (rawData[i].name !== "Unknown")
+                    {
+                        currentData.push(rawData[i]);
+                    }
+                }
+            }
+        }
+    }
+
+    return (
+        <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-10 flex flex-col items-center">
+            <div className="text-center mb-10">
+                <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4 drop-shadow-sm">
+                    🗺️ 맵별 1티어 브롤러 추천기
+                </h1>
+                <p className="text-gray-500 font-bold">
+                    누적 빅데이터 가중 승률 기반 알고리즘 적용
+                </p>
+                <div className="mt-6">
+                    <a href="/" className="inline-block bg-white text-indigo-600 border border-indigo-200 font-bold px-6 py-2 rounded-full hover:bg-indigo-50 transition-colors shadow-sm">
+                        ← 전적 검색으로 돌아가기
+                    </a>
+                </div>
+            </div>
+            
+            {loading ? (
+                <div className="text-2xl font-black text-indigo-500 animate-pulse mt-20 bg-white px-8 py-4 rounded-full shadow-md">
+                    데이터베이스에서 글로벌 통계를 가져오는 중... 🚀
+                </div>
+            ) : (
+                <div className="w-full flex flex-col items-center">
+                    <div className="flex gap-4 mb-10 bg-white p-2 rounded-full shadow-md flex-wrap justify-center max-w-4xl">
+                        {mapList.map((mapName) => 
+                        {
+                            let isSelected = false;
+                            if (mapName === selectedMap) 
+                            {
+                                isSelected = true;
+                            }
+
+                            let displayMapName = mapName;
+                            if (mapDict[mapName])
+                            {
+                                displayMapName = mapDict[mapName];
+                            }
+
+                            return (
+                                <button
+                                    key={mapName}
+                                    onClick={() => setSelectedMap(mapName)}
+                                    className={`px-8 py-3 rounded-full font-black text-lg transition-colors ${
+                                        isSelected ? "bg-indigo-600 text-white shadow-md" : "bg-transparent text-gray-500 hover:bg-gray-100"
+                                    }`}
+                                >
+                                    {displayMapName}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {currentData.length > 0 ? (
+                        <div className="w-full max-w-3xl bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white">
+                            <h2 className="text-2xl font-black mb-6 border-b-2 border-indigo-100 pb-4 flex justify-between items-end">
+                                <span>
+                                    🏆 {mapDict[selectedMap] ? mapDict[selectedMap] : selectedMap} 최고 승률 픽
+                                </span>
+                                <span className="text-sm font-bold text-gray-400">데이터 기준: 최소 5판 이상</span>
+                            </h2>
+                            
+                            <div className="flex flex-col gap-4">
+                                {currentData.map((brawler: any, index: number) => 
+                                {
+                                    let displayBrawlerName = brawler.name;
+                                    if (brawlerDict[brawler.name])
+                                    {
+                                        displayBrawlerName = brawlerDict[brawler.name];
+                                    }
+
+                                    // ✨ 이름 텍스트로 추측하지 않고, 100% 정확한 고유 ID로 사진 가져오기!
+                                    const brawlerId = imageDict[brawler.name];
+                                    let imgSrc = "";
+                                    
+                                    if (brawlerId)
+                                    {
+                                        // 메인 화면과 똑같이 테두리 있는 예쁜 사진 폴더(borders) 사용
+                                        imgSrc = `https://cdn.brawlify.com/brawlers/borders/${brawlerId}.png`;
+                                    }
+                                    else
+                                    {
+                                        imgSrc = `https://cdn.brawlify.com/brawler/${brawler.name}.png`;
+                                    }
+
+                                    return (
+                                        <div 
+                                            key={brawler.name} 
+                                            className="flex items-center justify-between bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-3xl font-black text-indigo-200 w-10 text-center">
+                                                    #{index + 1}
+                                                </div>
+                                                <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
+                                                    {/* ✨ 100% 정확한 ID 기반 이미지 연동 */}
+                                                    <img 
+                                                        src={imgSrc} 
+                                                        alt={brawler.name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => 
+                                                        {
+                                                            (e.target as HTMLImageElement).style.display = "none";
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span className="text-2xl font-black text-gray-800">
+                                                    {displayBrawlerName}
+                                                </span>
+                                            </div>
+                                            <div className="flex gap-8 text-right">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs text-gray-500 font-bold mb-1">가중 추천 점수</span>
+                                                    <span className="text-2xl font-black text-indigo-600">
+                                                        {brawler.score}점
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs text-gray-500 font-bold mb-1">실제 승률 (판수)</span>
+                                                    <span className="text-lg font-bold text-gray-700">
+                                                        {brawler.winRate}% ({brawler.plays}전)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-gray-500 font-bold text-xl mt-10 bg-white px-8 py-4 rounded-full shadow-md">
+                            이 맵은 아직 누적된 데이터가 없어!
+                        </div>
+                    )}
+                </div>
+            )}
+        </main>
+    );
+}

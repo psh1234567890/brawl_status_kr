@@ -597,7 +597,7 @@ export default function Home() {
                 </span>
               </div>
               <div className="flex justify-between bg-purple-50 border-l-4 border-purple-500 p-5 rounded-r-xl shadow-sm col-span-1 md:col-span-2">
-                <span>⏱️ 찐 예상 플레이 타임:</span>
+                <span>⏱️ 예상 플레이 타임:</span>
                 <span className="font-black text-purple-700 text-xl">
                   약 {playTotalHours}시간 {playMinutes}분
                 </span>
@@ -625,7 +625,7 @@ export default function Home() {
                 </span>
               </div>
               <div className="flex justify-between bg-pink-50 border-l-4 border-pink-500 p-5 rounded-r-xl shadow-sm">
-                <span>🎖️ 역대 최고 랭크:</span>
+                <span>🎖️ 역대 최고 경쟁전 랭크:</span>
                 <span className="font-black text-pink-700 text-xl">
                   {playerData.highestAllTimeRankedRankName
                     ? (rankDict[playerData.highestAllTimeRankedRankName]
@@ -638,7 +638,7 @@ export default function Home() {
                 </span>
               </div>
               <div className="flex justify-between bg-pink-50 border-l-4 border-pink-500 p-5 rounded-r-xl shadow-sm">
-                <span>🔥 현재 랭크:</span>
+                <span>🔥 현재 경쟁전 랭크:</span>
                 <span className="font-black text-pink-700 text-xl">
                   {playerData.rankedRankName
                     ? (rankDict[playerData.rankedRankName]
@@ -1278,6 +1278,38 @@ export default function Home() {
           </div>
         </div>
       ) : null}
+      {/* 화면 맨 아래에 추가할 푸터(Footer) 영역 */}
+      <footer className="w-full max-w-5xl mt-20 pb-10 border-t border-indigo-100 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-500 font-bold text-sm">
+        <div>
+          <p>© 2026 Brawl Stars Analytics. All rights reserved.</p>
+          <p className="text-xs text-gray-400 font-medium mt-1">
+            Brawl Stars Korean Language profile analysis Site
+          </p>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <a
+            href="https://github.com/psh1234567890/brawl_status_kr" // 기장님 깃허브 주소!
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors group"
+          >
+            {/* 깃허브 오리지널 SVG 아이콘 */}
+            <svg
+              className="w-6 h-6 fill-current"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span className="group-hover:underline">GitHub Repository</span>
+          </a>
+        </div>
+      </footer>
     </main>
   );
 }

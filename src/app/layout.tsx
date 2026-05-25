@@ -2,18 +2,19 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const geistSans = Geist(
+{
+    variable: "--font-geist-sans",
+    subsets: ["latin"]
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const geistMono = Geist_Mono(
+{
+    variable: "--font-geist-mono",
+    subsets: ["latin"]
 });
 
-import type { Metadata } from "next";
-
+// ✨ 중복 없이 깔끔하게 하나만 배치된 메타데이터!
 export const metadata: Metadata = 
 {
     title: "브롤스타즈 전적 검색 - Analytics",
@@ -23,24 +24,20 @@ export const metadata: Metadata =
     {
         title: "브롤스타즈 전적 검색 - Analytics",
         description: "최근 25전 분석부터 빅데이터 누적 승률까지 완벽하게 분석해 드립니다.",
-        url: "https://brawl-status-kr.vercel.app", // 기장님 Vercel 주소!
+        url: "https://brawl-status-kr.vercel.app",
         siteName: "Brawl Analytics",
         locale: "ko_KR",
         type: "website"
     }
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
-    </html>
-  );
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode; }>) 
+{
+    return (
+        <html lang="ko">
+            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+                {children}
+            </body>
+        </html>
+    );
 }

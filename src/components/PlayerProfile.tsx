@@ -145,7 +145,7 @@ export default function PlayerProfile({
                     <span className="font-black text-orange-700 text-xl">
                         {playerData.isQualifiedFromChampionshipChallenge
                             ? "통과 🎉"
-                            : "미통과"}
+                            : "미통과(가장 최근)"}
                     </span>
                 </div>
             </div>

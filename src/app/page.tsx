@@ -447,7 +447,7 @@ export default function Home()
                             setSelectedBattle={setSelectedBattle}
                         />
                     ) : null}
-                    
+
                     <BrawlerList 
                         playerData={playerData} 
                         setSelectedBrawler={setSelectedBrawler} 
@@ -1021,6 +1021,14 @@ export default function Home()
                         <span className="group-hover:underline">GitHub Repository</span>
                     </a>
                 </div>
+            </footer>
+            {/* ✨ 여기에 공지사항(Footer) 추가! */}
+            <footer className="mt-16 pb-8 text-center text-gray-400 font-bold w-full">
+                <p>Brawl Analytics는 지속적으로 업데이트될 예정입니다.</p>
+                <p className="text-sm mt-2 text-gray-300">
+                    버그 제보 및 기능 건의 환영 🙌
+                    seunghunbag76@gmail.com
+                </p>
             </footer>
         </main>
     );

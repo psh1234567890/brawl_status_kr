@@ -2,139 +2,11 @@
 
 import { useState, useEffect } from "react";
 
-const mapDict: any = 
-{
-    "Hard Rock Mine": "암석 광산"
-};
-
-const rankDict: any = 
-{
-};
-
-const modeDict: any = 
-{
-    brawlBall: "브롤 볼",
-    gemGrab: "젬 그랩",
-    soloShowdown: "솔로 쇼다운",
-    duoShowdown: "듀오 쇼다운",
-    heist: "하이스트",
-    bounty: "바운티",
-    hotZone: "핫 존",
-    knockout: "녹아웃",
-    wipeout: "와이프아웃",
-    duels: "듀얼",
-    trioShowdown: "트리오 쇼다운"
-};
-
-const brawlerDict: any = 
-{
-    SHELLY: "쉘리",
-    NITA: "니타",
-    COLT: "콜트",
-    BULL: "불",
-    BROCK: "브록",
-    "EL PRIMO": "엘 프리모",
-    BARLEY: "발리",
-    POCO: "포코",
-    ROSA: "로사",
-    JESSIE: "제시",
-    DYNAMIKE: "다이너마이크",
-    TICK: "틱",
-    "8-BIT": "8비트",
-    RICO: "리코",
-    DARRYL: "대릴",
-    PENNY: "페니",
-    CARL: "칼",
-    JACKY: "재키",
-    PIPER: "파이퍼",
-    PAM: "팸",
-    FRANK: "프랭크",
-    BIBI: "비비",
-    BEA: "비",
-    NANI: "나니",
-    EDGAR: "에드거",
-    GRIFF: "그리프",
-    GROM: "그롬",
-    MORTIS: "모티스",
-    TARA: "타라",
-    GENE: "진",
-    MAX: "맥스",
-    "MR. P": "미스터 P",
-    SPROUT: "스프라우트",
-    BYRON: "바이런",
-    SQUEAK: "스퀴크",
-    SPIKE: "스파이크",
-    CROW: "크로우",
-    LEON: "레온",
-    SANDY: "샌디",
-    AMBER: "앰버",
-    MEG: "메그",
-    SURGE: "서지",
-    COLETTE: "콜레트",
-    LOU: "루",
-    RUFFS: "러프스",
-    BELLE: "벨",
-    BUZZ: "버즈",
-    ASH: "애쉬",
-    LOLA: "롤라",
-    FANG: "팽",
-    EVE: "이브",
-    JANET: "자넷",
-    OTIS: "오티스",
-    SAM: "샘",
-    BUSTER: "버스터",
-    MANDY: "맨디",
-    "R-T": "R-T",
-    WILLOW: "윌로우",
-    MAISIE: "메이지",
-    HANK: "행크",
-    CORDELIUS: "코델리우스",
-    DOUG: "더그",
-    PEARL: "펄",
-    CHUCK: "척",
-    CHARLIE: "찰리",
-    MICO: "미코",
-    KIT: "키트",
-    "LARRY & LAWRIE": "래리 & 로리",
-    MELODIE: "멜로디",
-    ANGELO: "안젤로",
-    LILY: "릴리",
-    DRACO: "드라코",
-    BERRY: "베리",
-    CLANCY: "클랜시",
-    MOE: "모",
-    KENJI: "켄지",
-    JUJU: "주주",
-    SHADE: "셰이드",
-    GALE: "게일",
-    CHESTER: "체스터",
-    BO: "보",
-    EMZ: "엠즈",
-    STU: "스튜",
-    DEMIAN: "데미안",
-    DAMIAN: "데미안",
-    LUMI: "루미",
-    "STARR NOVA": "스타 노바",
-    BOLT: "볼트",
-    PIERCE: "피어스",
-    MINA: "미나",
-    MEEPLE: "미플",
-    ZIGGY: "지기",
-    OLLIE: "올리",
-    GLOWY: "글로이",
-    GLOWBERT: "글로버트",
-    TRUNK: "트렁크",
-    ALLI: "알리",
-    FINX: "핑스",
-    "JAE-YONG": "재용",
-    GIGI: "지지",
-    KAZE: "카제",
-    NAJIA: "나지아",
-    SIRIUS: "시리우스",
-    BONNIE: "보니",
-    GRAY: "그레이",
-    GUS: "거스"
-};
+import { mapDict, rankDict, modeDict, brawlerDict } from "../constants/brawl";
+import { checkIsRanked, getBattleResultInfo } from "../utils/brawlHelpers";
+import PlayerProfile from "../components/PlayerProfile";
+import BattleLogList from "../components/BattleLogList";
+import BrawlerList from "../components/BrawlerList";
 
 export default function Home() 
 {
@@ -289,130 +161,9 @@ export default function Home()
         }
     }
 
-    const checkIsRanked = (match: any) => 
-    {
-        let isRanked = false;
-        if (match.battle.type) 
-        {
-            if (match.battle.type === "soloRanked") 
-            {
-                isRanked = true;
-            } 
-            else 
-            {
-                if (match.battle.type === "teamRanked")
-                {
-                    isRanked = true;
-                }
-            }
-        }
-        return isRanked;
-    };
+    
 
-    const getBattleResultInfo = (match: any) => 
-    {
-        let isWin = false;
-        let isDraw = false;
-        let isLoss = false;
-
-        let resultText = "무승부";
-        let resultColor = "text-gray-500";
-        let bgColor = "bg-white border-gray-400";
-
-        if (match.battle.result) 
-        {
-            if (match.battle.result === "victory") 
-            {
-                isWin = true;
-            } 
-            else 
-            {
-                if (match.battle.result === "defeat")
-                {
-                    isLoss = true;
-                }
-                else
-                {
-                    isDraw = true;
-                }
-            }
-        }
-
-        if (match.event.mode === "soloShowdown") 
-        {
-            if (match.battle.rank) 
-            {
-                if (match.battle.rank <= 4) 
-                {
-                    isWin = true;
-                    isLoss = false;
-                    isDraw = false;
-                } 
-                else 
-                {
-                    isLoss = true;
-                    isWin = false;
-                    isDraw = false;
-                }
-            }
-        }
-
-        if (match.event.mode === "duoShowdown") 
-        {
-            if (match.battle.rank) 
-            {
-                if (match.battle.rank <= 2) 
-                {
-                    isWin = true;
-                    isLoss = false;
-                    isDraw = false;
-                } 
-                else 
-                {
-                    isLoss = true;
-                    isWin = false;
-                    isDraw = false;
-                }
-            }
-        }
-
-        if (match.event.mode === "trioShowdown") 
-        {
-            if (match.battle.rank) 
-            {
-                if (match.battle.rank <= 2) 
-                {
-                    isWin = true;
-                    isLoss = false;
-                    isDraw = false;
-                } 
-                else 
-                {
-                    isLoss = true;
-                    isWin = false;
-                    isDraw = false;
-                }
-            }
-        }
-
-        if (isWin) 
-        {
-            resultText = "승리";
-            resultColor = "text-blue-500";
-            bgColor = "bg-white border-blue-500";
-        } 
-        else 
-        {
-            if (isLoss)
-            {
-                resultText = "패배";
-                resultColor = "text-red-500";
-                bgColor = "bg-white border-red-500";
-            }
-        }
-
-        return { resultText, resultColor, bgColor, isWin, isLoss, isDraw };
-    };
+    
 
     let recentWins = 0;
     let recentDefeats = 0;
@@ -676,300 +427,32 @@ export default function Home()
 
             {playerData !== null ? (
                 <div className="flex flex-col items-center w-full max-w-5xl animate-fade-in-up mt-8">
-                    <div className="bg-white/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full text-black border border-white mb-10 transition-transform hover:-translate-y-1">
-                        <div className="flex flex-col items-center border-b-2 border-gray-100 pb-8 mb-8">
-                            <div className="flex items-center gap-4 mb-2">
-                                {playerData.icon ? (
-                                    <img
-                                        src={`https://cdn.brawlify.com/profile/${playerData.icon.id}.png`}
-                                        alt="profile icon"
-                                        className="w-16 h-16 rounded-full shadow-md border-2 border-indigo-200"
-                                        onError={(e) => 
-                                        {
-                                            (e.target as HTMLImageElement).style.display = "none";
-                                        }}
-                                    />
-                                ) : null}
-                                <h2
-                                    className="text-5xl font-black drop-shadow-sm"
-                                    style={{ color: nameColorStr }}
-                                >
-                                    {playerData.name}
-                                </h2>
-                            </div>
-
-                            {streakCount > 0 ? (
-                                <div className="mt-4 flex items-center bg-orange-100 border border-orange-300 px-6 py-2 rounded-full shadow-sm animate-pulse">
-                                    <span className="text-orange-600 font-black text-lg">
-                                        🔥 최근 {streakCount}일 연속 플레이 중!
-                                    </span>
-                                </div>
-                            ) : null}
-
-                            {playerData.club ? (
-                                <div className="mt-4 flex items-center bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-2 rounded-full shadow-md">
-                                    <span className="text-white font-bold text-lg">
-                                        🛡️ 소속 클럽: {playerData.club.name}
-                                    </span>
-                                </div>
-                            ) : (
-                                <div className="mt-4 flex items-center bg-gray-200 px-6 py-2 rounded-full shadow-inner">
-                                    <span className="text-gray-600 font-bold text-lg">
-                                        소속 클럽 없음
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg font-medium">
-                            <div className="flex justify-between bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-xl shadow-sm">
-                                <span>🏆 현재 트로피:</span>
-                                <span className="font-black text-yellow-600 text-xl">
-                                    {playerData.trophies}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-gray-50 border-l-4 border-gray-400 p-5 rounded-r-xl shadow-sm">
-                                <span>⭐ 최고 트로피:</span>
-                                <span className="font-black text-gray-700 text-xl">
-                                    {playerData.highestTrophies}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-purple-50 border-l-4 border-purple-500 p-5 rounded-r-xl shadow-sm col-span-1 md:col-span-2">
-                                <span>⏱️ 예상 플레이 타임:</span>
-                                <span className="font-black text-purple-700 text-xl">
-                                    약 {playTotalHours}시간 {playMinutes}분
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-gray-50 p-5 rounded-xl shadow-sm">
-                                <span>📈 경험치 레벨:</span>
-                                <span className="font-bold text-xl">{playerData.expLevel}</span>
-                            </div>
-                            <div className="flex justify-between bg-gray-50 p-5 rounded-xl shadow-sm">
-                                <span>⚔️ 3v3 승리:</span>
-                                <span className="font-bold text-xl">
-                                    {playerData["3vs3Victories"]}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-blue-50 border-l-4 border-blue-400 p-5 rounded-r-xl shadow-sm">
-                                <span>😈 솔로 쇼다운 승리:</span>
-                                <span className="font-black text-blue-700 text-xl">
-                                    {playerData.soloVictories}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-green-50 border-l-4 border-green-400 p-5 rounded-r-xl shadow-sm">
-                                <span>🤝 듀오 쇼다운 승리:</span>
-                                <span className="font-black text-green-700 text-xl">
-                                    {playerData.duoVictories}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-pink-50 border-l-4 border-pink-500 p-5 rounded-r-xl shadow-sm">
-                                <span>🎖️ 역대 최고 경쟁전 랭크:</span>
-                                <span className="font-black text-pink-700 text-xl">
-                                    {playerData.highestAllTimeRankedRankName
-                                        ? (rankDict[playerData.highestAllTimeRankedRankName]
-                                            ? rankDict[playerData.highestAllTimeRankedRankName]
-                                            : playerData.highestAllTimeRankedRankName) +
-                                        " (" +
-                                        playerData.highestAllTimeRankedElo +
-                                        "점)"
-                                        : "기록 없음"}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-pink-50 border-l-4 border-pink-500 p-5 rounded-r-xl shadow-sm">
-                                <span>🔥 현재 경쟁전 랭크:</span>
-                                <span className="font-black text-pink-700 text-xl">
-                                    {playerData.rankedRankName
-                                        ? (rankDict[playerData.rankedRankName]
-                                            ? rankDict[playerData.rankedRankName]
-                                            : playerData.rankedRankName) +
-                                        " (" +
-                                        playerData.rankedElo +
-                                        "점)"
-                                        : "기록 없음"}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-indigo-50 border-l-4 border-indigo-400 p-5 rounded-r-xl shadow-sm">
-                                <span>🤖 로보 럼블 최고 기록:</span>
-                                <span className="font-black text-indigo-700 text-xl">
-                                    {playerData.bestRoboRumbleTime}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-teal-50 border-l-4 border-teal-400 p-5 rounded-r-xl shadow-sm">
-                                <span>🦖 빅 브롤러 최고 기록:</span>
-                                <span className="font-black text-teal-700 text-xl">
-                                    {playerData.bestTimeAsBigBrawler}
-                                </span>
-                            </div>
-                            <div className="flex justify-between bg-orange-50 border-l-4 border-orange-400 p-5 rounded-r-xl shadow-sm md:col-span-2">
-                                <span>🏆 챔피언십 챌린지 예선:</span>
-                                <span className="font-black text-orange-700 text-xl">
-                                    {playerData.isQualifiedFromChampionshipChallenge
-                                        ? "통과 🎉"
-                                        : "미통과"}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    <PlayerProfile 
+                        playerData={playerData}
+                        nameColorStr={nameColorStr}
+                        streakCount={streakCount}
+                        playTotalHours={playTotalHours}
+                        playMinutes={playMinutes}
+                    />
 
                     {battleLog !== null ? (
-                        <div className="w-full mb-12">
-                            <h3 className="text-2xl font-black mb-6 text-indigo-900 border-l-8 border-indigo-500 pl-4">
-                                📊 전체 기록 분석 ({battleLog.items.length}전)
-                            </h3>
-                            <div className="bg-white p-8 rounded-3xl shadow-xl w-full border border-gray-100 mb-10 flex flex-col md:flex-row justify-around items-center gap-6 transition-transform hover:-translate-y-1">
-                                <div className="text-center">
-                                    <span className="block text-gray-500 font-bold mb-2 text-lg">
-                                        최근 승률
-                                    </span>
-                                    <span className="text-5xl font-black text-indigo-600 drop-shadow-sm">
-                                        {recentWinRate}%
-                                    </span>
-                                    <span className="block text-md text-gray-400 mt-3 font-bold bg-gray-100 px-3 py-1 rounded-full">
-                                        {totalRecent}전 {recentWins}승 {recentDefeats}패
-                                    </span>
-                                </div>
-                                <div className="text-center border-t-2 md:border-t-0 md:border-l-2 border-gray-200 pt-6 md:pt-0 md:pl-10">
-                                    <span className="block text-gray-500 font-bold mb-2 text-lg">
-                                        가장 잘 나가는 모드
-                                    </span>
-                                    <span className="text-4xl font-black text-gray-800">
-                                        {modeDict[bestMode] ? modeDict[bestMode] : bestMode}
-                                    </span>
-                                    <span className="block text-md text-indigo-500 mt-3 font-bold">
-                                        이 모드에서만 {maxModeWins}승 달성! 🔥
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-between items-end mb-6 border-l-8 border-indigo-500 pl-4">
-                                <h3 className="text-2xl font-black text-indigo-900">
-                                    ⚔️ 모든 전투 기록 (최대 25게임)
-                                </h3>
-                                <span className="text-sm text-gray-500 font-bold bg-gray-200 px-3 py-1 rounded-full">
-                                    👆 클릭해서 상세표 보기
-                                </span>
-                            </div>
-
-                            <div className="flex flex-col gap-4 mb-10 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                                {battleLog.items.map((match: any, index: number) => 
-                                {
-                                    const info = getBattleResultInfo(match);
-                                    const isRanked = checkIsRanked(match);
-
-                                    return (
-                                        <div
-                                            key={index}
-                                            onClick={() => setSelectedBattle(match)}
-                                            className={`p-6 rounded-2xl shadow-md border-l-8 flex justify-between items-center transition-transform hover:-translate-x-1 cursor-pointer ${info.bgColor}`}
-                                        >
-                                            <div className="flex flex-col">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    {isRanked ? (
-                                                        <span className="text-[10px] font-black text-white bg-red-500 px-2 py-0.5 rounded-full">
-                                                            🔴 경쟁전
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-[10px] font-black text-white bg-green-500 px-2 py-0.5 rounded-full">
-                                                            🟢 일반 모드
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <span className="font-black text-gray-800 text-xl mb-1">
-                                                    {modeDict[match.event.mode]
-                                                        ? modeDict[match.event.mode]
-                                                        : match.event.mode}{" "}
-                                                    -{" "}
-                                                    {mapDict[match.event.map]
-                                                        ? mapDict[match.event.map]
-                                                        : match.event.map}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                {match.battle.trophyChange ? (
-                                                    isRanked ? null : (
-                                                        <span
-                                                            className={`text-xl font-black ${match.battle.trophyChange > 0 ? "text-yellow-500" : "text-red-500"}`}
-                                                        >
-                                                            {match.battle.trophyChange > 0 ? "+" : ""}
-                                                            {match.battle.trophyChange}🏆
-                                                        </span>
-                                                    )
-                                                ) : null}
-                                                <div
-                                                    className={`text-3xl font-black ${info.resultColor} drop-shadow-sm`}
-                                                >
-                                                    {info.resultText}
-                                                    {match.battle.rank ? (
-                                                        <span className="text-lg ml-1">
-                                                            ({match.battle.rank}등)
-                                                        </span>
-                                                    ) : null}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                        <BattleLogList 
+                            battleLog={battleLog}
+                            recentWinRate={recentWinRate}
+                            totalRecent={totalRecent}
+                            recentWins={recentWins}
+                            recentDefeats={recentDefeats}
+                            bestMode={bestMode}
+                            maxModeWins={maxModeWins}
+                            setSelectedBattle={setSelectedBattle}
+                        />
                     ) : null}
+                    
+                    <BrawlerList 
+                        playerData={playerData} 
+                        setSelectedBrawler={setSelectedBrawler} 
+                    />
 
-                    <div className="w-full">
-                        <div className="flex justify-between items-end mb-6 border-l-8 border-indigo-500 pl-4">
-                            <h3 className="text-2xl font-black text-indigo-900">
-                                보유 브롤러 상세 정보 ({playerData.brawlers.length}개)
-                            </h3>
-                            <span className="text-sm text-gray-500 font-bold bg-gray-200 px-3 py-1 rounded-full">
-                                👆 클릭해서 아이템 확인
-                            </span>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                            {[...playerData.brawlers]
-                                .sort((a: any, b: any) => 
-                                {
-                                    return b.trophies - a.trophies;
-                                })
-                                .map((brawler: any) => 
-                                {
-                                    return (
-                                        <div
-                                            key={brawler.id}
-                                            onClick={() => setSelectedBrawler(brawler)}
-                                            className="bg-white p-5 rounded-2xl shadow-md border border-gray-100 flex flex-col items-center transition-transform hover:-translate-y-2 hover:shadow-xl cursor-pointer ring-2 ring-transparent hover:ring-indigo-300"
-                                        >
-                                            <img
-                                                src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
-                                                alt={brawler.name}
-                                                className="w-20 h-20 mb-3 rounded-xl shadow-sm"
-                                                onError={(e) => 
-                                                {
-                                                    (e.target as HTMLImageElement).style.display = "none";
-                                                }}
-                                            />
-                                            <span className="font-black text-gray-800 text-lg mb-1">
-                                                {brawlerDict[brawler.name]
-                                                    ? brawlerDict[brawler.name]
-                                                    : brawler.name}
-                                            </span>
-                                            <span className="text-xs text-white bg-indigo-500 px-2 py-1 rounded-md font-bold mb-3">
-                                                파워 {brawler.power}
-                                            </span>
-                                            <div className="flex gap-2 text-xs text-gray-500 mb-3 font-bold bg-gray-50 w-full justify-center py-2 rounded-lg">
-                                                <span>
-                                                    🟢 {brawler.gadgets ? brawler.gadgets.length : 0}
-                                                </span>
-                                                <span>
-                                                    ⭐{" "}
-                                                    {brawler.starPowers ? brawler.starPowers.length : 0}
-                                                </span>
-                                            </div>
-                                            <span className="text-yellow-600 font-black text-xl">
-                                                🏆 {brawler.trophies}
-                                            </span>
-                                        </div>
-                                    );
-                                })}
-                        </div>
-                    </div>
                 </div>
             ) : null}
 
@@ -1019,7 +502,7 @@ export default function Home()
                                                         <img
                                                             src={`https://cdn.brawlify.com/gadgets/regular/${g.id}.png`}
                                                             alt={g.name}
-                                                            className="w-8 h-8 rounded-md bg-green-50"
+                                                               className="w-8 h-8 rounded-md bg-green-50"
                                                             onError={(e) => 
                                                             {
                                                                 (e.target as HTMLImageElement).style.display = "none";

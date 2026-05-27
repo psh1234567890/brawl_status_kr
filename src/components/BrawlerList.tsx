@@ -59,9 +59,16 @@ export default function BrawlerList({ playerData, setSelectedBrawler }: BrawlerL
                                         {brawler.starPowers ? brawler.starPowers.length : 0}
                                     </span>
                                 </div>
-                                <span className="text-yellow-600 font-black text-xl">
-                                    🏆 {brawler.trophies}
-                                </span>
+                                
+                                {/* ✨ 바로 이 부분이 새롭게 추가된 트로피/최고기록 UI 상자야! */}
+                                <div className="flex flex-col items-center bg-yellow-50 w-full rounded-lg py-2 border border-yellow-100 mt-auto">
+                                    <span className="text-yellow-600 font-black text-xl">
+                                        🏆 {brawler.trophies}
+                                    </span>
+                                    <span className="text-gray-400 font-bold text-xs mt-1">
+                                        최고 기록: {brawler.highestTrophies}
+                                    </span>
+                                </div>
                             </div>
                         );
                     })}

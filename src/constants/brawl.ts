@@ -366,7 +366,7 @@ export const brawlerDict: any =
     GLOWBERT: "글로버트",
     TRUNK: "트렁크",
     ALLI: "알리",
-    FINX: "핑스",
+    FINX: "핑크스",
     "JAE-YONG": "재용",
     GIGI: "지지",
     KAZE: "카제",

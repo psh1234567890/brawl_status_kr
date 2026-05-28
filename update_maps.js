@@ -1,4 +1,10 @@
-export const mapDict: any = 
+const fs = require('fs');
+const path = require('path');
+
+const filePath = path.join(__dirname, 'src', 'constants', 'brawl.ts');
+let content = fs.readFileSync(filePath, 'utf-8');
+
+const mapDictStr = `export const mapDict: any = 
 {
     // 젬 그랩 (Gem Grab)
     "Hard Rock Mine": "암석 광산",
@@ -225,154 +231,35 @@ export const mapToModeDict: any =
     "The Great Open": "와이프아웃",
     "Pain in the Grass": "기타"
 };
+`;
 
-export const rankDict: any = 
-{
-    "BRONZE I": "브론즈 I",
-    "BRONZE II": "브론즈 II",
-    "BRONZE III": "브론즈 III",
-    "SILVER I": "실버 I",
-    "SILVER II": "실버 II",
-    "SILVER III": "실버 III",
-    "GOLD I": "골드 I",
-    "GOLD II": "골드 II",
-    "GOLD III": "골드 III",
-    "DIAMOND I": "다이아몬드 I",
-    "DIAMOND II": "다이아몬드 II",
-    "DIAMOND III": "다이아몬드 III",
-    "MYTHIC I": "신화 I",
-    "MYTHIC II": "신화 II",
-    "MYTHIC III": "신화 III",
-    "LEGENDARY I": "전설 I",
-    "LEGENDARY II": "전설 II",
-    "LEGENDARY III": "전설 III",
-    "MASTERS I": "마스터 I",
-    "MASTERS II": "마스터 II",
-    "MASTERS III": "마스터 III",
-    "PRO": "프로",
-};
+// Extract existing file string starting from 'export const rankDict: any ='
+const startIndex = content.indexOf('export const rankDict: any =');
+if(startIndex !== -1) {
+    const newContent = mapDictStr + "\n" + content.substring(startIndex);
+    fs.writeFileSync(filePath, newContent, 'utf-8');
+    console.log('Successfully updated brawl.ts');
+} else {
+    console.error('Could not find rankDict to replace.');
+}
 
-export const modeDict: any = 
-{
-    brawlBall: "브롤 볼",
-    gemGrab: "젬 그랩",
-    soloShowdown: "솔로 쇼다운",
-    duoShowdown: "듀오 쇼다운",
-    heist: "하이스트",
-    bounty: "바운티",
-    hotZone: "핫 존",
-    knockout: "녹아웃",
-    wipeout: "와이프아웃",
-    duels: "듀얼",
-    trioShowdown: "트리오 쇼다운"
-};
+// Now let's update src/app/meta/page.tsx to remove its hardcoded maps and import from brawl.ts
+const metaPath = path.join(__dirname, 'src', 'app', 'meta', 'page.tsx');
+let metaContent = fs.readFileSync(metaPath, 'utf-8');
 
-export const brawlerDict: any = 
-{
-    SHELLY: "쉘리",
-    NITA: "니타",
-    COLT: "콜트",
-    BULL: "불",
-    BROCK: "브록",
-    "EL PRIMO": "엘 프리모",
-    BARLEY: "발리",
-    POCO: "포코",
-    ROSA: "로사",
-    JESSIE: "제시",
-    DYNAMIKE: "다이너마이크",
-    TICK: "틱",
-    "8-BIT": "8비트",
-    RICO: "리코",
-    DARRYL: "대릴",
-    PENNY: "페니",
-    CARL: "칼",
-    JACKY: "재키",
-    PIPER: "파이퍼",
-    PAM: "팸",
-    FRANK: "프랭크",
-    BIBI: "비비",
-    BEA: "비",
-    NANI: "나니",
-    EDGAR: "에드거",
-    GRIFF: "그리프",
-    GROM: "그롬",
-    MORTIS: "모티스",
-    TARA: "타라",
-    GENE: "진",
-    MAX: "맥스",
-    "MR. P": "미스터 P",
-    SPROUT: "스프라우트",
-    BYRON: "바이런",
-    SQUEAK: "스퀴크",
-    SPIKE: "스파이크",
-    CROW: "크로우",
-    LEON: "레온",
-    SANDY: "샌디",
-    AMBER: "앰버",
-    MEG: "메그",
-    SURGE: "서지",
-    COLETTE: "콜레트",
-    LOU: "루",
-    RUFFS: "러프스",
-    BELLE: "벨",
-    BUZZ: "버즈",
-    ASH: "애쉬",
-    LOLA: "롤라",
-    FANG: "팽",
-    EVE: "이브",
-    JANET: "자넷",
-    OTIS: "오티스",
-    SAM: "샘",
-    BUSTER: "버스터",
-    MANDY: "맨디",
-    "R-T": "R-T",
-    WILLOW: "윌로우",
-    MAISIE: "메이지",
-    HANK: "행크",
-    CORDELIUS: "코델리우스",
-    DOUG: "더그",
-    PEARL: "펄",
-    CHUCK: "척",
-    CHARLIE: "찰리",
-    MICO: "미코",
-    KIT: "키트",
-    "LARRY & LAWRIE": "래리 & 로리",
-    MELODIE: "멜로디",
-    ANGELO: "안젤로",
-    LILY: "릴리",
-    DRACO: "드라코",
-    BERRY: "베리",
-    CLANCY: "클랜시",
-    MOE: "모",
-    KENJI: "켄지",
-    JUJU: "주주",
-    SHADE: "셰이드",
-    GALE: "게일",
-    CHESTER: "체스터",
-    BO: "보",
-    EMZ: "엠즈",
-    STU: "스튜",
-    DEMIAN: "데미안",
-    DAMIAN: "데미안",
-    LUMI: "루미",
-    "STARR NOVA": "스타 노바",
-    BOLT: "볼트",
-    PIERCE: "피어스",
-    MINA: "미나",
-    MEEPLE: "미플",
-    ZIGGY: "지기",
-    OLLIE: "올리",
-    GLOWY: "글로이",
-    GLOWBERT: "글로버트",
-    TRUNK: "트렁크",
-    ALLI: "알리",
-    FINX: "핑스",
-    "JAE-YONG": "재용",
-    GIGI: "지지",
-    KAZE: "카제",
-    NAJIA: "나지아",
-    SIRIUS: "시리우스",
-    BONNIE: "보니",
-    GRAY: "그레이",
-    GUS: "거스"
-};
+// The maps in meta/page.tsx start at line 5 and end before 'const brawlerDict: any ='
+const metaBrawlerStartIndex = metaContent.indexOf('const brawlerDict: any =');
+const importString = 'import { mapDict, mapToModeDict } from "../../constants/brawl";\n\n';
+
+if (metaBrawlerStartIndex !== -1) {
+    // find start of mapDict
+    const startMapDictIdx = metaContent.indexOf('const mapDict: any =');
+    
+    if(startMapDictIdx !== -1) {
+        let finalMetaContent = metaContent.substring(0, startMapDictIdx) + importString + metaContent.substring(metaBrawlerStartIndex);
+        fs.writeFileSync(metaPath, finalMetaContent, 'utf-8');
+        console.log('Successfully updated meta/page.tsx');
+    } else {
+        console.error('Could not find mapDict in meta/page.tsx');
+    }
+}

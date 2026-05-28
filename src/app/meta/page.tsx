@@ -3,72 +3,7 @@
 import { useState, useEffect } from "react";
 
 // 1. 맵 이름 한국어 번역 사전
-const mapDict: any = 
-{
-    "Hard Rock Mine": "암석 광산",
-    "Minecart Madness": "광산 열차",
-    "Sneaky Fields": "스니키 필드",
-    "Triple Dribble": "트리플 드리블",
-    "Pit Stop": "피트 스톱",
-    "Bridge Too Far": "브릿지 투 파",
-    "Shooting Star": "슈팅 스타",
-    "Snake Prairie": "뱀의 초원",
-    "Dueling Beetles": "불타는 비틀즈",
-    "Ring of Fire": "불의 고리",
-    "Goldarm Gulch": "골드암 갱도",
-    "Flaring Phoenix": "불타는 피닉스",
-    "Out in the Open": "아웃 인 더 오픈",
-    "Belle's Rock": "벨의 바위",
-    "Safe Zone": "안전 지대",
-    "Kaboom Canyon": "카붐 캐년",
-    "Double Swoosh": "이중 곡선",
-    "Undermine": "언더마인",
-    "Center Stage": "센터 스테이지",
-    "Super Beach": "슈퍼 해변",
-    "Canal Grande": "대운하",
-    "Excel": "엑셀",
-    "Parallel Plays": "평행선",
-    "Split": "분할",
-    "Feast or Famine": "모 아니면 도",
-    "Skull Creek": "해골 천천"
-};
-
-// 2. ✨ [핵심 해결책] 외부 API를 믿지 않고, 확실한 맵-모드 분류 사전을 하드코딩으로 박아버림!
-const mapToModeDict: any = 
-{
-    "Hard Rock Mine": "젬 그랩",
-    "Minecart Madness": "젬 그랩",
-    "Double Swoosh": "젬 그랩",
-    "Undermine": "젬 그랩",
-    
-    "Sneaky Fields": "브롤 볼",
-    "Triple Dribble": "브롤 볼",
-    "Center Stage": "브롤 볼",
-    "Super Beach": "브롤 볼",
-    
-    "Pit Stop": "하이스트",
-    "Bridge Too Far": "하이스트",
-    "Safe Zone": "하이스트",
-    "Kaboom Canyon": "하이스트",
-    
-    "Shooting Star": "바운티",
-    "Snake Prairie": "바운티",
-    "Canal Grande": "바운티",
-    "Excel": "바운티",
-    
-    "Dueling Beetles": "핫 존",
-    "Ring of Fire": "핫 존",
-    "Parallel Plays": "핫 존",
-    "Split": "핫 존",
-    
-    "Goldarm Gulch": "녹아웃",
-    "Flaring Phoenix": "녹아웃",
-    "Out in the Open": "녹아웃",
-    "Belle's Rock": "녹아웃",
-    
-    "Feast or Famine": "쇼다운",
-    "Skull Creek": "쇼다운"
-};
+import { mapDict, mapToModeDict } from "../../constants/brawl";
 
 const brawlerDict: any = 
 {

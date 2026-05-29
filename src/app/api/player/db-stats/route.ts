@@ -1,76 +1,60 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../db"; 
+import { db } from "../../../../db";
 import { battleLogs } from "../../../../db/schema";
-import { eq, and } from "drizzle-orm";
+import { isValidPlayerTag, normalizePlayerTag } from "../../../../utils/playerTag";
+import { inArray, sql } from "drizzle-orm";
 
-export async function GET(request: Request) 
-{
-    const { searchParams } = new URL(request.url);
-    const tag = searchParams.get("tag");
+type BrawlerStat = {
+  name: string;
+  plays: number;
+  wins: number;
+  winRate: number;
+};
 
-    if (!tag) 
-    {
-        return NextResponse.json({ error: "태그가 필요합니다." }, { status: 400 });
-    }
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const tag = searchParams.get("tag");
 
-    try 
-    {
-        // 1. 우리 DB에서 이 플레이어의 모든 기록 가져오기
-        const playerLogs = await db.select().from(battleLogs).where(eq(battleLogs.playerTag, tag));
+  if (!tag || !isValidPlayerTag(tag)) {
+    return NextResponse.json({ error: "태그가 필요합니다." }, { status: 400 });
+  }
 
-        // 2. 브롤러별로 묶어서 계산할 객체
-        const brawlerStats: any = {};
+  try {
+    const cleanTag = normalizePlayerTag(tag);
+    const tagVariants = Array.from(new Set([tag, cleanTag]));
 
-        for (let i = 0; i < playerLogs.length; i = i + 1) 
-        {
-            const log = playerLogs[i];
-            const bName = log.brawlerName;
-            const res = log.result;
+    const rows = await db
+      .select({
+        name: battleLogs.brawlerName,
+        plays: sql<number>`count(*)`,
+        wins: sql<number>`sum(case when ${battleLogs.result} = 'victory' then 1 else 0 end)`,
+      })
+      .from(battleLogs)
+      .where(inArray(battleLogs.playerTag, tagVariants))
+      .groupBy(battleLogs.brawlerName);
 
-            if (bName) 
-            {
-                if (!brawlerStats[bName]) 
-                {
-                    brawlerStats[bName] = { plays: 0, wins: 0 };
-                }
+    const resultList: BrawlerStat[] = rows
+      .map((row) => {
+        const plays = Number(row.plays);
+        const wins = Number(row.wins);
 
-                brawlerStats[bName].plays = brawlerStats[bName].plays + 1;
+        return {
+          name: row.name,
+          plays,
+          wins,
+          winRate: plays > 0 ? Math.floor((wins / plays) * 100) : 0,
+        };
+      })
+      .sort((a, b) => b.winRate - a.winRate);
 
-                if (res === "victory") 
-                {
-                    brawlerStats[bName].wins = brawlerStats[bName].wins + 1;
-                }
-            }
-        }
+    const totalGames = resultList.reduce((total, stat) => total + stat.plays, 0);
 
-        // 3. 브롤러별 승률 계산해서 배열로 변환
-        const resultList = [];
-        const bNames = Object.keys(brawlerStats);
-
-        for (let j = 0; j < bNames.length; j = j + 1) 
-        {
-            const name = bNames[j];
-            const stats = brawlerStats[name];
-            const winRate = Math.floor((stats.wins / stats.plays) * 100);
-
-            resultList.push({
-                name: name,
-                plays: stats.plays,
-                wins: stats.wins,
-                winRate: winRate
-            });
-        }
-
-        // 승률 높은 순서로 정렬
-        resultList.sort((a, b) => b.winRate - a.winRate);
-
-        return NextResponse.json({
-            totalGames: playerLogs.length,
-            brawlers: resultList
-        });
-    } 
-    catch (error) 
-    {
-        return NextResponse.json({ error: "DB 통계 계산 실패" }, { status: 500 });
-    }
+    return NextResponse.json({
+      totalGames,
+      brawlers: resultList,
+    });
+  } catch (error) {
+    console.error("Failed to calculate player DB stats:", error);
+    return NextResponse.json({ error: "DB 통계 계산 실패" }, { status: 500 });
+  }
 }

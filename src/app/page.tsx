@@ -1,12 +1,48 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useSyncExternalStore, useState } from "react";
 
-import { mapDict, rankDict, modeDict, brawlerDict } from "../constants/brawl";
+import { mapDict, modeDict, brawlerDict } from "../constants/brawl";
 import { checkIsRanked, getBattleResultInfo } from "../utils/brawlHelpers";
 import PlayerProfile from "../components/PlayerProfile";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
+
+const RECENT_TAGS_KEY = "recentTags";
+const EMPTY_RECENT_TAGS = "[]";
+const RECENT_TAGS_CHANGED_EVENT = "recentTagsChanged";
+
+function getRecentTagsSnapshot() {
+    if (typeof window === "undefined")
+    {
+        return EMPTY_RECENT_TAGS;
+    }
+
+    return window.localStorage.getItem(RECENT_TAGS_KEY) ?? EMPTY_RECENT_TAGS;
+}
+
+function subscribeRecentTags(onStoreChange: () => void) {
+    window.addEventListener("storage", onStoreChange);
+    window.addEventListener(RECENT_TAGS_CHANGED_EVENT, onStoreChange);
+
+    return () =>
+    {
+        window.removeEventListener("storage", onStoreChange);
+        window.removeEventListener(RECENT_TAGS_CHANGED_EVENT, onStoreChange);
+    };
+}
+
+function parseRecentTags(snapshot: string) {
+    try
+    {
+        const parsed = JSON.parse(snapshot);
+        return Array.isArray(parsed) ? parsed.filter((tag) => typeof tag === "string") : [];
+    }
+    catch
+    {
+        return [];
+    }
+}
 
 export default function Home() 
 {
@@ -15,20 +51,19 @@ export default function Home()
     const [battleLog, setBattleLog] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const recentSearchesSnapshot = useSyncExternalStore(
+        subscribeRecentTags,
+        getRecentTagsSnapshot,
+        () => EMPTY_RECENT_TAGS,
+    );
+    const recentSearches = useMemo(
+        () => parseRecentTags(recentSearchesSnapshot),
+        [recentSearchesSnapshot],
+    );
     
     const [dbStats, setDbStats] = useState<any>(null);
     const [selectedBrawler, setSelectedBrawler] = useState<any>(null);
     const [selectedBattle, setSelectedBattle] = useState<any>(null);
-
-    useEffect(() => 
-    {
-        const saved = localStorage.getItem("recentTags");
-        if (saved) 
-        {
-            setRecentSearches(JSON.parse(saved));
-        }
-    }, []);
 
     const handleSearch = async (searchTag?: string) => 
     {
@@ -114,8 +149,8 @@ export default function Home()
                     }
                 }
                 
-                setRecentSearches(newRecent);
-                localStorage.setItem("recentTags", JSON.stringify(newRecent));
+                localStorage.setItem(RECENT_TAGS_KEY, JSON.stringify(newRecent));
+                window.dispatchEvent(new Event(RECENT_TAGS_CHANGED_EVENT));
             }
 
             const battleResponse = await fetch(`/api/player/matches?tag=${safeTag}`);
@@ -129,7 +164,7 @@ export default function Home()
                 }
             }
         } 
-        catch (err) 
+        catch
         {
             setError("서버와 연결할 수 없습니다.");
         } 
@@ -290,11 +325,12 @@ export default function Home()
                     {
                         match.battle.players.forEach((p: any) => 
                         {
-                            const cleanP = p.tag.replace("#", "");
-                            const cleanMe = playerData.tag.replace("#", "");
+                            const cleanP = p.tag ? p.tag.replace("#", "") : "";
+                            const cleanMe = playerData.tag ? playerData.tag.replace("#", "") : "";
                             if (cleanP === cleanMe) 
                             {
-                                if (p.brawler.name === brawlerName) 
+                                const playerBrawlerName = p.brawler?.name ?? p.brawlers?.[0]?.name;
+                                if (playerBrawlerName === brawlerName) 
                                 {
                                     isMyBrawler = true;
                                 }
@@ -308,11 +344,12 @@ export default function Home()
                         {
                             team.forEach((p: any) => 
                             {
-                                const cleanP = p.tag.replace("#", "");
-                                const cleanMe = playerData.tag.replace("#", "");
+                                const cleanP = p.tag ? p.tag.replace("#", "") : "";
+                                const cleanMe = playerData.tag ? playerData.tag.replace("#", "") : "";
                                 if (cleanP === cleanMe) 
                                 {
-                                    if (p.brawler.name === brawlerName) 
+                                    const playerBrawlerName = p.brawler?.name ?? p.brawlers?.[0]?.name;
+                                    if (playerBrawlerName === brawlerName) 
                                     {
                                         isMyBrawler = true;
                                     }

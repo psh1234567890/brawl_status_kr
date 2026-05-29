@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 // 1. 맵 이름 한국어 번역 사전
 import { mapDict, mapToModeDict } from "../../constants/brawl";
@@ -298,9 +299,9 @@ export default function MetaDashboard()
                     누적 빅데이터 가중 승률 기반 알고리즘 적용
                 </p>
                 <div className="mt-6">
-                    <a href="/" className="inline-block bg-white text-indigo-600 border border-indigo-200 font-bold px-6 py-2 rounded-full hover:bg-indigo-50 transition-colors shadow-sm">
+                    <Link href="/" className="inline-block bg-white text-indigo-600 border border-indigo-200 font-bold px-6 py-2 rounded-full hover:bg-indigo-50 transition-colors shadow-sm">
                         ← 전적 검색으로 돌아가기
-                    </a>
+                    </Link>
                 </div>
             </div>
             

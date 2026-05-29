@@ -1,5 +1,3 @@
-import { mapDict, modeDict, brawlerDict } from "../constants/brawl";
-
 export const checkIsRanked = (match: any) => 
     {
         let isRanked = false;

@@ -4,7 +4,7 @@ import {
     generatedModeDict,
 } from "./generatedBrawlTranslations";
 
-export const mapDict: any = 
+export const mapDict: Record<string, string> =
 {
     // 젬 그랩 (Gem Grab)
     "Hard Rock Mine": "암석 광산",
@@ -22,7 +22,7 @@ export const mapDict: any =
     "Acute Angle": "예각",
     "Solid Center": "단단한 중심",
     "Sillhouette": "실루엣",
-    
+
     // 브롤 볼 (Brawl Ball)
     "Backyard Bowl": "뒷마당 월드컵",
     "Center Stage": "센터 스테이지",
@@ -40,7 +40,7 @@ export const mapDict: any =
     "Iron Corridors": "강철 회랑",
     "Goalkeeper's Dream": "골키퍼의 꿈",
     "Retina": "망막",
-    
+
     // 쇼다운 (Showdown)
     "Feast or Famine": "모 아니면 도",
     "Skull Creek": "해골천",
@@ -58,7 +58,7 @@ export const mapDict: any =
     "Point of View": "관점",
     "Dune Drift": "사구 드리프트",
     "Forsaken Falls": "버려진 폭포",
-    
+
     // 하이스트 (Heist)
     "Safe Zone": "안전 지대",
     "Hot Potato": "뜨거운 감자",
@@ -73,7 +73,7 @@ export const mapDict: any =
     "Cover Crowd": "커버 크라우드",
     "Splitter": "스플리터",
     "Milky Way": "은하수",
-    
+
     // 바운티 (Bounty)
     "Shooting Star": "별내림 계곡",
     "Canal Grande": "운하 협곡",
@@ -85,7 +85,7 @@ export const mapDict: any =
     "Hideout": "은신처",
     "Overgrown Oasis": "우거진 오아시스",
     "Purple Paradise": "퍼플 파라다이스",
-    
+
     // 핫 존 (Hot Zone)
     "Ring of Fire": "불의 고리",
     "Dueling Beetles": "곤충 싸움",
@@ -96,7 +96,7 @@ export const mapDict: any =
     "Triumvirate": "삼두정치",
     "Night Museum": "야간 박물관",
     "Massive Attack": "대규모 공격",
-    
+
     // 녹아웃 (Knockout)
     "Goldarm Gulch": "골드암 골짜기",
     "Flaring Phoenix": "불타는 불사조",
@@ -110,7 +110,7 @@ export const mapDict: any =
     "Four Levels": "네 개의 레벨",
     "Flowing Springs": "흐르는 샘",
     "Waters of Doom": "파멸의 물",
-    
+
     // 와이프아웃 (Wipeout)
     "Infinite Doom": "무한한 파멸",
     "Quad Damage": "쿼드 데미지",
@@ -119,7 +119,7 @@ export const mapDict: any =
     ...generatedMapDict,
 };
 
-export const mapToModeDict: any = 
+export const mapToModeDict: Record<string, string> =
 {
     // 젬 그랩
     "Hard Rock Mine": "젬 그랩",
@@ -137,7 +137,7 @@ export const mapToModeDict: any =
     "Acute Angle": "젬 그랩",
     "Solid Center": "젬 그랩",
     "Sillhouette": "젬 그랩",
-    
+
     // 브롤 볼
     "Backyard Bowl": "브롤 볼",
     "Center Stage": "브롤 볼",
@@ -155,7 +155,7 @@ export const mapToModeDict: any =
     "Iron Corridors": "브롤 볼",
     "Goalkeeper's Dream": "브롤 볼",
     "Retina": "브롤 볼",
-    
+
     // 쇼다운
     "Feast or Famine": "쇼다운",
     "Skull Creek": "쇼다운",
@@ -173,7 +173,7 @@ export const mapToModeDict: any =
     "Point of View": "쇼다운",
     "Dune Drift": "쇼다운",
     "Forsaken Falls": "쇼다운",
-    
+
     // 하이스트
     "Safe Zone": "하이스트",
     "Hot Potato": "하이스트",
@@ -188,7 +188,7 @@ export const mapToModeDict: any =
     "Cover Crowd": "하이스트",
     "Splitter": "하이스트",
     "Milky Way": "하이스트",
-    
+
     // 바운티
     "Shooting Star": "바운티",
     "Canal Grande": "바운티",
@@ -200,7 +200,7 @@ export const mapToModeDict: any =
     "Hideout": "바운티",
     "Overgrown Oasis": "바운티",
     "Purple Paradise": "바운티",
-    
+
     // 핫 존
     "Ring of Fire": "핫 존",
     "Dueling Beetles": "핫 존",
@@ -211,7 +211,7 @@ export const mapToModeDict: any =
     "Triumvirate": "핫 존",
     "Night Museum": "핫 존",
     "Massive Attack": "핫 존",
-    
+
     // 녹아웃
     "Goldarm Gulch": "녹아웃",
     "Flaring Phoenix": "녹아웃",
@@ -225,7 +225,7 @@ export const mapToModeDict: any =
     "Four Levels": "녹아웃",
     "Flowing Springs": "녹아웃",
     "Waters of Doom": "녹아웃",
-    
+
     // 와이프아웃
     "Infinite Doom": "와이프아웃",
     "Quad Damage": "와이프아웃",
@@ -234,7 +234,7 @@ export const mapToModeDict: any =
     ...generatedMapToModeDict,
 };
 
-export const rankDict: any = 
+export const rankDict: Record<string, string> =
 {
     "BRONZE I": "브론즈 I",
     "BRONZE II": "브론즈 II",
@@ -260,7 +260,7 @@ export const rankDict: any =
     "PRO": "프로",
 };
 
-export const modeDict: any = 
+export const modeDict: Record<string, string> =
 {
     brawlBall: "브롤 볼",
     gemGrab: "젬 그랩",
@@ -276,7 +276,7 @@ export const modeDict: any =
     ...generatedModeDict,
 };
 
-export const brawlerDict: any = 
+export const brawlerDict: Record<string, string> =
 {
     SHELLY: "쉘리",
     NITA: "니타",

@@ -1,432 +1,195 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
-
-// 1. 맵 이름 한국어 번역 사전
-import { mapDict, mapToModeDict } from "../../constants/brawl";
+import { useEffect, useMemo, useState } from "react";
+import BrawlImage from "../../components/BrawlImage";
+import { brawlerDict, mapDict, mapToModeDict } from "../../constants/brawl";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
 
-const brawlerDict: any = 
-{
-    SHELLY: "쉘리",
-    NITA: "니타",
-    COLT: "콜트",
-    BULL: "불",
-    BROCK: "브록",
-    "EL PRIMO": "엘 프리모",
-    BARLEY: "발리",
-    POCO: "포코",
-    ROSA: "로사",
-    JESSIE: "제시",
-    DYNAMIKE: "다이너마이크",
-    TICK: "틱",
-    "8-BIT": "8비트",
-    RICO: "리코",
-    DARRYL: "대릴",
-    PENNY: "페니",
-    CARL: "칼",
-    JACKY: "재키",
-    PIPER: "파이퍼",
-    PAM: "팸",
-    FRANK: "프랭크",
-    BIBI: "비비",
-    BEA: "비",
-    NANI: "나니",
-    EDGAR: "에드거",
-    GRIFF: "그리프",
-    GROM: "그롬",
-    MORTIS: "모티스",
-    TARA: "타라",
-    GENE: "진",
-    MAX: "맥스",
-    "MR. P": "미스터 P",
-    SPROUT: "스프라우트",
-    BYRON: "바이런",
-    SQUEAK: "스퀴크",
-    SPIKE: "스파이크",
-    CROW: "크로우",
-    LEON: "레온",
-    SANDY: "샌디",
-    AMBER: "앰버",
-    MEG: "메그",
-    SURGE: "서지",
-    COLETTE: "콜레트",
-    LOU: "루",
-    RUFFS: "러프스",
-    BELLE: "벨",
-    BUZZ: "버즈",
-    ASH: "애쉬",
-    LOLA: "롤라",
-    FANG: "팽",
-    EVE: "이브",
-    JANET: "자넷",
-    OTIS: "오티스",
-    SAM: "샘",
-    BUSTER: "버스터",
-    MANDY: "맨디",
-    "R-T": "R-T",
-    WILLOW: "윌로우",
-    MAISIE: "메이지",
-    HANK: "행크",
-    CORDELIUS: "코델리우스",
-    DOUG: "더그",
-    PEARL: "펄",
-    CHUCK: "척",
-    CHARLIE: "찰리",
-    MICO: "미코",
-    KIT: "키트",
-    "LARRY & LAWRIE": "래리 & 로리",
-    MELODIE: "멜로디",
-    ANGELO: "안젤로",
-    LILY: "릴리",
-    DRACO: "드라코",
-    BERRY: "베리",
-    CLANCY: "클랜시",
-    MOE: "모",
-    KENJI: "켄지",
-    JUJU: "주주",
-    SHADE: "셰이드",
-    GALE: "게일",
-    CHESTER: "체스터",
-    BO: "보",
-    EMZ: "엠즈",
-    STU: "스튜",
-    DEMIAN: "데미안",
-    DAMIAN: "데미안",
-    LUMI: "루미",
-    "STARR Nova": "스타 노바",
-    BOLT: "볼트",
-    PIERCE: "피어스",
-    MINA: "미나",
-    MEEPLE: "미플",
-    ZIGGY: "지기",
-    OLLIE: "올리",
-    GLOWY: "글로이",
-    GLOWBERT: "글로버트",
-    TRUNK: "트렁크",
-    ALLI: "알리",
-    FINX: "핑스",
-    "JAE-YONG": "재용",
-    GIGI: "지지",
-    KAZE: "카제",
-    NAJIA: "나지아",
-    SIRIUS: "시리우스",
-    BONNIE: "보니",
-    GRAY: "그레이",
-    GUS: "거스",
+const MODE_LIST = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
+
+type BrawlerMapStat = {
+  id?: number;
+  name: string;
+  plays: number;
+  wins: number;
+  winRate: number;
+  score: number;
 };
 
-export default function MetaDashboard() 
-{
-    const [realData, setRealData] = useState<any>(null);
-    
-    const [selectedMode, setSelectedMode] = useState<string>("젬 그랩");
-    const [selectedMap, setSelectedMap] = useState<string>("");
-    const [loading, setLoading] = useState(true);
+type MapStatsResponse = Record<string, BrawlerMapStat[]>;
 
-    const modeList = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
+export default function MetaDashboard() {
+  const [data, setData] = useState<MapStatsResponse>({});
+  const [selectedMode, setSelectedMode] = useState("젬 그랩");
+  const [selectedMap, setSelectedMap] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    useEffect(() => 
-    {
-        const fetchData = async () => 
-        {
-            try 
-            {
-                // 우리 DB 통계 가져오기
-                const res = await fetch("/api/meta");
-                const json = await res.json();
-                
-                setRealData(json);
-                
-                const keys = Object.keys(json);
-                if (keys.length > 0) 
-                {
-                    let isFound = false;
-                    for (let i = 0; i < keys.length; i = i + 1)
-                    {
-                        const mName = keys[i];
-                        
-                        // ✨ 정규화나 외부 API 없이 우리가 만든 확실한 사전에서 모드 찾기!
-                        let mMode = "기타";
-                        if (mapToModeDict[mName])
-                        {
-                            mMode = mapToModeDict[mName];
-                        }
-                        
-                        if (mMode === "젬 그랩")
-                        {
-                            if (!isFound)
-                            {
-                                setSelectedMap(mName);
-                                isFound = true;
-                            }
-                        }
-                    }
-                    
-                    // 만약 젬 그랩 맵이 아예 없으면 첫번째 맵 강제 선택
-                    if (!isFound)
-                    {
-                        setSelectedMap(keys[0]);
-                        
-                        let fallbackMode = "기타";
-                        if (mapToModeDict[keys[0]])
-                        {
-                            fallbackMode = mapToModeDict[keys[0]];
-                        }
-                        setSelectedMode(fallbackMode);
-                    }
-                }
-                
-                setLoading(false);
-            } 
-            catch (error) 
-            {
-                console.error("에러 발생", error);
-                setLoading(false);
-            }
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadMetaStats() {
+      try {
+        const response = await fetch("/api/meta", { signal: controller.signal });
+        const json = (await response.json().catch(() => ({}))) as MapStatsResponse & {
+          error?: string;
         };
-        
-        fetchData();
-    }, []);
+        if (!response.ok) throw new Error(json.error ?? "메타 통계를 불러오지 못했습니다.");
 
-    // 탭 클릭했을 때 동작하는 로직
-    const handleModeClick = (modeName: string) =>
-    {
-        setSelectedMode(modeName);
-        
-        let targetMap = "";
-        if (realData !== null)
-        {
-            const keys = Object.keys(realData);
-            let isFound = false;
-            
-            for (let i = 0; i < keys.length; i = i + 1)
-            {
-                const mName = keys[i];
-                
-                let mMode = "기타";
-                if (mapToModeDict[mName])
-                {
-                    mMode = mapToModeDict[mName];
-                }
-                
-                if (mMode === modeName)
-                {
-                    if (!isFound)
-                    {
-                        targetMap = mName;
-                        isFound = true;
-                    }
-                }
-            }
-        }
-        setSelectedMap(targetMap);
-    };
-
-    // 현재 선택된 모드에 해당하는 맵만 걸러내기
-    const filteredMaps: string[] = [];
-    if (realData !== null)
-    {
-        const allMaps = Object.keys(realData);
-        for (let i = 0; i < allMaps.length; i = i + 1)
-        {
-            const mName = allMaps[i];
-            
-            let mMode = "기타";
-            if (mapToModeDict[mName])
-            {
-                mMode = mapToModeDict[mName];
-            }
-            
-            if (mMode === selectedMode)
-            {
-                filteredMaps.push(mName);
-            }
-        }
+        const maps = Object.keys(json);
+        setData(json);
+        const firstGemGrab = maps.find((mapName) => getMapMode(mapName) === "젬 그랩");
+        const firstMap = firstGemGrab ?? maps[0] ?? "";
+        setSelectedMap(firstMap);
+        if (firstMap) setSelectedMode(getMapMode(firstMap));
+      } catch (loadError) {
+        if (loadError instanceof DOMException && loadError.name === "AbortError") return;
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "메타 통계를 불러오지 못했습니다.",
+        );
+      } finally {
+        setLoading(false);
+      }
     }
 
-    // 선택된 맵의 브롤러 통계 정제 (Unknown 제거)
-    let currentData = [];
-    if (realData !== null)
-    {
-        if (selectedMap !== "")
-        {
-            const rawData = realData[selectedMap];
-            if (rawData)
-            {
-                currentData = [];
-                for (let i = 0; i < rawData.length; i = i + 1)
-                {
-                    if (rawData[i].name !== "Unknown")
-                    {
-                        currentData.push(rawData[i]);
-                    }
-                }
-            }
-        }
-    }
+    void loadMetaStats();
+    return () => controller.abort();
+  }, []);
 
-    return (
-        <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-10 flex flex-col items-center">
-            <div className="text-center mb-10">
-                <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4 drop-shadow-sm">
-                    🗺️ 맵별 1티어 브롤러 추천기
-                </h1>
-                <p className="text-gray-500 font-bold">
-                    누적 빅데이터 가중 승률 기반 알고리즘 적용
-                </p>
-                <div className="mt-6">
-                    <Link href="/" className="inline-block bg-white text-indigo-600 border border-indigo-200 font-bold px-6 py-2 rounded-full hover:bg-indigo-50 transition-colors shadow-sm">
-                        ← 전적 검색으로 돌아가기
-                    </Link>
-                </div>
-            </div>
-            
-            {loading ? (
-                <div className="text-2xl font-black text-indigo-500 animate-pulse mt-20 bg-white px-8 py-4 rounded-full shadow-md">
-                    데이터베이스에서 글로벌 통계를 가져오는 중... 🚀
-                </div>
+  const filteredMaps = useMemo(
+    () => Object.keys(data).filter((mapName) => getMapMode(mapName) === selectedMode),
+    [data, selectedMode],
+  );
+  const currentData = selectedMap ? data[selectedMap] ?? [] : [];
+
+  function selectMode(modeName: string) {
+    setSelectedMode(modeName);
+    setSelectedMap(Object.keys(data).find((mapName) => getMapMode(mapName) === modeName) ?? "");
+  }
+
+  return (
+    <main className="flex min-h-screen flex-col items-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6 sm:p-10">
+      <header className="mb-10 text-center">
+        <h1 className="mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-4xl font-black text-transparent drop-shadow-sm">
+          맵별 추천 브롤러
+        </h1>
+        <p className="font-bold text-gray-500">검색 표본 기반 가중 승률 추천</p>
+        <Link href="/" className="mt-6 inline-block rounded-full border border-indigo-200 bg-white px-6 py-2 font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50">
+          전적 검색으로 돌아가기
+        </Link>
+      </header>
+
+      {loading ? (
+        <div className="mt-20 rounded-full bg-white px-8 py-4 text-2xl font-black text-indigo-500 shadow-md">
+          메타 통계를 불러오는 중...
+        </div>
+      ) : error ? (
+        <div className="rounded-lg border-l-4 border-red-500 bg-red-100 px-6 py-4 font-bold text-red-700 shadow-md">
+          {error}
+        </div>
+      ) : (
+        <div className="flex w-full max-w-4xl flex-col items-center">
+          <div className="mb-6 flex w-full justify-start gap-3 overflow-x-auto rounded-2xl bg-white/60 p-2 shadow-sm sm:justify-center">
+            {MODE_LIST.map((modeName) => (
+              <button
+                type="button"
+                key={modeName}
+                onClick={() => selectMode(modeName)}
+                className={`whitespace-nowrap rounded-xl px-6 py-2.5 text-sm font-black transition-all ${
+                  modeName === selectedMode
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-white text-gray-500 hover:bg-gray-100"
+                }`}
+              >
+                {modeName}
+              </button>
+            ))}
+          </div>
+
+          <div className="mb-10 flex w-full flex-wrap justify-center gap-3">
+            {filteredMaps.length ? (
+              filteredMaps.map((mapName) => (
+                <button
+                  type="button"
+                  key={mapName}
+                  onClick={() => setSelectedMap(mapName)}
+                  className={`rounded-full border px-6 py-2.5 font-bold transition-all ${
+                    mapName === selectedMap
+                      ? "border-2 border-indigo-500 bg-white text-indigo-600 shadow-sm"
+                      : "border-gray-200 bg-white/80 text-gray-500 hover:bg-white"
+                  }`}
+                >
+                  {mapDict[mapName] ?? mapName}
+                </button>
+              ))
             ) : (
-                <div className="w-full flex flex-col items-center max-w-4xl">
-                    
-                    {/* 상단 모드 선택 탭 */}
-                    <div className="flex gap-3 mb-6 bg-white/60 p-2 rounded-2xl shadow-sm overflow-x-auto w-full justify-start sm:justify-center no-scrollbar">
-                        {modeList.map((modeName) => 
-                        {
-                            let isModeSelected = false;
-                            if (modeName === selectedMode)
-                            {
-                                isModeSelected = true;
-                            }
-
-                            return (
-                                <button
-                                    key={modeName}
-                                    onClick={() => handleModeClick(modeName)}
-                                    className={`px-6 py-2.5 rounded-xl font-black text-sm whitespace-nowrap transition-all ${
-                                        isModeSelected ? "bg-indigo-600 text-white shadow-md scale-105" : "bg-white text-gray-500 hover:bg-gray-100"
-                                    }`}
-                                >
-                                    {modeName}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* 선택된 모드의 맵 리스트 버튼들 */}
-                    <div className="flex gap-3 mb-10 flex-wrap justify-center w-full">
-                        {filteredMaps.length > 0 ? (
-                            filteredMaps.map((mapName) => 
-                            {
-                                let isMapSelected = false;
-                                if (mapName === selectedMap) 
-                                {
-                                    isMapSelected = true;
-                                }
-
-                                let displayMapName = mapName;
-                                if (mapDict[mapName])
-                                {
-                                    displayMapName = mapDict[mapName];
-                                }
-
-                                return (
-                                    <button
-                                        key={mapName}
-                                        onClick={() => setSelectedMap(mapName)}
-                                        className={`px-6 py-2.5 rounded-full font-bold text-md border transition-all ${
-                                            isMapSelected ? "bg-white border-2 border-indigo-500 text-indigo-600 shadow-sm font-black" : "bg-white/80 border-gray-200 text-gray-500 hover:bg-white"
-                                        }`}
-                                    >
-                                        {displayMapName}
-                                    </button>
-                                );
-                            })
-                        ) : (
-                            <div className="text-gray-400 font-bold text-sm bg-white/40 px-6 py-2 rounded-full border border-dashed border-gray-300">
-                                현재 이 모드에 저장된 맵 데이터가 없어!
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 추천 브롤러 결과 리스트 */}
-                    {currentData.length > 0 ? (
-                        <div className="w-full max-w-3xl bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-white">
-                            <h2 className="text-2xl font-black mb-6 border-b-2 border-indigo-100 pb-4 flex justify-between items-end">
-                                <span>
-                                    🏆 {mapDict[selectedMap] ? mapDict[selectedMap] : selectedMap} 최고 승률 픽
-                                </span>
-                                <span className="text-sm font-bold text-gray-400">데이터 기준: 최소 5판 이상</span>
-                            </h2>
-                            
-                            <div className="flex flex-col gap-4">
-                                {currentData.map((brawler: any, index: number) => 
-                                {
-                                    let displayBrawlerName = brawler.name;
-                                    if (brawlerDict[brawler.name])
-                                    {
-                                        displayBrawlerName = brawlerDict[brawler.name];
-                                    }
-
-                                    const brawlerId =
-                                        brawler.id ?? generatedBrawlerImageIdByName[brawler.name];
-
-                                    return (
-                                        <div 
-                                            key={brawler.name} 
-                                            className="flex items-center justify-between bg-white p-5 rounded-2xl border border-gray-100 shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="text-3xl font-black text-indigo-200 w-10 text-center">
-                                                    #{index + 1}
-                                                </div>
-                                                <div className="relative w-12 h-12 bg-indigo-50 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
-                                                    <span className="absolute inset-0 flex items-center justify-center text-indigo-300 font-black">
-                                                        {displayBrawlerName.slice(0, 1)}
-                                                    </span>
-                                                    {brawlerId ? (
-                                                        <img
-                                                            src={`https://cdn.brawlify.com/brawlers/borders/${brawlerId}.png`}
-                                                            alt={brawler.name}
-                                                            className="relative w-full h-full object-cover"
-                                                            onError={(e) =>
-                                                            {
-                                                                (e.target as HTMLImageElement).style.display = "none";
-                                                            }}
-                                                        />
-                                                    ) : null}
-                                                </div>
-                                                <span className="text-2xl font-black text-gray-800">
-                                                    {displayBrawlerName}
-                                                </span>
-                                            </div>
-                                            <div className="flex gap-8 text-right">
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs text-gray-500 font-bold mb-1">가중 추천 점수</span>
-                                                    <span className="text-2xl font-black text-indigo-600">
-                                                        {brawler.score}점
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs text-gray-500 font-bold mb-1">실제 승률 (판수)</span>
-                                                    <span className="text-lg font-bold text-gray-700">
-                                                        {brawler.winRate}% ({brawler.plays}전)
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-gray-500 font-bold text-xl mt-10 bg-white px-8 py-4 rounded-full shadow-md text-center w-full max-w-3xl">
-                            선택된 맵은 아직 누적된 전투 기록이 없어! 😢
-                        </div>
-                    )}
-                </div>
+              <div className="rounded-full border border-dashed border-gray-300 bg-white/40 px-6 py-2 text-sm font-bold text-gray-400">
+                아직 저장된 맵 데이터가 없습니다.
+              </div>
             )}
-        </main>
-    );
+          </div>
+
+          {currentData.length ? (
+            <section className="w-full max-w-3xl rounded-3xl border border-white bg-white/80 p-8 shadow-2xl backdrop-blur-md">
+              <h2 className="mb-6 flex flex-col gap-2 border-b-2 border-indigo-100 pb-4 text-2xl font-black sm:flex-row sm:items-end sm:justify-between">
+                <span>{mapDict[selectedMap] ?? selectedMap} 추천</span>
+                <span className="text-sm font-bold text-gray-400">검색 표본 기준: 최소 5판 이상</span>
+              </h2>
+              <div className="flex flex-col gap-4">
+                {currentData.map((brawler, index) => {
+                  const displayName = brawlerDict[brawler.name] ?? brawler.name;
+                  const brawlerId = brawler.id ?? generatedBrawlerImageIdByName[brawler.name];
+                  return (
+                    <article key={brawler.name} className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-4">
+                        <span className="w-10 text-center text-3xl font-black text-indigo-200">#{index + 1}</span>
+                        {brawlerId ? (
+                          <BrawlImage
+                            src={`https://cdn.brawlify.com/brawlers/borders/${brawlerId}.png`}
+                            alt={displayName}
+                            width={48}
+                            height={48}
+                            className="h-12 w-12 rounded-lg border-2 border-gray-200 bg-indigo-50 shadow-sm"
+                          />
+                        ) : (
+                          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 font-black text-indigo-300">
+                            {displayName.slice(0, 1)}
+                          </span>
+                        )}
+                        <span className="text-2xl font-black text-gray-800">{displayName}</span>
+                      </div>
+                      <div className="flex w-full justify-between gap-4 border-t border-gray-100 pt-3 text-left sm:w-auto sm:border-0 sm:pt-0 sm:text-right">
+                        <Stat label="추천 점수" value={`${brawler.score}점`} />
+                        <Stat label="실제 승률" value={`${brawler.winRate}% (${brawler.plays}전)`} />
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ) : (
+            <div className="mt-10 w-full max-w-3xl rounded-full bg-white px-8 py-4 text-center text-xl font-bold text-gray-500 shadow-md">
+              선택한 맵에는 아직 충분한 표본이 없습니다.
+            </div>
+          )}
+        </div>
+      )}
+    </main>
+  );
+}
+
+function getMapMode(mapName: string) {
+  return mapToModeDict[mapName] ?? "기타";
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="mb-1 text-xs font-bold text-gray-500">{label}</span>
+      <span className="whitespace-nowrap text-base font-black text-indigo-600 sm:text-lg">{value}</span>
+    </div>
+  );
 }

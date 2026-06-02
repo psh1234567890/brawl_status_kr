@@ -7,10 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "db:check": "node scripts/check-db.mjs",
+    "db:migrate": "node scripts/migrate-db.mjs",
     "translations:update": "node scripts/update-brawl-translations.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.106.1",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.6",
     "pg": "^8.21.0",
@@ -28,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.8"
   }
 }

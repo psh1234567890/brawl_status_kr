@@ -1,132 +1,90 @@
-import { modeDict, mapDict } from "../constants/brawl";
-import { getBattleResultInfo, checkIsRanked } from "../utils/brawlHelpers";
+import { mapDict, modeDict } from "../constants/brawl";
+import type { BattleLogItem, BattleLogResponse, RecentBattleSummary } from "../types/brawl";
+import { checkIsRanked, getBattleResultInfo } from "../utils/brawlHelpers";
 
-interface BattleLogListProps 
-{
-    battleLog: any;
-    recentWinRate: number;
-    totalRecent: number;
-    recentWins: number;
-    recentDefeats: number;
-    bestMode: string;
-    maxModeWins: number;
-    setSelectedBattle: (match: any) => void;
+interface BattleLogListProps {
+  battleLog: BattleLogResponse;
+  summary: RecentBattleSummary;
+  onSelectBattle: (match: BattleLogItem) => void;
 }
 
 export default function BattleLogList({
-    battleLog,
-    recentWinRate,
-    totalRecent,
-    recentWins,
-    recentDefeats,
-    bestMode,
-    maxModeWins,
-    setSelectedBattle
-}: BattleLogListProps) 
-{
-    return (
-        <div className="w-full mb-12">
-            <h3 className="text-2xl font-black mb-6 text-indigo-900 border-l-8 border-indigo-500 pl-4">
-                📊 전체 기록 분석 ({battleLog.items.length}전)
-            </h3>
-            
-            <div className="bg-white p-8 rounded-3xl shadow-xl w-full border border-gray-100 mb-10 flex flex-col md:flex-row justify-around items-center gap-6 transition-transform hover:-translate-y-1">
-                <div className="text-center">
-                    <span className="block text-gray-500 font-bold mb-2 text-lg">
-                        최근 승률
-                    </span>
-                    <span className="text-5xl font-black text-indigo-600 drop-shadow-sm">
-                        {recentWinRate}%
-                    </span>
-                    <span className="block text-md text-gray-400 mt-3 font-bold bg-gray-100 px-3 py-1 rounded-full">
-                        {totalRecent}전 {recentWins}승 {recentDefeats}패
-                    </span>
-                </div>
-                
-                <div className="text-center border-t-2 md:border-t-0 md:border-l-2 border-gray-200 pt-6 md:pt-0 md:pl-10">
-                    <span className="block text-gray-500 font-bold mb-2 text-lg">
-                        가장 잘 나가는 모드
-                    </span>
-                    <span className="text-4xl font-black text-gray-800">
-                        {modeDict[bestMode] ? modeDict[bestMode] : bestMode}
-                    </span>
-                    <span className="block text-md text-indigo-500 mt-3 font-bold">
-                        이 모드에서만 {maxModeWins}승 달성! 🔥
-                    </span>
-                </div>
-            </div>
+  battleLog,
+  summary,
+  onSelectBattle,
+}: BattleLogListProps) {
+  return (
+    <section className="mb-12 w-full" aria-labelledby="battle-log-title">
+      <h3 id="battle-log-title" className="mb-6 border-l-8 border-indigo-500 pl-4 text-2xl font-black text-indigo-900">
+        전체 기록 분석 ({battleLog.items.length}전)
+      </h3>
 
-            <div className="flex justify-between items-end mb-6 border-l-8 border-indigo-500 pl-4">
-                <h3 className="text-2xl font-black text-indigo-900">
-                    ⚔️ 모든 전투 기록 (최대 25게임)
-                </h3>
-                <span className="text-sm text-gray-500 font-bold bg-gray-200 px-3 py-1 rounded-full">
-                    👆 클릭해서 상세표 보기
-                </span>
-            </div>
-
-            <div className="flex flex-col gap-4 mb-10 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                {battleLog.items.map((match: any, index: number) => 
-                {
-                    const info = getBattleResultInfo(match);
-                    const isRanked = checkIsRanked(match);
-
-                    return (
-                        <div
-                            key={index}
-                            onClick={() => setSelectedBattle(match)}
-                            className={`p-6 rounded-2xl shadow-md border-l-8 flex justify-between items-center transition-transform hover:-translate-x-1 cursor-pointer ${info.bgColor}`}
-                        >
-                            <div className="flex flex-col">
-                                <div className="flex items-center gap-2 mb-1">
-                                    {isRanked ? (
-                                        <span className="text-[10px] font-black text-white bg-red-500 px-2 py-0.5 rounded-full">
-                                            🔴 경쟁전
-                                        </span>
-                                    ) : (
-                                        <span className="text-[10px] font-black text-white bg-green-500 px-2 py-0.5 rounded-full">
-                                            🟢 일반 모드
-                                        </span>
-                                    )}
-                                </div>
-                                <span className="font-black text-gray-800 text-xl mb-1">
-                                    {modeDict[match.event.mode]
-                                        ? modeDict[match.event.mode]
-                                        : match.event.mode}{" "}
-                                    -{" "}
-                                    {mapDict[match.event.map]
-                                        ? mapDict[match.event.map]
-                                        : match.event.map}
-                                </span>
-                            </div>
-                            
-                            <div className="flex items-center gap-4">
-                                {match.battle.trophyChange ? (
-                                    isRanked ? null : (
-                                        <span
-                                            className={`text-xl font-black ${match.battle.trophyChange > 0 ? "text-yellow-500" : "text-red-500"}`}
-                                        >
-                                            {match.battle.trophyChange > 0 ? "+" : ""}
-                                            {match.battle.trophyChange}🏆
-                                        </span>
-                                    )
-                                ) : null}
-                                
-                                <div
-                                    className={`text-3xl font-black ${info.resultColor} drop-shadow-sm`}
-                                >
-                                    {info.resultText}
-                                    {match.battle.rank ? (
-                                        <span className="text-lg ml-1">
-                                            ({match.battle.rank}등)
-                                        </span>
-                                    ) : null}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+      <div className="mb-10 flex w-full flex-col items-center justify-around gap-6 rounded-3xl border border-gray-100 bg-white p-8 shadow-xl transition-transform hover:-translate-y-1 md:flex-row">
+        <div className="text-center">
+          <span className="mb-2 block text-lg font-bold text-gray-500">최근 승률</span>
+          <span className="text-5xl font-black text-indigo-600 drop-shadow-sm">
+            {summary.winRate}%
+          </span>
+          <span className="mt-3 block rounded-full bg-gray-100 px-3 py-1 text-md font-bold text-gray-400">
+            {summary.total}전 {summary.wins}승 {summary.defeats}패
+          </span>
         </div>
-    );
+        <div className="border-t-2 border-gray-200 pt-6 text-center md:border-l-2 md:border-t-0 md:pl-10 md:pt-0">
+          <span className="mb-2 block text-lg font-bold text-gray-500">가장 잘 나가는 모드</span>
+          <span className="text-4xl font-black text-gray-800">
+            {modeDict[summary.bestMode] ?? summary.bestMode}
+          </span>
+          <span className="mt-3 block text-md font-bold text-indigo-500">
+            이 모드에서 {summary.maxModeWins}승
+          </span>
+        </div>
+      </div>
+
+      <div className="mb-6 flex items-end justify-between border-l-8 border-indigo-500 pl-4">
+        <h3 className="text-2xl font-black text-indigo-900">모든 전투 기록 (최대 25게임)</h3>
+        <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-bold text-gray-500">
+          클릭해서 상세표 보기
+        </span>
+      </div>
+
+      <div className="custom-scrollbar mb-10 flex max-h-[600px] flex-col gap-4 overflow-y-auto pr-2">
+        {battleLog.items.map((match) => {
+          const info = getBattleResultInfo(match);
+          const isRanked = checkIsRanked(match);
+          return (
+            <button
+              type="button"
+              key={`${match.battleTime}-${match.event.mode}-${match.event.map}`}
+              onClick={() => onSelectBattle(match)}
+              className={`flex items-center justify-between rounded-2xl border-l-8 p-6 text-left shadow-md transition-transform hover:-translate-x-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${info.bgColor}`}
+            >
+              <span className="flex flex-col">
+                <span className="mb-1 flex items-center gap-2">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black text-white ${isRanked ? "bg-red-500" : "bg-green-500"}`}>
+                    {isRanked ? "경쟁전" : "일반 모드"}
+                  </span>
+                </span>
+                <span className="mb-1 text-xl font-black text-gray-800">
+                  {modeDict[match.event.mode] ?? match.event.mode} -{" "}
+                  {mapDict[match.event.map] ?? match.event.map}
+                </span>
+              </span>
+              <span className="flex items-center gap-4">
+                {match.battle.trophyChange && !isRanked ? (
+                  <span className={`text-xl font-black ${match.battle.trophyChange > 0 ? "text-yellow-500" : "text-red-500"}`}>
+                    {match.battle.trophyChange > 0 ? "+" : ""}
+                    {match.battle.trophyChange}🏆
+                  </span>
+                ) : null}
+                <span className={`text-3xl font-black drop-shadow-sm ${info.resultColor}`}>
+                  {info.resultText}
+                  {match.battle.rank ? <span className="ml-1 text-lg">({match.battle.rank}등)</span> : null}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import BrawlImage from "../../components/BrawlImage";
 
 import {
   generatedSkinCatalog,
@@ -136,9 +137,11 @@ export default function SkinCatalogPage() {
               key={skin.id}
               className="flex min-w-0 items-center gap-3 rounded-lg border border-white bg-white p-3 shadow-sm"
             >
-              <img
+              <BrawlImage
                 src={`https://cdn.brawlify.com/brawlers/borders/${skin.brawlerId}.png`}
                 alt={skin.brawlerNameKo}
+                width={64}
+                height={64}
                 className="h-16 w-16 shrink-0 rounded-md bg-indigo-50"
                 title="스킨 전용 이미지가 없어 브롤러 기본 이미지를 표시합니다."
               />

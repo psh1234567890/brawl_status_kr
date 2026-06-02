@@ -1,154 +1,99 @@
 import { rankDict } from "../constants/brawl";
+import type { PlayerData } from "../types/brawl";
+import BrawlImage from "./BrawlImage";
 
-// ✨ 부모(page.tsx)에게서 받을 택배(Props) 목록을 정의하는 곳!
 interface PlayerProfileProps {
-    playerData: any;
-    nameColorStr: string;
-    streakCount: number;
-    playTotalHours: number;
-    playMinutes: number;
+  playerData: PlayerData;
+  nameColor: string;
+  streakCount: number;
+  playTime: { hours: number; minutes: number };
 }
 
-export default function PlayerProfile({ 
-    playerData, 
-    nameColorStr, 
-    streakCount, 
-    playTotalHours, 
-    playMinutes 
+export default function PlayerProfile({
+  playerData,
+  nameColor,
+  streakCount,
+  playTime,
 }: PlayerProfileProps) {
-    return (
-        <div className="bg-white/80 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full text-black border border-white mb-10 transition-transform hover:-translate-y-1">
-            <div className="flex flex-col items-center border-b-2 border-gray-100 pb-8 mb-8">
-                <div className="flex items-center gap-4 mb-2">
-                    {playerData.icon ? (
-                        <img
-                            src={`https://cdn.brawlify.com/profile/${playerData.icon.id}.png`}
-                            alt="profile icon"
-                            className="w-16 h-16 rounded-full shadow-md border-2 border-indigo-200"
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none";
-                            }}
-                        />
-                    ) : null}
-                    <h2
-                        className="text-5xl font-black drop-shadow-sm"
-                        style={{ color: nameColorStr }}
-                    >
-                        {playerData.name}
-                    </h2>
-                </div>
-
-                {streakCount > 0 ? (
-                    <div className="mt-4 flex items-center bg-orange-100 border border-orange-300 px-6 py-2 rounded-full shadow-sm animate-pulse">
-                        <span className="text-orange-600 font-black text-lg">
-                            🔥 최근 {streakCount}일 연속 플레이 중!
-                        </span>
-                    </div>
-                ) : null}
-
-                {playerData.club ? (
-                    <div className="mt-4 flex items-center bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-2 rounded-full shadow-md">
-                        <span className="text-white font-bold text-lg">
-                            🛡️ 소속 클럽: {playerData.club.name}
-                        </span>
-                    </div>
-                ) : (
-                    <div className="mt-4 flex items-center bg-gray-200 px-6 py-2 rounded-full shadow-inner">
-                        <span className="text-gray-600 font-bold text-lg">
-                            소속 클럽 없음
-                        </span>
-                    </div>
-                )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg font-medium">
-                <div className="flex justify-between bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-r-xl shadow-sm">
-                    <span>🏆 현재 트로피:</span>
-                    <span className="font-black text-yellow-600 text-xl">
-                        {playerData.trophies}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-gray-50 border-l-4 border-gray-400 p-5 rounded-r-xl shadow-sm">
-                    <span>⭐ 최고 트로피:</span>
-                    <span className="font-black text-gray-700 text-xl">
-                        {playerData.highestTrophies}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-purple-50 border-l-4 border-purple-500 p-5 rounded-r-xl shadow-sm col-span-1 md:col-span-2">
-                    <span>⏱️ 예상 플레이 타임:</span>
-                    <span className="font-black text-purple-700 text-xl">
-                        약 {playTotalHours}시간 {playMinutes}분
-                    </span>
-                </div>
-                <div className="flex justify-between bg-gray-50 p-5 rounded-xl shadow-sm">
-                    <span>📈 경험치 레벨:</span>
-                    <span className="font-bold text-xl">{playerData.expLevel}</span>
-                </div>
-                <div className="flex justify-between bg-gray-50 p-5 rounded-xl shadow-sm">
-                    <span>⚔️ 3v3 승리:</span>
-                    <span className="font-bold text-xl">
-                        {playerData["3vs3Victories"]}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-blue-50 border-l-4 border-blue-400 p-5 rounded-r-xl shadow-sm">
-                    <span>😈 솔로 쇼다운 승리:</span>
-                    <span className="font-black text-blue-700 text-xl">
-                        {playerData.soloVictories}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-green-50 border-l-4 border-green-400 p-5 rounded-r-xl shadow-sm">
-                    <span>🤝 듀오 쇼다운 승리:</span>
-                    <span className="font-black text-green-700 text-xl">
-                        {playerData.duoVictories}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-pink-50 border-l-4 border-pink-500 p-5 rounded-r-xl shadow-sm">
-                    <span>🎖️ 역대 최고 경쟁전 랭크:</span>
-                    <span className="font-black text-pink-700 text-xl">
-                        {playerData.highestAllTimeRankedRankName
-                            ? (rankDict[playerData.highestAllTimeRankedRankName]
-                                ? rankDict[playerData.highestAllTimeRankedRankName]
-                                : playerData.highestAllTimeRankedRankName) +
-                            " (" +
-                            playerData.highestAllTimeRankedElo +
-                            "점)"
-                            : "기록 없음"}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-pink-50 border-l-4 border-pink-500 p-5 rounded-r-xl shadow-sm">
-                    <span>🔥 현재 경쟁전 랭크:</span>
-                    <span className="font-black text-pink-700 text-xl">
-                        {playerData.rankedRankName
-                            ? (rankDict[playerData.rankedRankName]
-                                ? rankDict[playerData.rankedRankName]
-                                : playerData.rankedRankName) +
-                            " (" +
-                            playerData.rankedElo +
-                            "점)"
-                            : "기록 없음"}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-indigo-50 border-l-4 border-indigo-400 p-5 rounded-r-xl shadow-sm">
-                    <span>🤖 로보 럼블 최고 기록:</span>
-                    <span className="font-black text-indigo-700 text-xl">
-                        {playerData.bestRoboRumbleTime}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-teal-50 border-l-4 border-teal-400 p-5 rounded-r-xl shadow-sm">
-                    <span>🦖 빅 브롤러 최고 기록:</span>
-                    <span className="font-black text-teal-700 text-xl">
-                        {playerData.bestTimeAsBigBrawler}
-                    </span>
-                </div>
-                <div className="flex justify-between bg-orange-50 border-l-4 border-orange-400 p-5 rounded-r-xl shadow-sm md:col-span-2">
-                    <span>🏆 챔피언십 챌린지 예선:</span>
-                    <span className="font-black text-orange-700 text-xl">
-                        {playerData.isQualifiedFromChampionshipChallenge
-                            ? "통과 🎉"
-                            : "미통과(가장 최근)"}
-                    </span>
-                </div>
-            </div>
+  return (
+    <section className="mb-10 w-full rounded-3xl border border-white bg-white/80 p-10 text-black shadow-2xl backdrop-blur-md transition-transform hover:-translate-y-1">
+      <div className="mb-8 flex flex-col items-center border-b-2 border-gray-100 pb-8">
+        <div className="mb-2 flex items-center gap-4">
+          {playerData.icon ? (
+            <BrawlImage
+              src={`https://cdn.brawlify.com/profile/${playerData.icon.id}.png`}
+              alt="프로필 아이콘"
+              width={64}
+              height={64}
+              className="h-16 w-16 rounded-full border-2 border-indigo-200 shadow-md"
+            />
+          ) : null}
+          <h2 className="text-5xl font-black drop-shadow-sm" style={{ color: nameColor }}>
+            {playerData.name}
+          </h2>
         </div>
-    );
+        {streakCount > 0 ? (
+          <div className="mt-4 rounded-full border border-orange-300 bg-orange-100 px-6 py-2 shadow-sm">
+            <span className="text-lg font-black text-orange-600">
+              최근 {streakCount}일 연속 플레이 중
+            </span>
+          </div>
+        ) : null}
+        <div className={`mt-4 rounded-full px-6 py-2 shadow-md ${playerData.club ? "bg-indigo-600" : "bg-gray-200"}`}>
+          <span className={`text-lg font-bold ${playerData.club ? "text-white" : "text-gray-600"}`}>
+            {playerData.club ? `소속 클럽: ${playerData.club.name}` : "소속 클럽 없음"}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 text-lg font-medium md:grid-cols-2">
+        <Stat label="현재 트로피" value={playerData.trophies} color="yellow" />
+        <Stat label="최고 트로피" value={playerData.highestTrophies} color="gray" />
+        <Stat label="예상 플레이 타임" value={`약 ${playTime.hours}시간 ${playTime.minutes}분`} color="purple" wide />
+        <Stat label="경험치 레벨" value={playerData.expLevel} />
+        <Stat label="3v3 승리" value={playerData["3vs3Victories"]} />
+        <Stat label="솔로 쇼다운 승리" value={playerData.soloVictories} color="blue" />
+        <Stat label="듀오 쇼다운 승리" value={playerData.duoVictories} color="green" />
+        <Stat label="역대 최고 경쟁전 랭크" value={formatRank(playerData.highestAllTimeRankedRankName, playerData.highestAllTimeRankedElo)} color="pink" />
+        <Stat label="현재 경쟁전 랭크" value={formatRank(playerData.rankedRankName, playerData.rankedElo)} color="pink" />
+        <Stat label="로보 럼블 최고 기록" value={playerData.bestRoboRumbleTime ?? "-"} color="indigo" />
+        <Stat label="빅 브롤러 최고 기록" value={playerData.bestTimeAsBigBrawler ?? "-"} color="teal" />
+        <Stat label="챔피언십 챌린지 예선" value={playerData.isQualifiedFromChampionshipChallenge ? "통과" : "미통과(가장 최근)"} color="orange" wide />
+      </div>
+    </section>
+  );
+}
+
+function formatRank(rank?: string, elo?: number) {
+  return rank ? `${rankDict[rank] ?? rank} (${elo ?? 0}점)` : "기록 없음";
+}
+
+function Stat({
+  label,
+  value,
+  color = "gray",
+  wide = false,
+}: {
+  label: string;
+  value: string | number;
+  color?: string;
+  wide?: boolean;
+}) {
+  const colors: Record<string, string> = {
+    yellow: "border-yellow-400 bg-yellow-50 text-yellow-700",
+    gray: "border-gray-400 bg-gray-50 text-gray-700",
+    purple: "border-purple-500 bg-purple-50 text-purple-700",
+    blue: "border-blue-400 bg-blue-50 text-blue-700",
+    green: "border-green-400 bg-green-50 text-green-700",
+    pink: "border-pink-500 bg-pink-50 text-pink-700",
+    indigo: "border-indigo-400 bg-indigo-50 text-indigo-700",
+    teal: "border-teal-400 bg-teal-50 text-teal-700",
+    orange: "border-orange-400 bg-orange-50 text-orange-700",
+  };
+  return (
+    <div className={`flex justify-between rounded-r-xl border-l-4 p-5 shadow-sm ${colors[color]} ${wide ? "md:col-span-2" : ""}`}>
+      <span>{label}</span>
+      <span className="text-right text-xl font-black">{value}</span>
+    </div>
+  );
 }

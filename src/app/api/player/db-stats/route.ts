@@ -1,28 +1,30 @@
+import { inArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "../../../../db";
 import { battleLogs } from "../../../../db/schema";
+import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import type { BrawlerStat } from "../../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../../utils/playerTag";
-import { inArray, sql } from "drizzle-orm";
-
-type BrawlerStat = {
-  name: string;
-  plays: number;
-  wins: number;
-  winRate: number;
-};
 
 export async function GET(request: Request) {
+  const rejected = rejectRateLimitedRequest(request, "player-db-stats", {
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (rejected) return rejected;
+
   const { searchParams } = new URL(request.url);
   const tag = searchParams.get("tag");
-
   if (!tag || !isValidPlayerTag(tag)) {
-    return NextResponse.json({ error: "태그가 필요합니다." }, { status: 400 });
+    return NextResponse.json(
+      { error: "올바른 플레이어 태그가 필요합니다." },
+      { status: 400 },
+    );
   }
 
   try {
     const cleanTag = normalizePlayerTag(tag);
-    const tagVariants = Array.from(new Set([tag, cleanTag]));
-
+    const tagVariants = Array.from(new Set([tag, cleanTag, `#${cleanTag}`]));
     const rows = await db
       .select({
         name: battleLogs.brawlerName,
@@ -33,11 +35,10 @@ export async function GET(request: Request) {
       .where(inArray(battleLogs.playerTag, tagVariants))
       .groupBy(battleLogs.brawlerName);
 
-    const resultList: BrawlerStat[] = rows
+    const brawlers: BrawlerStat[] = rows
       .map((row) => {
         const plays = Number(row.plays);
         const wins = Number(row.wins);
-
         return {
           name: row.name,
           plays,
@@ -45,16 +46,14 @@ export async function GET(request: Request) {
           winRate: plays > 0 ? Math.floor((wins / plays) * 100) : 0,
         };
       })
-      .sort((a, b) => b.winRate - a.winRate);
-
-    const totalGames = resultList.reduce((total, stat) => total + stat.plays, 0);
+      .sort((left, right) => right.winRate - left.winRate);
 
     return NextResponse.json({
-      totalGames,
-      brawlers: resultList,
+      totalGames: brawlers.reduce((total, stat) => total + stat.plays, 0),
+      brawlers,
     });
   } catch (error) {
     console.error("Failed to calculate player DB stats:", error);
-    return NextResponse.json({ error: "DB 통계 계산 실패" }, { status: 500 });
+    return NextResponse.json({ error: "DB 통계 계산에 실패했습니다." }, { status: 500 });
   }
 }

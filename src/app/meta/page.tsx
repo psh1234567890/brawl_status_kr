@@ -5,6 +5,7 @@ import Link from "next/link";
 
 // 1. 맵 이름 한국어 번역 사전
 import { mapDict, mapToModeDict } from "../../constants/brawl";
+import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
 
 const brawlerDict: any = 
 {
@@ -119,7 +120,6 @@ const brawlerDict: any =
 export default function MetaDashboard() 
 {
     const [realData, setRealData] = useState<any>(null);
-    const [imageDict, setImageDict] = useState<any>({});
     
     const [selectedMode, setSelectedMode] = useState<string>("젬 그랩");
     const [selectedMap, setSelectedMap] = useState<string>("");
@@ -133,29 +133,7 @@ export default function MetaDashboard()
         {
             try 
             {
-                // 1. 브롤러 ID는 사진을 위해 계속 BrawlAPI에서 가져옴
-                try 
-                {
-                    const brawlerRes = await fetch("https://api.brawlapi.com/v1/brawlers");
-                    const brawlerJson = await brawlerRes.json();
-                    
-                    const idMap: any = {};
-                    if (brawlerJson.list) 
-                    {
-                        for (let i = 0; i < brawlerJson.list.length; i = i + 1)
-                        {
-                            const b = brawlerJson.list[i];
-                            idMap[b.name.toUpperCase()] = b.id;
-                        }
-                    }
-                    setImageDict(idMap);
-                } 
-                catch (error) 
-                {
-                    console.error("브롤러 API 에러:", error);
-                }
-
-                // 2. 우리 DB 통계 가져오기
+                // 우리 DB 통계 가져오기
                 const res = await fetch("/api/meta");
                 const json = await res.json();
                 
@@ -391,17 +369,8 @@ export default function MetaDashboard()
                                         displayBrawlerName = brawlerDict[brawler.name];
                                     }
 
-                                    const brawlerId = imageDict[brawler.name];
-                                    let imgSrc = "";
-                                    
-                                    if (brawlerId)
-                                    {
-                                        imgSrc = `https://cdn.brawlify.com/brawlers/borders/${brawlerId}.png`;
-                                    }
-                                    else
-                                    {
-                                        imgSrc = `https://cdn.brawlify.com/brawler/${brawler.name}.png`;
-                                    }
+                                    const brawlerId =
+                                        brawler.id ?? generatedBrawlerImageIdByName[brawler.name];
 
                                     return (
                                         <div 
@@ -412,16 +381,21 @@ export default function MetaDashboard()
                                                 <div className="text-3xl font-black text-indigo-200 w-10 text-center">
                                                     #{index + 1}
                                                 </div>
-                                                <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
-                                                    <img 
-                                                        src={imgSrc} 
-                                                        alt={brawler.name}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => 
-                                                        {
-                                                            (e.target as HTMLImageElement).style.display = "none";
-                                                        }}
-                                                    />
+                                                <div className="relative w-12 h-12 bg-indigo-50 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
+                                                    <span className="absolute inset-0 flex items-center justify-center text-indigo-300 font-black">
+                                                        {displayBrawlerName.slice(0, 1)}
+                                                    </span>
+                                                    {brawlerId ? (
+                                                        <img
+                                                            src={`https://cdn.brawlify.com/brawlers/borders/${brawlerId}.png`}
+                                                            alt={brawler.name}
+                                                            className="relative w-full h-full object-cover"
+                                                            onError={(e) =>
+                                                            {
+                                                                (e.target as HTMLImageElement).style.display = "none";
+                                                            }}
+                                                        />
+                                                    ) : null}
                                                 </div>
                                                 <span className="text-2xl font-black text-gray-800">
                                                     {displayBrawlerName}

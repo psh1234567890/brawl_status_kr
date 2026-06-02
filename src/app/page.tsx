@@ -4,6 +4,11 @@ import { useMemo, useSyncExternalStore, useState } from "react";
 
 import { mapDict, modeDict, brawlerDict } from "../constants/brawl";
 import { checkIsRanked, getBattleResultInfo } from "../utils/brawlHelpers";
+import {
+    translateAbilityName,
+    translateGearName,
+    translateSkinName,
+} from "../utils/brawlTranslations";
 import PlayerProfile from "../components/PlayerProfile";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
@@ -403,12 +408,18 @@ export default function Home()
                 <p className="text-md text-gray-500 font-bold bg-white px-4 py-1 rounded-full shadow-sm inline-block">
                     ※ 영어 대소문자 상관 없음
                 </p>
-                <div className="mt-4">
+                <div className="mt-4 flex flex-wrap justify-center gap-3">
                     <a 
                         href="/meta"
                         className="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white font-black text-xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-transform border-4 border-white"
                     >
                         📊 빅데이터 맵별 1티어 추천 보기
+                    </a>
+                    <a
+                        href="/skins"
+                        className="inline-block bg-white text-indigo-700 font-black text-xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition-transform border-4 border-indigo-100"
+                    >
+                        스킨 카탈로그
                     </a>
                 </div>
             </div>
@@ -520,6 +531,33 @@ export default function Home()
                         </div>
 
                         <div className="bg-gray-50 p-5 rounded-2xl mb-6 flex flex-col gap-4">
+                            <div className="flex flex-col gap-2">
+                                <span className="font-bold text-gray-600 text-sm">
+                                    현재 장착 스킨
+                                </span>
+                                <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                    <img
+                                        src={`https://cdn.brawlify.com/brawlers/borders/${selectedBrawler.id}.png`}
+                                        alt={selectedBrawler.skin?.name ?? selectedBrawler.name}
+                                        className="w-12 h-12 rounded-md bg-indigo-50"
+                                        title="스킨 전용 이미지가 없어 브롤러 기본 이미지를 표시합니다."
+                                    />
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-bold text-indigo-800">
+                                            {selectedBrawler.skin
+                                                ? translateSkinName(
+                                                    selectedBrawler.skin.id,
+                                                    selectedBrawler.skin.name,
+                                                )
+                                                : "기본 스킨"}
+                                        </span>
+                                        <span className="text-[11px] text-gray-400">
+                                            브롤러 기본 이미지
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <h4 className="font-black text-gray-700 border-b pb-2">
                                 📦 실제 보유 장비 목록
                             </h4>
@@ -546,7 +584,7 @@ export default function Home()
                                                             }}
                                                         />
                                                         <span className="text-sm font-bold text-green-800">
-                                                            {g.name}
+                                                            {translateAbilityName(g.id, g.name)}
                                                         </span>
                                                     </div>
                                                 );
@@ -588,7 +626,7 @@ export default function Home()
                                                             }}
                                                         />
                                                         <span className="text-sm font-bold text-yellow-800">
-                                                            {sp.name}
+                                                            {translateAbilityName(sp.id, sp.name)}
                                                         </span>
                                                     </div>
                                                 );
@@ -605,6 +643,71 @@ export default function Home()
                                     </span>
                                 )}
                             </div>
+
+                            <div className="flex flex-col gap-2">
+                                <span className="font-bold text-gray-600 text-sm">
+                                    🔥 하이퍼차지
+                                </span>
+                                {selectedBrawler.hyperCharges ? (
+                                    selectedBrawler.hyperCharges.length > 0 ? (
+                                        <div className="flex flex-col gap-2">
+                                            {selectedBrawler.hyperCharges.map((hc: any) =>
+                                            {
+                                                return (
+                                                    <div
+                                                        key={hc.id}
+                                                        className="flex items-center gap-3 bg-white p-2 rounded-lg border border-purple-100 shadow-sm"
+                                                    >
+                                                        <div className="w-8 h-8 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center font-black text-sm">
+                                                            H
+                                                        </div>
+                                                        <span className="text-sm font-bold text-purple-800">
+                                                            {translateAbilityName(hc.id, hc.name)}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-gray-400">
+                                            보유한 하이퍼차지가 없습니다.
+                                        </span>
+                                    )
+                                ) : (
+                                    <span className="text-xs text-gray-400">
+                                        보유한 하이퍼차지가 없습니다.
+                                    </span>
+                                )}
+                            </div>
+
+                            {selectedBrawler.buffies ? (
+                                <div className="flex flex-col gap-2">
+                                    <span className="font-bold text-gray-600 text-sm">
+                                        ✨ 버피 강화 상태
+                                    </span>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            ["가젯", selectedBrawler.buffies.gadget],
+                                            ["스타파워", selectedBrawler.buffies.starPower],
+                                            ["하이퍼차지", selectedBrawler.buffies.hyperCharge],
+                                        ].map(([label, active]) =>
+                                        {
+                                            return (
+                                                <div
+                                                    key={String(label)}
+                                                    className={`text-center text-xs font-bold px-2 py-2 rounded-lg border ${
+                                                        active
+                                                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                                            : "bg-white border-gray-100 text-gray-400"
+                                                    }`}
+                                                >
+                                                    {label}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : null}
 
                             <div className="flex flex-col gap-2">
                                 <span className="font-bold text-gray-600 text-sm">⚙️ 기어</span>
@@ -628,7 +731,7 @@ export default function Home()
                                                             }}
                                                         />
                                                         <span className="text-sm font-bold text-gray-800">
-                                                            {gr.name}
+                                                            {translateGearName(gr.id, gr.name)}
                                                         </span>
                                                     </div>
                                                 );

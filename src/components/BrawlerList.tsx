@@ -58,6 +58,10 @@ export default function BrawlerList({ playerData, setSelectedBrawler }: BrawlerL
                                         ⭐{" "}
                                         {brawler.starPowers ? brawler.starPowers.length : 0}
                                     </span>
+                                    <span>
+                                        🔥{" "}
+                                        {brawler.hyperCharges ? brawler.hyperCharges.length : 0}
+                                    </span>
                                 </div>
                                 
                                 {/* ✨ 바로 이 부분이 새롭게 추가된 트로피/최고기록 UI 상자야! */}

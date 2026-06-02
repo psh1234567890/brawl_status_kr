@@ -1,3 +1,9 @@
+import {
+    generatedMapDict,
+    generatedMapToModeDict,
+    generatedModeDict,
+} from "./generatedBrawlTranslations";
+
 export const mapDict: any = 
 {
     // 젬 그랩 (Gem Grab)
@@ -109,7 +115,8 @@ export const mapDict: any =
     "Infinite Doom": "무한한 파멸",
     "Quad Damage": "쿼드 데미지",
     "The Great Open": "탁 트인 공간",
-    "Pain in the Grass": "초원의 고통"
+    "Pain in the Grass": "초원의 고통",
+    ...generatedMapDict,
 };
 
 export const mapToModeDict: any = 
@@ -223,7 +230,8 @@ export const mapToModeDict: any =
     "Infinite Doom": "와이프아웃",
     "Quad Damage": "와이프아웃",
     "The Great Open": "와이프아웃",
-    "Pain in the Grass": "기타"
+    "Pain in the Grass": "기타",
+    ...generatedMapToModeDict,
 };
 
 export const rankDict: any = 
@@ -264,7 +272,8 @@ export const modeDict: any =
     knockout: "녹아웃",
     wipeout: "와이프아웃",
     duels: "듀얼",
-    trioShowdown: "트리오 쇼다운"
+    trioShowdown: "트리오 쇼다운",
+    ...generatedModeDict,
 };
 
 export const brawlerDict: any = 

@@ -4,6 +4,7 @@ import { battleLogs } from "../../../db/schema";
 import { sql } from "drizzle-orm";
 
 type BrawlerMapStat = {
+  id?: number;
   name: string;
   plays: number;
   wins: number;
@@ -13,9 +14,52 @@ type BrawlerMapStat = {
 
 type MapStatsResponse = Record<string, BrawlerMapStat[]>;
 
+type BattleBrawler = {
+  id?: number;
+  name?: string;
+};
+
+type BattlePlayer = {
+  brawler?: BattleBrawler;
+  brawlers?: BattleBrawler[];
+};
+
+type BattleDetail = {
+  battle?: {
+    players?: BattlePlayer[];
+    teams?: BattlePlayer[][];
+  };
+};
+
+function collectBrawlerIds(detail: string, brawlerIds: Map<string, number>) {
+  try {
+    const match = JSON.parse(detail) as BattleDetail;
+    const players = [
+      ...(match.battle?.players ?? []),
+      ...(match.battle?.teams ?? []).flat(),
+    ];
+
+    for (const player of players) {
+      const brawlers = [
+        ...(player.brawler ? [player.brawler] : []),
+        ...(player.brawlers ?? []),
+      ];
+
+      for (const brawler of brawlers) {
+        if (brawler.name && brawler.id && !brawlerIds.has(brawler.name)) {
+          brawlerIds.set(brawler.name, brawler.id);
+        }
+      }
+    }
+  } catch {
+    // Ignore malformed legacy details and keep serving the remaining stats.
+  }
+}
+
 export async function GET() {
   try {
-    const rows = await db
+    const [rows, detailRows] = await Promise.all([
+      db
       .select({
         map: battleLogs.map,
         brawlerName: battleLogs.brawlerName,
@@ -23,9 +67,20 @@ export async function GET() {
         wins: sql<number>`sum(case when ${battleLogs.result} = 'victory' then 1 else 0 end)`,
       })
       .from(battleLogs)
-      .groupBy(battleLogs.map, battleLogs.brawlerName);
+      .groupBy(battleLogs.map, battleLogs.brawlerName),
+      db
+        .selectDistinctOn([battleLogs.brawlerName], {
+          detail: battleLogs.battleDetail,
+        })
+        .from(battleLogs),
+    ]);
 
     const finalResult: MapStatsResponse = {};
+    const brawlerIds = new Map<string, number>();
+
+    for (const row of detailRows) {
+      collectBrawlerIds(row.detail, brawlerIds);
+    }
 
     for (const row of rows) {
       const plays = Number(row.plays);
@@ -38,6 +93,7 @@ export async function GET() {
       }
 
       finalResult[row.map].push({
+        id: brawlerIds.get(row.brawlerName),
         name: row.brawlerName,
         plays,
         wins,

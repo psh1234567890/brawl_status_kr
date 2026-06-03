@@ -26,6 +26,7 @@ export interface Brawler {
   hyperCharges?: BrawlAbility[];
   gears?: BrawlGear[];
   skin?: BrawlerSkin;
+  skins?: BrawlerSkin[];
   buffies?: {
     gadget?: boolean;
     starPower?: boolean;
@@ -112,4 +113,3 @@ export interface RecentBattleSummary {
   maxModeWins: number;
   streakCount: number;
 }
-

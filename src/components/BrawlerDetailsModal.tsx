@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { brawlerDict, modeDict } from "../constants/brawl";
-import type { BrawlAbility, Brawler, BrawlerStat } from "../types/brawl";
+import type { BrawlAbility, Brawler, BrawlerSkin, BrawlerStat } from "../types/brawl";
 import {
   translateAbilityName,
   translateGearName,
@@ -24,6 +24,7 @@ export default function BrawlerDetailsModal({
   onClose,
 }: BrawlerDetailsModalProps) {
   useCloseOnEscape(onClose);
+  const ownedSkins = getOwnedSkins(brawler);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -79,6 +80,43 @@ export default function BrawlerDetailsModal({
                 <span className="text-[11px] text-gray-400">브롤러 기본 이미지</span>
               </div>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-bold text-gray-600">보유 스킨 목록</span>
+              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-black text-indigo-700">
+                {ownedSkins.length}개
+              </span>
+            </div>
+            {ownedSkins.length ? (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {ownedSkins.map((skin) => (
+                  <div
+                    key={skin.id}
+                    className={`rounded-lg border px-3 py-2 text-sm font-bold shadow-sm ${
+                      brawler.skin?.id === skin.id
+                        ? "border-indigo-200 bg-indigo-50 text-indigo-800"
+                        : "border-gray-100 bg-white text-gray-700"
+                    }`}
+                    title={skin.name}
+                  >
+                    <span className="line-clamp-2">
+                      {translateSkinName(skin.id, skin.name)}
+                    </span>
+                    {brawler.skin?.id === skin.id ? (
+                      <span className="mt-1 block text-[11px] font-black text-indigo-500">
+                        현재 장착
+                      </span>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <span className="rounded-lg border border-dashed border-gray-200 bg-white p-3 text-xs font-bold text-gray-400">
+                공식 API 응답에 보유 스킨 목록이 없습니다.
+              </span>
+            )}
           </div>
 
           <h3 className="border-b pb-2 font-black text-gray-700">실제 보유 장비 목록</h3>
@@ -145,6 +183,18 @@ export default function BrawlerDetailsModal({
         <StatsCard title="내 검색 기록 누적 승률" color="indigo" stat={dbStat} />
       </section>
     </div>
+  );
+}
+
+function getOwnedSkins(brawler: Brawler) {
+  const byId = new Map<number, BrawlerSkin>();
+  for (const skin of brawler.skins ?? []) byId.set(skin.id, skin);
+  if (brawler.skin) byId.set(brawler.skin.id, brawler.skin);
+  return [...byId.values()].sort((left, right) =>
+    translateSkinName(left.id, left.name).localeCompare(
+      translateSkinName(right.id, right.name),
+      "ko",
+    ),
   );
 }
 
@@ -239,4 +289,3 @@ function useCloseOnEscape(onClose: () => void) {
     return () => window.removeEventListener("keydown", close);
   }, [onClose]);
 }
-

@@ -76,7 +76,7 @@ export default function MetaDashboard() {
         <h1 className="mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-4xl font-black text-transparent drop-shadow-sm">
           맵별 추천 브롤러
         </h1>
-        <p className="font-bold text-gray-500">검색 표본 기반 가중 승률 추천</p>
+        <p className="font-bold text-gray-500">전체 저장 전투 표본 기반 가중 승률 추천</p>
         <Link href="/" className="mt-6 inline-block rounded-full border border-indigo-200 bg-white px-6 py-2 font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50">
           전적 검색으로 돌아가기
         </Link>
@@ -136,7 +136,7 @@ export default function MetaDashboard() {
             <section className="w-full max-w-3xl rounded-3xl border border-white bg-white/80 p-8 shadow-2xl backdrop-blur-md">
               <h2 className="mb-6 flex flex-col gap-2 border-b-2 border-indigo-100 pb-4 text-2xl font-black sm:flex-row sm:items-end sm:justify-between">
                 <span>{mapDict[selectedMap] ?? selectedMap} 추천</span>
-                <span className="text-sm font-bold text-gray-400">검색 표본 기준: 최소 5판 이상</span>
+                <span className="text-sm font-bold text-gray-400">전체 저장 전투 표본 기준: 최소 5판 이상</span>
               </h2>
               <div className="flex flex-col gap-4">
                 {currentData.map((brawler, index) => {

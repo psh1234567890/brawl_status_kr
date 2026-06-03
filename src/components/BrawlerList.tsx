@@ -47,6 +47,9 @@ export default function BrawlerList({ brawlers, onSelectBrawler }: BrawlerListPr
                 <span>SP {brawler.starPowers?.length ?? 0}</span>
                 <span>HC {brawler.hyperCharges?.length ?? 0}</span>
               </span>
+              <span className="mb-3 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-500">
+                스킨 {brawler.skins?.length ?? (brawler.skin ? 1 : 0)}
+              </span>
               <span className="mt-auto flex w-full flex-col items-center rounded-lg border border-yellow-100 bg-yellow-50 py-2">
                 <span className="text-xl font-black text-yellow-600">🏆 {brawler.trophies}</span>
                 <span className="mt-1 text-xs font-bold text-gray-400">

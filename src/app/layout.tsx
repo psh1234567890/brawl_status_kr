@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const siteUrl = "https://brawl-status-kr.vercel.app";
+const siteUrl = "https://www.brawl-o1.site";
 const siteName = "브롤스타즈 전적 검색";
 const siteDescription =
   "브롤스타즈 플레이어 전적 검색, 최근 전투 분석, 맵별 추천 브롤러, 스킨 카탈로그를 한국어로 확인하세요.";

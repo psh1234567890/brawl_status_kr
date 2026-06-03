@@ -108,6 +108,18 @@ export default function Home() {
         ) : null}
       </section>
 
+      <section
+        aria-label="검색 주기 안내"
+        className="mb-12 w-full max-w-3xl rounded-3xl border-4 border-white bg-indigo-600 px-6 py-7 text-center text-white shadow-2xl"
+      >
+        <p className="text-2xl font-black sm:text-4xl">
+          25경기마다 검색하는 것을 권장합니다
+        </p>
+        <p className="mt-3 text-sm font-bold text-indigo-100 sm:text-base">
+          공식 전투 기록은 최근 최대 25경기만 불러올 수 있어, 자주 검색할수록 누적 통계가 더 정확해집니다.
+        </p>
+      </section>
+
       {search.error ? <Message text={search.error} tone="error" /> : null}
       {search.notice ? <Message text={search.notice} tone="notice" /> : null}
 

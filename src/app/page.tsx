@@ -71,7 +71,7 @@ export default function Home() {
       </header>
 
       <section className="mb-10 flex w-full max-w-md flex-col items-center gap-4" aria-label="플레이어 검색">
-        <div className="flex w-full overflow-hidden rounded-2xl border-2 border-white shadow-xl">
+        <div className="flex w-full flex-col overflow-hidden rounded-2xl border-2 border-white shadow-xl sm:flex-row">
           <input
             type="text"
             value={search.tag}
@@ -87,7 +87,7 @@ export default function Home() {
             type="button"
             onClick={() => void search.handleSearch()}
             disabled={search.loading}
-            className="shrink-0 bg-indigo-600 px-5 py-4 text-base font-black text-white transition-colors hover:bg-indigo-700 disabled:bg-gray-400 sm:px-8 sm:text-lg"
+            className="w-full bg-indigo-600 px-5 py-4 text-base font-black text-white transition-colors hover:bg-indigo-700 disabled:bg-gray-400 sm:w-auto sm:shrink-0 sm:px-8 sm:text-lg"
           >
             {search.loading ? "검색 중..." : "검색"}
           </button>

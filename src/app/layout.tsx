@@ -1,34 +1,96 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const siteUrl = "https://brawl-status-kr.vercel.app";
+const siteName = "브롤스타즈 전적 검색";
+const siteDescription =
+  "브롤스타즈 플레이어 전적 검색, 최근 전투 분석, 맵별 추천 브롤러, 스킨 카탈로그를 한국어로 확인하세요.";
+
 export const metadata: Metadata = {
-  title: "브롤스타즈 전적 검색 - Analytics",
-  description:
-    "브롤스타즈 전적, 맵별 1티어 추천, 프로필 분석 및 자체 DB 전적 승률을 확인하세요.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `${siteName} | Brawl Status KR`,
+    template: `%s | Brawl Status KR`,
+  },
+  description: siteDescription,
+  applicationName: "Brawl Status KR",
+  authors: [{ name: "Brawl Status KR" }],
+  creator: "Brawl Status KR",
+  publisher: "Brawl Status KR",
   keywords: [
     "브롤스타즈 전적",
-    "브롤스타즈 프로필",
     "브롤스타즈 전적 검색",
-    "브롤스타즈 맵 1티어",
+    "브롤스타즈 프로필",
+    "브롤스타즈 승률",
+    "브롤스타즈 맵 추천",
+    "브롤스타즈 추천 브롤러",
+    "브롤스타즈 스킨",
     "브롤스타즈 통계",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "브롤스타즈 전적 검색 - Analytics",
-    description:
-      "최근 전투 기록과 DB 기반 맵별 추천 브롤러를 분석합니다.",
-    url: "https://brawl-status-kr.vercel.app",
-    siteName: "Brawl Analytics",
+    title: `${siteName} | Brawl Status KR`,
+    description: siteDescription,
+    url: siteUrl,
+    siteName,
     locale: "ko_KR",
     type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: `${siteName} | Brawl Status KR`,
+    description: siteDescription,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: siteName,
+    url: siteUrl,
+    applicationCategory: "GameApplication",
+    operatingSystem: "Web",
+    inLanguage: "ko-KR",
+    description: siteDescription,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "KRW",
+    },
+    featureList: [
+      "브롤스타즈 플레이어 전적 검색",
+      "최근 전투 기록 분석",
+      "맵별 추천 브롤러 통계",
+      "브롤스타즈 스킨 카탈로그",
+    ],
+  };
+
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

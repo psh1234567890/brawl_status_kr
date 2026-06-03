@@ -52,9 +52,9 @@ export default function Home() {
   const nameColor = search.playerData?.nameColor?.replace("0x", "#") ?? "#1f2937";
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <main className="flex min-h-screen flex-col items-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8 sm:p-8">
       <header className="mb-8 mt-10 text-center">
-        <h1 className="mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-5xl font-black text-transparent drop-shadow-sm">
+        <h1 className="mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-4xl font-black text-transparent drop-shadow-sm sm:text-5xl">
           브롤스타즈 전적 검색
         </h1>
         <p className="inline-block rounded-full bg-white px-4 py-1 text-md font-bold text-gray-500 shadow-sm">
@@ -81,13 +81,13 @@ export default function Home() {
             }}
             placeholder="플레이어 태그 (예: 2Q89RU)"
             aria-label="플레이어 태그"
-            className="flex-grow p-4 text-lg font-bold text-gray-800 focus:outline-none"
+            className="min-w-0 flex-1 p-4 text-base font-bold text-gray-800 focus:outline-none sm:text-lg"
           />
           <button
             type="button"
             onClick={() => void search.handleSearch()}
             disabled={search.loading}
-            className="bg-indigo-600 px-8 py-4 text-lg font-black text-white transition-colors hover:bg-indigo-700 disabled:bg-gray-400"
+            className="shrink-0 bg-indigo-600 px-5 py-4 text-base font-black text-white transition-colors hover:bg-indigo-700 disabled:bg-gray-400 sm:px-8 sm:text-lg"
           >
             {search.loading ? "검색 중..." : "검색"}
           </button>

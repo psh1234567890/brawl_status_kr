@@ -171,14 +171,28 @@ export default function Home() {
             버그 제보 및 기능 건의: seunghunbag76@gmail.com
           </p>
         </div>
-        <a
-          href="https://github.com/psh1234567890/brawl_status_kr"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-600 transition-colors hover:text-black hover:underline"
-        >
-          GitHub Repository
-        </a>
+        <nav className="flex flex-wrap justify-center gap-3" aria-label="사이트 정보">
+          <Link href="/about" className="text-gray-600 transition-colors hover:text-black hover:underline">
+            소개
+          </Link>
+          <Link href="/privacy" className="text-gray-600 transition-colors hover:text-black hover:underline">
+            개인정보처리방침
+          </Link>
+          <Link href="/terms" className="text-gray-600 transition-colors hover:text-black hover:underline">
+            이용 안내
+          </Link>
+          <Link href="/contact" className="text-gray-600 transition-colors hover:text-black hover:underline">
+            문의
+          </Link>
+          <a
+            href="https://github.com/psh1234567890/brawl_status_kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-600 transition-colors hover:text-black hover:underline"
+          >
+            GitHub
+          </a>
+        </nav>
       </footer>
     </main>
   );

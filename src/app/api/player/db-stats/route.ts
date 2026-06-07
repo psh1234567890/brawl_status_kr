@@ -1,4 +1,4 @@
-import { inArray, sql } from "drizzle-orm";
+import { and, inArray, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "../../../../db";
 import { battleLogs } from "../../../../db/schema";
@@ -32,7 +32,12 @@ export async function GET(request: Request) {
         wins: sql<number>`sum(case when ${battleLogs.result} = 'victory' then 1 else 0 end)`,
       })
       .from(battleLogs)
-      .where(inArray(battleLogs.playerTag, tagVariants))
+      .where(
+        and(
+          inArray(battleLogs.playerTag, tagVariants),
+          sql`coalesce(${battleLogs.battleDetailJson}->'battle'->>'type', '') <> 'friendly'`,
+        ),
+      )
       .groupBy(battleLogs.brawlerName);
 
     const brawlers: BrawlerStat[] = rows

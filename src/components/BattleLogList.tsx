@@ -1,6 +1,6 @@
 import { mapDict, modeDict } from "../constants/brawl";
 import type { BattleLogItem, BattleLogResponse, RecentBattleSummary } from "../types/brawl";
-import { checkIsRanked, getBattleResultInfo } from "../utils/brawlHelpers";
+import { checkIsFriendly, checkIsRanked, getBattleResultInfo } from "../utils/brawlHelpers";
 
 interface BattleLogListProps {
   battleLog: BattleLogResponse;
@@ -13,10 +13,11 @@ export default function BattleLogList({
   summary,
   onSelectBattle,
 }: BattleLogListProps) {
+  const displayItems = battleLog.items;
   return (
     <section className="mb-12 w-full" aria-labelledby="battle-log-title">
       <h3 id="battle-log-title" className="mb-6 border-l-8 border-indigo-500 pl-4 text-2xl font-black text-indigo-900">
-        전체 기록 분석 ({battleLog.items.length}전)
+        전체 기록 분석 ({summary.total}전)
       </h3>
 
       <div className="mb-10 flex w-full flex-col items-center justify-around gap-6 rounded-3xl border border-gray-100 bg-white p-8 shadow-xl transition-transform hover:-translate-y-1 md:flex-row">
@@ -48,9 +49,10 @@ export default function BattleLogList({
       </div>
 
       <div className="custom-scrollbar mb-10 flex max-h-[600px] flex-col gap-4 overflow-y-auto pr-2">
-        {battleLog.items.map((match) => {
+        {displayItems.map((match) => {
           const info = getBattleResultInfo(match);
           const isRanked = checkIsRanked(match);
+          const isFriendly = checkIsFriendly(match);
           return (
             <button
               type="button"
@@ -60,17 +62,17 @@ export default function BattleLogList({
             >
               <span className="flex flex-col">
                 <span className="mb-1 flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black text-white ${isRanked ? "bg-red-500" : "bg-green-500"}`}>
-                    {isRanked ? "경쟁전" : "일반 모드"}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black text-white ${isFriendly ? "bg-amber-500" : isRanked ? "bg-red-500" : "bg-green-500"}`}>
+                    {isFriendly ? "친선전" : isRanked ? "경쟁전" : "일반 모드"}
                   </span>
                 </span>
                 <span className="mb-1 text-xl font-black text-gray-800">
-                  {modeDict[match.event.mode] ?? match.event.mode} -{" "}
-                  {mapDict[match.event.map] ?? match.event.map}
+                  {modeDict[match.event.mode ?? ""] ?? match.event.mode ?? "친선"} -{" "}
+                  {mapDict[match.event.map ?? ""] ?? match.event.map ?? "친선 경기"}
                 </span>
               </span>
               <span className="flex items-center gap-4">
-                {match.battle.trophyChange && !isRanked ? (
+                {match.battle.trophyChange && !isRanked && !isFriendly ? (
                   <span className={`text-xl font-black ${match.battle.trophyChange > 0 ? "text-yellow-500" : "text-red-500"}`}>
                     {match.battle.trophyChange > 0 ? "+" : ""}
                     {match.battle.trophyChange}🏆

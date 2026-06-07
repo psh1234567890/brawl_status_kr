@@ -40,6 +40,7 @@ const getCachedMetaStats = unstable_cache(
           ) AS duplicate_order
         FROM battle_logs
         WHERE battle_detail_json->'battle'->'teams' IS NOT NULL
+          AND coalesce(battle_detail_json->'battle'->>'type', '') <> 'friendly'
       ),
       team_logs AS (
         SELECT *
@@ -87,6 +88,7 @@ const getCachedMetaStats = unstable_cache(
         SELECT map, brawler_id, brawler_name, result
         FROM battle_logs
         WHERE battle_detail_json->'battle'->'teams' IS NULL
+          AND coalesce(battle_detail_json->'battle'->>'type', '') <> 'friendly'
       ),
       combined_stats AS (
         SELECT * FROM expanded_team_stats
@@ -132,7 +134,7 @@ const getCachedMetaStats = unstable_cache(
     }
     return result;
   },
-  ["meta-stats-v2"],
+  ["meta-stats-v3"],
   { revalidate: 60, tags: ["meta-stats"] },
 );
 

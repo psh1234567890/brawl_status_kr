@@ -66,10 +66,28 @@ describe("battle log helpers", () => {
     });
   });
 
+  it("excludes friendly battles from statistical summaries", () => {
+    const items = [
+      battle({ result: "victory" }),
+      { ...battle({ result: "defeat", type: "friendly" }), battleTime: "20260602T123456.000Z" },
+    ];
+
+    expect(calculateRecentBattleSummary({ items })).toMatchObject({
+      wins: 1,
+      defeats: 0,
+      total: 1,
+      winRate: 100,
+    });
+    expect(calculateBrawlerStats({ items }, "#2Q89RU", "SHELLY")).toMatchObject({
+      plays: 1,
+      wins: 1,
+      winRate: 100,
+    });
+  });
+
   it("parses Supercell battle timestamps", () => {
     expect(parseBattleTime("20260603T123456.789Z")?.toISOString()).toBe(
       "2026-06-03T12:34:56.789Z",
     );
   });
 });
-

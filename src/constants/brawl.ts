@@ -273,6 +273,7 @@ export const modeDict: Record<string, string> =
     wipeout: "와이프아웃",
     duels: "듀얼",
     trioShowdown: "트리오 쇼다운",
+    friendly: "친선",
     ...generatedModeDict,
 };
 

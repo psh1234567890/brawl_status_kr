@@ -19,8 +19,13 @@ export function checkIsRanked(match: BattleLogItem) {
   return match.battle.type === "soloRanked" || match.battle.type === "teamRanked";
 }
 
+export function checkIsFriendly(match: BattleLogItem) {
+  return match.battle.type === "friendly";
+}
+
 export function getNormalizedBattleResult(match: BattleLogItem): BattleOutcome {
-  const showdownWinRank = SHOWDOWN_WIN_RANK[match.event.mode];
+  const mode = match.event.mode ?? "";
+  const showdownWinRank = SHOWDOWN_WIN_RANK[mode];
   if (showdownWinRank !== undefined && match.battle.rank !== undefined) {
     return match.battle.rank <= showdownWinRank ? "victory" : "defeat";
   }
@@ -95,8 +100,8 @@ export function createBattleFingerprint(match: BattleLogItem) {
 
   return [
     match.battleTime,
-    match.event.mode,
-    match.event.map,
+    match.event.mode ?? "friendly",
+    match.event.map ?? "친선 경기",
     participantTags || "unknown-participants",
   ].join("|");
 }
@@ -134,6 +139,8 @@ export function calculateRecentBattleSummary(
   let maxModeWins = 0;
 
   for (const match of battleLog?.items ?? []) {
+    if (checkIsFriendly(match)) continue;
+
     if (match.battleTime) {
       const date = match.battleTime.slice(0, 8);
       if (!uniqueDates.includes(date)) uniqueDates.push(date);
@@ -142,10 +149,11 @@ export function calculateRecentBattleSummary(
     const result = getNormalizedBattleResult(match);
     if (result === "victory") {
       wins += 1;
-      modeWins[match.event.mode] = (modeWins[match.event.mode] ?? 0) + 1;
-      if (modeWins[match.event.mode] > maxModeWins) {
-        maxModeWins = modeWins[match.event.mode];
-        bestMode = match.event.mode;
+      const modeKey = match.event.mode ?? "friendly";
+      modeWins[modeKey] = (modeWins[modeKey] ?? 0) + 1;
+      if (modeWins[modeKey] > maxModeWins) {
+        maxModeWins = modeWins[modeKey];
+        bestMode = modeKey;
       }
     } else if (result === "defeat") {
       defeats += 1;
@@ -197,14 +205,16 @@ export function calculateBrawlerStats(
   let maxMode = 0;
 
   for (const match of battleLog?.items ?? []) {
+    if (checkIsFriendly(match)) continue;
     if (getPlayerBrawler(match, playerTag)?.name !== brawlerName) continue;
 
     plays += 1;
     if (getNormalizedBattleResult(match) === "victory") wins += 1;
-    modes[match.event.mode] = (modes[match.event.mode] ?? 0) + 1;
-    if (modes[match.event.mode] > maxMode) {
-      maxMode = modes[match.event.mode];
-      topMode = match.event.mode;
+    const modeKey = match.event.mode ?? "friendly";
+    modes[modeKey] = (modes[modeKey] ?? 0) + 1;
+    if (modes[modeKey] > maxMode) {
+      maxMode = modes[modeKey];
+      topMode = modeKey;
     }
   }
 

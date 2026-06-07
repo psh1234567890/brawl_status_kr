@@ -44,9 +44,9 @@ export default function BattleDetailsModal({
         <header className="flex items-center justify-between border-b-4 border-black bg-[#8f98c6] p-4 pr-14">
           <div className="flex flex-col">
             <h2 id="battle-dialog-title" className="text-2xl font-black text-white drop-shadow-md">
-              {modeDict[battle.event.mode] ?? battle.event.mode}
+              {modeDict[battle.event.mode ?? ""] ?? battle.event.mode ?? "친선"}
             </h2>
-            <span className="font-bold text-gray-200">{mapDict[battle.event.map] ?? battle.event.map}</span>
+            <span className="font-bold text-gray-200">{mapDict[battle.event.map ?? ""] ?? battle.event.map ?? "친선 경기"}</span>
           </div>
           <span className={`text-4xl font-black drop-shadow-md ${result.isWin ? "text-green-400" : result.isLoss ? "text-red-500" : "text-gray-300"}`}>
             {result.resultText}

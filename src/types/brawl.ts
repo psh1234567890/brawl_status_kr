@@ -50,8 +50,8 @@ export interface BattlePlayer {
 export interface BattleLogItem {
   battleTime: string;
   event: {
-    mode: string;
-    map: string;
+    mode?: string;
+    map?: string;
   };
   battle: {
     result?: string;

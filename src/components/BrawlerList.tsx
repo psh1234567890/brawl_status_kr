@@ -1,22 +1,41 @@
-import type { Brawler, PlayerSkinInventoryResponse } from "../types/brawl";
+import type { Brawler, PlayerSkinInventoryResponse, PlayerSkinInventoryStatus } from "../types/brawl";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
 
 interface BrawlerListProps {
   brawlers: Brawler[];
   skinInventory?: PlayerSkinInventoryResponse | null;
+  skinInventoryStatus?: PlayerSkinInventoryStatus;
+  skinInventoryError?: string;
   onSelectBrawler: (brawler: Brawler) => void;
 }
 
-export default function BrawlerList({ brawlers, skinInventory, onSelectBrawler }: BrawlerListProps) {
+export default function BrawlerList({
+  brawlers,
+  skinInventory,
+  skinInventoryStatus = "idle",
+  skinInventoryError = "",
+  onSelectBrawler,
+}: BrawlerListProps) {
+  const isSkinLoading = skinInventoryStatus === "loading" && !skinInventory;
+  const skinStatusLabel =
+    skinInventoryStatus === "loading"
+      ? "보유 스킨 조회 중"
+      : skinInventoryStatus === "error"
+        ? "보유 스킨 일부 미표시"
+        : "클릭해서 아이템 확인";
+
   return (
     <section className="w-full" aria-labelledby="brawler-list-title">
       <div className="mb-6 flex items-end justify-between border-l-8 border-indigo-500 pl-4">
         <h3 id="brawler-list-title" className="text-2xl font-black text-indigo-900">
           보유 브롤러 상세 정보 ({brawlers.length}개)
         </h3>
-        <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-bold text-gray-500">
-          클릭해서 아이템 확인
+        <span
+          className="rounded-full bg-gray-200 px-3 py-1 text-sm font-bold text-gray-500"
+          title={skinInventoryError || undefined}
+        >
+          {skinStatusLabel}
         </span>
       </div>
 
@@ -53,7 +72,7 @@ export default function BrawlerList({ brawlers, skinInventory, onSelectBrawler }
                 <span>HC {brawler.hyperCharges?.length ?? 0}</span>
               </span>
               <span className="mb-3 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-500">
-                스킨 {skinCount}
+                {isSkinLoading ? "스킨 조회중" : `스킨 ${skinCount}`}
               </span>
               <span className="mt-auto flex w-full flex-col items-center rounded-lg border border-yellow-100 bg-yellow-50 py-2">
                 <span className="text-xl font-black text-yellow-600">🏆 {brawler.trophies}</span>

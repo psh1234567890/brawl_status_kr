@@ -206,6 +206,8 @@ export default function Home() {
           <BrawlerList
             brawlers={search.playerData.brawlers}
             skinInventory={search.skinInventory}
+            skinInventoryStatus={search.skinInventoryStatus}
+            skinInventoryError={search.skinInventoryError}
             onSelectBrawler={setSelectedBrawler}
           />
         </div>
@@ -215,6 +217,8 @@ export default function Home() {
         <BrawlerDetailsModal
           brawler={selectedBrawler}
           externalSkins={selectedExternalSkins}
+          skinInventoryStatus={search.skinInventoryStatus}
+          skinInventoryError={search.skinInventoryError}
           recentStat={recentBrawlerStat}
           dbStat={dbBrawlerStat}
           onClose={() => setSelectedBrawler(null)}

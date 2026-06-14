@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import type { BrawlAbility, Brawler, BrawlerStat, PlayerOwnedSkin } from "../types/brawl";
+import type {
+  BrawlAbility,
+  Brawler,
+  BrawlerStat,
+  PlayerOwnedSkin,
+  PlayerSkinInventoryStatus,
+} from "../types/brawl";
 import {
   translateAbilityName,
   translateBrawlerName,
@@ -14,6 +20,8 @@ import BrawlImage from "./BrawlImage";
 interface BrawlerDetailsModalProps {
   brawler: Brawler;
   externalSkins?: PlayerOwnedSkin[];
+  skinInventoryStatus?: PlayerSkinInventoryStatus;
+  skinInventoryError?: string;
   recentStat: BrawlerStat & { topMode: string };
   dbStat?: BrawlerStat;
   onClose: () => void;
@@ -22,6 +30,8 @@ interface BrawlerDetailsModalProps {
 export default function BrawlerDetailsModal({
   brawler,
   externalSkins = [],
+  skinInventoryStatus = "idle",
+  skinInventoryError = "",
   recentStat,
   dbStat,
   onClose,
@@ -29,6 +39,8 @@ export default function BrawlerDetailsModal({
   useCloseOnEscape(onClose);
   const ownedSkins = getOwnedSkins(brawler, externalSkins);
   const displayName = translateBrawlerName(brawler.name);
+  const isSkinLoading = skinInventoryStatus === "loading";
+  const hasSkinError = skinInventoryStatus === "error";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -121,9 +133,23 @@ export default function BrawlerDetailsModal({
               </div>
             ) : (
               <span className="rounded-lg border border-dashed border-gray-200 bg-white p-3 text-xs font-bold text-gray-400">
-                공식 API와 보조 조회에서 보유 스킨 목록을 찾지 못했습니다.
+                {isSkinLoading
+                  ? "보유 스킨 보조 조회 중입니다."
+                  : hasSkinError
+                    ? "보조 조회에 실패해 공식 API 스킨만 표시 중입니다."
+                    : "공식 API와 보조 조회에서 보유 스킨 목록을 찾지 못했습니다."}
               </span>
             )}
+            {isSkinLoading ? (
+              <span className="rounded-lg border border-indigo-100 bg-indigo-50 p-2 text-xs font-black text-indigo-600">
+                보유 스킨 보조 조회 중입니다.
+              </span>
+            ) : null}
+            {hasSkinError ? (
+              <span className="rounded-lg border border-amber-100 bg-amber-50 p-2 text-xs font-black text-amber-700">
+                {skinInventoryError || "보유 스킨 보조 조회에 실패했습니다."}
+              </span>
+            ) : null}
           </div>
 
           <h3 className="border-b pb-2 font-black text-gray-700">실제 보유 장비 목록</h3>

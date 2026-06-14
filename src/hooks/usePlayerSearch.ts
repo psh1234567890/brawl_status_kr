@@ -7,6 +7,7 @@ import type {
   PlayerDbStats,
   PlayerHistoryResponse,
   PlayerSkinInventoryResponse,
+  PlayerSkinInventoryStatus,
 } from "../types/brawl";
 import { normalizePlayerTag } from "../utils/playerTag";
 
@@ -61,6 +62,8 @@ export function usePlayerSearch() {
   const [dbStats, setDbStats] = useState<PlayerDbStats | null>(null);
   const [playerHistory, setPlayerHistory] = useState<PlayerHistoryResponse | null>(null);
   const [skinInventory, setSkinInventory] = useState<PlayerSkinInventoryResponse | null>(null);
+  const [skinInventoryStatus, setSkinInventoryStatus] = useState<PlayerSkinInventoryStatus>("idle");
+  const [skinInventoryError, setSkinInventoryError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -105,8 +108,28 @@ export function usePlayerSearch() {
       setDbStats(null);
       setPlayerHistory(null);
       setSkinInventory(null);
+      setSkinInventoryStatus("loading");
+      setSkinInventoryError("");
 
       try {
+        const skinInventoryRequest = fetchJson<PlayerSkinInventoryResponse>(`/api/player/skins?tag=${safeTag}`, {
+          signal: controller.signal,
+        })
+          .then((skins) => {
+            if (!isCurrent()) return;
+            setSkinInventory(skins);
+            setSkinInventoryStatus("ready");
+          })
+          .catch((skinError) => {
+            if (isAbortError(skinError) || !isCurrent()) return;
+            setSkinInventoryStatus("error");
+            setSkinInventoryError(
+              skinError instanceof Error
+                ? skinError.message
+                : "보유 스킨 목록을 불러오지 못했습니다.",
+            );
+          });
+
         const [profileResult, battleResult] = await Promise.allSettled([
           fetchJson<PlayerData>(`/api/player?tag=${safeTag}`, {
             signal: controller.signal,
@@ -118,7 +141,10 @@ export function usePlayerSearch() {
         ]);
 
         if (!isCurrent()) return;
-        if (profileResult.status === "rejected") throw profileResult.reason;
+        if (profileResult.status === "rejected") {
+          controller.abort();
+          throw profileResult.reason;
+        }
 
         setPlayerData(profileResult.value);
         const updatedRecent = [
@@ -135,25 +161,22 @@ export function usePlayerSearch() {
         }
 
         try {
-          const [stats, history, skins] = await Promise.allSettled([
+          const [stats, history] = await Promise.allSettled([
             fetchJson<PlayerDbStats>(`/api/player/db-stats?tag=${safeTag}`, {
               signal: controller.signal,
             }),
             fetchJson<PlayerHistoryResponse>(`/api/player/history?tag=${safeTag}`, {
               signal: controller.signal,
             }),
-            fetchJson<PlayerSkinInventoryResponse>(`/api/player/skins?tag=${safeTag}`, {
-              signal: controller.signal,
-            }),
           ]);
           if (isCurrent()) {
             if (stats.status === "fulfilled") setDbStats(stats.value);
             if (history.status === "fulfilled") setPlayerHistory(history.value);
-            if (skins.status === "fulfilled") setSkinInventory(skins.value);
             if (stats.status === "rejected" || history.status === "rejected") {
               setNotice("프로필은 불러왔지만 누적 통계는 갱신하지 못했습니다.");
             }
           }
+          await skinInventoryRequest;
         } catch (statsError) {
           if (!isAbortError(statsError) && isCurrent()) {
             setNotice("프로필은 불러왔지만 누적 통계는 갱신하지 못했습니다.");
@@ -161,6 +184,8 @@ export function usePlayerSearch() {
         }
       } catch (requestError) {
         if (!isAbortError(requestError) && isCurrent()) {
+          setSkinInventoryStatus("idle");
+          setSkinInventoryError("");
           setError(
             requestError instanceof Error
               ? requestError.message
@@ -197,6 +222,8 @@ export function usePlayerSearch() {
     dbStats,
     playerHistory,
     skinInventory,
+    skinInventoryStatus,
+    skinInventoryError,
     loading,
     error,
     notice,

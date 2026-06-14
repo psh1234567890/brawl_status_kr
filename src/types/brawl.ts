@@ -141,6 +141,8 @@ export interface PlayerSkinInventoryResponse {
   byBrawler: Record<string, PlayerOwnedSkin[]>;
 }
 
+export type PlayerSkinInventoryStatus = "idle" | "loading" | "ready" | "error";
+
 export interface ClubMember {
   tag: string;
   name: string;

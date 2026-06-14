@@ -15,6 +15,13 @@ export interface BrawlerSkin {
   name: string;
 }
 
+export interface PlayerOwnedSkin {
+  id?: number;
+  name: string;
+  brawlerName: string;
+  source: "official" | "brawlace";
+}
+
 export interface Brawler {
   id: number;
   name: string;
@@ -125,6 +132,13 @@ export interface PlayerHistoryResponse {
   daily: PlayerHistoryDay[];
   topModes: PlayerHistoryBucket[];
   topMaps: PlayerHistoryBucket[];
+}
+
+export interface PlayerSkinInventoryResponse {
+  tag: string;
+  source: "brawlace";
+  skins: PlayerOwnedSkin[];
+  byBrawler: Record<string, PlayerOwnedSkin[]>;
 }
 
 export interface ClubMember {

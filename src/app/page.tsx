@@ -9,12 +9,13 @@ import BrawlerList from "../components/BrawlerList";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
 import { usePlayerSearch } from "../hooks/usePlayerSearch";
-import type { BattleLogItem, Brawler } from "../types/brawl";
+import type { BattleLogItem, Brawler, PlayerOwnedSkin } from "../types/brawl";
 import {
   calculateBrawlerStats,
   calculateRecentBattleSummary,
   estimatePlayTime,
 } from "../utils/brawlHelpers";
+import { normalizePlayerTag } from "../utils/playerTag";
 
 export default function Home() {
   const search = usePlayerSearch();
@@ -49,6 +50,13 @@ export default function Home() {
         ? search.dbStats?.brawlers.find((stat) => stat.name === selectedBrawler.name)
         : undefined,
     [search.dbStats, selectedBrawler],
+  );
+  const selectedExternalSkins = useMemo(
+    () =>
+      selectedBrawler
+        ? getExternalSkinsForBrawler(search.skinInventory?.byBrawler, selectedBrawler.name)
+        : [],
+    [search.skinInventory, selectedBrawler],
   );
   const nameColor = search.playerData?.nameColor?.replace("0x", "#") ?? "#1f2937";
 
@@ -114,18 +122,49 @@ export default function Home() {
             {search.loading ? "검색 중..." : "검색"}
           </button>
         </div>
+        {search.playerData ? (
+          <button
+            type="button"
+            onClick={() => search.toggleFavorite(search.playerData?.tag)}
+            className="rounded-full border border-indigo-200 bg-white px-4 py-2 text-sm font-black text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
+          >
+            {search.favoriteSearches.includes(normalizePlayerTag(search.playerData.tag))
+              ? "즐겨찾기 해제"
+              : "즐겨찾기 추가"}
+          </button>
+        ) : null}
+        {search.favoriteSearches.length > 0 ? (
+          <div className="mt-2 flex w-full flex-col items-center gap-2">
+            <span className="text-xs font-black text-indigo-500">즐겨찾기</span>
+            <div className="flex flex-wrap justify-center gap-2">
+              {search.favoriteSearches.map((favoriteTag) => (
+                <button
+                  type="button"
+                  key={favoriteTag}
+                  onClick={() => void search.handleSearch(favoriteTag)}
+                  className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
+                >
+                  {favoriteTag}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {search.recentSearches.length > 0 ? (
-          <div className="mt-2 flex flex-wrap justify-center gap-2">
-            {search.recentSearches.map((recentTag) => (
-              <button
-                type="button"
-                key={recentTag}
-                onClick={() => void search.handleSearch(recentTag)}
-                className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50"
-              >
-                {recentTag}
-              </button>
-            ))}
+          <div className="mt-2 flex w-full flex-col items-center gap-2">
+            <span className="text-xs font-black text-gray-500">최근 검색</span>
+            <div className="flex flex-wrap justify-center gap-2">
+              {search.recentSearches.map((recentTag) => (
+                <button
+                  type="button"
+                  key={recentTag}
+                  onClick={() => void search.handleSearch(recentTag)}
+                  className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50"
+                >
+                  {recentTag}
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
       </section>
@@ -166,6 +205,7 @@ export default function Home() {
           />
           <BrawlerList
             brawlers={search.playerData.brawlers}
+            skinInventory={search.skinInventory}
             onSelectBrawler={setSelectedBrawler}
           />
         </div>
@@ -174,6 +214,7 @@ export default function Home() {
       {selectedBrawler && recentBrawlerStat ? (
         <BrawlerDetailsModal
           brawler={selectedBrawler}
+          externalSkins={selectedExternalSkins}
           recentStat={recentBrawlerStat}
           dbStat={dbBrawlerStat}
           onClose={() => setSelectedBrawler(null)}
@@ -230,4 +271,18 @@ function Message({ text, tone }: { text: string; tone: "error" | "notice" }) {
       {text}
     </div>
   );
+}
+
+function getExternalSkinsForBrawler(
+  byBrawler: Record<string, PlayerOwnedSkin[]> | undefined,
+  brawlerName: string,
+) {
+  return byBrawler?.[normalizeBrawlerSkinKey(brawlerName)] ?? [];
+}
+
+function normalizeBrawlerSkinKey(value: string) {
+  return value
+    .toUpperCase()
+    .replace(/&/g, "AND")
+    .replace(/[^A-Z0-9]+/g, "");
 }

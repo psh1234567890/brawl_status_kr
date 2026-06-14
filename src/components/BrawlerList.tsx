@@ -1,13 +1,14 @@
-import type { Brawler } from "../types/brawl";
+import type { Brawler, PlayerSkinInventoryResponse } from "../types/brawl";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
 
 interface BrawlerListProps {
   brawlers: Brawler[];
+  skinInventory?: PlayerSkinInventoryResponse | null;
   onSelectBrawler: (brawler: Brawler) => void;
 }
 
-export default function BrawlerList({ brawlers, onSelectBrawler }: BrawlerListProps) {
+export default function BrawlerList({ brawlers, skinInventory, onSelectBrawler }: BrawlerListProps) {
   return (
     <section className="w-full" aria-labelledby="brawler-list-title">
       <div className="mb-6 flex items-end justify-between border-l-8 border-indigo-500 pl-4">
@@ -24,6 +25,7 @@ export default function BrawlerList({ brawlers, onSelectBrawler }: BrawlerListPr
           .sort((left, right) => right.trophies - left.trophies)
           .map((brawler) => {
             const displayName = translateBrawlerName(brawler.name);
+            const skinCount = getSkinCount(brawler, skinInventory);
 
             return (
             <button
@@ -51,7 +53,7 @@ export default function BrawlerList({ brawlers, onSelectBrawler }: BrawlerListPr
                 <span>HC {brawler.hyperCharges?.length ?? 0}</span>
               </span>
               <span className="mb-3 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-500">
-                스킨 {brawler.skins?.length ?? (brawler.skin ? 1 : 0)}
+                스킨 {skinCount}
               </span>
               <span className="mt-auto flex w-full flex-col items-center rounded-lg border border-yellow-100 bg-yellow-50 py-2">
                 <span className="text-xl font-black text-yellow-600">🏆 {brawler.trophies}</span>
@@ -65,4 +67,17 @@ export default function BrawlerList({ brawlers, onSelectBrawler }: BrawlerListPr
       </div>
     </section>
   );
+}
+
+function getSkinCount(brawler: Brawler, skinInventory: PlayerSkinInventoryResponse | null | undefined) {
+  const externalSkins = skinInventory?.byBrawler[normalizeBrawlerSkinKey(brawler.name)];
+  if (externalSkins?.length) return externalSkins.length;
+  return brawler.skins?.length ?? (brawler.skin ? 1 : 0);
+}
+
+function normalizeBrawlerSkinKey(value: string) {
+  return value
+    .toUpperCase()
+    .replace(/&/g, "AND")
+    .replace(/[^A-Z0-9]+/g, "");
 }

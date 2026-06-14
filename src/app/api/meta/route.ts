@@ -5,14 +5,21 @@ import { db } from "../../../db";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 
 const MINIMUM_PLAYS = 5;
+const MEDIUM_CONFIDENCE_PLAYS = 20;
+const HIGH_CONFIDENCE_PLAYS = 50;
+
+type SampleConfidence = "LOW" | "MEDIUM" | "HIGH";
 
 type BrawlerMapStat = {
   id?: number;
   name: string;
   plays: number;
   wins: number;
+  draws: number;
   winRate: number;
   score: number;
+  confidence: SampleConfidence;
+  confidenceScore: number;
 };
 
 type MapStatsResponse = Record<string, BrawlerMapStat[]>;
@@ -25,6 +32,7 @@ const getCachedMetaStats = unstable_cache(
       brawlerName: string;
       plays: number | string;
       wins: number | string;
+      draws: number | string;
     }>(sql`
       WITH team_log_candidates AS (
         SELECT
@@ -100,7 +108,8 @@ const getCachedMetaStats = unstable_cache(
         max(brawler_id) AS "brawlerId",
         brawler_name AS "brawlerName",
         count(*) AS plays,
-        sum(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS wins
+        sum(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS wins,
+        sum(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) AS draws
       FROM combined_stats
       WHERE result IS NOT NULL
         AND brawler_name IS NOT NULL
@@ -115,6 +124,7 @@ const getCachedMetaStats = unstable_cache(
 
       const plays = Number(row.plays);
       const wins = Number(row.wins);
+      const draws = Number(row.draws);
       const winRate = plays > 0 ? Math.floor((wins / plays) * 100) : 0;
       const score = Math.floor((winRate * plays) / (plays + MINIMUM_PLAYS));
 
@@ -124,8 +134,11 @@ const getCachedMetaStats = unstable_cache(
         name: row.brawlerName,
         plays,
         wins,
+        draws,
         winRate,
         score,
+        confidence: getSampleConfidence(plays),
+        confidenceScore: getConfidenceScore(plays),
       });
     }
 
@@ -134,9 +147,19 @@ const getCachedMetaStats = unstable_cache(
     }
     return result;
   },
-  ["meta-stats-v3"],
+  ["meta-stats-v4"],
   { revalidate: 60, tags: ["meta-stats"] },
 );
+
+function getSampleConfidence(plays: number): SampleConfidence {
+  if (plays >= HIGH_CONFIDENCE_PLAYS) return "HIGH";
+  if (plays >= MEDIUM_CONFIDENCE_PLAYS) return "MEDIUM";
+  return "LOW";
+}
+
+function getConfidenceScore(plays: number) {
+  return Math.min(100, Math.round((plays / HIGH_CONFIDENCE_PLAYS) * 100));
+}
 
 export async function GET(request: Request) {
   const rejected = rejectRateLimitedRequest(request, "meta", {

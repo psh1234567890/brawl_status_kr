@@ -6,24 +6,27 @@ import type {
   PlayerData,
   PlayerDbStats,
   PlayerHistoryResponse,
+  PlayerSkinInventoryResponse,
 } from "../types/brawl";
 import { normalizePlayerTag } from "../utils/playerTag";
 
 const RECENT_TAGS_KEY = "recentTags";
+const FAVORITE_TAGS_KEY = "favoriteTags";
 const EMPTY_RECENT_TAGS = "[]";
 const RECENT_TAGS_CHANGED_EVENT = "recentTagsChanged";
+const FAVORITE_TAGS_CHANGED_EVENT = "favoriteTagsChanged";
 
-function getRecentTagsSnapshot() {
+function getStoredTagsSnapshot(key: string) {
   if (typeof window === "undefined") return EMPTY_RECENT_TAGS;
-  return window.localStorage.getItem(RECENT_TAGS_KEY) ?? EMPTY_RECENT_TAGS;
+  return window.localStorage.getItem(key) ?? EMPTY_RECENT_TAGS;
 }
 
-function subscribeRecentTags(onStoreChange: () => void) {
+function subscribeStoredTags(eventName: string, onStoreChange: () => void) {
   window.addEventListener("storage", onStoreChange);
-  window.addEventListener(RECENT_TAGS_CHANGED_EVENT, onStoreChange);
+  window.addEventListener(eventName, onStoreChange);
   return () => {
     window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(RECENT_TAGS_CHANGED_EVENT, onStoreChange);
+    window.removeEventListener(eventName, onStoreChange);
   };
 }
 
@@ -57,6 +60,7 @@ export function usePlayerSearch() {
   const [battleLog, setBattleLog] = useState<BattleLogResponse | null>(null);
   const [dbStats, setDbStats] = useState<PlayerDbStats | null>(null);
   const [playerHistory, setPlayerHistory] = useState<PlayerHistoryResponse | null>(null);
+  const [skinInventory, setSkinInventory] = useState<PlayerSkinInventoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -64,11 +68,17 @@ export function usePlayerSearch() {
   const requestSequence = useRef(0);
 
   const recentSnapshot = useSyncExternalStore(
-    subscribeRecentTags,
-    getRecentTagsSnapshot,
+    (onStoreChange) => subscribeStoredTags(RECENT_TAGS_CHANGED_EVENT, onStoreChange),
+    () => getStoredTagsSnapshot(RECENT_TAGS_KEY),
+    () => EMPTY_RECENT_TAGS,
+  );
+  const favoriteSnapshot = useSyncExternalStore(
+    (onStoreChange) => subscribeStoredTags(FAVORITE_TAGS_CHANGED_EVENT, onStoreChange),
+    () => getStoredTagsSnapshot(FAVORITE_TAGS_KEY),
     () => EMPTY_RECENT_TAGS,
   );
   const recentSearches = useMemo(() => parseRecentTags(recentSnapshot), [recentSnapshot]);
+  const favoriteSearches = useMemo(() => parseRecentTags(favoriteSnapshot), [favoriteSnapshot]);
 
   const handleSearch = useCallback(
     async (searchTag?: string) => {
@@ -94,6 +104,7 @@ export function usePlayerSearch() {
       setBattleLog(null);
       setDbStats(null);
       setPlayerHistory(null);
+      setSkinInventory(null);
 
       try {
         const [profileResult, battleResult] = await Promise.allSettled([
@@ -124,17 +135,24 @@ export function usePlayerSearch() {
         }
 
         try {
-          const [stats, history] = await Promise.all([
+          const [stats, history, skins] = await Promise.allSettled([
             fetchJson<PlayerDbStats>(`/api/player/db-stats?tag=${safeTag}`, {
               signal: controller.signal,
             }),
             fetchJson<PlayerHistoryResponse>(`/api/player/history?tag=${safeTag}`, {
               signal: controller.signal,
             }),
+            fetchJson<PlayerSkinInventoryResponse>(`/api/player/skins?tag=${safeTag}`, {
+              signal: controller.signal,
+            }),
           ]);
           if (isCurrent()) {
-            setDbStats(stats);
-            setPlayerHistory(history);
+            if (stats.status === "fulfilled") setDbStats(stats.value);
+            if (history.status === "fulfilled") setPlayerHistory(history.value);
+            if (skins.status === "fulfilled") setSkinInventory(skins.value);
+            if (stats.status === "rejected" || history.status === "rejected") {
+              setNotice("프로필은 불러왔지만 누적 통계는 갱신하지 못했습니다.");
+            }
           }
         } catch (statsError) {
           if (!isAbortError(statsError) && isCurrent()) {
@@ -156,6 +174,21 @@ export function usePlayerSearch() {
     [recentSearches, tag],
   );
 
+  const toggleFavorite = useCallback(
+    (target?: string) => {
+      const targetTag = normalizePlayerTag(target ?? tag);
+      if (!targetTag) return;
+
+      const nextFavorites = favoriteSearches.includes(targetTag)
+        ? favoriteSearches.filter((favoriteTag) => favoriteTag !== targetTag)
+        : [targetTag, ...favoriteSearches.filter((favoriteTag) => favoriteTag !== targetTag)].slice(0, 12);
+
+      localStorage.setItem(FAVORITE_TAGS_KEY, JSON.stringify(nextFavorites));
+      window.dispatchEvent(new Event(FAVORITE_TAGS_CHANGED_EVENT));
+    },
+    [favoriteSearches, tag],
+  );
+
   return {
     tag,
     setTag,
@@ -163,10 +196,13 @@ export function usePlayerSearch() {
     battleLog,
     dbStats,
     playerHistory,
+    skinInventory,
     loading,
     error,
     notice,
     recentSearches,
+    favoriteSearches,
     handleSearch,
+    toggleFavorite,
   };
 }

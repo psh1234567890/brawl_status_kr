@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import type { BrawlAbility, Brawler, BrawlerSkin, BrawlerStat } from "../types/brawl";
+import type { BrawlAbility, Brawler, BrawlerStat, PlayerOwnedSkin } from "../types/brawl";
 import {
   translateAbilityName,
   translateBrawlerName,
@@ -13,6 +13,7 @@ import BrawlImage from "./BrawlImage";
 
 interface BrawlerDetailsModalProps {
   brawler: Brawler;
+  externalSkins?: PlayerOwnedSkin[];
   recentStat: BrawlerStat & { topMode: string };
   dbStat?: BrawlerStat;
   onClose: () => void;
@@ -20,12 +21,13 @@ interface BrawlerDetailsModalProps {
 
 export default function BrawlerDetailsModal({
   brawler,
+  externalSkins = [],
   recentStat,
   dbStat,
   onClose,
 }: BrawlerDetailsModalProps) {
   useCloseOnEscape(onClose);
-  const ownedSkins = getOwnedSkins(brawler);
+  const ownedSkins = getOwnedSkins(brawler, externalSkins);
   const displayName = translateBrawlerName(brawler.name);
 
   return (
@@ -95,18 +97,21 @@ export default function BrawlerDetailsModal({
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {ownedSkins.map((skin) => (
                   <div
-                    key={skin.id}
+                    key={skin.key}
                     className={`rounded-lg border px-3 py-2 text-sm font-bold shadow-sm ${
-                      brawler.skin?.id === skin.id
+                      skin.isEquipped
                         ? "border-indigo-200 bg-indigo-50 text-indigo-800"
                         : "border-gray-100 bg-white text-gray-700"
                     }`}
                     title={skin.name}
                   >
                     <span className="line-clamp-2">
-                      {translateSkinName(skin.id, skin.name)}
+                      {formatSkinName(skin, displayName, brawler.name)}
                     </span>
-                    {brawler.skin?.id === skin.id ? (
+                    <span className="mt-1 block text-[11px] font-black text-gray-400">
+                      {skin.source === "official" ? "공식 API" : "보조 조회"}
+                    </span>
+                    {skin.isEquipped ? (
                       <span className="mt-1 block text-[11px] font-black text-indigo-500">
                         현재 장착
                       </span>
@@ -116,7 +121,7 @@ export default function BrawlerDetailsModal({
               </div>
             ) : (
               <span className="rounded-lg border border-dashed border-gray-200 bg-white p-3 text-xs font-bold text-gray-400">
-                공식 API 응답에 보유 스킨 목록이 없습니다.
+                공식 API와 보조 조회에서 보유 스킨 목록을 찾지 못했습니다.
               </span>
             )}
           </div>
@@ -188,16 +193,84 @@ export default function BrawlerDetailsModal({
   );
 }
 
-function getOwnedSkins(brawler: Brawler) {
-  const byId = new Map<number, BrawlerSkin>();
-  for (const skin of brawler.skins ?? []) byId.set(skin.id, skin);
-  if (brawler.skin) byId.set(brawler.skin.id, brawler.skin);
-  return [...byId.values()].sort((left, right) =>
-    translateSkinName(left.id, left.name).localeCompare(
-      translateSkinName(right.id, right.name),
+type DisplaySkin = {
+  id?: number;
+  isEquipped: boolean;
+  key: string;
+  name: string;
+  source: "official" | "brawlace";
+};
+
+function getOwnedSkins(brawler: Brawler, externalSkins: PlayerOwnedSkin[]) {
+  const byKey = new Map<string, DisplaySkin>();
+
+  for (const skin of brawler.skins ?? []) {
+    byKey.set(`id:${skin.id}`, {
+      id: skin.id,
+      isEquipped: brawler.skin?.id === skin.id,
+      key: `id:${skin.id}`,
+      name: skin.name,
+      source: "official",
+    });
+  }
+
+  if (brawler.skin) {
+    byKey.set(`id:${brawler.skin.id}`, {
+      id: brawler.skin.id,
+      isEquipped: true,
+      key: `id:${brawler.skin.id}`,
+      name: brawler.skin.name,
+      source: "official",
+    });
+  }
+
+  for (const skin of externalSkins) {
+    const key = `name:${normalizeSkinName(skin.name)}`;
+    if (byKey.has(key)) continue;
+    byKey.set(key, {
+      id: skin.id,
+      isEquipped:
+        brawler.skin !== undefined &&
+        normalizeSkinName(skin.name) === normalizeSkinName(brawler.skin.name),
+      key,
+      name: skin.name,
+      source: skin.source,
+    });
+  }
+
+  return [...byKey.values()].sort((left, right) =>
+    formatSkinName(left, translateBrawlerName(brawler.name), brawler.name).localeCompare(
+      formatSkinName(right, translateBrawlerName(brawler.name), brawler.name),
       "ko",
     ),
   );
+}
+
+function formatSkinName(skin: DisplaySkin, displayBrawlerName: string, brawlerName: string) {
+  if (skin.id !== undefined) return translateSkinName(skin.id, skin.name);
+  if (normalizeSkinName(skin.name) === normalizeSkinName(brawlerName)) {
+    return `${displayBrawlerName} 기본 스킨`;
+  }
+  return toTitleCase(skin.name);
+}
+
+function normalizeSkinName(value: string) {
+  return value
+    .toUpperCase()
+    .replace(/&/g, "AND")
+    .replace(/[^A-Z0-9]+/g, "");
+}
+
+function toTitleCase(value: string) {
+  return value
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => {
+      if (/^[ivx]+$/i.test(word)) return word.toUpperCase();
+      return `${word.slice(0, 1).toUpperCase()}${word.slice(1)}`;
+    })
+    .join(" ");
 }
 
 function AbilityGroup({

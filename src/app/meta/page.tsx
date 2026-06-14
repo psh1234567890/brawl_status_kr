@@ -8,14 +8,23 @@ import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTra
 import { translateBrawlerName, translateMapName } from "../../utils/brawlTranslations";
 
 const MODE_LIST = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
+const DEFAULT_VISIBLE_COUNT = 15;
+const MIN_PLAY_OPTIONS = [5, 10, 20, 50];
+
+type SampleConfidence = "LOW" | "MEDIUM" | "HIGH";
+type ConfidenceFilter = "ALL" | SampleConfidence;
+type MetaSortMode = "SCORE" | "WIN_RATE" | "PLAYS";
 
 type BrawlerMapStat = {
   id?: number;
   name: string;
   plays: number;
   wins: number;
+  draws: number;
   winRate: number;
   score: number;
+  confidence: SampleConfidence;
+  confidenceScore: number;
 };
 
 type MapStatsResponse = Record<string, BrawlerMapStat[]>;
@@ -26,6 +35,10 @@ export default function MetaDashboard() {
   const [selectedMap, setSelectedMap] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [minPlays, setMinPlays] = useState(5);
+  const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("ALL");
+  const [sortMode, setSortMode] = useState<MetaSortMode>("SCORE");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -64,11 +77,35 @@ export default function MetaDashboard() {
     () => Object.keys(data).filter((mapName) => getMapMode(mapName) === selectedMode),
     [data, selectedMode],
   );
-  const currentData = selectedMap ? data[selectedMap] ?? [] : [];
+  const currentData = useMemo(
+    () => (selectedMap ? data[selectedMap] ?? [] : []),
+    [data, selectedMap],
+  );
+  const filteredCurrentData = useMemo(
+    () =>
+      currentData
+        .filter((brawler) => brawler.plays >= minPlays)
+        .filter((brawler) => confidenceFilter === "ALL" || brawler.confidence === confidenceFilter)
+        .sort((left, right) => compareMetaStat(left, right, sortMode)),
+    [confidenceFilter, currentData, minPlays, sortMode],
+  );
+  const visibleData = showAll ? filteredCurrentData : filteredCurrentData.slice(0, DEFAULT_VISIBLE_COUNT);
+  const mapSummary = useMemo(() => {
+    const totalSamples = filteredCurrentData.reduce((sum, brawler) => sum + brawler.plays, 0);
+    const reliableCount = filteredCurrentData.filter((brawler) => brawler.confidence === "HIGH").length;
+    const topWinRate = filteredCurrentData.reduce((max, brawler) => Math.max(max, brawler.winRate), 0);
+    return { reliableCount, topWinRate, totalSamples };
+  }, [filteredCurrentData]);
 
   function selectMode(modeName: string) {
     setSelectedMode(modeName);
     setSelectedMap(Object.keys(data).find((mapName) => getMapMode(mapName) === modeName) ?? "");
+    setShowAll(false);
+  }
+
+  function selectMap(mapName: string) {
+    setSelectedMap(mapName);
+    setShowAll(false);
   }
 
   return (
@@ -93,7 +130,7 @@ export default function MetaDashboard() {
         </div>
       ) : (
         <div className="flex w-full max-w-4xl flex-col items-center">
-          <div className="mb-6 flex w-full justify-start gap-3 overflow-x-auto rounded-2xl bg-white/60 p-2 shadow-sm sm:justify-center">
+          <div className="mb-6 flex w-full flex-wrap justify-center gap-3 rounded-2xl bg-white/60 p-2 shadow-sm">
             {MODE_LIST.map((modeName) => (
               <button
                 type="button"
@@ -116,7 +153,7 @@ export default function MetaDashboard() {
                 <button
                   type="button"
                   key={mapName}
-                  onClick={() => setSelectedMap(mapName)}
+                  onClick={() => selectMap(mapName)}
                   className={`rounded-full border px-6 py-2.5 font-bold transition-all ${
                     mapName === selectedMap
                       ? "border-2 border-indigo-500 bg-white text-indigo-600 shadow-sm"
@@ -137,10 +174,71 @@ export default function MetaDashboard() {
             <section className="w-full max-w-3xl rounded-3xl border border-white bg-white/80 p-8 shadow-2xl backdrop-blur-md">
               <h2 className="mb-6 flex flex-col gap-2 border-b-2 border-indigo-100 pb-4 text-2xl font-black sm:flex-row sm:items-end sm:justify-between">
                 <span>{translateMapName(selectedMap)} 추천</span>
-                <span className="text-sm font-bold text-gray-400">전체 저장 전투 표본 기준: 최소 5판 이상</span>
+                <span className="text-sm font-bold text-gray-400">DB 전체 표본 기준: 최소 5판 이상</span>
               </h2>
-              <div className="flex flex-col gap-4">
-                {currentData.map((brawler, index) => {
+
+              <div className="mb-6 grid gap-3 sm:grid-cols-3">
+                <FilterField label="최소 표본">
+                  <select
+                    value={minPlays}
+                    onChange={(event) => {
+                      setMinPlays(Number(event.target.value));
+                      setShowAll(false);
+                    }}
+                    className="w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm font-black text-indigo-950 outline-none focus:border-indigo-400"
+                  >
+                    {MIN_PLAY_OPTIONS.map((value) => (
+                      <option key={value} value={value}>{value}전 이상</option>
+                    ))}
+                  </select>
+                </FilterField>
+                <FilterField label="신뢰도">
+                  <select
+                    value={confidenceFilter}
+                    onChange={(event) => {
+                      setConfidenceFilter(event.target.value as ConfidenceFilter);
+                      setShowAll(false);
+                    }}
+                    className="w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm font-black text-indigo-950 outline-none focus:border-indigo-400"
+                  >
+                    {(Object.keys(confidenceFilterLabels) as ConfidenceFilter[]).map((value) => (
+                      <option key={value} value={value}>{confidenceFilterLabels[value]}</option>
+                    ))}
+                  </select>
+                </FilterField>
+                <FilterField label="정렬">
+                  <select
+                    value={sortMode}
+                    onChange={(event) => {
+                      setSortMode(event.target.value as MetaSortMode);
+                      setShowAll(false);
+                    }}
+                    className="w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm font-black text-indigo-950 outline-none focus:border-indigo-400"
+                  >
+                    {(Object.keys(sortModeLabels) as MetaSortMode[]).map((value) => (
+                      <option key={value} value={value}>{sortModeLabels[value]}</option>
+                    ))}
+                  </select>
+                </FilterField>
+              </div>
+
+              <div className="mb-6 grid gap-3 sm:grid-cols-3">
+                <SummaryStat
+                  label="추천 후보"
+                  value={`${filteredCurrentData.length.toLocaleString("ko-KR")}명`}
+                  subValue={`전체 ${currentData.length.toLocaleString("ko-KR")}명`}
+                />
+                <SummaryStat label="집계 표본" value={`${mapSummary.totalSamples.toLocaleString("ko-KR")}건`} />
+                <SummaryStat
+                  label="고신뢰 후보"
+                  value={`${mapSummary.reliableCount.toLocaleString("ko-KR")}명`}
+                  subValue={`최고 승률 ${mapSummary.topWinRate}%`}
+                />
+              </div>
+
+              {filteredCurrentData.length ? (
+                <div className="flex flex-col gap-4">
+                  {visibleData.map((brawler, index) => {
                   const displayName = translateBrawlerName(brawler.name);
                   const brawlerId =
                     brawler.id ??
@@ -165,14 +263,34 @@ export default function MetaDashboard() {
                         )}
                         <span className="text-2xl font-black text-gray-800">{displayName}</span>
                       </div>
-                      <div className="flex w-full justify-between gap-4 border-t border-gray-100 pt-3 text-left sm:w-auto sm:border-0 sm:pt-0 sm:text-right">
-                        <Stat label="추천 점수" value={`${brawler.score}점`} />
-                        <Stat label="실제 승률" value={`${brawler.winRate}% (${brawler.plays}전)`} />
+                      <div className="flex w-full flex-col gap-3 border-t border-gray-100 pt-3 sm:w-[300px] sm:border-0 sm:pt-0">
+                        <div className="flex justify-between gap-4 text-left sm:text-right">
+                          <Stat label="추천 점수" value={`${brawler.score}점`} />
+                          <Stat label="실제 승률" value={`${brawler.winRate}% (${brawler.plays}전)`} />
+                        </div>
+                        <ConfidenceMeter stat={brawler} />
                       </div>
                     </article>
                   );
                 })}
-              </div>
+                </div>
+              ) : (
+                <p className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50 px-4 py-8 text-center text-sm font-bold text-indigo-500">
+                  현재 필터 조건에 맞는 추천 후보가 없습니다.
+                </p>
+              )}
+
+              {filteredCurrentData.length > DEFAULT_VISIBLE_COUNT ? (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAll((current) => !current)}
+                    className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
+                  >
+                    {showAll ? "상위 15개만 보기" : `전체 후보 ${filteredCurrentData.length.toLocaleString("ko-KR")}명 보기`}
+                  </button>
+                </div>
+              ) : null}
             </section>
           ) : (
             <div className="mt-10 w-full max-w-3xl rounded-full bg-white px-8 py-4 text-center text-xl font-bold text-gray-500 shadow-md">
@@ -189,6 +307,25 @@ function getMapMode(mapName: string) {
   return mapToModeDict[mapName] ?? "기타";
 }
 
+function SummaryStat({ label, value, subValue }: { label: string; value: string; subValue?: string }) {
+  return (
+    <div className="rounded-2xl bg-indigo-50 px-4 py-3">
+      <span className="text-xs font-black text-indigo-500">{label}</span>
+      <strong className="mt-1 block text-xl font-black text-indigo-950">{value}</strong>
+      {subValue ? <span className="mt-1 block text-xs font-bold text-indigo-400">{subValue}</span> : null}
+    </div>
+  );
+}
+
+function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="flex flex-col gap-1 text-xs font-black text-indigo-500">
+      {label}
+      {children}
+    </label>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col">
@@ -196,4 +333,67 @@ function Stat({ label, value }: { label: string; value: string }) {
       <span className="whitespace-nowrap text-base font-black text-indigo-600 sm:text-lg">{value}</span>
     </div>
   );
+}
+
+function ConfidenceMeter({ stat }: { stat: BrawlerMapStat }) {
+  const label = confidenceLabels[stat.confidence];
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <span className="text-xs font-bold text-gray-500">표본 신뢰도</span>
+        <span className={`rounded-full px-2 py-1 text-[11px] font-black ${confidenceBadgeClasses[stat.confidence]}`}>
+          {label}
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+        <div
+          className={`h-full rounded-full ${confidenceBarClasses[stat.confidence]}`}
+          style={{ width: `${stat.confidenceScore}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+const confidenceLabels: Record<SampleConfidence, string> = {
+  HIGH: "높음",
+  MEDIUM: "보통",
+  LOW: "낮음",
+};
+
+const confidenceFilterLabels: Record<ConfidenceFilter, string> = {
+  ALL: "전체",
+  HIGH: "높음만",
+  MEDIUM: "보통만",
+  LOW: "낮음만",
+};
+
+const sortModeLabels: Record<MetaSortMode, string> = {
+  SCORE: "추천 점수순",
+  WIN_RATE: "승률순",
+  PLAYS: "표본 많은순",
+};
+
+const confidenceBadgeClasses: Record<SampleConfidence, string> = {
+  HIGH: "bg-emerald-100 text-emerald-700",
+  MEDIUM: "bg-amber-100 text-amber-700",
+  LOW: "bg-gray-100 text-gray-500",
+};
+
+const confidenceBarClasses: Record<SampleConfidence, string> = {
+  HIGH: "bg-emerald-500",
+  MEDIUM: "bg-amber-400",
+  LOW: "bg-gray-300",
+};
+
+function compareMetaStat(left: BrawlerMapStat, right: BrawlerMapStat, mode: MetaSortMode) {
+  if (mode === "WIN_RATE") {
+    return right.winRate - left.winRate || right.plays - left.plays || right.score - left.score;
+  }
+
+  if (mode === "PLAYS") {
+    return right.plays - left.plays || right.score - left.score || right.winRate - left.winRate;
+  }
+
+  return right.score - left.score || right.plays - left.plays || right.winRate - left.winRate;
 }

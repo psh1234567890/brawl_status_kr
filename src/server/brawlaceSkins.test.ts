@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { groupSkinsByBrawler, normalizeLookupKey, parseBrawlaceSkinTable } from "./brawlaceSkins";
+import {
+  groupSkinsByBrawler,
+  normalizeLookupKey,
+  parseBrawlaceSkinMarkdown,
+  parseBrawlaceSkinTable,
+} from "./brawlaceSkins";
 
 describe("brawlace skin parser", () => {
   it("extracts owned skin rows from the Brawlace table fragment", () => {
@@ -45,5 +50,27 @@ describe("brawlace skin parser", () => {
 
     expect(normalizeLookupKey("Larry & Lawrie")).toBe("LARRYANDLAWRIE");
     expect(grouped.LARRYANDLAWRIE).toHaveLength(1);
+  });
+
+  it("extracts owned skin rows from the Brawlace reader markdown table", () => {
+    const markdown = `
+      | BRAWLERS | SKINS |
+      | --- | --- |
+      | ![Image 1: OTIS](https://brawlace.com/otis.png) OTIS | PHARAOTIS |
+      | ![Image 2: LARRY & LAWRIE](https://brawlace.com/ll.png) LARRY &amp; LAWRIE | GLITCH LARRY &amp; LAWRIE |
+    `;
+
+    expect(parseBrawlaceSkinMarkdown(markdown)).toEqual([
+      {
+        brawlerName: "LARRY & LAWRIE",
+        name: "GLITCH LARRY & LAWRIE",
+        source: "brawlace",
+      },
+      {
+        brawlerName: "OTIS",
+        name: "PHARAOTIS",
+        source: "brawlace",
+      },
+    ]);
   });
 });

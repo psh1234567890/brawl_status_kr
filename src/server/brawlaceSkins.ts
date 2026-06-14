@@ -2,6 +2,7 @@ import type { PlayerOwnedSkin, PlayerSkinInventoryResponse } from "../types/braw
 import { normalizePlayerTag } from "../utils/playerTag";
 
 const BRAWLACE_BASE_URL = "https://brawlace.com";
+const BRAWLACE_READER_BASE_URL = "https://r.jina.ai/http://r.jina.ai/http://";
 const MAX_BRAWLACE_SKINS_HTML_BYTES = 1_000_000;
 
 export class BrawlaceSkinLookupError extends Error {
@@ -12,9 +13,38 @@ export class BrawlaceSkinLookupError extends Error {
 
 export async function fetchBrawlaceSkinInventory(tag: string): Promise<PlayerSkinInventoryResponse> {
   const cleanTag = normalizePlayerTag(tag);
+  const skins = await fetchBrawlaceSkins(cleanTag);
+
+  return {
+    byBrawler: groupSkinsByBrawler(skins),
+    skins,
+    source: "brawlace",
+    tag: cleanTag,
+  };
+}
+
+async function fetchBrawlaceSkins(cleanTag: string) {
+  try {
+    const html = await fetchBrawlaceDirectHtml(cleanTag);
+    const skins = parseBrawlaceSkinTable(html);
+    if (skins.length > 0) return skins;
+    throw new BrawlaceSkinLookupError("보유 스킨 표를 찾지 못했습니다.");
+  } catch (error) {
+    console.warn("Brawlace direct skin lookup failed; trying reader fallback:", getLookupLog(error));
+  }
+
+  const markdown = await fetchBrawlaceReaderMarkdown(cleanTag);
+  const skins = parseBrawlaceSkinMarkdown(markdown);
+  if (skins.length > 0) return skins;
+
+  throw new BrawlaceSkinLookupError("보유 스킨 보조 조회 결과가 비어 있습니다.");
+}
+
+async function fetchBrawlaceDirectHtml(cleanTag: string) {
   const response = await fetch(`${BRAWLACE_BASE_URL}/players/%23${cleanTag}/skins`, {
     headers: {
       accept: "text/html,*/*",
+      "accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
       "user-agent": "Brawl Status KR skin lookup",
     },
     signal: AbortSignal.timeout(8_000),
@@ -39,13 +69,33 @@ export async function fetchBrawlaceSkinInventory(tag: string): Promise<PlayerSki
     throw new BrawlaceSkinLookupError("보유 스킨 응답이 너무 큽니다.", response.status);
   }
 
-  const skins = parseBrawlaceSkinTable(html);
-  return {
-    byBrawler: groupSkinsByBrawler(skins),
-    skins,
-    source: "brawlace",
-    tag: cleanTag,
-  };
+  return html;
+}
+
+async function fetchBrawlaceReaderMarkdown(cleanTag: string) {
+  const response = await fetch(`${BRAWLACE_READER_BASE_URL}${BRAWLACE_BASE_URL}/players/%2523${cleanTag}/skins`, {
+    headers: {
+      accept: "text/plain,*/*",
+      "user-agent": "Brawl Status KR skin lookup",
+    },
+    signal: AbortSignal.timeout(15_000),
+  });
+
+  if (!response.ok) {
+    throw new BrawlaceSkinLookupError("보유 스킨 reader 조회에 실패했습니다.", response.status);
+  }
+
+  const contentLength = Number(response.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_BRAWLACE_SKINS_HTML_BYTES) {
+    throw new BrawlaceSkinLookupError("보유 스킨 reader 응답이 너무 큽니다.", response.status);
+  }
+
+  const markdown = await response.text();
+  if (markdown.length > MAX_BRAWLACE_SKINS_HTML_BYTES) {
+    throw new BrawlaceSkinLookupError("보유 스킨 reader 응답이 너무 큽니다.", response.status);
+  }
+
+  return markdown;
 }
 
 export function parseBrawlaceSkinTable(html: string): PlayerOwnedSkin[] {
@@ -93,6 +143,49 @@ export function groupSkinsByBrawler(skins: PlayerOwnedSkin[]) {
   return result;
 }
 
+export function parseBrawlaceSkinMarkdown(markdown: string): PlayerOwnedSkin[] {
+  const skins: PlayerOwnedSkin[] = [];
+  const seen = new Set<string>();
+
+  for (const line of markdown.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) continue;
+
+    const cells = trimmed
+      .slice(1, -1)
+      .split("|")
+      .map((cell) => normalizeMarkdownCell(cell));
+    if (cells.length < 2) continue;
+
+    const [brawlerName, skinName] = cells;
+    if (
+      !brawlerName ||
+      !skinName ||
+      /^-+$/.test(brawlerName) ||
+      /^brawlers$/i.test(brawlerName) ||
+      /^skins$/i.test(skinName)
+    ) {
+      continue;
+    }
+
+    const key = `${normalizeLookupKey(brawlerName)}:${normalizeLookupKey(skinName)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    skins.push({
+      brawlerName,
+      name: skinName,
+      source: "brawlace",
+    });
+  }
+
+  return skins.sort(
+    (left, right) =>
+      left.brawlerName.localeCompare(right.brawlerName, "en") ||
+      left.name.localeCompare(right.name, "en"),
+  );
+}
+
 export function normalizeLookupKey(value: string) {
   return decodeHtmlEntities(value)
     .toUpperCase()
@@ -102,6 +195,15 @@ export function normalizeLookupKey(value: string) {
 
 function normalizeCellText(html: string) {
   return decodeHtmlEntities(stripTags(html))
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeMarkdownCell(markdown: string) {
+  return decodeHtmlEntities(markdown)
+    .replace(/!\[[^\]]*]\([^)]+\)/g, " ")
+    .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
+    .replace(/\\([\\`*_{}\[\]()#+\-.!|])/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -120,4 +222,16 @@ function decodeHtmlEntities(value: string) {
     .replace(/&apos;/g, "'")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
+}
+
+function getLookupLog(error: unknown) {
+  if (error instanceof BrawlaceSkinLookupError) {
+    return { message: error.message, status: error.status };
+  }
+
+  if (error instanceof Error) {
+    return { message: error.message, name: error.name };
+  }
+
+  return { message: String(error) };
 }

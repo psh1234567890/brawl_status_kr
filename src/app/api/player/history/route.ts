@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "../../../../db";
 import { battleLogs } from "../../../../db/schema";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import { rejectCrossSiteMutation } from "../../../../server/requestGuard";
 import type {
   PlayerHistoryBucket,
   PlayerHistoryDay,
@@ -116,6 +117,9 @@ export async function GET(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const crossSiteRejected = rejectCrossSiteMutation(request);
+  if (crossSiteRejected) return crossSiteRejected;
+
   const rejected = rejectRateLimitedRequest(request, "player-history-delete", {
     limit: 6,
     windowMs: 60_000,

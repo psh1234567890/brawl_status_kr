@@ -2,6 +2,7 @@ import type { PlayerOwnedSkin, PlayerSkinInventoryResponse } from "../types/braw
 import { normalizePlayerTag } from "../utils/playerTag";
 
 const BRAWLACE_BASE_URL = "https://brawlace.com";
+const MAX_BRAWLACE_SKINS_HTML_BYTES = 1_000_000;
 
 export class BrawlaceSkinLookupError extends Error {
   constructor(message: string, public readonly status?: number) {
@@ -23,7 +24,21 @@ export async function fetchBrawlaceSkinInventory(tag: string): Promise<PlayerSki
     throw new BrawlaceSkinLookupError("보유 스킨 보조 조회에 실패했습니다.", response.status);
   }
 
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType && !contentType.toLowerCase().includes("text/html")) {
+    throw new BrawlaceSkinLookupError("보유 스킨 응답 형식이 올바르지 않습니다.", response.status);
+  }
+
+  const contentLength = Number(response.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_BRAWLACE_SKINS_HTML_BYTES) {
+    throw new BrawlaceSkinLookupError("보유 스킨 응답이 너무 큽니다.", response.status);
+  }
+
   const html = await response.text();
+  if (html.length > MAX_BRAWLACE_SKINS_HTML_BYTES) {
+    throw new BrawlaceSkinLookupError("보유 스킨 응답이 너무 큽니다.", response.status);
+  }
+
   const skins = parseBrawlaceSkinTable(html);
   return {
     byBrawler: groupSkinsByBrawler(skins),

@@ -15,6 +15,9 @@ export async function GET(request: Request) {
   if (!brawler) {
     return NextResponse.json({ error: "브롤러 이름이 필요합니다." }, { status: 400 });
   }
+  if (brawler.length > 40) {
+    return NextResponse.json({ error: "브롤러 이름이 너무 깁니다." }, { status: 400 });
+  }
 
   try {
     const result = await db.execute<{

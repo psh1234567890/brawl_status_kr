@@ -26,6 +26,9 @@ export async function GET(request: Request) {
   if (type === "brawlers" && !brawlerId) {
     return NextResponse.json({ error: "브롤러 랭킹에는 브롤러 ID가 필요합니다." }, { status: 400 });
   }
+  if (type === "brawlers" && !/^\d+$/.test(String(brawlerId))) {
+    return NextResponse.json({ error: "브롤러 ID는 숫자여야 합니다." }, { status: 400 });
+  }
 
   const path =
     type === "brawlers"

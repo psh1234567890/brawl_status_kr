@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { saveBattleLogs } from "../../../../server/battleLogs";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import { rejectCrossSiteMutation } from "../../../../server/requestGuard";
 import { fetchBrawlApi, UpstreamApiError } from "../../../../server/upstream";
 import type { BattleLogResponse } from "../../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../../utils/playerTag";
@@ -48,5 +49,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const rejected = rejectCrossSiteMutation(request);
+  if (rejected) return rejected;
+
   return loadBattleLogs(request, true);
 }

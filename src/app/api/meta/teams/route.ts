@@ -12,6 +12,9 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const mapName = searchParams.get("map") ?? "";
+  if (mapName.length > 120) {
+    return NextResponse.json({ error: "맵 이름이 너무 깁니다." }, { status: 400 });
+  }
 
   try {
     const result = await db.execute<{

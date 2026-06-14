@@ -1,4 +1,5 @@
 import {
+    generatedBrawlerDict,
     generatedMapDict,
     generatedMapToModeDict,
     generatedModeDict,
@@ -279,6 +280,7 @@ export const modeDict: Record<string, string> =
 
 export const brawlerDict: Record<string, string> =
 {
+    ...generatedBrawlerDict,
     SHELLY: "쉘리",
     NITA: "니타",
     COLT: "콜트",
@@ -382,6 +384,8 @@ export const brawlerDict: Record<string, string> =
     KAZE: "카제",
     NAJIA: "나지아",
     SIRIUS: "시리우스",
+    "BUZZ LIGHTYEAR": "버즈 라이트이어",
+    "Buzz Lightyear": "버즈 라이트이어",
     BONNIE: "보니",
     GRAY: "그레이",
     GUS: "거스"

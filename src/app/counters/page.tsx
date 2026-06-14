@@ -15,7 +15,7 @@ export default async function CountersPage() {
   return (
     <PortalLayout
       title="브롤러 카운터"
-      eyebrow="Counters"
+      eyebrow="카운터"
       description="우리 DB에 저장된 실제 팀전 표본에서 선택한 브롤러를 상대로 승률이 높았던 상대 브롤러를 계산합니다. 표본이 적으면 결과가 비어 있을 수 있습니다."
     >
       <CounterBrowser brawlers={brawlers} />

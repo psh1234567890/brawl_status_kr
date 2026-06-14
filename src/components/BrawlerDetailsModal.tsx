@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { brawlerDict, modeDict } from "../constants/brawl";
 import type { BrawlAbility, Brawler, BrawlerSkin, BrawlerStat } from "../types/brawl";
 import {
   translateAbilityName,
+  translateBrawlerName,
   translateGearName,
+  translateModeName,
   translateSkinName,
 } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
@@ -25,6 +26,7 @@ export default function BrawlerDetailsModal({
 }: BrawlerDetailsModalProps) {
   useCloseOnEscape(onClose);
   const ownedSkins = getOwnedSkins(brawler);
+  const displayName = translateBrawlerName(brawler.name);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -46,13 +48,13 @@ export default function BrawlerDetailsModal({
         <div className="mb-6 flex flex-col items-center">
           <BrawlImage
             src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
-            alt={brawler.name}
+            alt={displayName}
             width={112}
             height={112}
             className="mb-4 h-28 w-28 rounded-2xl border-4 border-indigo-100 shadow-md"
           />
           <h2 id="brawler-dialog-title" className="text-3xl font-black text-gray-800">
-            {brawlerDict[brawler.name] ?? brawler.name}
+            {displayName}
           </h2>
           <div className="mt-2 rounded-full bg-indigo-50 px-4 py-1 font-bold text-indigo-600">
             현재 트로피: {brawler.trophies}
@@ -65,7 +67,7 @@ export default function BrawlerDetailsModal({
             <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white p-3 shadow-sm">
               <BrawlImage
                 src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
-                alt={brawler.skin?.name ?? brawler.name}
+                alt={brawler.skin ? translateSkinName(brawler.skin.id, brawler.skin.name) : displayName}
                 width={48}
                 height={48}
                 className="h-12 w-12 rounded-md bg-indigo-50"
@@ -178,7 +180,7 @@ export default function BrawlerDetailsModal({
           title="최근 25전 내 분석"
           color="blue"
           stat={recentStat}
-          extra={recentStat.plays > 0 ? `주력 모드: ${modeDict[recentStat.topMode] ?? recentStat.topMode}` : undefined}
+          extra={recentStat.plays > 0 ? `주력 모드: ${translateModeName(recentStat.topMode)}` : undefined}
         />
         <StatsCard title="내 검색 기록 누적 승률" color="indigo" stat={dbStat} />
       </section>

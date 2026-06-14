@@ -1,5 +1,5 @@
-import { brawlerDict } from "../constants/brawl";
 import type { Brawler } from "../types/brawl";
+import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
 
 interface BrawlerListProps {
@@ -22,7 +22,10 @@ export default function BrawlerList({ brawlers, onSelectBrawler }: BrawlerListPr
       <div className="grid grid-cols-2 gap-5 md:grid-cols-4 lg:grid-cols-5">
         {[...brawlers]
           .sort((left, right) => right.trophies - left.trophies)
-          .map((brawler) => (
+          .map((brawler) => {
+            const displayName = translateBrawlerName(brawler.name);
+
+            return (
             <button
               type="button"
               key={brawler.id}
@@ -31,13 +34,13 @@ export default function BrawlerList({ brawlers, onSelectBrawler }: BrawlerListPr
             >
               <BrawlImage
                 src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
-                alt={brawler.name}
+                alt={displayName}
                 width={80}
                 height={80}
                 className="mb-3 h-20 w-20 rounded-xl shadow-sm"
               />
               <span className="mb-1 text-lg font-black text-gray-800">
-                {brawlerDict[brawler.name] ?? brawler.name}
+                {displayName}
               </span>
               <span className="mb-3 rounded-md bg-indigo-500 px-2 py-1 text-xs font-bold text-white">
                 파워 {brawler.power}
@@ -57,7 +60,8 @@ export default function BrawlerList({ brawlers, onSelectBrawler }: BrawlerListPr
                 </span>
               </span>
             </button>
-          ))}
+            );
+          })}
       </div>
     </section>
   );

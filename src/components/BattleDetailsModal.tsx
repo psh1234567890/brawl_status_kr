@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
-import { mapDict, modeDict } from "../constants/brawl";
 import type { BattleLogItem, BattlePlayer } from "../types/brawl";
 import {
   checkIsRanked,
   getBattleResultInfo,
   getPrimaryBrawler,
 } from "../utils/brawlHelpers";
+import {
+  translateBrawlerName,
+  translateMapName,
+  translateModeName,
+} from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
 
 interface BattleDetailsModalProps {
@@ -44,9 +48,9 @@ export default function BattleDetailsModal({
         <header className="flex items-center justify-between border-b-4 border-black bg-[#8f98c6] p-4 pr-14">
           <div className="flex flex-col">
             <h2 id="battle-dialog-title" className="text-2xl font-black text-white drop-shadow-md">
-              {modeDict[battle.event.mode ?? ""] ?? battle.event.mode ?? "친선"}
+              {translateModeName(battle.event.mode) || "친선"}
             </h2>
-            <span className="font-bold text-gray-200">{mapDict[battle.event.map ?? ""] ?? battle.event.map ?? "친선 경기"}</span>
+            <span className="font-bold text-gray-200">{translateMapName(battle.event.map) || "친선 경기"}</span>
           </div>
           <span className={`text-4xl font-black drop-shadow-md ${result.isWin ? "text-green-400" : result.isLoss ? "text-red-500" : "text-gray-300"}`}>
             {result.resultText}
@@ -123,6 +127,7 @@ function PlayerCard({
   onSelectPlayer: (tag: string) => void;
 }) {
   const brawler = getPrimaryBrawler(player) ?? { id: 0, name: "Unknown", trophies: 0 };
+  const displayName = translateBrawlerName(brawler.name);
   return (
     <button
       type="button"
@@ -140,7 +145,7 @@ function PlayerCard({
         </span>
         <BrawlImage
           src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id ?? 0}.png`}
-          alt={brawler.name ?? "Unknown"}
+          alt={displayName || "알 수 없음"}
           width={80}
           height={80}
           className="h-full w-full object-cover"
@@ -162,4 +167,3 @@ function useCloseOnEscape(onClose: () => void) {
     return () => window.removeEventListener("keydown", close);
   }, [onClose]);
 }
-

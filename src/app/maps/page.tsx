@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
-import { mapDict, modeDict } from "../../constants/brawl";
 import { getBrawlifyMaps } from "../../server/brawlify";
+import { translateMapName, translateModeName } from "../../utils/brawlTranslations";
 
 export const metadata: Metadata = {
   title: "브롤스타즈 맵 도감",
@@ -24,7 +24,7 @@ export default async function MapsPage() {
   return (
     <PortalLayout
       title="맵 도감"
-      eyebrow="Map Atlas"
+      eyebrow="맵 도감"
       description="맵 이미지, 게임모드, 최근 활성 여부를 한곳에서 확인합니다. 각 맵 상세에서 같은 모드의 다른 맵과 DB 추천으로 이어갈 수 있습니다."
       actions={<LinkButton href="/events">현재 로테이션</LinkButton>}
     >
@@ -35,28 +35,32 @@ export default async function MapsPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {displayMaps.map((map) => (
+        {displayMaps.map((map) => {
+          const displayName = translateMapName(map.name);
+          const displayMode = translateModeName(map.gameMode?.name) || "기타";
+
+          return (
           <article key={map.id} className="overflow-hidden rounded-lg border border-white bg-white shadow-sm">
             {map.imageUrl ? (
               <BrawlImage
                 src={map.imageUrl}
-                alt={map.name}
+                alt={displayName}
                 width={500}
                 height={260}
                 className="h-36 w-full object-cover"
-                fallbackText={map.name.slice(0, 1)}
+                fallbackText={displayName.slice(0, 1)}
               />
             ) : (
               <div className="flex h-36 items-center justify-center bg-indigo-50 text-3xl font-black text-indigo-200">
-                {map.name.slice(0, 1)}
+                {displayName.slice(0, 1)}
               </div>
             )}
             <div className="p-4">
               <p className="text-xs font-black text-indigo-500">
-                {modeDict[map.gameMode?.name ?? ""] ?? map.gameMode?.name ?? "기타"}
+                {displayMode}
               </p>
-              <h2 className="mt-1 truncate text-lg font-black text-gray-900" title={map.name}>
-                {mapDict[map.name] ?? map.name}
+              <h2 className="mt-1 truncate text-lg font-black text-gray-900" title={displayName}>
+                {displayName}
               </h2>
               <p className="mt-2 text-xs font-bold text-gray-400">
                 최근 활성: {formatUnixDate(map.lastActive)}
@@ -69,7 +73,8 @@ export default async function MapsPage() {
               </Link>
             </div>
           </article>
-        ))}
+          );
+        })}
       </section>
     </PortalLayout>
   );

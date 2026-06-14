@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
-import { brawlerDict, mapDict, mapToModeDict } from "../../constants/brawl";
+import { mapToModeDict } from "../../constants/brawl";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
+import { translateBrawlerName, translateMapName } from "../../utils/brawlTranslations";
 
 const MODE_LIST = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
 
@@ -122,7 +123,7 @@ export default function MetaDashboard() {
                       : "border-gray-200 bg-white/80 text-gray-500 hover:bg-white"
                   }`}
                 >
-                  {mapDict[mapName] ?? mapName}
+                  {translateMapName(mapName)}
                 </button>
               ))
             ) : (
@@ -135,13 +136,16 @@ export default function MetaDashboard() {
           {currentData.length ? (
             <section className="w-full max-w-3xl rounded-3xl border border-white bg-white/80 p-8 shadow-2xl backdrop-blur-md">
               <h2 className="mb-6 flex flex-col gap-2 border-b-2 border-indigo-100 pb-4 text-2xl font-black sm:flex-row sm:items-end sm:justify-between">
-                <span>{mapDict[selectedMap] ?? selectedMap} 추천</span>
+                <span>{translateMapName(selectedMap)} 추천</span>
                 <span className="text-sm font-bold text-gray-400">전체 저장 전투 표본 기준: 최소 5판 이상</span>
               </h2>
               <div className="flex flex-col gap-4">
                 {currentData.map((brawler, index) => {
-                  const displayName = brawlerDict[brawler.name] ?? brawler.name;
-                  const brawlerId = brawler.id ?? generatedBrawlerImageIdByName[brawler.name];
+                  const displayName = translateBrawlerName(brawler.name);
+                  const brawlerId =
+                    brawler.id ??
+                    generatedBrawlerImageIdByName[brawler.name] ??
+                    generatedBrawlerImageIdByName[brawler.name.toUpperCase()];
                   return (
                     <article key={brawler.name} className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-4">

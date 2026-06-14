@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { EmptyState, StatPill } from "../../components/PortalLayout";
-import { mapDict, modeDict } from "../../constants/brawl";
 import { getBrawlifyEvents } from "../../server/brawlify";
 import type { BrawlifyEvent } from "../../types/brawlify";
+import { translateMapName, translateModeName } from "../../utils/brawlTranslations";
 
 export const metadata: Metadata = {
   title: "현재 맵 로테이션",
@@ -19,7 +19,7 @@ export default async function EventsPage() {
   return (
     <PortalLayout
       title="현재 맵 로테이션"
-      eyebrow="Live Rotation"
+      eyebrow="현재 로테이션"
       description="Brawlify 이벤트 데이터를 기반으로 현재 열려 있는 맵과 예정 맵을 보여줍니다. 저장된 전투 표본이 있는 맵은 맵 추천 페이지에서 우리 DB 기반 승률도 함께 확인할 수 있습니다."
       actions={<LinkButton href="/meta">DB 추천 보기</LinkButton>}
     >
@@ -43,28 +43,30 @@ function EventSection({ title, events }: { title: string; events: BrawlifyEvent[
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {events.map((event, index) => {
             const map = event.map;
-            const modeName = map?.gameMode?.name ?? event.slot?.name ?? "Unknown";
-            const mapName = map?.name ?? "Unknown Map";
+            const modeName = map?.gameMode?.name ?? event.slot?.name;
+            const mapName = map?.name;
+            const displayMode = translateModeName(modeName) || "알 수 없음";
+            const displayMap = translateMapName(mapName) || "알 수 없는 맵";
             return (
               <article key={`${title}-${map?.id ?? index}-${event.startTime ?? ""}`} className="overflow-hidden rounded-lg border border-white bg-white shadow-sm">
                 {map?.imageUrl ? (
                   <BrawlImage
                     src={map.imageUrl}
-                    alt={mapName}
+                    alt={displayMap}
                     width={640}
                     height={320}
                     className="h-40 w-full object-cover"
-                    fallbackText={mapName.slice(0, 1)}
+                    fallbackText={displayMap.slice(0, 1)}
                   />
                 ) : (
                   <div className="flex h-40 items-center justify-center bg-indigo-50 text-3xl font-black text-indigo-200">
-                    {mapName.slice(0, 1)}
+                    {displayMap.slice(0, 1)}
                   </div>
                 )}
                 <div className="flex flex-col gap-3 p-4">
                   <div>
-                    <p className="text-xs font-black text-indigo-500">{modeDict[modeName] ?? modeName}</p>
-                    <h3 className="mt-1 text-xl font-black text-gray-900">{mapDict[mapName] ?? mapName}</h3>
+                    <p className="text-xs font-black text-indigo-500">{displayMode}</p>
+                    <h3 className="mt-1 text-xl font-black text-gray-900">{displayMap}</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs font-bold text-gray-500">
                     <span>시작: {formatDate(event.startTime)}</span>

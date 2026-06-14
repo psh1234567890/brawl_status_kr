@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { sql } from "drizzle-orm";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
 import { db } from "../../db";
+import { translateBrawlerName, translateMapName } from "../../utils/brawlTranslations";
 
 export const metadata: Metadata = {
   title: "데이터 수집 현황",
@@ -61,7 +62,7 @@ export default async function StatusPage() {
   return (
     <PortalLayout
       title="데이터 수집 현황"
-      eyebrow="Data Status"
+      eyebrow="데이터 현황"
       description="사이트 이용자가 플레이어 태그를 검색할 때 저장된 전투 표본 현황입니다. 맵 추천과 누적 승률은 이 데이터가 쌓일수록 더 정확해집니다."
     >
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -73,21 +74,29 @@ export default async function StatusPage() {
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
-        <RankingPanel title="많이 수집된 맵" rows={popularMapsResult.rows} />
-        <RankingPanel title="많이 수집된 브롤러" rows={popularBrawlersResult.rows} />
+        <RankingPanel title="많이 수집된 맵" rows={popularMapsResult.rows} translate={translateMapName} />
+        <RankingPanel title="많이 수집된 브롤러" rows={popularBrawlersResult.rows} translate={translateBrawlerName} />
       </section>
     </PortalLayout>
   );
 }
 
-function RankingPanel({ title, rows }: { title: string; rows: PopularRow[] }) {
+function RankingPanel({
+  title,
+  rows,
+  translate,
+}: {
+  title: string;
+  rows: PopularRow[];
+  translate: (name: string) => string;
+}) {
   return (
     <section className="rounded-lg border border-white bg-white p-5 shadow-sm">
       <h2 className="mb-4 text-xl font-black text-indigo-950">{title}</h2>
       <div className="flex flex-col gap-2">
         {rows.map((row, index) => (
           <div key={row.name} className="flex items-center justify-between rounded-lg bg-indigo-50 p-3">
-            <span className="font-black text-gray-800">#{index + 1} {row.name}</span>
+            <span className="font-black text-gray-800">#{index + 1} {translate(row.name)}</span>
             <span className="text-sm font-black text-indigo-700">
               {Number(row.plays).toLocaleString("ko-KR")}전
             </span>

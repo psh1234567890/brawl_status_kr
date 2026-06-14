@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { mapDict, modeDict } from "../constants/brawl";
 import type { PlayerHistoryResponse } from "../types/brawl";
+import { translateMapName, translateModeName } from "../utils/brawlTranslations";
 
 interface PlayerHistoryPanelProps {
   tag: string;
@@ -103,8 +103,8 @@ export default function PlayerHistoryPanel({ tag, history }: PlayerHistoryPanelP
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <BucketList title="자주 플레이한 모드" rows={currentHistory.topModes} translate={(name) => modeDict[name] ?? name} />
-        <BucketList title="자주 플레이한 맵" rows={currentHistory.topMaps} translate={(name) => mapDict[name] ?? name} />
+        <BucketList title="자주 플레이한 모드" rows={currentHistory.topModes} translate={translateModeName} />
+        <BucketList title="자주 플레이한 맵" rows={currentHistory.topMaps} translate={translateMapName} />
       </div>
     </section>
   );

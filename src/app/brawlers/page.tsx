@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
-import { brawlerDict } from "../../constants/brawl";
 import { getBrawlifyBrawlers } from "../../server/brawlify";
+import {
+  translateBrawlerClassName,
+  translateBrawlerDescription,
+  translateBrawlerName,
+  translateRarityName,
+} from "../../utils/brawlTranslations";
 
 export const metadata: Metadata = {
   title: "브롤러 도감",
@@ -19,7 +24,7 @@ export default async function BrawlersPage() {
   return (
     <PortalLayout
       title="브롤러 도감"
-      eyebrow="Brawler Roster"
+      eyebrow="브롤러 명단"
       description="브롤러의 등급, 클래스, 설명, 가젯과 스타파워를 확인합니다. 플레이어 검색 화면에서는 실제 보유 상태와 승률도 함께 볼 수 있습니다."
       actions={<LinkButton href="/">내 브롤러 보기</LinkButton>}
     >
@@ -30,27 +35,31 @@ export default async function BrawlersPage() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {released.map((brawler) => (
+        {released.map((brawler) => {
+          const displayName = translateBrawlerName(brawler.name);
+          const description = translateBrawlerDescription(brawler.name, brawler.description);
+
+          return (
           <article key={brawler.id} className="rounded-lg border border-white bg-white p-4 shadow-sm">
             <div className="flex items-center gap-4">
               <BrawlImage
                 src={brawler.imageUrl2 ?? brawler.imageUrl ?? `https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
-                alt={brawler.name}
+                alt={displayName}
                 width={72}
                 height={72}
                 className="h-16 w-16 shrink-0 rounded-md bg-indigo-50 object-contain"
-                fallbackText={brawler.name.slice(0, 1)}
+                fallbackText={displayName.slice(0, 1)}
               />
               <div className="min-w-0">
                 <h2 className="truncate text-lg font-black text-gray-900">
-                  {brawlerDict[brawler.name.toUpperCase()] ?? brawlerDict[brawler.name] ?? brawler.name}
+                  {displayName}
                 </h2>
-                <p className="text-xs font-bold text-indigo-600">{brawler.rarity?.name ?? "Unknown"}</p>
-                <p className="text-xs font-bold text-gray-400">{brawler.class?.name ?? "-"}</p>
+                <p className="text-xs font-bold text-indigo-600">{translateRarityName(brawler.rarity?.name) || "알 수 없음"}</p>
+                <p className="text-xs font-bold text-gray-400">{translateBrawlerClassName(brawler.class?.name) || "-"}</p>
               </div>
             </div>
             <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-gray-500">
-              {brawler.description ?? "설명 데이터가 없습니다."}
+              {description || "설명 데이터가 없습니다."}
             </p>
             <Link
               href={`/brawlers/${brawler.id}`}
@@ -59,7 +68,8 @@ export default async function BrawlersPage() {
               상세 보기
             </Link>
           </article>
-        ))}
+          );
+        })}
       </section>
     </PortalLayout>
   );

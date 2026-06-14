@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { mapDict } from "../constants/brawl";
+import { translateBrawlerName, translateMapName } from "../utils/brawlTranslations";
 
 type TeamComp = {
   map: string;
@@ -48,7 +48,9 @@ export default function TeamMetaBrowser() {
     setMapName(value);
   }
 
-  const maps = [...new Set(items.map((item) => item.map))].sort();
+  const maps = [...new Set(items.map((item) => item.map))].sort((left, right) =>
+    translateMapName(left).localeCompare(translateMapName(right), "ko-KR"),
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -60,7 +62,7 @@ export default function TeamMetaBrowser() {
         >
           <option value="">전체 맵</option>
           {maps.map((map) => (
-            <option key={map} value={map}>{mapDict[map] ?? map}</option>
+            <option key={map} value={map}>{translateMapName(map)}</option>
           ))}
         </select>
       </section>
@@ -77,8 +79,8 @@ export default function TeamMetaBrowser() {
         <section className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
             <article key={`${item.map}-${item.team}`} className="rounded-lg border border-white bg-white p-5 shadow-sm">
-              <p className="text-xs font-black text-indigo-500">{mapDict[item.map] ?? item.map}</p>
-              <h2 className="mt-1 text-xl font-black text-gray-900">{item.team}</h2>
+              <p className="text-xs font-black text-indigo-500">{translateMapName(item.map)}</p>
+              <h2 className="mt-1 text-xl font-black text-gray-900">{translateTeamName(item.team)}</h2>
               <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                 <Metric label="추천 점수" value={String(item.score)} />
                 <Metric label="승률" value={`${item.winRate}%`} />
@@ -94,6 +96,10 @@ export default function TeamMetaBrowser() {
       )}
     </div>
   );
+}
+
+function translateTeamName(team: string) {
+  return team.split(" + ").map((name) => translateBrawlerName(name)).join(" + ");
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

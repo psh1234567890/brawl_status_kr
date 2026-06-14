@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { mapDict, modeDict } from "../constants/brawl";
 import type { BattleLogItem, BattleLogResponse, RecentBattleSummary } from "../types/brawl";
 import {
   checkIsFriendly,
@@ -11,6 +10,11 @@ import {
   getNormalizedBattleResult,
   getPrimaryBrawler,
 } from "../utils/brawlHelpers";
+import {
+  translateBrawlerName,
+  translateMapName,
+  translateModeName,
+} from "../utils/brawlTranslations";
 
 interface BattleLogListProps {
   battleLog: BattleLogResponse;
@@ -44,9 +48,9 @@ export default function BattleLogList({
     }
 
     return {
-      modes: [...modes].sort(),
-      maps: [...maps].sort(),
-      brawlers: [...brawlers].sort(),
+      modes: [...modes].sort((left, right) => translateModeName(left).localeCompare(translateModeName(right), "ko-KR")),
+      maps: [...maps].sort((left, right) => translateMapName(left).localeCompare(translateMapName(right), "ko-KR")),
+      brawlers: [...brawlers].sort((left, right) => translateBrawlerName(left).localeCompare(translateBrawlerName(right), "ko-KR")),
     };
   }, [displayItems]);
 
@@ -89,7 +93,7 @@ export default function BattleLogList({
         <div className="border-t-2 border-gray-200 pt-6 text-center md:border-l-2 md:border-t-0 md:pl-10 md:pt-0">
           <span className="mb-2 block text-lg font-bold text-gray-500">가장 많이 이긴 모드</span>
           <span className="text-4xl font-black text-gray-800">
-            {modeDict[summary.bestMode] ?? summary.bestMode}
+            {translateModeName(summary.bestMode)}
           </span>
           <span className="mt-3 block text-md font-bold text-indigo-500">
             이 모드에서 {summary.maxModeWins}승
@@ -114,19 +118,19 @@ export default function BattleLogList({
         <FilterSelect label="모드" value={modeFilter} onChange={setModeFilter}>
           <option value="ALL">전체 모드</option>
           {filterOptions.modes.map((mode) => (
-            <option key={mode} value={mode}>{modeDict[mode] ?? mode}</option>
+            <option key={mode} value={mode}>{translateModeName(mode)}</option>
           ))}
         </FilterSelect>
         <FilterSelect label="맵" value={mapFilter} onChange={setMapFilter}>
           <option value="ALL">전체 맵</option>
           {filterOptions.maps.map((map) => (
-            <option key={map} value={map}>{mapDict[map] ?? map}</option>
+            <option key={map} value={map}>{translateMapName(map)}</option>
           ))}
         </FilterSelect>
         <FilterSelect label="브롤러" value={brawlerFilter} onChange={setBrawlerFilter}>
           <option value="ALL">전체 브롤러</option>
           {filterOptions.brawlers.map((brawler) => (
-            <option key={brawler} value={brawler}>{brawler}</option>
+            <option key={brawler} value={brawler}>{translateBrawlerName(brawler)}</option>
           ))}
         </FilterSelect>
       </div>
@@ -150,8 +154,8 @@ export default function BattleLogList({
                   </span>
                 </span>
                 <span className="mb-1 text-xl font-black text-gray-800">
-                  {modeDict[match.event.mode ?? ""] ?? match.event.mode ?? "친선"} -{" "}
-                  {mapDict[match.event.map ?? ""] ?? match.event.map ?? "친선 경기"}
+                  {translateModeName(match.event.mode) || "친선"} -{" "}
+                  {translateMapName(match.event.map) || "친선 경기"}
                 </span>
               </span>
               <span className="flex items-center gap-4">

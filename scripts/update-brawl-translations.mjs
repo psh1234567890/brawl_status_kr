@@ -34,6 +34,18 @@ function lowerFirst(value) {
   return value ? value[0].toLowerCase() + value.slice(1) : value;
 }
 
+function toTitleCase(value) {
+  return value
+    ? value.toLowerCase().replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
+    : value;
+}
+
+function addTranslationAlias(record, key, value) {
+  if (key && value) {
+    record[key] = value;
+  }
+}
+
 function sortRecord(record) {
   return Object.fromEntries(
     Object.entries(record).sort(([left], [right]) => left.localeCompare(right)),
@@ -72,20 +84,47 @@ const [
 const mapDict = {};
 const mapToModeDict = {};
 const modeDict = {};
+const modeDisplayDict = {};
+const modeDescriptionDict = {};
 const modeByVariation = {};
 const abilityDictById = {};
 const abilityDictByName = {};
+const brawlerDict = {};
+const brawlerDescriptionDict = {};
 const brawlerImageIdByName = {};
 const skinNameById = {};
 
+const manualSkinNameById = {
+  "29001458": "곤충맨 브롤렌타인 크로마 1",
+  "29001459": "곤충맨 브롤렌타인 크로마 2",
+};
+
 for (const mode of Object.values(modeVariations)) {
+  const englishName = getTranslation(englishTexts, mode.TID, "EN");
   const koreanName = getTranslation(koreanTexts, mode.TID, "KR");
-  if (!koreanName || mode.Disabled) {
+  if (!koreanName) {
     continue;
   }
 
   const modeKey = mode.Name === "Showdown" ? "soloShowdown" : lowerFirst(mode.Name);
-  modeDict[modeKey] = koreanName;
+  const koreanDescription =
+    getTranslation(koreanTexts, mode.IntroDescText, "KR") ??
+    getTranslation(koreanTexts, mode.IntroDescText2, "KR");
+  addTranslationAlias(modeDisplayDict, mode.Name, koreanName);
+  addTranslationAlias(modeDisplayDict, mode.ShortName, koreanName);
+  addTranslationAlias(modeDisplayDict, modeKey, koreanName);
+  addTranslationAlias(modeDisplayDict, englishName, koreanName);
+  addTranslationAlias(modeDisplayDict, toTitleCase(englishName), koreanName);
+
+  addTranslationAlias(modeDescriptionDict, mode.Name, koreanDescription);
+  addTranslationAlias(modeDescriptionDict, mode.ShortName, koreanDescription);
+  addTranslationAlias(modeDescriptionDict, modeKey, koreanDescription);
+  addTranslationAlias(modeDescriptionDict, englishName, koreanDescription);
+  addTranslationAlias(modeDescriptionDict, toTitleCase(englishName), koreanDescription);
+
+  if (!mode.Disabled) {
+    modeDict[modeKey] = koreanName;
+  }
   modeByVariation[mode.Name] = koreanName;
 }
 
@@ -129,6 +168,15 @@ for (const character of Object.values(characters)) {
   }
 
   const name = englishName.toUpperCase();
+  const koreanName = getTranslation(koreanTexts, character.TID, "KR");
+  if (koreanName) {
+    brawlerDict[name] = koreanName;
+    brawlerDict[englishName] = koreanName;
+  }
+  const koreanDescription = getTranslation(koreanTexts, `${character.TID}_DESC`, "KR");
+  addTranslationAlias(brawlerDescriptionDict, name, koreanDescription);
+  addTranslationAlias(brawlerDescriptionDict, englishName, koreanDescription);
+
   if (!brawlerImageIdByName[name]) {
     brawlerImageIdByName[name] = String(character.id);
   }
@@ -168,6 +216,7 @@ for (const skin of Object.values(skins)) {
     getTranslation(koreanTexts, character.TID, "KR") ?? brawlerName;
   const isDefault = character.DefaultSkin === skin.Name;
   const skinName =
+    manualSkinNameById[String(skin.id)] ??
     getTranslation(koreanTexts, skin.TID, "KR") ??
     getTranslation(englishTexts, skin.TID, "EN") ??
     (isDefault ? `${brawlerNameKo} 기본 스킨` : skin.Name);
@@ -197,9 +246,17 @@ ${toTsRecord("generatedMapToModeDict", mapToModeDict)}
 
 ${toTsRecord("generatedModeDict", modeDict)}
 
+${toTsRecord("generatedModeDisplayDict", modeDisplayDict)}
+
+${toTsRecord("generatedModeDescriptionDict", modeDescriptionDict)}
+
 ${toTsRecord("generatedAbilityDictById", abilityDictById)}
 
 ${toTsRecord("generatedAbilityDictByName", abilityDictByName)}
+
+${toTsRecord("generatedBrawlerDict", brawlerDict)}
+
+${toTsRecord("generatedBrawlerDescriptionDict", brawlerDescriptionDict)}
 
 ${toTsRecord("generatedBrawlerImageIdByName", brawlerImageIdByName)}
 
@@ -235,5 +292,5 @@ await writeFile(outputPath, source, "utf8");
 await writeFile(skinCatalogOutputPath, skinCatalogSource, "utf8");
 
 console.log(
-  `Generated ${Object.keys(mapDict).length} maps, ${Object.keys(modeDict).length} modes, ${Object.keys(abilityDictById).length} abilities, ${Object.keys(brawlerImageIdByName).length} brawler image IDs, and ${skinCatalog.length} skins.`,
+  `Generated ${Object.keys(mapDict).length} maps, ${Object.keys(modeDict).length} modes, ${Object.keys(modeDisplayDict).length} mode aliases, ${Object.keys(modeDescriptionDict).length} mode descriptions, ${Object.keys(abilityDictById).length} abilities, ${Object.keys(brawlerDict).length} brawler translations, ${Object.keys(brawlerDescriptionDict).length} brawler descriptions, ${Object.keys(brawlerImageIdByName).length} brawler image IDs, and ${skinCatalog.length} skins.`,
 );

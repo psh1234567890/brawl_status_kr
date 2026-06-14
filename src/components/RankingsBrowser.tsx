@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { BrawlifyBrawler } from "../types/brawlify";
 import type { RankingItem, RankingsResponse } from "../types/brawl";
 import { getClubBadgeUrl, getPlayerIconUrl } from "../utils/brawlAssets";
+import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
 
 type RankingType = "players" | "clubs" | "brawlers";
@@ -96,7 +97,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
         >
           {releasedBrawlers.map((brawler) => (
             <option key={brawler.id} value={brawler.id}>
-              {brawler.name}
+              {translateBrawlerName(brawler.name)}
             </option>
           ))}
         </select>

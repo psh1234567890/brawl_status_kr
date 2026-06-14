@@ -15,7 +15,7 @@ export default async function RankingsPage() {
   return (
     <PortalLayout
       title="랭킹"
-      eyebrow="Leaderboards"
+      eyebrow="랭킹"
       description="플레이어, 클럽, 브롤러별 글로벌/국가별 랭킹을 확인합니다. 브롤러 랭킹은 원하는 브롤러를 선택해 볼 수 있습니다."
     >
       <RankingsBrowser brawlers={brawlers} />

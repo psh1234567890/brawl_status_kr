@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { brawlerDict } from "../constants/brawl";
 import type { BrawlifyBrawler } from "../types/brawlify";
+import { translateBrawlerName } from "../utils/brawlTranslations";
 
 type CounterItem = {
   brawler: string;
@@ -58,7 +58,7 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
         >
           {released.map((brawler) => (
             <option key={brawler.id} value={brawler.name}>
-              {brawlerDict[brawler.name.toUpperCase()] ?? brawler.name}
+              {translateBrawlerName(brawler.name)}
             </option>
           ))}
         </select>
@@ -78,7 +78,7 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
             <article key={item.brawler} className="rounded-lg border border-white bg-white p-5 shadow-sm">
               <p className="text-xs font-black text-indigo-300">#{index + 1}</p>
               <h2 className="mt-1 text-xl font-black text-gray-900">
-                {brawlerDict[item.brawler] ?? item.brawler}
+                {translateBrawlerName(item.brawler)}
               </h2>
               <p className="mt-3 text-sm font-bold text-gray-500">
                 선택 브롤러를 상대로 {item.winRate}% 승률

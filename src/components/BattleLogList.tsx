@@ -1,6 +1,16 @@
+"use client";
+
+import { useMemo, useState, type ReactNode } from "react";
 import { mapDict, modeDict } from "../constants/brawl";
 import type { BattleLogItem, BattleLogResponse, RecentBattleSummary } from "../types/brawl";
-import { checkIsFriendly, checkIsRanked, getBattleResultInfo } from "../utils/brawlHelpers";
+import {
+  checkIsFriendly,
+  checkIsRanked,
+  getBattlePlayers,
+  getBattleResultInfo,
+  getNormalizedBattleResult,
+  getPrimaryBrawler,
+} from "../utils/brawlHelpers";
 
 interface BattleLogListProps {
   battleLog: BattleLogResponse;
@@ -14,6 +24,52 @@ export default function BattleLogList({
   onSelectBattle,
 }: BattleLogListProps) {
   const displayItems = battleLog.items;
+  const [resultFilter, setResultFilter] = useState("ALL");
+  const [modeFilter, setModeFilter] = useState("ALL");
+  const [mapFilter, setMapFilter] = useState("ALL");
+  const [brawlerFilter, setBrawlerFilter] = useState("ALL");
+
+  const filterOptions = useMemo(() => {
+    const modes = new Set<string>();
+    const maps = new Set<string>();
+    const brawlers = new Set<string>();
+
+    for (const match of displayItems) {
+      if (match.event.mode) modes.add(match.event.mode);
+      if (match.event.map) maps.add(match.event.map);
+      for (const player of getBattlePlayers(match)) {
+        const brawler = getPrimaryBrawler(player);
+        if (brawler?.name) brawlers.add(brawler.name);
+      }
+    }
+
+    return {
+      modes: [...modes].sort(),
+      maps: [...maps].sort(),
+      brawlers: [...brawlers].sort(),
+    };
+  }, [displayItems]);
+
+  const filteredItems = useMemo(
+    () =>
+      displayItems.filter((match) => {
+        const result = getNormalizedBattleResult(match);
+        const hasBrawler =
+          brawlerFilter === "ALL" ||
+          getBattlePlayers(match).some(
+            (player) => getPrimaryBrawler(player)?.name === brawlerFilter,
+          );
+
+        return (
+          (resultFilter === "ALL" || result === resultFilter) &&
+          (modeFilter === "ALL" || match.event.mode === modeFilter) &&
+          (mapFilter === "ALL" || match.event.map === mapFilter) &&
+          hasBrawler
+        );
+      }),
+    [brawlerFilter, displayItems, mapFilter, modeFilter, resultFilter],
+  );
+
   return (
     <section className="mb-12 w-full" aria-labelledby="battle-log-title">
       <h3 id="battle-log-title" className="mb-6 border-l-8 border-indigo-500 pl-4 text-2xl font-black text-indigo-900">
@@ -31,7 +87,7 @@ export default function BattleLogList({
           </span>
         </div>
         <div className="border-t-2 border-gray-200 pt-6 text-center md:border-l-2 md:border-t-0 md:pl-10 md:pt-0">
-          <span className="mb-2 block text-lg font-bold text-gray-500">가장 잘 나가는 모드</span>
+          <span className="mb-2 block text-lg font-bold text-gray-500">가장 많이 이긴 모드</span>
           <span className="text-4xl font-black text-gray-800">
             {modeDict[summary.bestMode] ?? summary.bestMode}
           </span>
@@ -44,12 +100,39 @@ export default function BattleLogList({
       <div className="mb-6 flex items-end justify-between border-l-8 border-indigo-500 pl-4">
         <h3 className="text-2xl font-black text-indigo-900">모든 전투 기록 (최대 25게임)</h3>
         <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-bold text-gray-500">
-          클릭해서 상세표 보기
+          {filteredItems.length}/{displayItems.length} 표시
         </span>
       </div>
 
+      <div className="mb-4 grid gap-2 rounded-2xl border border-white bg-white/80 p-3 shadow-sm sm:grid-cols-4">
+        <FilterSelect label="결과" value={resultFilter} onChange={setResultFilter}>
+          <option value="ALL">전체 결과</option>
+          <option value="victory">승리</option>
+          <option value="defeat">패배</option>
+          <option value="draw">무승부</option>
+        </FilterSelect>
+        <FilterSelect label="모드" value={modeFilter} onChange={setModeFilter}>
+          <option value="ALL">전체 모드</option>
+          {filterOptions.modes.map((mode) => (
+            <option key={mode} value={mode}>{modeDict[mode] ?? mode}</option>
+          ))}
+        </FilterSelect>
+        <FilterSelect label="맵" value={mapFilter} onChange={setMapFilter}>
+          <option value="ALL">전체 맵</option>
+          {filterOptions.maps.map((map) => (
+            <option key={map} value={map}>{mapDict[map] ?? map}</option>
+          ))}
+        </FilterSelect>
+        <FilterSelect label="브롤러" value={brawlerFilter} onChange={setBrawlerFilter}>
+          <option value="ALL">전체 브롤러</option>
+          {filterOptions.brawlers.map((brawler) => (
+            <option key={brawler} value={brawler}>{brawler}</option>
+          ))}
+        </FilterSelect>
+      </div>
+
       <div className="custom-scrollbar mb-10 flex max-h-[600px] flex-col gap-4 overflow-y-auto pr-2">
-        {displayItems.map((match) => {
+        {filteredItems.map((match) => {
           const info = getBattleResultInfo(match);
           const isRanked = checkIsRanked(match);
           const isFriendly = checkIsFriendly(match);
@@ -88,5 +171,30 @@ export default function BattleLogList({
         })}
       </div>
     </section>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children: ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1 text-xs font-black text-gray-500">
+      {label}
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
+      >
+        {children}
+      </select>
+    </label>
   );
 }

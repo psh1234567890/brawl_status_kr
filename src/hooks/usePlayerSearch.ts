@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { BattleLogResponse, PlayerData, PlayerDbStats } from "../types/brawl";
+import type {
+  BattleLogResponse,
+  PlayerData,
+  PlayerDbStats,
+  PlayerHistoryResponse,
+} from "../types/brawl";
 import { normalizePlayerTag } from "../utils/playerTag";
 
 const RECENT_TAGS_KEY = "recentTags";
@@ -51,6 +56,7 @@ export function usePlayerSearch() {
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [battleLog, setBattleLog] = useState<BattleLogResponse | null>(null);
   const [dbStats, setDbStats] = useState<PlayerDbStats | null>(null);
+  const [playerHistory, setPlayerHistory] = useState<PlayerHistoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -87,6 +93,7 @@ export function usePlayerSearch() {
       setPlayerData(null);
       setBattleLog(null);
       setDbStats(null);
+      setPlayerHistory(null);
 
       try {
         const [profileResult, battleResult] = await Promise.allSettled([
@@ -117,11 +124,18 @@ export function usePlayerSearch() {
         }
 
         try {
-          const stats = await fetchJson<PlayerDbStats>(
-            `/api/player/db-stats?tag=${safeTag}`,
-            { signal: controller.signal },
-          );
-          if (isCurrent()) setDbStats(stats);
+          const [stats, history] = await Promise.all([
+            fetchJson<PlayerDbStats>(`/api/player/db-stats?tag=${safeTag}`, {
+              signal: controller.signal,
+            }),
+            fetchJson<PlayerHistoryResponse>(`/api/player/history?tag=${safeTag}`, {
+              signal: controller.signal,
+            }),
+          ]);
+          if (isCurrent()) {
+            setDbStats(stats);
+            setPlayerHistory(history);
+          }
         } catch (statsError) {
           if (!isAbortError(statsError) && isCurrent()) {
             setNotice("프로필은 불러왔지만 누적 통계는 갱신하지 못했습니다.");
@@ -148,6 +162,7 @@ export function usePlayerSearch() {
     playerData,
     battleLog,
     dbStats,
+    playerHistory,
     loading,
     error,
     notice,
@@ -155,4 +170,3 @@ export function usePlayerSearch() {
     handleSearch,
   };
 }
-

@@ -6,6 +6,7 @@ import BattleDetailsModal from "../components/BattleDetailsModal";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerDetailsModal from "../components/BrawlerDetailsModal";
 import BrawlerList from "../components/BrawlerList";
+import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
 import { usePlayerSearch } from "../hooks/usePlayerSearch";
 import type { BattleLogItem, Brawler } from "../types/brawl";
@@ -67,6 +68,27 @@ export default function Home() {
           <Link href="/skins" className="rounded-full border-4 border-indigo-100 bg-white px-8 py-4 text-xl font-black text-indigo-700 shadow-lg transition-transform hover:scale-105">
             스킨 카탈로그
           </Link>
+        </nav>
+        <nav className="mt-3 flex flex-wrap justify-center gap-2" aria-label="확장 기능">
+          {[
+            ["/events", "로테이션"],
+            ["/maps", "맵 도감"],
+            ["/gamemodes", "모드"],
+            ["/brawlers", "브롤러"],
+            ["/clubs", "클럽"],
+            ["/rankings", "랭킹"],
+            ["/teams", "팀 조합"],
+            ["/counters", "카운터"],
+            ["/status", "수집 현황"],
+          ].map(([href, label]) => (
+            <Link
+              key={href}
+              href={href}
+              className="rounded-full border border-indigo-100 bg-white/80 px-4 py-2 text-sm font-black text-indigo-700 shadow-sm transition-colors hover:bg-white"
+            >
+              {label}
+            </Link>
+          ))}
         </nav>
       </header>
 
@@ -138,6 +160,10 @@ export default function Home() {
               onSelectBattle={setSelectedBattle}
             />
           ) : null}
+          <PlayerHistoryPanel
+            tag={search.playerData.tag}
+            history={search.playerHistory}
+          />
           <BrawlerList
             brawlers={search.playerData.brawlers}
             onSelectBrawler={setSelectedBrawler}

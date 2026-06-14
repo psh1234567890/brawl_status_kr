@@ -103,6 +103,71 @@ export interface PlayerDbStats {
   brawlers: BrawlerStat[];
 }
 
+export interface PlayerHistoryBucket {
+  name: string;
+  plays: number;
+  wins: number;
+  winRate: number;
+  trophyDelta: number;
+}
+
+export interface PlayerHistoryDay {
+  day: string;
+  plays: number;
+  wins: number;
+  defeats: number;
+  draws: number;
+  trophyDelta: number;
+}
+
+export interface PlayerHistoryResponse {
+  totalTrackedGames: number;
+  daily: PlayerHistoryDay[];
+  topModes: PlayerHistoryBucket[];
+  topMaps: PlayerHistoryBucket[];
+}
+
+export interface ClubMember {
+  tag: string;
+  name: string;
+  nameColor?: string;
+  role: string;
+  trophies: number;
+  icon?: { id: number };
+}
+
+export interface ClubData {
+  tag: string;
+  name: string;
+  description?: string;
+  type?: string;
+  badgeId?: number;
+  requiredTrophies?: number;
+  trophies: number;
+  members?: ClubMember[];
+}
+
+export interface ClubSearchResponse {
+  club: ClubData;
+  members: ClubMember[];
+}
+
+export interface RankingItem {
+  tag?: string;
+  name: string;
+  nameColor?: string;
+  trophies: number;
+  rank: number;
+  memberCount?: number;
+  club?: { tag?: string; name?: string };
+  icon?: { id: number };
+  badgeId?: number;
+}
+
+export interface RankingsResponse {
+  items: RankingItem[];
+}
+
 export interface RecentBattleSummary {
   wins: number;
   defeats: number;

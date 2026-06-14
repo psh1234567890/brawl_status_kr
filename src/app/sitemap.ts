@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 const siteUrl = "https://www.brawl-o1.site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-06-04T00:00:00.000Z");
+  const lastModified = new Date("2026-06-14T00:00:00.000Z");
 
   return [
     {

@@ -22,9 +22,9 @@ export default function BrawlImage({
   fallbackText,
   title,
 }: BrawlImageProps) {
-  const [failed, setFailed] = useState(false);
+  const [failedSrc, setFailedSrc] = useState("");
 
-  if (failed) {
+  if (failedSrc === src) {
     return (
       <span
         aria-label={alt}
@@ -45,7 +45,7 @@ export default function BrawlImage({
       unoptimized
       className={className}
       title={title}
-      onError={() => setFailed(true)}
+      onError={() => setFailedSrc(src)}
     />
   );
 }

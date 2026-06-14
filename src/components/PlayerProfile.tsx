@@ -1,5 +1,6 @@
 import { rankDict } from "../constants/brawl";
 import type { PlayerData } from "../types/brawl";
+import { getPlayerIconUrl } from "../utils/brawlAssets";
 import BrawlImage from "./BrawlImage";
 
 interface PlayerProfileProps {
@@ -21,7 +22,7 @@ export default function PlayerProfile({
         <div className="mb-2 flex items-center gap-4">
           {playerData.icon ? (
             <BrawlImage
-              src={`https://cdn.brawlify.com/profile/${playerData.icon.id}.png`}
+              src={getPlayerIconUrl(playerData.icon.id)}
               alt="프로필 아이콘"
               width={64}
               height={64}

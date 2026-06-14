@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ClubSearchResponse } from "../types/brawl";
+import { getClubBadgeUrl, getPlayerIconUrl } from "../utils/brawlAssets";
 import BrawlImage from "./BrawlImage";
 
 async function fetchClub(tag: string) {
@@ -69,12 +70,24 @@ export default function ClubSearch() {
       {data ? (
         <>
           <section className="rounded-lg border border-white bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-2">
-              <p className="text-sm font-black text-indigo-500">{data.club.tag}</p>
-              <h2 className="text-3xl font-black text-gray-900">{data.club.name}</h2>
-              <p className="text-sm font-medium leading-6 text-gray-500">
-                {data.club.description ?? "클럽 설명이 없습니다."}
-              </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+              {data.club.badgeId ? (
+                <BrawlImage
+                  src={getClubBadgeUrl(data.club.badgeId)}
+                  alt={`${data.club.name} 클럽 배지`}
+                  width={72}
+                  height={72}
+                  className="h-[72px] w-[72px] rounded-lg bg-indigo-50 p-2"
+                  fallbackText={data.club.name.slice(0, 1)}
+                />
+              ) : null}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-black text-indigo-500">{data.club.tag}</p>
+                <h2 className="break-words text-3xl font-black text-gray-900">{data.club.name}</h2>
+                <p className="mt-2 text-sm font-medium leading-6 text-gray-500">
+                  {data.club.description ?? "클럽 설명이 없습니다."}
+                </p>
+              </div>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-4">
               <Metric label="총 트로피" value={data.club.trophies.toLocaleString("ko-KR")} />
@@ -91,7 +104,7 @@ export default function ClubSearch() {
                 <article key={member.tag} className="flex items-center gap-3 rounded-lg bg-indigo-50 p-3">
                   {member.icon?.id ? (
                     <BrawlImage
-                      src={`https://cdn.brawlify.com/profile/${member.icon.id}.png`}
+                      src={getPlayerIconUrl(member.icon.id)}
                       alt={member.name}
                       width={44}
                       height={44}

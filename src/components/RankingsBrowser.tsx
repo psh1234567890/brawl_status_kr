@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { BrawlifyBrawler } from "../types/brawlify";
 import type { RankingItem, RankingsResponse } from "../types/brawl";
+import { getClubBadgeUrl, getPlayerIconUrl } from "../utils/brawlAssets";
 import BrawlImage from "./BrawlImage";
 
 type RankingType = "players" | "clubs" | "brawlers";
@@ -116,9 +117,18 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
               <article key={`${item.rank}-${item.tag ?? item.name}`} className="flex items-center justify-between gap-3 rounded-lg bg-indigo-50 p-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="w-10 text-center text-xl font-black text-indigo-300">#{item.rank}</span>
-                  {item.icon?.id && type !== "clubs" ? (
+                  {type === "clubs" && item.badgeId ? (
                     <BrawlImage
-                      src={`https://cdn.brawlify.com/profile/${item.icon.id}.png`}
+                      src={getClubBadgeUrl(item.badgeId)}
+                      alt={`${item.name} 클럽 배지`}
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-md bg-white p-1"
+                      fallbackText={item.name.slice(0, 1)}
+                    />
+                  ) : item.icon?.id ? (
+                    <BrawlImage
+                      src={getPlayerIconUrl(item.icon.id)}
                       alt={item.name}
                       width={40}
                       height={40}

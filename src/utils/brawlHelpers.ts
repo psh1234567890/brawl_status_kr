@@ -43,7 +43,7 @@ export function getBattleResultInfo(match: BattleLogItem) {
   if (outcome === "victory") {
     return {
       resultText: "승리",
-      resultColor: "text-blue-500",
+      resultColor: "text-blue-600",
       bgColor: "bg-white border-blue-500",
       isWin: true,
       isLoss: false,
@@ -54,7 +54,7 @@ export function getBattleResultInfo(match: BattleLogItem) {
   if (outcome === "defeat") {
     return {
       resultText: "패배",
-      resultColor: "text-red-500",
+      resultColor: "text-red-600",
       bgColor: "bg-white border-red-500",
       isWin: false,
       isLoss: true,
@@ -64,8 +64,8 @@ export function getBattleResultInfo(match: BattleLogItem) {
 
   return {
     resultText: "무승부",
-    resultColor: "text-gray-500",
-    bgColor: "bg-white border-gray-400",
+    resultColor: "text-slate-500",
+    bgColor: "bg-white border-slate-400",
     isWin: false,
     isLoss: false,
     isDraw: true,

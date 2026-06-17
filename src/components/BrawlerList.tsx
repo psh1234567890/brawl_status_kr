@@ -23,23 +23,30 @@ export default function BrawlerList({
       ? "보유 스킨 조회 중"
       : skinInventoryStatus === "error"
         ? "보유 스킨 일부 미표시"
-        : "클릭해서 아이템 확인";
+        : skinInventoryStatus === "ready"
+          ? "보유 스킨 조회 완료"
+          : "브롤러 클릭 후 상세 확인";
 
   return (
-    <section className="w-full" aria-labelledby="brawler-list-title">
-      <div className="mb-6 flex items-end justify-between border-l-8 border-indigo-500 pl-4">
-        <h3 id="brawler-list-title" className="text-2xl font-black text-indigo-900">
-          보유 브롤러 상세 정보 ({brawlers.length}개)
-        </h3>
+    <section className="w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="brawler-list-title">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 id="brawler-list-title" className="text-lg font-black text-slate-950">
+            보유 브롤러
+          </h2>
+          <p className="mt-1 text-sm font-bold text-slate-500">
+            {brawlers.length}개 보유. 카드를 누르면 스킨, 가젯, 스타파워, 기어를 확인할 수 있습니다.
+          </p>
+        </div>
         <span
-          className="rounded-full bg-gray-200 px-3 py-1 text-sm font-bold text-gray-500"
+          className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-600"
           title={skinInventoryError || undefined}
         >
           {skinStatusLabel}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-5 md:grid-cols-4 lg:grid-cols-5">
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
         {[...brawlers]
           .sort((left, right) => right.trophies - left.trophies)
           .map((brawler) => {
@@ -47,44 +54,69 @@ export default function BrawlerList({
             const skinCount = getSkinCount(brawler, skinInventory);
 
             return (
-            <button
-              type="button"
-              key={brawler.id}
-              onClick={() => onSelectBrawler(brawler)}
-              className="flex flex-col items-center rounded-2xl border border-gray-100 bg-white p-5 text-left shadow-md ring-2 ring-transparent transition-transform hover:-translate-y-2 hover:shadow-xl hover:ring-indigo-300 focus:outline-none focus:ring-indigo-500"
-            >
-              <BrawlImage
-                src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
-                alt={displayName}
-                width={80}
-                height={80}
-                className="mb-3 h-20 w-20 rounded-xl shadow-sm"
-              />
-              <span className="mb-1 text-lg font-black text-gray-800">
-                {displayName}
-              </span>
-              <span className="mb-3 rounded-md bg-indigo-500 px-2 py-1 text-xs font-bold text-white">
-                파워 {brawler.power}
-              </span>
-              <span className="mb-3 flex w-full justify-center gap-2 rounded-lg bg-gray-50 py-2 text-xs font-bold text-gray-500">
-                <span>가젯 {brawler.gadgets?.length ?? 0}</span>
-                <span>SP {brawler.starPowers?.length ?? 0}</span>
-                <span>HC {brawler.hyperCharges?.length ?? 0}</span>
-              </span>
-              <span className="mb-3 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-500">
-                {isSkinLoading ? "스킨 조회중" : `스킨 ${skinCount}`}
-              </span>
-              <span className="mt-auto flex w-full flex-col items-center rounded-lg border border-yellow-100 bg-yellow-50 py-2">
-                <span className="text-xl font-black text-yellow-600">🏆 {brawler.trophies}</span>
-                <span className="mt-1 text-xs font-bold text-gray-400">
-                  최고 기록: {brawler.highestTrophies}
+              <button
+                type="button"
+                key={brawler.id}
+                onClick={() => onSelectBrawler(brawler)}
+                aria-label={`${displayName} 상세 보기`}
+                className="group flex min-h-[238px] flex-col rounded-lg border border-slate-200 bg-white p-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <BrawlImage
+                    src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
+                    alt={displayName}
+                    width={72}
+                    height={72}
+                    fallbackText={displayName.slice(0, 1)}
+                    className="h-16 w-16 shrink-0 rounded-lg bg-slate-50 object-cover sm:h-[72px] sm:w-[72px]"
+                  />
+                  <span className="rounded-md bg-slate-950 px-2 py-1 text-[11px] font-black text-white">
+                    P{brawler.power}
+                  </span>
+                </div>
+
+                <span className="mt-3 line-clamp-2 min-h-10 text-base font-black leading-5 text-slate-950">
+                  {displayName}
                 </span>
-              </span>
-            </button>
+
+                <div className="mt-3 grid grid-cols-3 gap-1 text-center text-[11px] font-black">
+                  <SmallStat label="G" value={brawler.gadgets?.length ?? 0} />
+                  <SmallStat label="SP" value={brawler.starPowers?.length ?? 0} />
+                  <SmallStat label="HC" value={brawler.hyperCharges?.length ?? 0} />
+                </div>
+
+                <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
+                  <div className="flex items-center justify-between gap-2 text-xs font-black text-slate-700">
+                    <span>스킨</span>
+                    <span>{isSkinLoading ? "조회 중" : `${skinCount}개`}</span>
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-3">
+                  <div className="flex items-end justify-between gap-2">
+                    <span>
+                      <span className="block text-[11px] font-black text-slate-500">트로피</span>
+                      <span className="block text-lg font-black text-slate-950">{brawler.trophies.toLocaleString("ko-KR")}</span>
+                    </span>
+                    <span className="text-right">
+                      <span className="block text-[11px] font-black text-slate-500">최고</span>
+                      <span className="block text-sm font-black text-slate-700">{brawler.highestTrophies.toLocaleString("ko-KR")}</span>
+                    </span>
+                  </div>
+                </div>
+              </button>
             );
           })}
       </div>
     </section>
+  );
+}
+
+function SmallStat({ label, value }: { label: string; value: number }) {
+  return (
+    <span className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-1 text-slate-700">
+      {label} {value}
+    </span>
   );
 }
 

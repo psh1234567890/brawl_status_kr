@@ -9,6 +9,7 @@ import {
   getBattleResultInfo,
   getNormalizedBattleResult,
   getPrimaryBrawler,
+  parseBattleTime,
 } from "../utils/brawlHelpers";
 import {
   translateBrawlerName,
@@ -75,40 +76,28 @@ export default function BattleLogList({
   );
 
   return (
-    <section className="mb-12 w-full" aria-labelledby="battle-log-title">
-      <h3 id="battle-log-title" className="mb-6 border-l-8 border-indigo-500 pl-4 text-2xl font-black text-indigo-900">
-        전체 기록 분석 ({summary.total}전)
-      </h3>
-
-      <div className="mb-10 flex w-full flex-col items-center justify-around gap-6 rounded-3xl border border-gray-100 bg-white p-8 shadow-xl transition-transform hover:-translate-y-1 md:flex-row">
-        <div className="text-center">
-          <span className="mb-2 block text-lg font-bold text-gray-500">최근 승률</span>
-          <span className="text-5xl font-black text-indigo-600 drop-shadow-sm">
-            {summary.winRate}%
-          </span>
-          <span className="mt-3 block rounded-full bg-gray-100 px-3 py-1 text-md font-bold text-gray-400">
-            {summary.total}전 {summary.wins}승 {summary.defeats}패
-          </span>
+    <section className="w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="battle-log-title">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 id="battle-log-title" className="text-lg font-black text-slate-950">
+            전투 기록
+          </h2>
+          <p className="mt-1 text-sm font-bold text-slate-500">
+            최근 최대 25경기를 표시합니다. 친선 경기는 목록에만 표시됩니다.
+          </p>
         </div>
-        <div className="border-t-2 border-gray-200 pt-6 text-center md:border-l-2 md:border-t-0 md:pl-10 md:pt-0">
-          <span className="mb-2 block text-lg font-bold text-gray-500">가장 많이 이긴 모드</span>
-          <span className="text-4xl font-black text-gray-800">
-            {translateModeName(summary.bestMode)}
-          </span>
-          <span className="mt-3 block text-md font-bold text-indigo-500">
-            이 모드에서 {summary.maxModeWins}승
-          </span>
-        </div>
-      </div>
-
-      <div className="mb-6 flex items-end justify-between border-l-8 border-indigo-500 pl-4">
-        <h3 className="text-2xl font-black text-indigo-900">모든 전투 기록 (최대 25게임)</h3>
-        <span className="rounded-full bg-gray-200 px-3 py-1 text-sm font-bold text-gray-500">
+        <span className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-600">
           {filteredItems.length}/{displayItems.length} 표시
         </span>
       </div>
 
-      <div className="mb-4 grid gap-2 rounded-2xl border border-white bg-white/80 p-3 shadow-sm sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <SummaryCell label="승률" value={`${summary.winRate}%`} detail={`${summary.total}전`} />
+        <SummaryCell label="승리" value={`${summary.wins}승`} detail={`${summary.defeats}패 ${summary.draws}무`} />
+        <SummaryCell label="강세 모드" value={translateModeName(summary.bestMode)} detail={summary.maxModeWins > 0 ? `${summary.maxModeWins}승` : "부족"} />
+      </div>
+
+      <div className="mt-4 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-4">
         <FilterSelect label="결과" value={resultFilter} onChange={setResultFilter}>
           <option value="ALL">전체 결과</option>
           <option value="victory">승리</option>
@@ -135,46 +124,95 @@ export default function BattleLogList({
         </FilterSelect>
       </div>
 
-      <div className="custom-scrollbar mb-10 flex max-h-[600px] flex-col gap-4 overflow-y-auto pr-2">
-        {filteredItems.map((match) => {
-          const info = getBattleResultInfo(match);
-          const isRanked = checkIsRanked(match);
-          const isFriendly = checkIsFriendly(match);
-          return (
-            <button
-              type="button"
-              key={`${match.battleTime}-${match.event.mode}-${match.event.map}`}
-              onClick={() => onSelectBattle(match)}
-              className={`flex items-center justify-between rounded-2xl border-l-8 p-6 text-left shadow-md transition-transform hover:-translate-x-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${info.bgColor}`}
-            >
-              <span className="flex flex-col">
-                <span className="mb-1 flex items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black text-white ${isFriendly ? "bg-amber-500" : isRanked ? "bg-red-500" : "bg-green-500"}`}>
-                    {isFriendly ? "친선전" : isRanked ? "경쟁전" : "일반 모드"}
+      <div className="mt-4 flex max-h-[640px] flex-col gap-2 overflow-y-auto pr-1">
+        {filteredItems.length ? (
+          filteredItems.map((match) => {
+            const info = getBattleResultInfo(match);
+            const isRanked = checkIsRanked(match);
+            const isFriendly = checkIsFriendly(match);
+            const borderTone = info.isWin
+              ? "border-l-blue-500"
+              : info.isLoss
+                ? "border-l-red-500"
+                : "border-l-slate-400";
+
+            return (
+              <button
+                type="button"
+                key={`${match.battleTime}-${match.event.mode}-${match.event.map}`}
+                onClick={() => onSelectBattle(match)}
+                className={`grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-l-4 border-slate-200 bg-white p-3 text-left transition-colors hover:border-blue-300 focus:outline-none focus:ring-4 focus:ring-blue-100 ${borderTone}`}
+              >
+                <span className="min-w-0">
+                  <span className="mb-1 flex flex-wrap items-center gap-2">
+                    <BattleTypeBadge friendly={isFriendly} ranked={isRanked} />
+                    <span className="text-xs font-bold text-slate-400">{formatBattleTime(match.battleTime)}</span>
+                  </span>
+                  <span className="block truncate text-base font-black text-slate-950">
+                    {translateModeName(match.event.mode) || "친선"} · {translateMapName(match.event.map) || "친선 경기"}
                   </span>
                 </span>
-                <span className="mb-1 text-xl font-black text-gray-800">
-                  {translateModeName(match.event.mode) || "친선"} -{" "}
-                  {translateMapName(match.event.map) || "친선 경기"}
-                </span>
-              </span>
-              <span className="flex items-center gap-4">
-                {match.battle.trophyChange && !isRanked && !isFriendly ? (
-                  <span className={`text-xl font-black ${match.battle.trophyChange > 0 ? "text-yellow-500" : "text-red-500"}`}>
-                    {match.battle.trophyChange > 0 ? "+" : ""}
-                    {match.battle.trophyChange}🏆
+                <span className="text-right">
+                  <span className={`block text-xl font-black ${info.resultColor}`}>
+                    {info.resultText}
+                    {match.battle.rank ? <span className="ml-1 text-sm">#{match.battle.rank}</span> : null}
                   </span>
-                ) : null}
-                <span className={`text-3xl font-black drop-shadow-sm ${info.resultColor}`}>
-                  {info.resultText}
-                  {match.battle.rank ? <span className="ml-1 text-lg">({match.battle.rank}등)</span> : null}
+                  {match.battle.trophyChange !== undefined && !isRanked && !isFriendly ? (
+                    <span className={`mt-1 block text-xs font-black ${match.battle.trophyChange > 0 ? "text-amber-600" : "text-red-600"}`}>
+                      {match.battle.trophyChange > 0 ? "+" : ""}
+                      {match.battle.trophyChange} 트로피
+                    </span>
+                  ) : null}
                 </span>
-              </span>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })
+        ) : (
+          <div className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm font-bold text-slate-500">
+            선택한 필터에 맞는 전투 기록이 없습니다.
+          </div>
+        )}
       </div>
     </section>
+  );
+}
+
+function SummaryCell({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p className="truncate text-xs font-black text-slate-500">{label}</p>
+      <p className="mt-1 truncate text-lg font-black text-slate-950 sm:text-2xl">{value}</p>
+      <p className="mt-1 truncate text-xs font-bold text-slate-500">{detail}</p>
+    </div>
+  );
+}
+
+function BattleTypeBadge({
+  friendly,
+  ranked,
+}: {
+  friendly: boolean;
+  ranked: boolean;
+}) {
+  const label = friendly ? "친선" : ranked ? "경쟁전" : "일반";
+  const className = friendly
+    ? "border-amber-200 bg-amber-50 text-amber-700"
+    : ranked
+      ? "border-red-200 bg-red-50 text-red-700"
+      : "border-emerald-200 bg-emerald-50 text-emerald-700";
+
+  return (
+    <span className={`rounded-md border px-2 py-0.5 text-[11px] font-black ${className}`}>
+      {label}
+    </span>
   );
 }
 
@@ -190,15 +228,26 @@ function FilterSelect({
   children: ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-1 text-xs font-black text-gray-500">
+    <label className="flex min-w-0 flex-col gap-1 text-xs font-black text-slate-500">
       {label}
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
+        className="h-11 min-w-0 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
       >
         {children}
       </select>
     </label>
   );
+}
+
+function formatBattleTime(battleTime: string) {
+  const date = parseBattleTime(battleTime);
+  if (!date) return "시간 정보 없음";
+  return date.toLocaleString("ko-KR", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

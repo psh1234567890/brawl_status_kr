@@ -43,177 +43,164 @@ export default function BrawlerDetailsModal({
   const hasSkinError = skinInventoryStatus === "error";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="brawler-dialog-title"
-        className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-8 shadow-2xl"
+        className="relative max-h-[88vh] w-full overflow-y-auto rounded-t-2xl bg-white p-4 shadow-2xl sm:max-w-2xl sm:rounded-xl sm:p-6"
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="브롤러 상세 닫기"
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xl font-black text-gray-800 transition-colors hover:bg-gray-200"
+          className="absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-xl font-black text-slate-700 transition-colors hover:bg-slate-200"
         >
           ×
         </button>
 
-        <div className="mb-6 flex flex-col items-center">
+        <div className="flex items-center gap-4 pr-12">
           <BrawlImage
             src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
             alt={displayName}
-            width={112}
-            height={112}
-            className="mb-4 h-28 w-28 rounded-2xl border-4 border-indigo-100 shadow-md"
+            width={96}
+            height={96}
+            fallbackText={displayName.slice(0, 1)}
+            className="h-20 w-20 shrink-0 rounded-xl border border-slate-200 bg-slate-50 object-cover sm:h-24 sm:w-24"
           />
-          <h2 id="brawler-dialog-title" className="text-3xl font-black text-gray-800">
-            {displayName}
-          </h2>
-          <div className="mt-2 rounded-full bg-indigo-50 px-4 py-1 font-bold text-indigo-600">
-            현재 트로피: {brawler.trophies}
+          <div className="min-w-0">
+            <h2 id="brawler-dialog-title" className="truncate text-2xl font-black text-slate-950 sm:text-3xl">
+              {displayName}
+            </h2>
+            <p className="mt-1 text-sm font-bold text-slate-500">
+              현재 {brawler.trophies.toLocaleString("ko-KR")} 트로피 · 파워 {brawler.power}
+            </p>
           </div>
         </div>
 
-        <div className="mb-6 flex flex-col gap-4 rounded-2xl bg-gray-50 p-5">
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-bold text-gray-600">현재 장착 스킨</span>
-            <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white p-3 shadow-sm">
-              <BrawlImage
-                src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
-                alt={brawler.skin ? translateSkinName(brawler.skin.id, brawler.skin.name) : displayName}
-                width={48}
-                height={48}
-                className="h-12 w-12 rounded-md bg-indigo-50"
-                title="스킨 전용 이미지가 없어 브롤러 기본 이미지를 표시합니다."
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-indigo-800">
-                  {brawler.skin
-                    ? translateSkinName(brawler.skin.id, brawler.skin.name)
-                    : "기본 스킨"}
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <MiniMetric label="최고 트로피" value={brawler.highestTrophies.toLocaleString("ko-KR")} />
+          <MiniMetric label="가젯" value={`${brawler.gadgets?.length ?? 0}개`} />
+          <MiniMetric label="스타파워" value={`${brawler.starPowers?.length ?? 0}개`} />
+        </div>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="min-w-0 space-y-4">
+            <section className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-black text-slate-950">스킨</h3>
+                <span className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-black text-slate-600">
+                  {ownedSkins.length}개
                 </span>
-                <span className="text-[11px] text-gray-400">브롤러 기본 이미지</span>
               </div>
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-bold text-gray-600">보유 스킨 목록</span>
-              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-black text-indigo-700">
-                {ownedSkins.length}개
-              </span>
-            </div>
-            {ownedSkins.length ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {ownedSkins.map((skin) => (
-                  <div
-                    key={skin.key}
-                    className={`rounded-lg border px-3 py-2 text-sm font-bold shadow-sm ${
-                      skin.isEquipped
-                        ? "border-indigo-200 bg-indigo-50 text-indigo-800"
-                        : "border-gray-100 bg-white text-gray-700"
-                    }`}
-                    title={skin.name}
-                  >
-                    <span className="line-clamp-2">
-                      {formatSkinName(skin, displayName, brawler.name)}
-                    </span>
-                    <span className="mt-1 block text-[11px] font-black text-gray-400">
-                      {skin.source === "official" ? "공식 API" : "보조 조회"}
-                    </span>
-                    {skin.isEquipped ? (
-                      <span className="mt-1 block text-[11px] font-black text-indigo-500">
-                        현재 장착
+              <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                <BrawlImage
+                  src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
+                  alt={brawler.skin ? translateSkinName(brawler.skin.id, brawler.skin.name) : displayName}
+                  width={48}
+                  height={48}
+                  fallbackText={displayName.slice(0, 1)}
+                  className="h-12 w-12 shrink-0 rounded-lg bg-slate-50 object-cover"
+                  title="현재 스킨 이미지는 공식 API에서 직접 제공되지 않아 기본 브롤러 이미지를 표시합니다."
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-slate-900">
+                    {brawler.skin
+                      ? translateSkinName(brawler.skin.id, brawler.skin.name)
+                      : "기본 스킨"}
+                  </p>
+                  <p className="mt-1 text-xs font-bold text-slate-500">현재 착용 정보</p>
+                </div>
+              </div>
+
+              {ownedSkins.length ? (
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {ownedSkins.map((skin) => (
+                    <div
+                      key={skin.key}
+                      className={`rounded-lg border px-3 py-2 text-sm font-bold ${
+                        skin.isEquipped
+                          ? "border-blue-200 bg-blue-50 text-blue-800"
+                          : "border-slate-200 bg-white text-slate-700"
+                      }`}
+                      title={skin.name}
+                    >
+                      <span className="line-clamp-2">
+                        {formatSkinName(skin, displayName, brawler.name)}
                       </span>
-                    ) : null}
-                  </div>
-                ))}
+                      <span className="mt-1 block text-[11px] font-black text-slate-400">
+                        {skin.source === "official" ? "공식 API" : "Brawlace 보조 조회"}
+                      </span>
+                      {skin.isEquipped ? (
+                        <span className="mt-1 block text-[11px] font-black text-blue-600">
+                          현재 착용
+                        </span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 rounded-lg border border-dashed border-slate-300 bg-white p-3 text-xs font-bold text-slate-500">
+                  {isSkinLoading
+                    ? "보유 스킨 목록을 조회 중입니다."
+                    : hasSkinError
+                      ? "보조 조회에 실패해 공식 API에서 제공되는 스킨만 표시합니다."
+                      : "보유 스킨 목록을 찾지 못했습니다."}
+                </p>
+              )}
+
+              {hasSkinError ? (
+                <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-black text-amber-700">
+                  {skinInventoryError || "보유 스킨 보조 조회에 실패했습니다."}
+                </p>
+              ) : null}
+            </section>
+
+            <section className="rounded-xl border border-slate-200 bg-white p-4">
+              <h3 className="mb-3 text-sm font-black text-slate-950">보유 장비</h3>
+              <div className="grid gap-4">
+                <AbilityGroup label="가젯" abilities={brawler.gadgets} imageType="gadgets" tone="green" />
+                <AbilityGroup label="스타파워" abilities={brawler.starPowers} imageType="star-powers" tone="amber" />
+                <AbilityGroup label="하이퍼차지" abilities={brawler.hyperCharges} imageType="hypercharges" tone="violet" />
+                <GearGroup brawler={brawler} />
               </div>
-            ) : (
-              <span className="rounded-lg border border-dashed border-gray-200 bg-white p-3 text-xs font-bold text-gray-400">
-                {isSkinLoading
-                  ? "보유 스킨 보조 조회 중입니다."
-                  : hasSkinError
-                    ? "보조 조회에 실패해 공식 API 스킨만 표시 중입니다."
-                    : "공식 API와 보조 조회에서 보유 스킨 목록을 찾지 못했습니다."}
-              </span>
-            )}
-            {isSkinLoading ? (
-              <span className="rounded-lg border border-indigo-100 bg-indigo-50 p-2 text-xs font-black text-indigo-600">
-                보유 스킨 보조 조회 중입니다.
-              </span>
-            ) : null}
-            {hasSkinError ? (
-              <span className="rounded-lg border border-amber-100 bg-amber-50 p-2 text-xs font-black text-amber-700">
-                {skinInventoryError || "보유 스킨 보조 조회에 실패했습니다."}
-              </span>
-            ) : null}
+            </section>
           </div>
 
-          <h3 className="border-b pb-2 font-black text-gray-700">실제 보유 장비 목록</h3>
-          <AbilityGroup label="가젯" abilities={brawler.gadgets} imageType="gadgets" color="green" />
-          <AbilityGroup label="스타파워" abilities={brawler.starPowers} imageType="star-powers" color="yellow" />
-          <AbilityGroup label="하이퍼차지" abilities={brawler.hyperCharges} imageType="hypercharges" color="purple" />
-
-          {brawler.buffies ? (
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-bold text-gray-600">버피 강화 상태</span>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  ["가젯", brawler.buffies.gadget],
-                  ["스타파워", brawler.buffies.starPower],
-                  ["하이퍼차지", brawler.buffies.hyperCharge],
-                ].map(([label, active]) => (
-                  <span
-                    key={String(label)}
-                    className={`rounded-lg border px-2 py-2 text-center text-xs font-bold ${
-                      active
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : "border-gray-100 bg-white text-gray-400"
-                    }`}
-                  >
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-bold text-gray-600">기어</span>
-            {brawler.gears?.length ? (
-              <div className="flex flex-col gap-2">
-                {brawler.gears.map((gear) => (
-                  <div key={gear.id} className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white p-2 shadow-sm">
-                    <BrawlImage
-                      src={`https://cdn.brawlify.com/gears/regular/${gear.id}.png`}
-                      alt={gear.name}
-                      width={32}
-                      height={32}
-                      fallbackText="G"
-                      className="h-8 w-8 rounded-md bg-gray-100"
-                    />
-                    <span className="text-sm font-bold text-gray-800">
-                      {translateGearName(gear.id, gear.name)}
+          <aside className="space-y-3">
+            {brawler.buffies ? (
+              <section className="rounded-xl border border-slate-200 bg-white p-4">
+                <h3 className="mb-3 text-sm font-black text-slate-950">버피 강화 상태</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    ["가젯", brawler.buffies.gadget],
+                    ["스타파워", brawler.buffies.starPower],
+                    ["하이퍼", brawler.buffies.hyperCharge],
+                  ].map(([label, active]) => (
+                    <span
+                      key={String(label)}
+                      className={`rounded-lg border px-2 py-2 text-center text-xs font-black ${
+                        active
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-slate-200 bg-slate-50 text-slate-400"
+                      }`}
+                    >
+                      {label}
                     </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <span className="text-xs text-gray-400">보유한 기어가 없습니다.</span>
-            )}
-          </div>
-        </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
-        <StatsCard
-          title="최근 25전 내 분석"
-          color="blue"
-          stat={recentStat}
-          extra={recentStat.plays > 0 ? `주력 모드: ${translateModeName(recentStat.topMode)}` : undefined}
-        />
-        <StatsCard title="내 검색 기록 누적 승률" color="indigo" stat={dbStat} />
+            <StatsCard
+              title="최근 25전 개인 기록"
+              stat={recentStat}
+              extra={recentStat.plays > 0 ? `주력 모드: ${translateModeName(recentStat.topMode)}` : undefined}
+            />
+            <StatsCard title="전체 저장 DB 기록" stat={dbStat} />
+          </aside>
+        </div>
       </section>
     </div>
   );
@@ -229,8 +216,11 @@ type DisplaySkin = {
 
 function getOwnedSkins(brawler: Brawler, externalSkins: PlayerOwnedSkin[]) {
   const byKey = new Map<string, DisplaySkin>();
+  const knownNames = new Set<string>();
 
   for (const skin of brawler.skins ?? []) {
+    const normalizedName = normalizeSkinName(skin.name);
+    knownNames.add(normalizedName);
     byKey.set(`id:${skin.id}`, {
       id: skin.id,
       isEquipped: brawler.skin?.id === skin.id,
@@ -241,6 +231,7 @@ function getOwnedSkins(brawler: Brawler, externalSkins: PlayerOwnedSkin[]) {
   }
 
   if (brawler.skin) {
+    knownNames.add(normalizeSkinName(brawler.skin.name));
     byKey.set(`id:${brawler.skin.id}`, {
       id: brawler.skin.id,
       isEquipped: true,
@@ -251,14 +242,15 @@ function getOwnedSkins(brawler: Brawler, externalSkins: PlayerOwnedSkin[]) {
   }
 
   for (const skin of externalSkins) {
-    const key = `name:${normalizeSkinName(skin.name)}`;
-    if (byKey.has(key)) continue;
-    byKey.set(key, {
+    const normalizedName = normalizeSkinName(skin.name);
+    if (knownNames.has(normalizedName)) continue;
+    knownNames.add(normalizedName);
+    byKey.set(`name:${normalizedName}`, {
       id: skin.id,
       isEquipped:
         brawler.skin !== undefined &&
-        normalizeSkinName(skin.name) === normalizeSkinName(brawler.skin.name),
-      key,
+        normalizedName === normalizeSkinName(brawler.skin.name),
+      key: `name:${normalizedName}`,
       name: skin.name,
       source: skin.source,
     });
@@ -299,45 +291,88 @@ function toTitleCase(value: string) {
     .join(" ");
 }
 
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+      <p className="text-xs font-black text-slate-500">{label}</p>
+      <p className="mt-1 truncate text-lg font-black text-slate-950">{value}</p>
+    </div>
+  );
+}
+
 function AbilityGroup({
   label,
   abilities,
   imageType,
-  color,
+  tone,
 }: {
   label: string;
   abilities?: BrawlAbility[];
   imageType: string;
-  color: "green" | "yellow" | "purple";
+  tone: "green" | "amber" | "violet";
 }) {
-  const colors = {
-    green: "text-green-800 bg-green-50",
-    yellow: "text-yellow-800 bg-yellow-50",
-    purple: "text-purple-800 bg-purple-50",
-  };
+  const toneClass = {
+    green: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
+    violet: "bg-violet-50 text-violet-700",
+  }[tone];
+
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm font-bold text-gray-600">{label}</span>
+    <div>
+      <h4 className="mb-2 text-xs font-black text-slate-500">{label}</h4>
       {abilities?.length ? (
-        <div className="flex flex-col gap-2">
+        <div className="grid gap-2 sm:grid-cols-2">
           {abilities.map((ability) => (
-            <div key={ability.id} className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white p-2 shadow-sm">
+            <div key={ability.id} className="flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
               <BrawlImage
                 src={`https://cdn.brawlify.com/${imageType}/regular/${ability.id}.png`}
                 alt={ability.name}
-                width={32}
-                height={32}
+                width={36}
+                height={36}
                 fallbackText={label.slice(0, 1)}
-                className={`h-8 w-8 rounded-md ${colors[color]}`}
+                className={`h-9 w-9 shrink-0 rounded-lg ${toneClass}`}
               />
-              <span className={`text-sm font-bold ${colors[color].split(" ")[0]}`}>
+              <span className="min-w-0 truncate text-sm font-black text-slate-800">
                 {translateAbilityName(ability.id, ability.name)}
               </span>
             </div>
           ))}
         </div>
       ) : (
-        <span className="text-xs text-gray-400">보유한 {label}가 없습니다.</span>
+        <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs font-bold text-slate-400">
+          보유한 {label}이 없습니다.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function GearGroup({ brawler }: { brawler: Brawler }) {
+  return (
+    <div>
+      <h4 className="mb-2 text-xs font-black text-slate-500">기어</h4>
+      {brawler.gears?.length ? (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {brawler.gears.map((gear) => (
+            <div key={gear.id} className="flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+              <BrawlImage
+                src={`https://cdn.brawlify.com/gears/regular/${gear.id}.png`}
+                alt={gear.name}
+                width={36}
+                height={36}
+                fallbackText="G"
+                className="h-9 w-9 shrink-0 rounded-lg bg-slate-100"
+              />
+              <span className="min-w-0 truncate text-sm font-black text-slate-800">
+                {translateGearName(gear.id, gear.name)}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs font-bold text-slate-400">
+          보유한 기어가 없습니다.
+        </p>
       )}
     </div>
   );
@@ -345,39 +380,34 @@ function AbilityGroup({
 
 function StatsCard({
   title,
-  color,
   stat,
   extra,
 }: {
   title: string;
-  color: "blue" | "indigo";
   stat?: BrawlerStat;
   extra?: string;
 }) {
-  const isBlue = color === "blue";
   return (
-    <div className={`mb-4 rounded-2xl border p-5 ${isBlue ? "border-blue-100 bg-blue-50" : "border-indigo-100 bg-indigo-50"}`}>
-      <h3 className={`mb-3 border-b pb-2 font-black ${isBlue ? "border-blue-200 text-blue-900" : "border-indigo-200 text-indigo-900"}`}>
-        {title}
-      </h3>
+    <section className="rounded-xl border border-slate-200 bg-white p-4">
+      <h3 className="text-sm font-black text-slate-950">{title}</h3>
       {stat && stat.plays > 0 ? (
-        <div className={`flex flex-col gap-3 text-sm font-bold ${isBlue ? "text-blue-700" : "text-indigo-700"}`}>
-          <div className="flex items-center justify-between">
+        <div className="mt-3 space-y-2 text-sm font-bold text-slate-700">
+          <div className="flex items-center justify-between gap-3">
             <span>승률</span>
-            <span className="text-2xl font-black">{stat.winRate}%</span>
+            <span className="text-2xl font-black text-blue-700">{stat.winRate}%</span>
           </div>
-          <div className="flex justify-between">
-            <span>플레이 횟수</span>
+          <div className="flex justify-between gap-3">
+            <span>플레이</span>
             <span>{stat.plays}전 {stat.wins}승</span>
           </div>
-          {extra ? <div className="rounded-lg bg-white/60 p-2">{extra}</div> : null}
+          {extra ? <p className="rounded-lg bg-slate-50 p-2 text-xs font-black text-slate-600">{extra}</p> : null}
         </div>
       ) : (
-        <div className="py-4 text-center text-sm font-bold text-gray-400">
-          아직 기록된 데이터가 없습니다.
-        </div>
+        <p className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-sm font-bold text-slate-400">
+          아직 기록 데이터가 없습니다.
+        </p>
       )}
-    </div>
+    </section>
   );
 }
 

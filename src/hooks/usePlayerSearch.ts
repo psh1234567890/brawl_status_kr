@@ -13,13 +13,13 @@ import { normalizePlayerTag } from "../utils/playerTag";
 
 const RECENT_TAGS_KEY = "recentTags";
 const FAVORITE_TAGS_KEY = "favoriteTags";
-const EMPTY_RECENT_TAGS = "[]";
+const EMPTY_STORED_TAGS = "[]";
 const RECENT_TAGS_CHANGED_EVENT = "recentTagsChanged";
 const FAVORITE_TAGS_CHANGED_EVENT = "favoriteTagsChanged";
 
 function getStoredTagsSnapshot(key: string) {
-  if (typeof window === "undefined") return EMPTY_RECENT_TAGS;
-  return window.localStorage.getItem(key) ?? EMPTY_RECENT_TAGS;
+  if (typeof window === "undefined") return EMPTY_STORED_TAGS;
+  return window.localStorage.getItem(key) ?? EMPTY_STORED_TAGS;
 }
 
 function subscribeStoredTags(eventName: string, onStoreChange: () => void) {
@@ -31,7 +31,7 @@ function subscribeStoredTags(eventName: string, onStoreChange: () => void) {
   };
 }
 
-function parseRecentTags(snapshot: string) {
+function parseStoredTags(snapshot: string) {
   try {
     const value = JSON.parse(snapshot) as unknown;
     return Array.isArray(value)
@@ -73,21 +73,21 @@ export function usePlayerSearch() {
   const recentSnapshot = useSyncExternalStore(
     (onStoreChange) => subscribeStoredTags(RECENT_TAGS_CHANGED_EVENT, onStoreChange),
     () => getStoredTagsSnapshot(RECENT_TAGS_KEY),
-    () => EMPTY_RECENT_TAGS,
+    () => EMPTY_STORED_TAGS,
   );
   const favoriteSnapshot = useSyncExternalStore(
     (onStoreChange) => subscribeStoredTags(FAVORITE_TAGS_CHANGED_EVENT, onStoreChange),
     () => getStoredTagsSnapshot(FAVORITE_TAGS_KEY),
-    () => EMPTY_RECENT_TAGS,
+    () => EMPTY_STORED_TAGS,
   );
-  const recentSearches = useMemo(() => parseRecentTags(recentSnapshot), [recentSnapshot]);
-  const favoriteSearches = useMemo(() => parseRecentTags(favoriteSnapshot), [favoriteSnapshot]);
+  const recentSearches = useMemo(() => parseStoredTags(recentSnapshot), [recentSnapshot]);
+  const favoriteSearches = useMemo(() => parseStoredTags(favoriteSnapshot), [favoriteSnapshot]);
 
   const handleSearch = useCallback(
     async (searchTag?: string) => {
       const targetTag = normalizePlayerTag(searchTag ?? tag);
       if (!targetTag) {
-        setError("플레이어 태그를 입력해주세요.");
+        setError("플레이어 태그를 입력해 주세요.");
         return;
       }
 

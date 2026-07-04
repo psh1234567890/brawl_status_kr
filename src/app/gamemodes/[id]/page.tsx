@@ -16,7 +16,7 @@ interface GameModeDetailPageProps {
 
 export async function generateMetadata({ params }: GameModeDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const mode = (await getBrawlifyGameModes()).list.find((item) => String(item.id) === id);
+  const mode = (await getBrawlifyGameModes().catch(() => ({ list: [] }))).list.find((item) => String(item.id) === id);
   return {
     title: mode ? `${translateModeName(mode.name)} 모드 상세` : "게임모드 상세",
     alternates: { canonical: `/gamemodes/${id}` },
@@ -25,7 +25,10 @@ export async function generateMetadata({ params }: GameModeDetailPageProps): Pro
 
 export default async function GameModeDetailPage({ params }: GameModeDetailPageProps) {
   const { id } = await params;
-  const [modes, maps] = await Promise.all([getBrawlifyGameModes(), getBrawlifyMaps()]);
+  const [modes, maps] = await Promise.all([
+    getBrawlifyGameModes().catch(() => ({ list: [] })),
+    getBrawlifyMaps().catch(() => ({ list: [] })),
+  ]);
   const mode = modes.list.find((item) => String(item.id) === id);
   if (!mode) notFound();
   const displayName = translateModeName(mode.name);

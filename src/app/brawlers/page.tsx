@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BrawlersPage() {
-  const brawlers = (await getBrawlifyBrawlers()).list;
+  const brawlers = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list;
   const released = brawlers.filter((brawler) => brawler.released !== false);
   const rarities = new Set(brawlers.map((brawler) => brawler.rarity?.name).filter(Boolean));
 

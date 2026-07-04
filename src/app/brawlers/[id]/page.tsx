@@ -18,7 +18,7 @@ interface BrawlerDetailPageProps {
 
 export async function generateMetadata({ params }: BrawlerDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const brawler = (await getBrawlifyBrawlers()).list.find((item) => String(item.id) === id);
+  const brawler = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list.find((item) => String(item.id) === id);
   const name = brawler ? translateBrawlerName(brawler.name) : "브롤러";
   return {
     title: `${name} 브롤러 상세`,
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: BrawlerDetailPageProps): Prom
 
 export default async function BrawlerDetailPage({ params }: BrawlerDetailPageProps) {
   const { id } = await params;
-  const brawler = (await getBrawlifyBrawlers()).list.find((item) => String(item.id) === id);
+  const brawler = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list.find((item) => String(item.id) === id);
   if (!brawler) notFound();
 
   const displayName = translateBrawlerName(brawler.name);

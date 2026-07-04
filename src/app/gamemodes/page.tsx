@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function GameModesPage() {
-  const modes = (await getBrawlifyGameModes()).list;
+  const modes = (await getBrawlifyGameModes().catch(() => ({ list: [] }))).list;
   const enabled = modes.filter((mode) => !mode.disabled);
 
   return (

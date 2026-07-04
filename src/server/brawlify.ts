@@ -25,11 +25,16 @@ async function fetchBrawlify<T>(path: string, revalidateSeconds = 3600): Promise
   });
 
   const text = await response.text();
-  const data = text ? (JSON.parse(text) as unknown) : {};
   if (!response.ok) {
     throw new BrawlifyApiError(response.status, "Brawlify 데이터를 불러오지 못했습니다.");
   }
-  return data as T;
+  if (!text) return {} as T;
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new BrawlifyApiError(response.status, "Brawlify에서 JSON이 아닌 응답을 받았습니다.");
+  }
 }
 
 export async function getBrawlifyBrawlers() {

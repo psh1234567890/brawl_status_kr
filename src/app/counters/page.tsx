@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CountersPage() {
-  const brawlers = (await getBrawlifyBrawlers()).list;
+  const brawlers = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list;
 
   return (
     <PortalLayout

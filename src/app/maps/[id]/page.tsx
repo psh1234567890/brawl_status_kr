@@ -12,7 +12,7 @@ interface MapDetailPageProps {
 
 export async function generateMetadata({ params }: MapDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const map = (await getBrawlifyMaps()).list.find((item) => String(item.id) === id);
+  const map = (await getBrawlifyMaps().catch(() => ({ list: [] }))).list.find((item) => String(item.id) === id);
   return {
     title: map ? `${translateMapName(map.name)} 맵 상세` : "맵 상세",
     alternates: { canonical: `/maps/${id}` },
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: MapDetailPageProps): Promise<
 
 export default async function MapDetailPage({ params }: MapDetailPageProps) {
   const { id } = await params;
-  const maps = (await getBrawlifyMaps()).list;
+  const maps = (await getBrawlifyMaps().catch(() => ({ list: [] }))).list;
   const map = maps.find((item) => String(item.id) === id);
   if (!map) notFound();
   const displayName = translateMapName(map.name);

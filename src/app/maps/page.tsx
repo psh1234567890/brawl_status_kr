@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function MapsPage() {
-  const maps = (await getBrawlifyMaps()).list;
+  const maps = (await getBrawlifyMaps().catch(() => ({ list: [] }))).list;
   const activeMaps = maps.filter((map) => !map.disabled);
   const modes = new Set(maps.map((map) => map.gameMode?.name).filter(Boolean));
   const recentMaps = [...maps]

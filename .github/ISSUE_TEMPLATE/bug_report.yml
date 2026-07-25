@@ -1,0 +1,67 @@
+name: 버그 신고
+description: 재현 가능한 기능 오류나 화면 문제를 알려주세요.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        실제 API 키, DB 주소, 이메일, 전체 플레이어 태그는 올리지 마세요.
+        보안 취약점은 공개 이슈가 아니라 Security Advisory를 사용해 주세요.
+  - type: input
+    id: page
+    attributes:
+      label: 문제가 발생한 페이지
+      placeholder: https://www.brawl-o1.site/...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 단계
+      description: 처음 보는 사람도 같은 문제를 재현할 수 있게 순서대로 적어주세요.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대한 결과
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 결과
+      description: 오류 문구는 비밀정보를 가린 뒤 그대로 적어주세요.
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: 사용 환경
+      options:
+        - 모바일 브라우저
+        - 데스크톱 브라우저
+        - 로컬 개발 환경
+        - 기타
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: 브라우저와 버전
+      placeholder: Chrome 000, Safari 00
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 확인
+      options:
+        - label: 비밀정보와 불필요한 개인정보를 제거했습니다.
+          required: true
+        - label: 같은 내용의 기존 이슈를 검색했습니다.
+          required: true

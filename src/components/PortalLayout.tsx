@@ -65,6 +65,35 @@ export default function PortalLayout({
         </header>
         <AdSlot />
         {children}
+        <footer className="flex flex-col justify-between gap-3 border-t border-indigo-100 py-6 text-xs font-bold text-gray-500 sm:flex-row sm:items-center">
+          <p>
+            이 자료는 비공식이며 Supercell의 승인을 받지 않았습니다.{" "}
+            <a
+              href="https://supercell.com/en/fan-content-policy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-indigo-700 hover:underline"
+            >
+              Fan Content Policy
+            </a>
+          </p>
+          <nav className="flex flex-wrap gap-3" aria-label="프로젝트 정보">
+            <Link href="/methodology" className="hover:text-indigo-700 hover:underline">
+              데이터 산정 방식
+            </Link>
+            <Link href="/privacy" className="hover:text-indigo-700 hover:underline">
+              개인정보처리방침
+            </Link>
+            <a
+              href="https://github.com/psh1234567890/brawl_status_kr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-indigo-700 hover:underline"
+            >
+              오픈소스·기여하기
+            </a>
+          </nav>
+        </footer>
       </div>
     </main>
   );

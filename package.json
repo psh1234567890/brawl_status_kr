@@ -1,5 +1,5 @@
 {
-  "name": "brawlapi",
+  "name": "brawl-status-kr",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,17 +14,17 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
-    "next": "16.2.6",
+    "next": "16.2.11",
     "pg": "^8.21.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "overrides": {
     "esbuild": "0.28.1",
-    "postcss": "8.5.15"
+    "postcss": "8.5.18"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
@@ -32,9 +32,9 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4",
+    "eslint-config-next": "^16.2.11",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.10"
   }
 }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Brawl Status KR</title>
+  <defs>
+    <linearGradient id="background" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563eb" />
+      <stop offset="1" stop-color="#6d28d9" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#background)" />
+  <path d="M112 120h288v272H112z" fill="#fff" opacity=".12" />
+  <text x="256" y="270" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="176" font-weight="800" text-anchor="middle">BS</text>
+  <text x="256" y="354" fill="#dbeafe" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="700" letter-spacing="16" text-anchor="middle">KR</text>
+</svg>

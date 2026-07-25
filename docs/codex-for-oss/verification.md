@@ -14,6 +14,7 @@
 | `npm.cmd run build` | Next.js 16.2.11 프로덕션 빌드 통과 |
 | 정적 페이지 생성 | 32개 경로 처리 완료 |
 | `/status` | 요청 시 서버 렌더링되는 동적 경로로 확인 |
+| `DELETE /api/player/history` | 공개 핸들러 제거 후 HTTP 405 확인 |
 | Markdown 로컬 링크 | 26개 Markdown 파일, 깨진 링크 0개 |
 | GitHub YAML 파싱 | 6개 파일 통과 |
 | `git diff --check` | 오류 없음 |
@@ -43,7 +44,7 @@
 ## 남아 있는 의도적 미검증
 
 - 운영 DB에 쓰는 `POST /api/player/matches`
-- 운영 DB 기록을 지우는 `DELETE /api/player/history`
+- 운영 DB 기록 요청의 실제 운영자 검토 절차
 - GitHub Actions의 실제 원격 실행
 - 배포 후 canonical 도메인의 새 화면
 

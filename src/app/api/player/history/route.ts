@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { db } from "../../../../db";
 import { battleLogs } from "../../../../db/schema";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
-import { rejectCrossSiteMutation } from "../../../../server/requestGuard";
 import type {
   PlayerHistoryBucket,
   PlayerHistoryDay,
@@ -113,33 +112,5 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Failed to calculate player history:", error);
     return NextResponse.json({ error: "장기 기록을 계산하지 못했습니다." }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  const crossSiteRejected = rejectCrossSiteMutation(request);
-  if (crossSiteRejected) return crossSiteRejected;
-
-  const rejected = rejectRateLimitedRequest(request, "player-history-delete", {
-    limit: 6,
-    windowMs: 60_000,
-  });
-  if (rejected) return rejected;
-
-  const { searchParams } = new URL(request.url);
-  const tag = searchParams.get("tag");
-  if (!tag || !isValidPlayerTag(tag)) {
-    return NextResponse.json({ error: "올바른 플레이어 태그가 필요합니다." }, { status: 400 });
-  }
-
-  try {
-    const deletedRows = await db
-      .delete(battleLogs)
-      .where(inArray(battleLogs.playerTag, getTagVariants(tag)))
-      .returning({ id: battleLogs.id });
-    return NextResponse.json({ deleted: deletedRows.length });
-  } catch (error) {
-    console.error("Failed to delete player history:", error);
-    return NextResponse.json({ error: "저장된 기록을 삭제하지 못했습니다." }, { status: 500 });
   }
 }

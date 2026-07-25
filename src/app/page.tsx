@@ -293,10 +293,7 @@ export default function Home() {
               ) : null}
               {activePanel === "history" ? (
                 search.playerHistory ? (
-                  <PlayerHistoryPanel
-                    tag={search.playerData.tag}
-                    history={search.playerHistory}
-                  />
+                  <PlayerHistoryPanel history={search.playerHistory} />
                 ) : (
                   <EmptyPanel title="누적 기록을 준비 중입니다" body="검색이 누적되면 일별 기록과 자주 플레이한 맵, 모드가 표시됩니다." />
                 )

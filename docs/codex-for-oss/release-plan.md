@@ -29,7 +29,7 @@
 - [x] 모바일·데스크톱 smoke test
 - [x] 무인증 기록 삭제 API 제거
 - [x] 묵시적 제3자 프록시 기본값 제거
-- [ ] 배포 환경에 신뢰한 HTTPS API 주소 명시
+- [x] Vercel Production·Preview에 공식 문서가 안내하는 RoyaleAPI Brawl Stars HTTPS 프록시 주소 명시
 - [ ] changelog 날짜와 tag 확정
 - [ ] 공개 저장소 metadata 수정 승인
 

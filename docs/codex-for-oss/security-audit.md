@@ -41,6 +41,8 @@
 
 코드에 있던 `https://bsproxy.royaleapi.dev/v1` 기본값을 제거했다. 이제 `BRAWL_STARS_API_BASE_URL`에 인증정보 없는 HTTPS URL을 명시하지 않으면 키를 전송하지 않고 설정 오류를 반환한다. 공식 API 또는 프록시의 신뢰, 로그, 보관, 키 회전 정책 선택은 운영자의 명시적 책임이다.
 
+Vercel Production·Preview 환경에는 [RoyaleAPI가 동적 IP 서버용 Brawl Stars 프록시로 문서화한 주소](https://docs.royaleapi.com/proxy.html) `https://bsproxy.royaleapi.dev/v1`을 명시적으로 등록했다. 코드의 묵시적 신뢰는 제거했지만, 운영자는 해당 제공자의 정책 변화와 키 회전을 계속 점검해야 한다.
+
 ### P2 — 분산되지 않은 rate limit
 
 프로세스 메모리 기반 Map이므로 인스턴스마다 제한이 따로 적용되고 재시작 때 초기화된다. `x-forwarded-for` 신뢰도도 배포 환경에 의존한다. 규모가 커지면 공유 저장소와 배포 플랫폼의 신뢰 가능한 client IP 규칙이 필요하다.

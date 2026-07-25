@@ -18,7 +18,7 @@
 | API 연결 설정 | 명시적 HTTPS 주소만 허용하는 4개 경계 테스트 통과 |
 | GitHub Actions `verify` | PR #1의 두 번째 원격 실행 통과 |
 | Vercel Preview | PR #1 배포 통과, 읽기 API HTTP 200 확인 |
-| Vercel API 주소 | Production·Preview에 명시적 HTTPS 프록시 설정 등록, 다음 Preview에서 재검증 예정 |
+| Vercel API 주소 | Production·Preview에 명시적 HTTPS 프록시 설정 등록 후 새 Preview 읽기 API HTTP 200 확인 |
 | Markdown 로컬 링크 | 26개 Markdown 파일, 깨진 링크 0개 |
 | GitHub YAML 파싱 | 6개 파일 통과 |
 | `git diff --check` | 오류 없음 |

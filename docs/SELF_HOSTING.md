@@ -25,7 +25,7 @@ BRAWL_STARS_API_KEY=YOUR_KEY
 BRAWL_STARS_API_BASE_URL=https://YOUR_TRUSTED_PROXY.example/v1
 ```
 
-`BRAWL_STARS_API_BASE_URL`을 비워 두면 현재 구현은 `https://bsproxy.royaleapi.dev/v1`을 사용합니다. 이 경우 API 키가 프록시로 전달됩니다. 운영 환경에서는 직접 관리하거나 명시적으로 신뢰한 프록시만 사용하세요.
+`BRAWL_STARS_API_BASE_URL`에는 인증정보가 포함되지 않은 HTTPS URL을 반드시 명시해야 합니다. 묵시적 기본 프록시는 없습니다. 공식 API를 직접 사용하면 배포 환경의 고정 IP 허용 조건을 확인하고, 프록시를 사용하면 해당 운영자·로그·보관·키 회전 정책을 먼저 신뢰할 수 있어야 합니다.
 
 ## 데이터베이스
 

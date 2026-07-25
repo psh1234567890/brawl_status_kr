@@ -3,18 +3,21 @@
 - 검증일: 2026-07-25
 - 작업 위치: `C:\Users\ADMIN\Desktop\brawl_status_kr_oss`
 - 브랜치: `codex/oss-readiness`
-- 검증 대상: GitHub 공개 전 로컬 후보
+- 검증 대상: GitHub draft PR #1의 공개 후보 브랜치
 
 ## 자동 검증
 
 | 검사 | 결과 |
 | --- | --- |
 | `npm.cmd run lint` | 통과 |
-| `npm.cmd test -- --run` | 6개 파일, 19개 테스트 통과 |
+| `npm.cmd test -- --run` | 7개 파일, 23개 테스트 통과 |
 | `npm.cmd run build` | Next.js 16.2.11 프로덕션 빌드 통과 |
 | 정적 페이지 생성 | 32개 경로 처리 완료 |
 | `/status` | 요청 시 서버 렌더링되는 동적 경로로 확인 |
 | `DELETE /api/player/history` | 공개 핸들러 제거 후 HTTP 405 확인 |
+| API 연결 설정 | 명시적 HTTPS 주소만 허용하는 4개 경계 테스트 통과 |
+| GitHub Actions `verify` | PR #1의 두 번째 원격 실행 통과 |
+| Vercel Preview | PR #1 배포 통과, 읽기 API HTTP 200 확인 |
 | Markdown 로컬 링크 | 26개 Markdown 파일, 깨진 링크 0개 |
 | GitHub YAML 파싱 | 6개 파일 통과 |
 | `git diff --check` | 오류 없음 |

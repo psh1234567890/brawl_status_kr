@@ -15,7 +15,7 @@
 - 고유 태그 수와 사용자 수를 구분할 분석 체계 부족
 - 메모리 기반 rate limit
 - 계정 없는 서비스라 자동 기록 삭제 대신 운영자 검토 요청을 사용
-- 기본 프록시의 API 키 전달 위험
+- 명시한 API 또는 프록시의 신뢰·고정 IP·키 회전 운영 확인 필요
 - 외부 Brawlify/BrawlAPI 데이터 가용성
 - 의존성 high advisory 잔여
 
@@ -24,11 +24,12 @@
 - [x] MIT 승인과 `LICENSE`
 - [x] 출처 불명 게임 아이콘 제거와 고유 문자 아이콘 교체
 - [ ] BrawlAPI·Brawlify 데이터 조건 확인
-- [ ] CI가 공개 GitHub에서 통과
+- [x] CI가 공개 GitHub PR #1에서 통과
 - [ ] 운영 저장 흐름 승인 테스트
-- [ ] 모바일·데스크톱 smoke test
+- [x] 모바일·데스크톱 smoke test
 - [x] 무인증 기록 삭제 API 제거
-- [ ] 제3자 프록시 키 전달 P1 결정
+- [x] 묵시적 제3자 프록시 기본값 제거
+- [ ] 배포 환경에 신뢰한 HTTPS API 주소 명시
 - [ ] changelog 날짜와 tag 확정
 - [ ] 공개 저장소 metadata 수정 승인
 
@@ -40,4 +41,4 @@
 4. `docs: publish data methodology and self-hosting guide`
 5. `feat: expose methodology and contribution links`
 
-사용자는 2026-07-25 commit·branch push·draft PR 생성을 승인했다. 실제 release와 배포는 공개 CI와 보안 P1 결정을 확인한 뒤 진행한다.
+사용자는 2026-07-25 commit·branch push·draft PR 생성을 승인했다. 공개 CI와 보안 P1 코드 수정은 완료됐으며, 실제 release와 production 배포는 신뢰한 API 주소의 운영 환경 설정과 남은 권리 조건을 확인한 뒤 진행한다.

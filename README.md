@@ -76,11 +76,11 @@ npm.cmd run dev
 | `DATABASE_URL` | 예 | 앱 런타임 PostgreSQL 연결 |
 | `DIRECT_URL` | 마이그레이션 시 | DB 점검·마이그레이션 직접 연결 |
 | `BRAWL_STARS_API_KEY` | 예 | 서버의 Brawl Stars API 인증 |
-| `BRAWL_STARS_API_BASE_URL` | 선택 | 직접 관리하거나 신뢰한 프록시 |
+| `BRAWL_STARS_API_BASE_URL` | 예 | 공식 API 또는 직접 관리하거나 명시적으로 신뢰한 HTTPS 프록시 |
 | `NEXT_PUBLIC_ADSENSE_CLIENT_ID` | 선택 | 광고 클라이언트 ID |
 | `NEXT_PUBLIC_ADSENSE_SLOT_ID` | 선택 | 광고 슬롯 ID |
 
-실제 값을 커밋하지 마세요. `.env.example`에는 변수 이름과 빈 값만 있습니다. 기본 API 프록시를 사용하면 서버 API 키가 해당 프록시에 전달되므로 신뢰 관계를 반드시 확인해야 합니다.
+실제 값을 커밋하지 마세요. `.env.example`에는 변수 이름과 빈 값만 있습니다. 묵시적 기본 프록시는 없으며, 운영자가 `BRAWL_STARS_API_BASE_URL`을 명시해야만 서버 API 키가 전송됩니다.
 
 ## 데이터베이스
 

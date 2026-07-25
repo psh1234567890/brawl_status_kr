@@ -37,9 +37,9 @@
 
 ## 확인된 위험
 
-### P1 — 제3자 프록시에 API 키 전달
+### 해결 — 묵시적 제3자 프록시에 API 키 전달
 
-`BRAWL_STARS_API_BASE_URL`이 없으면 `https://bsproxy.royaleapi.dev/v1`을 사용하며 서버 API 키를 Authorization header로 전송한다. 프록시 신뢰, 로그, 보관, 키 회전 정책을 확인해야 한다. 운영에서는 직접 관리하거나 명시적으로 신뢰한 프록시를 권장한다.
+코드에 있던 `https://bsproxy.royaleapi.dev/v1` 기본값을 제거했다. 이제 `BRAWL_STARS_API_BASE_URL`에 인증정보 없는 HTTPS URL을 명시하지 않으면 키를 전송하지 않고 설정 오류를 반환한다. 공식 API 또는 프록시의 신뢰, 로그, 보관, 키 회전 정책 선택은 운영자의 명시적 책임이다.
 
 ### P2 — 분산되지 않은 rate limit
 

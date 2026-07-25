@@ -30,8 +30,9 @@
 - [x] 무인증 기록 삭제 API 제거
 - [x] 묵시적 제3자 프록시 기본값 제거
 - [x] Vercel Production·Preview에 공식 문서가 안내하는 RoyaleAPI Brawl Stars HTTPS 프록시 주소 명시
+- [x] PR #1을 `main`에 병합하고 canonical 프로덕션 배포 검증
 - [ ] changelog 날짜와 tag 확정
-- [ ] 공개 저장소 metadata 수정 승인
+- [x] 공개 저장소 description·topics·homepage 수정
 
 ## 커밋 후보
 
@@ -41,4 +42,4 @@
 4. `docs: publish data methodology and self-hosting guide`
 5. `feat: expose methodology and contribution links`
 
-사용자는 2026-07-25 commit·branch push·draft PR 생성을 승인했다. 공개 CI와 보안 P1 코드 수정은 완료됐으며, 실제 release와 production 배포는 신뢰한 API 주소의 운영 환경 설정과 남은 권리 조건을 확인한 뒤 진행한다.
+사용자는 2026-07-25 공개 변경 진행을 승인했고 PR #1은 `main`에 병합됐다. 프로덕션 배포와 읽기 흐름은 검증됐지만, 실제 `v0.1.0` 태그와 GitHub Release는 제3자 데이터 조건·운영 저장 흐름·남은 advisory를 검토한 뒤 진행한다.

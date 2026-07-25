@@ -135,10 +135,10 @@ Brawl Stars, Supercell, 관련 명칭·이미지·게임 데이터와 제3자 �
 
 ## 현재 상태와 로드맵
 
-현재 우선순위는 제3자 데이터 조건 확인, 공개 CI, 데이터 방법론, 첫 릴리스, 실제 피드백·사용량 근거입니다. 계획과 현재 기능을 섞지 않으며 자세한 내용은 [ROADMAP.md](docs/ROADMAP.md)와 [CHANGELOG.md](CHANGELOG.md)에 있습니다.
+현재 우선순위는 제3자 데이터 조건 확인, 첫 릴리스, 실제 피드백·사용량 근거입니다. 계획과 현재 기능을 섞지 않으며 자세한 내용은 [ROADMAP.md](docs/ROADMAP.md)와 [CHANGELOG.md](CHANGELOG.md)에 있습니다.
 
 ## 피드백
 
-GitHub Issues에서 버그, 기능 제안, 데이터 정확성 양식을 사용할 수 있도록 후보 브랜치에 준비했습니다. 공개 전까지는 저장소의 기존 피드백 경로나 `seunghunbag76@gmail.com`으로 문의할 수 있습니다.
+GitHub Issues에서 버그, 기능 제안, 데이터 정확성 양식을 사용할 수 있습니다. 보안 취약점은 공개 이슈 대신 [SECURITY.md](SECURITY.md)의 비공개 신고 절차를 이용해 주세요.
 
 지원 범위와 공식 Supercell 문의가 필요한 항목은 [SUPPORT.md](SUPPORT.md)를 확인하세요.

@@ -4,7 +4,7 @@
 
 ## 2026-07-25
 
-### 공개 저장소
+### 공개 저장소 — 병합 전 기준선
 
 - URL: <https://github.com/psh1234567890/brawl_status_kr>
 - 공개 여부: public
@@ -53,3 +53,24 @@
 - live error rate와 uptime
 
 이 값들은 측정 체계와 개인정보 검토 후 추가한다.
+
+### 오픈소스 준비 병합과 프로덕션 검증
+
+- PR #1: <https://github.com/psh1234567890/brawl_status_kr/pull/1>
+- 상태: 2026-07-25 병합
+- `main` 병합 커밋: `e4843218eb56700b1b8746e29c5dff2718e9e0ee`
+- 공개 `LICENSE`: GitHub API가 MIT(`SPDX: MIT`)로 감지
+- CI: PR #1과 병합된 `main`의 lint·test·build 통과
+- 저장소 metadata:
+  - description: `Korean Brawl Stars player search and sample-based battle analytics`
+  - homepage: <https://www.brawl-o1.site/>
+  - topics: analytics, brawl-stars, korean, nextjs, open-source, postgresql, typescript
+- Vercel 프로덕션 배포: `dpl_6CthtvMGbQGtQh5HcN3RPK1f585h`, READY
+- canonical 운영 검증:
+  - 홈, `/methodology`, `/status`: HTTP 200
+  - `/api/rankings?type=players&country=global`: HTTP 200, 정상 JSON
+  - `DELETE /api/player/history`: HTTP 405
+  - 홈·방법론 브라우저 콘솔 오류와 프레임워크 오류 오버레이: 0
+  - 해당 배포의 error·fatal 런타임 로그: 0
+
+운영 DB 쓰기 요청은 실행하지 않았고, 태그·Release도 아직 만들지 않았다.

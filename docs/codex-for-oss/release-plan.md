@@ -31,7 +31,7 @@
 - [x] 묵시적 제3자 프록시 기본값 제거
 - [x] Vercel Production·Preview에 공식 문서가 안내하는 RoyaleAPI Brawl Stars HTTPS 프록시 주소 명시
 - [x] PR #1을 `main`에 병합하고 canonical 프로덕션 배포 검증
-- [ ] changelog 날짜와 tag 확정
+- [x] changelog 날짜와 `v0.1.0-rc.1` tag 확정
 - [x] 공개 저장소 description·topics·homepage 수정
 
 ## 커밋 후보

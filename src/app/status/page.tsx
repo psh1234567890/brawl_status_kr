@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { sql } from "drizzle-orm";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
 import { db } from "../../db";
@@ -24,6 +25,8 @@ type PopularRow = {
 };
 
 export default async function StatusPage() {
+  await connection();
+
   const [summaryResult, popularMapsResult, popularBrawlersResult] = await Promise.all([
     db.execute<StatusRow>(sql`
       SELECT

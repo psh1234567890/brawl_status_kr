@@ -15,6 +15,25 @@ export class UpstreamApiError extends Error {
   }
 }
 
+export function resolveBrawlApiBaseUrl(value: string | undefined) {
+  if (!value?.trim()) {
+    throw new UpstreamApiError(500, "서버 API 연결 설정이 없습니다.");
+  }
+
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    throw new UpstreamApiError(500, "서버 API 연결 주소가 올바르지 않습니다.");
+  }
+
+  if (url.protocol !== "https:" || url.username || url.password) {
+    throw new UpstreamApiError(500, "서버 API 연결 주소는 인증정보가 없는 HTTPS URL이어야 합니다.");
+  }
+
+  return url.toString().replace(/\/$/, "");
+}
+
 async function readJsonResponse(response: Response) {
   const text = await response.text();
   if (!text) return {};
@@ -43,9 +62,7 @@ export async function fetchBrawlApi<T>(path: string, ttlMs: number): Promise<T> 
       throw new UpstreamApiError(500, "서버 API 설정이 없습니다.");
     }
 
-    const baseUrl = (
-      process.env.BRAWL_STARS_API_BASE_URL ?? "https://bsproxy.royaleapi.dev/v1"
-    ).replace(/\/$/, "");
+    const baseUrl = resolveBrawlApiBaseUrl(process.env.BRAWL_STARS_API_BASE_URL);
     const response = await fetch(`${baseUrl}${path}`, {
       headers: { Authorization: `Bearer ${apiKey}` },
       cache: "no-store",

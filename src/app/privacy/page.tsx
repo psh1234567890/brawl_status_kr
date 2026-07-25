@@ -66,6 +66,10 @@ export default function PrivacyPage() {
             전투 기록과 통계 데이터는 서비스 제공과 통계 품질 유지를 위해 보관될 수
             있습니다. 문의 메일은 문의 처리와 분쟁 대응에 필요한 기간 동안 보관됩니다.
           </p>
+          <p className="mt-3">
+            공개 플레이어 태그만으로 소유자를 확인할 수 없어 자동 삭제 기능은 제공하지
+            않습니다. 기록 관련 요청은 아래 문의처에서 운영자가 개별 검토합니다.
+          </p>
         </PolicySection>
 
         <PolicySection title="문의">

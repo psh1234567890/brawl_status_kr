@@ -23,6 +23,7 @@ const staticRoutes: SitemapEntry[] = [
   route("/teams", "daily", 0.6),
   route("/counters", "daily", 0.6),
   route("/status", "daily", 0.4),
+  route("/methodology", "monthly", 0.5),
   route("/about", "monthly", 0.5),
   route("/privacy", "yearly", 0.4),
   route("/terms", "yearly", 0.4),

@@ -293,10 +293,7 @@ export default function Home() {
               ) : null}
               {activePanel === "history" ? (
                 search.playerHistory ? (
-                  <PlayerHistoryPanel
-                    tag={search.playerData.tag}
-                    history={search.playerHistory}
-                  />
+                  <PlayerHistoryPanel history={search.playerHistory} />
                 ) : (
                   <EmptyPanel title="누적 기록을 준비 중입니다" body="검색이 누적되면 일별 기록과 자주 플레이한 맵, 모드가 표시됩니다." />
                 )
@@ -342,9 +339,21 @@ export default function Home() {
             <p className="mt-1 text-xs font-medium text-slate-400">
               버그 제보 및 기능 건의: seunghunbag76@gmail.com
             </p>
+            <p className="mt-1 max-w-xl text-xs font-medium text-slate-400">
+              이 자료는 비공식이며 Supercell의 승인을 받지 않았습니다.{" "}
+              <a
+                href="https://supercell.com/en/fan-content-policy/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-slate-700 hover:underline"
+              >
+                Fan Content Policy
+              </a>
+            </p>
           </div>
           <nav className="flex flex-wrap gap-3" aria-label="사이트 정보">
             <Link href="/about" className="hover:text-slate-950 hover:underline">소개</Link>
+            <Link href="/methodology" className="hover:text-slate-950 hover:underline">데이터 산정 방식</Link>
             <Link href="/privacy" className="hover:text-slate-950 hover:underline">개인정보처리방침</Link>
             <Link href="/terms" className="hover:text-slate-950 hover:underline">이용 안내</Link>
             <Link href="/contact" className="hover:text-slate-950 hover:underline">문의</Link>
@@ -354,7 +363,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="hover:text-slate-950 hover:underline"
             >
-              GitHub
+              오픈소스·기여하기
             </a>
           </nav>
         </footer>

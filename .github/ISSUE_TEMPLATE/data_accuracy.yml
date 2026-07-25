@@ -1,0 +1,58 @@
+name: 데이터 정확성 제보
+description: 승패, 번역, 맵, 브롤러, 표본 집계가 실제와 다르게 보이는 사례를 알려주세요.
+title: "[Data] "
+labels:
+  - data accuracy
+body:
+  - type: markdown
+    attributes:
+      value: |
+        이 사이트의 추천 수치는 전체 이용자 공식 통계가 아니라 검색 표본입니다.
+        실제 태그는 가능하면 앞뒤 일부를 가리고, 계정 이메일·API 키·DB 정보는 올리지 마세요.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 문제 유형
+      options:
+        - 전투 승패·순위
+        - 맵·모드·브롤러 번역
+        - 보유 장비·스킨
+        - 누적 전투 수
+        - 맵 추천·팀 조합·카운터
+        - 데이터 신선도
+        - 기타
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: 관찰한 값
+      description: 화면 위치, 표시 값, 확인 시각을 적어주세요.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 기대한 값과 근거
+      description: 게임 화면, 공개 API 응답 등 비교 근거를 비밀정보 없이 설명해 주세요.
+    validations:
+      required: true
+  - type: input
+    id: checked_at
+    attributes:
+      label: 확인 시각과 시간대
+      placeholder: 2026-07-25 10:00 KST
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: 표본 관련 정보
+      description: 맵, 모드, 표본 수 등 재현에 필요한 정보만 적어주세요.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 확인
+      options:
+        - label: 불필요한 플레이어 식별 정보와 비밀정보를 제거했습니다.
+          required: true

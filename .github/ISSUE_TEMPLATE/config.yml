@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 보안 취약점 비공개 신고
+    url: https://github.com/psh1234567890/brawl_status_kr/security/advisories/new
+    about: 악용 가능한 보안 문제는 공개 이슈 대신 비공개 Security Advisory로 알려주세요.
+  - name: 사용법과 데이터 산정 방식
+    url: https://github.com/psh1234567890/brawl_status_kr/blob/main/SUPPORT.md
+    about: 질문 전 지원 문서와 데이터 산정 방식을 확인해 주세요.

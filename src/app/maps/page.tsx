@@ -4,6 +4,7 @@ import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
 import { getBrawlifyMaps } from "../../server/brawlify";
 import { translateMapName, translateModeName } from "../../utils/brawlTranslations";
+import { selectIndexableMaps } from "../../utils/seoIndexing";
 
 export const metadata: Metadata = {
   title: "브롤스타즈 맵 도감",
@@ -15,11 +16,7 @@ export default async function MapsPage() {
   const maps = (await getBrawlifyMaps().catch(() => ({ list: [] }))).list;
   const activeMaps = maps.filter((map) => !map.disabled);
   const modes = new Set(maps.map((map) => map.gameMode?.name).filter(Boolean));
-  const recentMaps = [...maps]
-    .filter((map) => map.lastActive)
-    .sort((left, right) => (right.lastActive ?? 0) - (left.lastActive ?? 0))
-    .slice(0, 80);
-  const displayMaps = recentMaps.length ? recentMaps : activeMaps.slice(0, 80);
+  const displayMaps = selectIndexableMaps(maps);
 
   return (
     <PortalLayout

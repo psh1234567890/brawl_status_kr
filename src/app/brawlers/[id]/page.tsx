@@ -11,6 +11,7 @@ import {
   translateBrawlerName,
   translateRarityName,
 } from "../../../utils/brawlTranslations";
+import { selectIndexableBrawlers } from "../../../utils/seoIndexing";
 
 interface BrawlerDetailPageProps {
   params: Promise<{ id: string }>;
@@ -18,11 +19,17 @@ interface BrawlerDetailPageProps {
 
 export async function generateMetadata({ params }: BrawlerDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const brawler = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list.find((item) => String(item.id) === id);
+  const brawlers = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list;
+  const brawler = brawlers.find((item) => String(item.id) === id);
   const name = brawler ? translateBrawlerName(brawler.name) : "브롤러";
+  const shouldIndex = brawler
+    ? selectIndexableBrawlers(brawlers).some((item) => item.id === brawler.id)
+    : false;
+
   return {
     title: `${name} 브롤러 상세`,
     alternates: { canonical: `/brawlers/${id}` },
+    robots: shouldIndex ? undefined : { index: false, follow: true },
   };
 }
 

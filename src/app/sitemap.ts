@@ -4,9 +4,13 @@ import {
   getBrawlifyGameModes,
   getBrawlifyMaps,
 } from "../server/brawlify";
+import {
+  selectIndexableBrawlers,
+  selectIndexableGameModes,
+  selectIndexableMaps,
+} from "../utils/seoIndexing";
 
 const siteUrl = "https://www.brawl-o1.site";
-const lastModified = new Date("2026-06-14T00:00:00.000Z");
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
@@ -39,9 +43,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
-    ...entriesFromResult(brawlersResult, (item) => route(`/brawlers/${item.id}`, "weekly", 0.55)),
-    ...entriesFromResult(mapsResult, (item) => route(`/maps/${item.id}`, "weekly", 0.55)),
-    ...entriesFromResult(modesResult, (item) => route(`/gamemodes/${item.id}`, "weekly", 0.45)),
+    ...entriesFromResult(
+      brawlersResult,
+      selectIndexableBrawlers,
+      (item) => route(`/brawlers/${item.id}`, "weekly", 0.55),
+    ),
+    ...entriesFromResult(
+      mapsResult,
+      selectIndexableMaps,
+      (item) => route(`/maps/${item.id}`, "weekly", 0.55),
+    ),
+    ...entriesFromResult(
+      modesResult,
+      selectIndexableGameModes,
+      (item) => route(`/gamemodes/${item.id}`, "weekly", 0.45),
+    ),
   ];
 }
 
@@ -52,7 +68,6 @@ function route(
 ): SitemapEntry {
   return {
     changeFrequency,
-    lastModified,
     priority,
     url: `${siteUrl}${path}`,
   };
@@ -60,8 +75,11 @@ function route(
 
 function entriesFromResult<T extends { id: number | string }>(
   result: PromiseSettledResult<{ list: T[] }>,
+  selector: (items: T[]) => T[],
   mapper: (item: T) => SitemapEntry,
 ) {
   if (result.status !== "fulfilled") return [];
-  return result.value.list.filter((item) => item.id !== undefined && item.id !== null).map(mapper);
+  return selector(
+    result.value.list.filter((item) => item.id !== undefined && item.id !== null),
+  ).map(mapper);
 }

@@ -4,6 +4,7 @@ import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
 import { getBrawlifyGameModes } from "../../server/brawlify";
 import { translateModeDescription, translateModeName } from "../../utils/brawlTranslations";
+import { selectIndexableGameModes } from "../../utils/seoIndexing";
 
 export const metadata: Metadata = {
   title: "브롤스타즈 게임모드 도감",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 
 export default async function GameModesPage() {
   const modes = (await getBrawlifyGameModes().catch(() => ({ list: [] }))).list;
-  const enabled = modes.filter((mode) => !mode.disabled);
+  const enabled = selectIndexableGameModes(modes);
 
   return (
     <PortalLayout
@@ -29,7 +30,7 @@ export default async function GameModesPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {modes.map((mode) => {
+        {enabled.map((mode) => {
           const displayName = translateModeName(mode.name);
           const description = translateModeDescription(
             mode.name,

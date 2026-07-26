@@ -5,6 +5,7 @@ import BrawlImage from "../../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../../components/PortalLayout";
 import { getBrawlifyMaps } from "../../../server/brawlify";
 import { translateMapName, translateModeName } from "../../../utils/brawlTranslations";
+import { isIndexableMap, selectIndexableMaps } from "../../../utils/seoIndexing";
 
 interface MapDetailPageProps {
   params: Promise<{ id: string }>;
@@ -12,10 +13,14 @@ interface MapDetailPageProps {
 
 export async function generateMetadata({ params }: MapDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const map = (await getBrawlifyMaps().catch(() => ({ list: [] }))).list.find((item) => String(item.id) === id);
+  const maps = (await getBrawlifyMaps().catch(() => ({ list: [] }))).list;
+  const map = maps.find((item) => String(item.id) === id);
+  const shouldIndex = map ? isIndexableMap(map, maps) : false;
+
   return {
     title: map ? `${translateMapName(map.name)} 맵 상세` : "맵 상세",
     alternates: { canonical: `/maps/${id}` },
+    robots: shouldIndex ? undefined : { index: false, follow: true },
   };
 }
 
@@ -27,7 +32,7 @@ export default async function MapDetailPage({ params }: MapDetailPageProps) {
   const displayName = translateMapName(map.name);
   const displayMode = translateModeName(map.gameMode?.name) || "-";
 
-  const sameModeMaps = maps
+  const sameModeMaps = selectIndexableMaps(maps)
     .filter((item) => item.id !== map.id && item.gameMode?.name === map.gameMode?.name)
     .slice(0, 12);
 

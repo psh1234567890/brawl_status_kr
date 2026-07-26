@@ -9,6 +9,10 @@ import {
   translateModeDescription,
   translateModeName,
 } from "../../../utils/brawlTranslations";
+import {
+  selectIndexableGameModes,
+  selectIndexableMaps,
+} from "../../../utils/seoIndexing";
 
 interface GameModeDetailPageProps {
   params: Promise<{ id: string }>;
@@ -16,10 +20,16 @@ interface GameModeDetailPageProps {
 
 export async function generateMetadata({ params }: GameModeDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const mode = (await getBrawlifyGameModes().catch(() => ({ list: [] }))).list.find((item) => String(item.id) === id);
+  const modes = (await getBrawlifyGameModes().catch(() => ({ list: [] }))).list;
+  const mode = modes.find((item) => String(item.id) === id);
+  const shouldIndex = mode
+    ? selectIndexableGameModes(modes).some((item) => item.id === mode.id)
+    : false;
+
   return {
     title: mode ? `${translateModeName(mode.name)} 모드 상세` : "게임모드 상세",
     alternates: { canonical: `/gamemodes/${id}` },
+    robots: shouldIndex ? undefined : { index: false, follow: true },
   };
 }
 
@@ -37,9 +47,8 @@ export default async function GameModeDetailPage({ params }: GameModeDetailPageP
     mode.description ?? mode.shortDescription,
   );
 
-  const relatedMaps = maps.list
+  const relatedMaps = selectIndexableMaps(maps.list)
     .filter((map) => map.gameMode?.name === mode.name)
-    .sort((left, right) => (right.lastActive ?? 0) - (left.lastActive ?? 0))
     .slice(0, 24);
 
   return (

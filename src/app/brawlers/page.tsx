@@ -9,6 +9,7 @@ import {
   translateBrawlerName,
   translateRarityName,
 } from "../../utils/brawlTranslations";
+import { selectIndexableBrawlers } from "../../utils/seoIndexing";
 
 export const metadata: Metadata = {
   title: "브롤러 도감",
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 export default async function BrawlersPage() {
   const brawlers = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list;
-  const released = brawlers.filter((brawler) => brawler.released !== false);
+  const released = selectIndexableBrawlers(brawlers);
   const rarities = new Set(brawlers.map((brawler) => brawler.rarity?.name).filter(Boolean));
 
   return (

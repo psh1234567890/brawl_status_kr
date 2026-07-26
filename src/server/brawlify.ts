@@ -7,7 +7,10 @@ import type {
   BrawlifyMap,
 } from "../types/brawlify";
 
-const BRAWLIFY_BASE_URL = "https://api.brawlify.com/v1";
+const BRAWLIFY_BASE_URLS = [
+  "https://api.brawlapi.com/v1",
+  "https://brawlapi-v1.pages.dev/v1",
+] as const;
 
 export class BrawlifyApiError extends Error {
   constructor(
@@ -19,22 +22,45 @@ export class BrawlifyApiError extends Error {
 }
 
 async function fetchBrawlify<T>(path: string, revalidateSeconds = 3600): Promise<T> {
-  const response = await fetch(`${BRAWLIFY_BASE_URL}${path}`, {
-    next: { revalidate: revalidateSeconds },
-    signal: AbortSignal.timeout(10_000),
-  });
+  let lastError: BrawlifyApiError | undefined;
 
-  const text = await response.text();
-  if (!response.ok) {
-    throw new BrawlifyApiError(response.status, "Brawlify 데이터를 불러오지 못했습니다.");
-  }
-  if (!text) return {} as T;
+  for (const baseUrl of BRAWLIFY_BASE_URLS) {
+    try {
+      const response = await fetch(`${baseUrl}${path}`, {
+        next: { revalidate: revalidateSeconds },
+        signal: AbortSignal.timeout(10_000),
+      });
+      const text = await response.text();
 
-  try {
-    return JSON.parse(text) as T;
-  } catch {
-    throw new BrawlifyApiError(response.status, "Brawlify에서 JSON이 아닌 응답을 받았습니다.");
+      if (!response.ok) {
+        lastError = new BrawlifyApiError(
+          response.status,
+          "Brawl Stars 도감 데이터를 불러오지 못했습니다.",
+        );
+        continue;
+      }
+      if (!text) return {} as T;
+
+      try {
+        return JSON.parse(text) as T;
+      } catch {
+        lastError = new BrawlifyApiError(
+          response.status,
+          "Brawl Stars 도감 서버에서 JSON이 아닌 응답을 받았습니다.",
+        );
+      }
+    } catch (error) {
+      lastError =
+        error instanceof BrawlifyApiError
+          ? error
+          : new BrawlifyApiError(
+              503,
+              "Brawl Stars 도감 서버에 연결하지 못했습니다.",
+            );
+    }
   }
+
+  throw lastError ?? new BrawlifyApiError(503, "Brawl Stars 도감 데이터를 불러오지 못했습니다.");
 }
 
 export async function getBrawlifyBrawlers() {

@@ -42,10 +42,18 @@ export default function BrawlImage({
       alt={alt}
       width={width}
       height={height}
-      unoptimized
+      unoptimized={!isOptimizableBrawlImage(src)}
       className={className}
       title={title}
       onError={() => setFailedSrc(src)}
     />
   );
+}
+
+function isOptimizableBrawlImage(src: string) {
+  try {
+    return new URL(src).hostname === "cdn.brawlify.com";
+  } catch {
+    return src.startsWith("/");
+  }
 }

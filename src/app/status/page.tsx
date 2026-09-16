@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 
 type StatusRow = {
   totalBattles: number | string;
+  uniqueBattles: number | string;
   players: number | string;
   maps: number | string;
   brawlers: number | string;
@@ -31,9 +32,10 @@ export default async function StatusPage() {
     db.execute<StatusRow>(sql`
       SELECT
         count(*) AS "totalBattles",
+        count(DISTINCT battle_fingerprint) AS "uniqueBattles",
         count(DISTINCT player_tag) AS players,
         count(DISTINCT map) AS maps,
-        count(DISTINCT brawler_name) AS brawlers,
+        count(DISTINCT brawler_name) FILTER (WHERE brawler_name <> 'Unknown') AS brawlers,
         max(battle_timestamp)::text AS "latestBattle"
       FROM battle_logs
     `),
@@ -56,6 +58,7 @@ export default async function StatusPage() {
 
   const summary = summaryResult.rows[0] ?? {
     totalBattles: 0,
+    uniqueBattles: 0,
     players: 0,
     maps: 0,
     brawlers: 0,
@@ -66,11 +69,12 @@ export default async function StatusPage() {
     <PortalLayout
       title="데이터 수집 현황"
       eyebrow="데이터 현황"
-      description="사이트 이용자가 플레이어 태그를 검색할 때 저장된 전투 표본 현황입니다. 맵 추천과 누적 승률은 이 데이터가 쌓일수록 더 정확해집니다."
+      description="사이트 이용자가 플레이어 태그를 검색할 때 저장된 전투 표본 현황입니다. 검색 기반 표본이므로 전체 이용자를 대표하지 않으며, 수집량과 고유 전투 규모를 함께 표시합니다."
     >
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <StatPill label="저장 전투" value={Number(summary.totalBattles).toLocaleString("ko-KR")} />
-        <StatPill label="검색 플레이어" value={Number(summary.players).toLocaleString("ko-KR")} />
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <StatPill label="저장 전투 행" value={Number(summary.totalBattles).toLocaleString("ko-KR")} />
+        <StatPill label="고유 전투 지문" value={Number(summary.uniqueBattles).toLocaleString("ko-KR")} />
+        <StatPill label="저장된 고유 태그" value={Number(summary.players).toLocaleString("ko-KR")} />
         <StatPill label="맵" value={Number(summary.maps).toLocaleString("ko-KR")} />
         <StatPill label="브롤러" value={Number(summary.brawlers).toLocaleString("ko-KR")} />
         <StatPill label="최근 수집" value={formatDate(summary.latestBattle)} />
@@ -119,5 +123,6 @@ function formatDate(value: string | null) {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Seoul",
   }).format(date);
 }

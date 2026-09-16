@@ -15,6 +15,7 @@ type TeamComp = {
 export default function TeamMetaBrowser() {
   const [mapName, setMapName] = useState("");
   const [items, setItems] = useState<TeamComp[]>([]);
+  const [maps, setMaps] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -24,9 +25,16 @@ export default function TeamMetaBrowser() {
     if (mapName) params.set("map", mapName);
     fetch(`/api/meta/teams?${params}`)
       .then(async (response) => {
-        const data = (await response.json().catch(() => ({}))) as { items?: TeamComp[]; error?: string };
+        const data = (await response.json().catch(() => ({}))) as {
+          items?: TeamComp[];
+          maps?: string[];
+          error?: string;
+        };
         if (!response.ok) throw new Error(data.error ?? "팀 조합을 불러오지 못했습니다.");
-        if (alive) setItems(data.items ?? []);
+        if (alive) {
+          setItems(data.items ?? []);
+          setMaps(data.maps ?? []);
+        }
       })
       .catch((requestError) => {
         if (alive) {
@@ -48,20 +56,24 @@ export default function TeamMetaBrowser() {
     setMapName(value);
   }
 
-  const maps = [...new Set(items.map((item) => item.map))].sort((left, right) =>
+  const sortedMaps = [...new Set(maps)].sort((left, right) =>
     translateMapName(left).localeCompare(translateMapName(right), "ko-KR"),
   );
 
   return (
     <div className="flex flex-col gap-5">
       <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
+        <label htmlFor="team-meta-map" className="mb-2 block text-xs font-black text-indigo-500">
+          맵 선택
+        </label>
         <select
+          id="team-meta-map"
           value={mapName}
           onChange={(event) => selectMap(event.target.value)}
           className="w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400 sm:max-w-sm"
         >
           <option value="">전체 맵</option>
-          {maps.map((map) => (
+          {sortedMaps.map((map) => (
             <option key={map} value={map}>{translateMapName(map)}</option>
           ))}
         </select>
@@ -72,7 +84,7 @@ export default function TeamMetaBrowser() {
           팀 조합을 계산하는 중...
         </div>
       ) : error ? (
-        <div className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
+        <div role="alert" className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
           {error}
         </div>
       ) : items.length ? (

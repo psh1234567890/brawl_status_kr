@@ -3,7 +3,7 @@ import type { BattleLogItem } from "../types/brawl";
 
 const mocks = vi.hoisted(() => {
   const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
-  const values = vi.fn(() => ({ onConflictDoNothing }));
+  const values = vi.fn((input: unknown[]) => ({ onConflictDoNothing, input }));
   const insert = vi.fn(() => ({ values }));
   return { insert, onConflictDoNothing, values };
 });
@@ -49,7 +49,10 @@ describe("battle log persistence", () => {
 
     expect(mocks.values).toHaveBeenCalledTimes(1);
     expect(mocks.onConflictDoNothing).toHaveBeenCalledTimes(1);
-    const inserted = mocks.values.mock.calls[0][0][0];
+    const inserted = mocks.values.mock.calls[0]?.[0]?.[0] as
+      | { playerTag?: string; battleFingerprint?: string }
+      | undefined;
+    if (!inserted) throw new Error("expected one inserted battle row");
     expect(inserted.playerTag).toBe("2PYLQ");
     expect(inserted.battleFingerprint).toBe(
       "20260725T010203.000Z|brawlBall|Sneaky Fields|2PYLQ,8PQL,9GRJ",

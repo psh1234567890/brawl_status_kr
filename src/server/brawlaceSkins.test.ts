@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  fetchBrawlaceSkinInventory,
   groupSkinsByBrawler,
   normalizeLookupKey,
   parseBrawlaceSkinMarkdown,
@@ -7,6 +8,10 @@ import {
 } from "./brawlaceSkins";
 
 describe("brawlace skin parser", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("extracts owned skin rows from the Brawlace table fragment", () => {
     const html = `
       <div class="table-responsive">
@@ -72,5 +77,27 @@ describe("brawlace skin parser", () => {
         source: "brawlace",
       },
     ]);
+  });
+
+  it("uses a single Jina Reader prefix when direct lookup fails", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("blocked", { status: 403 }))
+      .mockResolvedValueOnce(
+        new Response("| BRAWLERS | SKINS |\n| --- | --- |\n| OTIS | PHARAOTIS |", {
+          status: 200,
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchBrawlaceSkinInventory("#2PYLQ")).resolves.toMatchObject({
+      tag: "2PYLQ",
+      skins: [{ brawlerName: "OTIS", name: "PHARAOTIS", source: "brawlace" }],
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://r.jina.ai/http://https://brawlace.com/players/%232PYLQ/skins",
+      expect.any(Object),
+    );
   });
 });

@@ -40,7 +40,15 @@ export async function GET(request: Request) {
     const dayExpr = sql<string>`to_char(${battleLogs.battleTimestamp} AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD')`;
     const baseWhere = getBaseWhere(tag);
 
-    const [dailyRows, modeRows, mapRows] = await Promise.all([
+    const [summaryRows, dailyRows, modeRows, mapRows] = await Promise.all([
+      db
+        .select({
+          totalTrackedGames: sql<number>`count(*)`,
+          trackedDays: sql<number>`count(distinct ${dayExpr})`,
+          totalTrophyDelta: sql<number>`coalesce(sum(${battleLogs.trophyChange}), 0)`,
+        })
+        .from(battleLogs)
+        .where(baseWhere),
       db
         .select({
           day: dayExpr,
@@ -103,7 +111,9 @@ export async function GET(request: Request) {
     };
 
     const response: PlayerHistoryResponse = {
-      totalTrackedGames: daily.reduce((total, row) => total + row.plays, 0),
+      totalTrackedGames: Number(summaryRows[0]?.totalTrackedGames ?? 0),
+      trackedDays: Number(summaryRows[0]?.trackedDays ?? 0),
+      totalTrophyDelta: Number(summaryRows[0]?.totalTrophyDelta ?? 0),
       daily,
       topModes: modeRows.map(toBucket),
       topMaps: mapRows.map(toBucket),

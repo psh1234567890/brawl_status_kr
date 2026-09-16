@@ -5,8 +5,9 @@
 - Next.js 16 App Router + React 19 + TypeScript
 - PostgreSQL + Drizzle ORM
 - Brawl Stars API 또는 설정된 API 프록시
-- Brawlify의 맵·모드·브롤러 메타데이터
-- BrawlAPI 원본 데이터를 이용해 생성한 한국어 번역·스킨 카탈로그
+- BrawlAPI의 맵·모드·브롤러·이벤트 메타데이터와 번역·스킨 카탈로그 원본
+- Brawlify CDN의 게임 이미지
+- 보유 스킨 보조 조회를 위한 Brawlace와 Jina Reader fallback
 
 ## 플레이어 검색 흐름
 
@@ -23,6 +24,7 @@
 - 쓰기 요청은 Origin과 Fetch Metadata를 이용해 단순 cross-site 요청을 거부한다.
 - Brawl Stars API 키는 서버에서만 읽는다.
 - DB는 `DATABASE_URL`, 마이그레이션은 `DIRECT_URL`을 사용한다.
+- 앱 런타임 DB 풀은 연결 5초, 서버 statement 10초, client query 12초 timeout을 두어 비정상적으로 오래 걸리는 요청이 DB 자원을 계속 점유하지 않게 한다.
 - `/status`는 요청 시점에 렌더링하므로 빌드 과정에서 운영 DB를 요구하지 않는다.
 
 ## 전투 저장과 중복 방지
@@ -33,9 +35,9 @@
 
 ## 캐시와 실패 처리
 
-- 메타 통계: 60초 서버 캐시
-- Brawlify 목록: 페이지별 revalidation 사용
-- Brawlify가 HTML/403을 반환하면 빌드가 중단되지 않도록 빈 목록 fallback 사용
+- 맵·팀 조합·카운터 메타 통계: 60초 서버 캐시
+- BrawlAPI 메타데이터 목록: 페이지별 revalidation 사용
+- 기본 BrawlAPI 엔드포인트가 실패하면 정적 mirror를 시도하고, 페이지에서는 빈 목록 fallback으로 빌드 중단을 피함
 - 프로필은 성공했지만 전투·스킨·DB 통계가 실패하면 가능한 정보는 유지하고 부분 실패 안내를 표시
 
 ## 알려진 운영 제약

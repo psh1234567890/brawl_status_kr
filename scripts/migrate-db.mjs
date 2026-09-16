@@ -6,6 +6,7 @@ import pg from "pg";
 dotenv.config({ path: ".env.local" });
 
 const { Pool } = pg;
+const LEGACY_BACKFILL_BATCH_SIZE = 500;
 const pool = new Pool({
   connectionString: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
 });
@@ -101,48 +102,96 @@ async function migrate() {
       WHERE player_tag <> regexp_replace(upper(trim(player_tag)), '^#', '')
     `);
 
-    const { rows } = await client.query(`
-      SELECT id, player_tag, battle_time, battle_detail
-      FROM battle_logs
-    `);
-
     let updated = 0;
-    for (const row of rows) {
-      try {
-        const detail = JSON.parse(row.battle_detail);
-        const player = getPlayers(detail).find(
-          (candidate) => normalizeTag(candidate.tag) === normalizeTag(row.player_tag),
-        );
-        const brawler = player?.brawler ?? player?.brawlers?.[0];
+    let lastProcessedId = 0;
+    while (true) {
+      const { rows } = await client.query(
+        `
+          SELECT id, player_tag, battle_time, battle_detail
+          FROM battle_logs
+          WHERE id > $1
+            AND (
+              battle_timestamp IS NULL
+              OR battle_fingerprint IS NULL
+              OR battle_detail_json IS NULL
+            )
+          ORDER BY id
+          LIMIT $2
+        `,
+        [lastProcessedId, LEGACY_BACKFILL_BATCH_SIZE],
+      );
 
-        await client.query(
-          `
-            UPDATE battle_logs
-            SET result = $2,
-                battle_timestamp = $3,
-                battle_fingerprint = $4,
-                brawler_id = $5,
-                battle_detail_json = $6::jsonb,
-                rank = $7,
-                trophy_change = $8
-            WHERE id = $1
-          `,
-          [
-            row.id,
-            getOutcome(detail),
-            getBattleTimestamp(row.battle_time),
-            getFingerprint(detail),
-            brawler?.id ?? null,
-            JSON.stringify(detail),
-            detail.battle?.rank ?? null,
-            detail.battle?.trophyChange ?? null,
-          ],
-        );
-        updated += 1;
-      } catch (error) {
-        console.warn(`Skipped malformed legacy battle log ${row.id}:`, error);
+      if (rows.length === 0) break;
+
+      for (const row of rows) {
+        lastProcessedId = row.id;
+        try {
+          const detail = JSON.parse(row.battle_detail);
+          const player = getPlayers(detail).find(
+            (candidate) => normalizeTag(candidate.tag) === normalizeTag(row.player_tag),
+          );
+          const brawler = player?.brawler ?? player?.brawlers?.[0];
+
+          await client.query(
+            `
+              UPDATE battle_logs
+              SET result = $2,
+                  battle_timestamp = $3,
+                  battle_fingerprint = $4,
+                  brawler_id = $5,
+                  battle_detail_json = $6::jsonb,
+                  rank = $7,
+                  trophy_change = $8
+              WHERE id = $1
+            `,
+            [
+              row.id,
+              getOutcome(detail),
+              getBattleTimestamp(row.battle_time),
+              getFingerprint(detail),
+              brawler?.id ?? null,
+              JSON.stringify(detail),
+              detail.battle?.rank ?? null,
+              detail.battle?.trophyChange ?? null,
+            ],
+          );
+          updated += 1;
+        } catch (error) {
+          console.warn(`Skipped malformed legacy battle log ${row.id}:`, error);
+        }
       }
     }
+
+    // Create uniqueness constraints only after legacy tags have been normalized,
+    // duplicates removed, and fingerprints backfilled. Creating these indexes
+    // before cleanup makes an otherwise recoverable legacy database fail the
+    // migration immediately when duplicate rows already exist.
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS battle_logs_battle_fingerprint_idx
+        ON battle_logs (battle_fingerprint)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS battle_logs_battle_timestamp_idx
+        ON battle_logs (battle_timestamp)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS battle_logs_battle_detail_json_gin_idx
+        ON battle_logs USING gin (battle_detail_json)
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS battle_logs_player_time_unique
+        ON battle_logs (player_tag, battle_time)
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS battle_logs_player_fingerprint_unique
+        ON battle_logs (player_tag, battle_fingerprint)
+    `);
+    // An older schema revision used this name for the same (player_tag,
+    // battle_time) unique index. Once the canonical index exists, keeping both
+    // only adds write/storage overhead.
+    await client.query(`
+      DROP INDEX IF EXISTS battle_logs_player_tag_battle_time_unique
+    `);
 
     await client.query("COMMIT");
     console.log(

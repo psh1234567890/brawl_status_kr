@@ -174,7 +174,7 @@ export default function MetaDashboard() {
             <section className="w-full max-w-3xl rounded-3xl border border-white bg-white/80 p-8 shadow-2xl backdrop-blur-md">
               <h2 className="mb-6 flex flex-col gap-2 border-b-2 border-indigo-100 pb-4 text-2xl font-black sm:flex-row sm:items-end sm:justify-between">
                 <span>{translateMapName(selectedMap)} 추천</span>
-                <span className="text-sm font-bold text-gray-400">DB 전체 표본 기준: 최소 5판 이상</span>
+                <span className="text-sm font-bold text-gray-400">DB 전체 표본 기준: 최소 {minPlays}판 이상</span>
               </h2>
 
               <div className="mb-6 grid gap-3 sm:grid-cols-3">
@@ -266,7 +266,7 @@ export default function MetaDashboard() {
                       <div className="flex w-full flex-col gap-3 border-t border-gray-100 pt-3 sm:w-[300px] sm:border-0 sm:pt-0">
                         <div className="flex justify-between gap-4 text-left sm:text-right">
                           <Stat label="추천 점수" value={`${brawler.score}점`} />
-                          <Stat label="실제 승률" value={`${brawler.winRate}% (${brawler.plays}전)`} />
+                          <Stat label="표본 승률" value={`${brawler.winRate}% (${brawler.plays}전)`} />
                         </div>
                         <ConfidenceMeter stat={brawler} />
                       </div>

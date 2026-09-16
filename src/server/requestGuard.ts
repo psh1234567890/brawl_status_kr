@@ -10,7 +10,7 @@ function isCrossSiteFetchMetadata(request: Request) {
 
 function isSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (!origin) return true;
+  if (!origin) return false;
 
   try {
     return new URL(origin).origin === getRequestOrigin(request);

@@ -37,6 +37,12 @@ export function consumeRateLimit(
     for (const [bucketKey, value] of buckets) {
       if (value.resetAt <= now) buckets.delete(bucketKey);
     }
+
+    while (buckets.size > 2_000) {
+      const oldestKey = buckets.keys().next().value as string | undefined;
+      if (!oldestKey) break;
+      buckets.delete(oldestKey);
+    }
   }
 
   return {
@@ -80,3 +86,6 @@ export function clearRateLimitBucketsForTest() {
   buckets.clear();
 }
 
+export function getRateLimitBucketCountForTest() {
+  return buckets.size;
+}

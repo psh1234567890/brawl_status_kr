@@ -37,6 +37,9 @@ jobs:
       - name: Test
         run: npm run test
 
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
       - name: Build without production secrets
         run: npm run build
         env:

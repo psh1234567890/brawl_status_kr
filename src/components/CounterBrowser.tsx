@@ -14,9 +14,10 @@ type CounterItem = {
 
 export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler[] }) {
   const released = brawlers.filter((brawler) => brawler.released !== false);
+  const catalogUnavailable = released.length === 0;
   const [selected, setSelected] = useState(released[0]?.name ?? "");
   const [items, setItems] = useState<CounterItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(released[0]?.name));
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -51,7 +52,11 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
   return (
     <div className="flex flex-col gap-5">
       <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
+        <label htmlFor="counter-brawler" className="mb-2 block text-xs font-black text-indigo-500">
+          카운터 기준 브롤러
+        </label>
         <select
+          id="counter-brawler"
           value={selected}
           onChange={(event) => selectBrawler(event.target.value)}
           className="w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400 sm:max-w-sm"
@@ -64,12 +69,16 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
         </select>
       </section>
 
-      {loading ? (
+      {catalogUnavailable ? (
+        <div role="status" className="rounded-lg border border-dashed border-amber-200 bg-amber-50 p-8 text-center text-sm font-bold text-amber-700">
+          브롤러 목록을 불러오지 못해 카운터를 선택할 수 없습니다. 잠시 후 다시 시도해 주세요.
+        </div>
+      ) : loading ? (
         <div className="rounded-lg bg-white p-8 text-center text-lg font-black text-indigo-600 shadow-sm">
           카운터를 계산하는 중...
         </div>
       ) : error ? (
-        <div className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
+        <div role="alert" className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
           {error}
         </div>
       ) : items.length ? (

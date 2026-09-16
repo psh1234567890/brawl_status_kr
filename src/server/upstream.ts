@@ -52,6 +52,7 @@ export async function fetchBrawlApi<T>(path: string, ttlMs: number): Promise<T> 
   const now = Date.now();
   const cached = responseCache.get(path);
   if (cached && cached.expiresAt > now) return cached.value as T;
+  if (cached) responseCache.delete(path);
 
   const pending = pendingRequests.get(path);
   if (pending) return pending as Promise<T>;
@@ -78,6 +79,7 @@ export async function fetchBrawlApi<T>(path: string, ttlMs: number): Promise<T> 
     }
 
     responseCache.set(path, { expiresAt: Date.now() + ttlMs, value: data });
+    pruneResponseCache();
     return data as T;
   })();
 
@@ -86,6 +88,20 @@ export async function fetchBrawlApi<T>(path: string, ttlMs: number): Promise<T> 
     return await request;
   } finally {
     pendingRequests.delete(path);
+  }
+}
+
+function pruneResponseCache(now = Date.now()) {
+  if (responseCache.size <= 2_000) return;
+
+  for (const [key, entry] of responseCache) {
+    if (entry.expiresAt <= now) responseCache.delete(key);
+  }
+
+  while (responseCache.size > 2_000) {
+    const oldestKey = responseCache.keys().next().value as string | undefined;
+    if (!oldestKey) break;
+    responseCache.delete(oldestKey);
   }
 }
 

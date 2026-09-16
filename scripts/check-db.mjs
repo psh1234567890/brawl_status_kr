@@ -45,11 +45,15 @@ const showdownDraws = await pool.query(`
 console.log("Missing brawler IDs:", JSON.stringify(missingBrawlers.rows, null, 2));
 console.log("Showdown draws:", JSON.stringify(showdownDraws.rows, null, 2));
 
-const playerCounts = await pool.query(`
-  SELECT player_tag, count(*)::int AS count
-  FROM battle_logs
-  GROUP BY player_tag
-  ORDER BY count(*) DESC, player_tag
+const playerCoverage = await pool.query(`
+  SELECT
+    count(DISTINCT player_tag)::int AS unique_tags,
+    coalesce(max(tag_rows), 0)::int AS max_rows_per_tag
+  FROM (
+    SELECT player_tag, count(*)::int AS tag_rows
+    FROM battle_logs
+    GROUP BY player_tag
+  ) grouped
 `);
 const metaCoverage = await pool.query(`
   SELECT
@@ -64,6 +68,26 @@ const metaCoverage = await pool.query(`
   ) groups
 `);
 
-console.log("Player counts:", JSON.stringify(playerCounts.rows, null, 2));
+const indexCoverage = await pool.query(`
+  SELECT indexname
+  FROM pg_indexes
+  WHERE tablename = 'battle_logs'
+`);
+const existingIndexes = new Set(indexCoverage.rows.map((row) => row.indexname));
+const requiredIndexes = [
+  "battle_logs_player_time_unique",
+  "battle_logs_player_fingerprint_unique",
+  "battle_logs_player_tag_idx",
+  "battle_logs_battle_fingerprint_idx",
+  "battle_logs_battle_detail_json_gin_idx",
+  "battle_logs_map_brawler_idx",
+  "battle_logs_battle_timestamp_idx",
+];
+
+console.log("Player coverage:", JSON.stringify(playerCoverage.rows[0], null, 2));
 console.log("Meta coverage:", JSON.stringify(metaCoverage.rows[0], null, 2));
+console.log(
+  "Missing indexes:",
+  JSON.stringify(requiredIndexes.filter((name) => !existingIndexes.has(name)), null, 2),
+);
 await pool.end();

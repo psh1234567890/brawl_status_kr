@@ -34,6 +34,8 @@ export const battleLogs = pgTable(
       table.battleFingerprint,
     ),
     index("battle_logs_player_tag_idx").on(table.playerTag),
+    index("battle_logs_battle_fingerprint_idx").on(table.battleFingerprint),
+    index("battle_logs_battle_detail_json_gin_idx").using("gin", table.battleDetailJson),
     index("battle_logs_map_brawler_idx").on(table.map, table.brawlerName),
     index("battle_logs_battle_timestamp_idx").on(table.battleTimestamp),
   ],

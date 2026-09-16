@@ -29,11 +29,11 @@ describe("SEO indexing catalog", () => {
   });
 
   it("limits maps to the newest enabled unique IDs", () => {
-    const maps = Array.from({ length: INDEXABLE_MAP_LIMIT + 5 }, (_, index) => ({
+    const maps: BrawlifyMap[] = Array.from({ length: INDEXABLE_MAP_LIMIT + 5 }, (_, index) => ({
       id: 15_000_000 + index,
       name: `Map ${index}`,
       disabled: false,
-    })) satisfies BrawlifyMap[];
+    }));
     maps.push({ id: 99_999_999, name: "Disabled", disabled: true });
     maps.push({ ...maps[0] });
 

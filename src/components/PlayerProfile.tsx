@@ -52,7 +52,12 @@ export default function PlayerProfile({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-        <Stat label="예상 플레이" value={`${playTime.hours}시간 ${playTime.minutes}분`} wide />
+        <Stat
+          label="비공식 플레이 추정"
+          value={`${playTime.hours}시간 ${playTime.minutes}분`}
+          title="승리 수와 경험치 레벨을 바탕으로 계산한 단순 추정치이며 실제 플레이 시간이 아닙니다."
+          wide
+        />
         <Stat label="경험치 레벨" value={playerData.expLevel} />
         <Stat label="3v3 승리" value={playerData["3vs3Victories"].toLocaleString("ko-KR")} />
         <Stat label="솔로 쇼다운" value={playerData.soloVictories.toLocaleString("ko-KR")} />
@@ -99,14 +104,19 @@ function Badge({
 function Stat({
   label,
   value,
+  title,
   wide = false,
 }: {
   label: string;
   value: string | number;
+  title?: string;
   wide?: boolean;
 }) {
   return (
-    <div className={`min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-3 ${wide ? "sm:col-span-2" : ""}`}>
+    <div
+      className={`min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-3 ${wide ? "sm:col-span-2" : ""}`}
+      title={title}
+    >
       <p className="truncate text-xs font-black text-slate-500">{label}</p>
       <p className="mt-1 truncate text-base font-black text-slate-950">{value}</p>
     </div>

@@ -1,6 +1,6 @@
 # 보안과 비밀정보 감사
 
-- 감사일: 2026-07-25
+- 감사일: 2026-09-16 (2026-07-25 감사 후속 갱신)
 - 범위: 현재 추적 파일, 50개 Git 커밋의 텍스트 blob, 의존성, 주요 API 경계
 
 ## 비밀정보 검사
@@ -22,7 +22,7 @@
 
 - 플레이어·클럽 태그 형식 검증
 - API route별 메모리 기반 rate limit
-- 쓰기 요청의 Origin·`Sec-Fetch-Site` 검사
+- 쓰기 요청의 필수 Origin·`Sec-Fetch-Site` 검사
 - Drizzle parameterized query와 고정 SQL
 - API 키의 서버 전용 사용
 - CSP, HSTS, frame 차단, MIME sniffing 차단, permissions policy
@@ -51,24 +51,19 @@ Vercel Production·Preview 환경에는 [RoyaleAPI가 동적 IP 서버용 Brawl 
 
 통계 필드 외에 전체 전투 JSON을 장기 보관한다. 개인정보처리방침의 기간이 구체적이지 않다. 최소 필드 장기 보관·원본 JSON 단기 보관 등 정책 결정이 필요하다.
 
-### P2 — 의존성 감사 잔여
+### 해결 — 의존성 감사 경고
 
-패치 후 `npm audit`은 high 11건을 보고한다. 주요 원인은 현재 Next.js 계열의 `sharp` 0.34.x와 ESLint 9 계열의 `brace-expansion/minimatch` advisory다. 자동 수정안은 Next.js 14 downgrade 또는 ESLint 10 major upgrade를 제안해 현재 Next.js 16 구조에 큰 호환성 위험이 있다.
+2026-09-16 재검증에서 Next.js 16.2.11이 새 critical advisory 범위에 포함된 것을 확인해 16.3.5로 올리고, `eslint-config-next`도 같은 버전으로 맞췄다. PostCSS override와 lockfile도 현재 호환 범위의 패치 버전으로 갱신해 전이 의존성 경고를 해소했다.
 
 현재 적용:
 
-- Next.js 16.2.6 → 16.2.11
-- React 19.2.4 → 19.2.8
-- Tailwind/PostCSS 도구 4.3.3
-- PostCSS override 8.5.18
-- Vitest 4.1.10
+- Next.js 16.3.5
+- React 19.2.8
+- eslint-config-next 16.3.5
+- PostCSS override 8.5.28
+- Vitest 4.1.10 계열
 
-남은 조치:
-
-- Next.js가 `sharp >=0.35`를 지원하는 패치 추적
-- `eslint-config-next`가 ESLint 10을 공식 지원할 때 업그레이드
-- advisory 영향 범위와 배포 설정을 릴리스 전에 재검토
-- `npm audit fix --force`는 사용하지 않음
+현재 `npm audit` 결과는 **0 vulnerabilities**다. 향후 advisory가 새로 공개될 수 있으므로 CI/Dependabot과 정기 감사를 계속 사용하고, `npm audit fix --force`는 호환성 검토 없이 실행하지 않는다.
 
 ## 아직 확인하지 못한 항목
 

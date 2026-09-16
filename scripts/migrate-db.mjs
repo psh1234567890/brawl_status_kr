@@ -187,8 +187,14 @@ async function migrate() {
         ON battle_logs (player_tag, battle_fingerprint)
     `);
     // An older schema revision used this name for the same (player_tag,
-    // battle_time) unique index. Once the canonical index exists, keeping both
-    // only adds write/storage overhead.
+    // battle_time) uniqueness rule. Depending on how that revision was created,
+    // PostgreSQL may represent it as a table UNIQUE constraint (which owns its
+    // backing index) or as a standalone unique index. Drop the constraint first,
+    // then the standalone-index form if it exists.
+    await client.query(`
+      ALTER TABLE battle_logs
+        DROP CONSTRAINT IF EXISTS battle_logs_player_tag_battle_time_unique
+    `);
     await client.query(`
       DROP INDEX IF EXISTS battle_logs_player_tag_battle_time_unique
     `);

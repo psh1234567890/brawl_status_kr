@@ -21,4 +21,21 @@ describe("legacy migration ordering", () => {
     expect(normalizePosition).toBeGreaterThan(dedupePosition);
     expect(uniquePosition).toBeGreaterThan(normalizePosition);
   });
+
+  it("removes the legacy player/time uniqueness rule whether it is a constraint or standalone index", () => {
+    const migrationScript = readFileSync(
+      resolve(process.cwd(), "scripts/migrate-db.mjs"),
+      "utf8",
+    );
+
+    const dropConstraintPosition = migrationScript.indexOf(
+      "DROP CONSTRAINT IF EXISTS battle_logs_player_tag_battle_time_unique",
+    );
+    const dropIndexPosition = migrationScript.indexOf(
+      "DROP INDEX IF EXISTS battle_logs_player_tag_battle_time_unique",
+    );
+
+    expect(dropConstraintPosition).toBeGreaterThan(-1);
+    expect(dropIndexPosition).toBeGreaterThan(dropConstraintPosition);
+  });
 });

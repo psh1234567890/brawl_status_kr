@@ -199,6 +199,15 @@ async function migrate() {
       DROP INDEX IF EXISTS battle_logs_player_tag_battle_time_unique
     `);
 
+    // Supabase exposes tables in the public schema through its Data API when
+    // privileges permit it. This application talks to PostgreSQL only from the
+    // trusted server using the table-owning postgres role, so no browser/anon
+    // policy is required. Enabling RLS with zero policies therefore blocks
+    // anon/authenticated Data API access while preserving the server connection.
+    await client.query(`
+      ALTER TABLE battle_logs ENABLE ROW LEVEL SECURITY
+    `);
+
     await client.query("COMMIT");
     console.log(
       `Database migration complete. Removed ${deduplicated.rowCount ?? 0} duplicate logs and updated ${updated} battle logs.`,

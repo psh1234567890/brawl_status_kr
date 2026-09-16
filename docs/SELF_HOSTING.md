@@ -36,7 +36,7 @@ npm.cmd run db:migrate
 npm.cmd run db:check
 ```
 
-마이그레이션은 컬럼과 기본 조회 인덱스를 준비한 뒤 기존 태그 정규화·중복 제거·전투 지문 backfill을 작은 배치로 수행합니다. backfill 뒤 fingerprint·timestamp·전투 JSON GIN 인덱스와 UNIQUE 인덱스를 생성하므로 대량 legacy UPDATE 중 불필요한 인덱스 갱신을 줄입니다. 이미 backfill된 행은 재실행 때 건너뜁니다. 운영 DB에서 실행하기 전에 SQL과 백업·복구 절차를 검토하세요.
+마이그레이션은 컬럼과 기본 조회 인덱스를 준비한 뒤 기존 태그 정규화·중복 제거·전투 지문 backfill을 작은 배치로 수행합니다. backfill 뒤 fingerprint·timestamp·전투 JSON GIN 인덱스와 UNIQUE 인덱스를 생성하므로 대량 legacy UPDATE 중 불필요한 인덱스 갱신을 줄입니다. 이미 backfill된 행은 재실행 때 건너뜁니다. 마지막에는 `battle_logs`에 PostgreSQL RLS를 활성화하며, 기본 프로젝트 구성은 익명/일반 사용자용 정책을 만들지 않고 서버의 직접 DB 연결만 사용합니다. 운영 DB에서 실행하기 전에 SQL과 백업·복구 절차를 검토하세요.
 
 ## 실행과 검증
 

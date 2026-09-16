@@ -38,4 +38,19 @@ describe("legacy migration ordering", () => {
     expect(dropConstraintPosition).toBeGreaterThan(-1);
     expect(dropIndexPosition).toBeGreaterThan(dropConstraintPosition);
   });
+
+  it("enables row level security after structural migration work", () => {
+    const migrationScript = readFileSync(
+      resolve(process.cwd(), "scripts/migrate-db.mjs"),
+      "utf8",
+    );
+
+    const uniquePosition = migrationScript.indexOf("CREATE UNIQUE INDEX");
+    const rlsPosition = migrationScript.indexOf(
+      "ALTER TABLE battle_logs ENABLE ROW LEVEL SECURITY",
+    );
+
+    expect(rlsPosition).toBeGreaterThan(uniquePosition);
+    expect(migrationScript).not.toContain("CREATE POLICY");
+  });
 });

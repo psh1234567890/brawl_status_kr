@@ -90,7 +90,7 @@ npm.cmd run db:migrate
 npm.cmd run db:check
 ```
 
-마이그레이션은 기존 `battle_logs`를 보존하면서 타임스탬프, 전투 지문, 브롤러 ID, JSON 컬럼과 UNIQUE·조회 인덱스를 추가합니다. 운영 DB에서는 백업과 복구 계획을 먼저 준비하세요.
+마이그레이션은 기존 `battle_logs`를 보존하면서 타임스탬프, 전투 지문, 브롤러 ID, JSON 컬럼과 UNIQUE·조회 인덱스를 추가하고 `battle_logs`의 PostgreSQL RLS를 활성화합니다. 이 프로젝트는 서버의 직접 PostgreSQL 연결을 사용하며 익명/일반 사용자용 Data API 정책은 만들지 않습니다. 운영 DB에서는 백업과 복구 계획을 먼저 준비하세요.
 
 ## 검증 명령
 

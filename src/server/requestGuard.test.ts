@@ -28,4 +28,12 @@ describe("rejectCrossSiteMutation", () => {
 
     expect(rejectCrossSiteMutation(request)?.status).toBe(403);
   });
+
+  it("rejects mutation requests that do not provide an Origin header", () => {
+    const request = new Request("https://www.brawl-o1.site/api/player/matches", {
+      method: "POST",
+    });
+
+    expect(rejectCrossSiteMutation(request)?.status).toBe(403);
+  });
 });

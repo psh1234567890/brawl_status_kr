@@ -14,8 +14,6 @@ export default function PlayerHistoryPanel({ history }: PlayerHistoryPanelProps)
     [history],
   );
   const maxPlays = Math.max(1, ...orderedDays.map((day) => day.plays));
-  const totalTrophyDelta = orderedDays.reduce((total, day) => total + day.trophyDelta, 0);
-
   if (!history) return null;
 
   return (
@@ -28,14 +26,15 @@ export default function PlayerHistoryPanel({ history }: PlayerHistoryPanelProps)
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <Metric label="저장된 전투" value={`${history.totalTrackedGames}개`} />
-        <Metric label="기록 일수" value={`${history.daily.length}일`} />
-        <Metric label="누적 트로피 변화" value={`${totalTrophyDelta > 0 ? "+" : ""}${totalTrophyDelta}`} />
+        <Metric label="전체 저장 전투" value={`${history.totalTrackedGames}개`} />
+        <Metric label="전체 기록 일수" value={`${history.trackedDays}일`} />
+        <Metric label="전체 트로피 변화" value={`${history.totalTrophyDelta > 0 ? "+" : ""}${history.totalTrophyDelta}`} />
       </div>
 
       {orderedDays.length ? (
         <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <h3 className="mb-4 text-sm font-black text-slate-950">일별 활동 그래프</h3>
+          <h3 className="mb-1 text-sm font-black text-slate-950">최근 활동 그래프</h3>
+          <p className="mb-4 text-xs font-bold text-slate-500">최근 최대 60개 활동일 중 마지막 21개를 표시합니다.</p>
           <div className="flex flex-col gap-2">
             {orderedDays.slice(-21).map((day) => (
               <div key={day.day} className="grid grid-cols-[52px_1fr_68px] items-center gap-2 text-xs font-bold text-slate-600 sm:grid-cols-[84px_1fr_96px] sm:gap-3">

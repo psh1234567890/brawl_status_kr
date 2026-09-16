@@ -2,7 +2,7 @@ import type { PlayerOwnedSkin, PlayerSkinInventoryResponse } from "../types/braw
 import { normalizePlayerTag } from "../utils/playerTag";
 
 const BRAWLACE_BASE_URL = "https://brawlace.com";
-const BRAWLACE_READER_BASE_URL = "https://r.jina.ai/http://r.jina.ai/http://";
+const BRAWLACE_READER_BASE_URL = "https://r.jina.ai/http://";
 const MAX_BRAWLACE_SKINS_HTML_BYTES = 1_000_000;
 
 export class BrawlaceSkinLookupError extends Error {
@@ -73,7 +73,8 @@ async function fetchBrawlaceDirectHtml(cleanTag: string) {
 }
 
 async function fetchBrawlaceReaderMarkdown(cleanTag: string) {
-  const response = await fetch(`${BRAWLACE_READER_BASE_URL}${BRAWLACE_BASE_URL}/players/%2523${cleanTag}/skins`, {
+  const targetUrl = `${BRAWLACE_BASE_URL}/players/%23${cleanTag}/skins`;
+  const response = await fetch(`${BRAWLACE_READER_BASE_URL}${targetUrl}`, {
     headers: {
       accept: "text/plain,*/*",
       "user-agent": "Brawl Status KR skin lookup",

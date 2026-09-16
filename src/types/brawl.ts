@@ -44,6 +44,7 @@ export interface Brawler {
 export interface BattleBrawler {
   id?: number;
   name?: string;
+  power?: number;
   trophies?: number;
 }
 
@@ -129,6 +130,8 @@ export interface PlayerHistoryDay {
 
 export interface PlayerHistoryResponse {
   totalTrackedGames: number;
+  trackedDays: number;
+  totalTrophyDelta: number;
   daily: PlayerHistoryDay[];
   topModes: PlayerHistoryBucket[];
   topMaps: PlayerHistoryBucket[];

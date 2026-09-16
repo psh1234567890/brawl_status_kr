@@ -3,6 +3,7 @@ import {
   clearRateLimitBucketsForTest,
   consumeRateLimit,
   getClientAddress,
+  getRateLimitBucketCountForTest,
 } from "./rateLimit";
 
 describe("consumeRateLimit", () => {
@@ -21,6 +22,15 @@ describe("consumeRateLimit", () => {
     expect(consumeRateLimit("profile:ip", options, 500).allowed).toBe(false);
     expect(consumeRateLimit("profile:ip", options, 1_000).allowed).toBe(true);
   });
+
+  it("caps process-local buckets instead of growing without bound", () => {
+    const options = { limit: 1, windowMs: 60_000 };
+    for (let index = 0; index < 2_100; index += 1) {
+      consumeRateLimit(`profile:ip-${index}`, options, 0);
+    }
+
+    expect(getRateLimitBucketCountForTest()).toBeLessThanOrEqual(2_000);
+  });
 });
 
 describe("getClientAddress", () => {
@@ -31,4 +41,3 @@ describe("getClientAddress", () => {
     expect(getClientAddress(request)).toBe("203.0.113.10");
   });
 });
-

@@ -14,14 +14,14 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
-    "next": "16.2.11",
+    "next": "16.3.5",
     "pg": "^8.21.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "overrides": {
     "esbuild": "0.28.1",
-    "postcss": "8.5.18"
+    "postcss": "8.5.28"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
@@ -32,7 +32,7 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "^16.2.11",
+    "eslint-config-next": "16.3.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^5",
     "vitest": "^4.1.10"

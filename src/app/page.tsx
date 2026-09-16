@@ -1,10 +1,9 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
-import BattleDetailsModal from "../components/BattleDetailsModal";
 import BattleLogList from "../components/BattleLogList";
-import BrawlerDetailsModal from "../components/BrawlerDetailsModal";
 import BrawlerList from "../components/BrawlerList";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
@@ -24,6 +23,9 @@ import {
 } from "../utils/brawlHelpers";
 import { translateModeName } from "../utils/brawlTranslations";
 import { normalizePlayerTag } from "../utils/playerTag";
+
+const BattleDetailsModal = dynamic(() => import("../components/BattleDetailsModal"));
+const BrawlerDetailsModal = dynamic(() => import("../components/BrawlerDetailsModal"));
 
 type ResultPanel = "overview" | "matches" | "brawlers" | "history";
 
@@ -110,9 +112,9 @@ export default function Home() {
         <header className="sticky top-0 z-30 -mx-4 border-b border-slate-200/80 bg-[#f6f7fb]/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-5">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="min-w-0" aria-label="홈으로 이동">
-              <span className="block text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
+              <h1 className="block text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
                 Brawl Status KR
-              </span>
+              </h1>
               <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
                 전투 기록, 브롤러 보유 현황, DB 기반 추천
               </span>
@@ -574,6 +576,7 @@ function EmptyStart() {
 function Message({ text, tone }: { text: string; tone: "error" | "notice" }) {
   return (
     <div
+      role={tone === "error" ? "alert" : "status"}
       className={`mt-4 rounded-lg border px-4 py-3 text-sm font-black shadow-sm ${
         tone === "error"
           ? "border-red-200 bg-red-50 text-red-700"

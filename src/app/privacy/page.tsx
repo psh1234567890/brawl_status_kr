@@ -59,6 +59,17 @@ export default function PrivacyPage() {
             사용할 수 있습니다. 사이트 운영과 배포에는 Vercel, GitHub 등 외부 인프라가
             사용될 수 있습니다.
           </p>
+          <p className="mt-3">
+            보유 스킨 조회를 위해 이용자가 검색한 공개 플레이어 태그가 Brawlace에 전달될
+            수 있으며, 직접 조회에 실패하면 Jina Reader를 통해 같은 공개 스킨 페이지를
+            읽는 보조 경로를 사용할 수 있습니다.
+          </p>
+          <p className="mt-3">
+            맵·모드·브롤러·이벤트 도감 정보는 BrawlAPI에서 조회하며 이 요청에는 이용자가
+            입력한 플레이어 태그를 보내지 않습니다. 브롤러·맵·배지 등 일부 이미지는
+            Brawlify CDN에서 원격으로 불러오므로 브라우저가 해당 CDN에 이미지 요청을 보낼
+            수 있습니다.
+          </p>
         </PolicySection>
 
         <PolicySection title="보관 기간">

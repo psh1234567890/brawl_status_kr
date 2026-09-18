@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# private database exports
+/backups/
+*.dump
+*.backup
+
 # next.js
 /.next/
 /out/

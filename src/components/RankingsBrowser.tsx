@@ -62,6 +62,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
     <div className="flex flex-col gap-5">
       <section className="grid gap-3 rounded-lg border border-white bg-white p-4 shadow-sm md:grid-cols-4">
         <select
+          aria-label="랭킹 종류"
           value={type}
           onChange={(event) => {
             beginReload();
@@ -74,6 +75,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
           <option value="brawlers">브롤러 랭킹</option>
         </select>
         <select
+          aria-label="랭킹 국가"
           value={country}
           onChange={(event) => {
             beginReload();
@@ -87,6 +89,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
           <option value="us">미국</option>
         </select>
         <select
+          aria-label="랭킹 브롤러"
           value={brawlerId}
           onChange={(event) => {
             beginReload();
@@ -108,8 +111,12 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
           랭킹을 불러오는 중...
         </div>
       ) : error ? (
-        <div className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
+        <div role="alert" className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
           {error}
+        </div>
+      ) : items.length === 0 ? (
+        <div role="status" className="rounded-lg border border-dashed border-indigo-200 bg-white/70 p-8 text-center text-sm font-bold text-gray-500">
+          선택한 조건의 랭킹 기록이 없습니다.
         </div>
       ) : (
         <section className="rounded-lg border border-white bg-white p-4 shadow-sm">

@@ -121,7 +121,7 @@ export function AdSlot() {
   const slotId = process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID;
   if (clientId && slotId) {
     return (
-      <aside className="rounded-lg border border-indigo-100 bg-white p-3 shadow-sm">
+      <aside>
         <ins
           className="adsbygoogle"
           style={{ display: "block" }}
@@ -134,12 +134,5 @@ export function AdSlot() {
     );
   }
 
-  return (
-    <aside className="rounded-lg border border-dashed border-indigo-200 bg-white/70 px-5 py-4 text-center text-xs font-bold text-gray-500">
-      광고 영역
-      <span className="ml-2 text-gray-400">
-        AdSense 승인 후 환경 변수로 실제 광고 슬롯을 연결할 수 있습니다.
-      </span>
-    </aside>
-  );
+  return null;
 }

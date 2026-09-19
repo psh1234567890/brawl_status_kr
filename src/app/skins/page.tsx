@@ -214,6 +214,7 @@ export default function SkinCatalogPage() {
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
             <input
               type="search"
+              aria-label="스킨 또는 브롤러 검색"
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value);
@@ -223,6 +224,7 @@ export default function SkinCatalogPage() {
               className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             />
             <select
+              aria-label="스킨 브롤러"
               value={brawlerId}
               onChange={(event) => {
                 setBrawlerId(event.target.value);
@@ -238,6 +240,7 @@ export default function SkinCatalogPage() {
               ))}
             </select>
             <select
+              aria-label="스킨 희귀도"
               value={rarity}
               onChange={(event) => {
                 setRarity(event.target.value);
@@ -253,6 +256,7 @@ export default function SkinCatalogPage() {
               ))}
             </select>
             <select
+              aria-label="스킨 판매 상태"
               value={saleStatus}
               onChange={(event) => {
                 setSaleStatus(event.target.value as SaleStatus);
@@ -267,6 +271,7 @@ export default function SkinCatalogPage() {
               ))}
             </select>
             <select
+              aria-label="스킨 정렬"
               value={sortMode}
               onChange={(event) => {
                 setSortMode(event.target.value as SortMode);

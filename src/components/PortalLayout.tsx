@@ -88,10 +88,10 @@ export default function PortalLayout({
             </a>
           </p>
           <nav className="flex flex-wrap gap-3" aria-label={copy.projectInfo}>
-            <Link href="/methodology" className="hover:text-indigo-700 hover:underline">
+            <Link href={localizedHref(locale, "/methodology")} className="hover:text-indigo-700 hover:underline">
               {copy.methodology}
             </Link>
-            <Link href="/privacy" className="hover:text-indigo-700 hover:underline">
+            <Link href={localizedHref(locale, "/privacy")} className="hover:text-indigo-700 hover:underline">
               {copy.privacy}
             </Link>
             <a

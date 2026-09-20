@@ -1,21 +1,31 @@
 import type { Metadata } from "next";
 import ClubSearch from "../../components/ClubSearch";
 import PortalLayout from "../../components/PortalLayout";
+import { localeAlternates, type Locale } from "../../i18n/config";
+import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
+
+const koCopy = getCatalogPageMessages("ko").clubs;
 
 export const metadata: Metadata = {
-  title: "클럽 검색",
-  description: "브롤스타즈 클럽 태그로 클럽 정보와 멤버 목록을 검색합니다.",
-  alternates: { canonical: "/clubs" },
+  title: koCopy.metadata.title,
+  description: koCopy.metadata.description,
+  alternates: { canonical: "/clubs", languages: localeAlternates("/clubs") },
 };
 
 export default function ClubsPage() {
+  return <ClubsPageContent locale="ko" />;
+}
+
+export function ClubsPageContent({ locale }: { locale: Locale }) {
+  const copy = getCatalogPageMessages(locale).clubs;
   return (
     <PortalLayout
-      title="클럽 검색"
-      eyebrow="클럽 추적"
-      description="공식 Brawl Stars API로 클럽 정보와 멤버 목록을 조회합니다. 클럽원 활동량 비교는 검색 기록이 더 쌓이면 확장할 수 있습니다."
+      locale={locale}
+      title={copy.title}
+      eyebrow={copy.eyebrow}
+      description={copy.description}
     >
-      <ClubSearch />
+      <ClubSearch locale={locale} />
     </PortalLayout>
   );
 }

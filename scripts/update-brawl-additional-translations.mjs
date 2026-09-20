@@ -10,6 +10,7 @@ const outputPath = resolve(
 );
 
 const localeSources = [
+  ["ja", "jp", "JP"],
   ["pt-br", "pt", "PT"],
   ["es", "es", "ES"],
   ["tr", "tr", "TR"],
@@ -58,24 +59,82 @@ function sortNestedRecord(record) {
   );
 }
 
-const [englishTexts, characters, locations, modeVariations, ...localizedTexts] =
+const [
+  englishTexts,
+  cards,
+  characters,
+  locations,
+  modeVariations,
+  skins,
+  skinConfs,
+  ...localizedTexts
+] =
   await Promise.all([
     getGameFile("localization/texts"),
+    getGameFile("csv_logic/cards"),
     getGameFile("csv_logic/characters"),
     getGameFile("csv_logic/locations"),
     getGameFile("csv_logic/game_mode_variations"),
+    getGameFile("csv_logic/skins"),
+    getGameFile("csv_logic/skin_confs"),
     ...localeSources.map(([, endpoint]) => getGameFile(`localization/${endpoint}`)),
   ]);
 
 const brawlers = {};
+const brawlerDescriptions = {};
 const maps = {};
 const modes = {};
+const modeDescriptions = {};
+const abilitiesById = {};
+const skinsById = {};
+
+const activeCharactersByName = new Map(
+  Object.values(characters)
+    .filter(
+      (character) =>
+        character.Type === "Hero" &&
+        !character.Disabled &&
+        character.ItemName,
+    )
+    .map((character) => [character.Name, character]),
+);
+const skinConfByName = new Map(
+  Object.values(skinConfs).map((skinConf) => [skinConf.Name, skinConf]),
+);
+
+const englishAbilitiesById = {};
+for (const card of Object.values(cards)) {
+  if (
+    (card.MetaType !== 4 && card.MetaType !== 5 && card.MetaType !== 6) ||
+    card.Disabled
+  ) {
+    continue;
+  }
+  const englishName = getTranslation(englishTexts, card.TID, "EN");
+  if (englishName) englishAbilitiesById[String(card.id)] = englishName;
+}
+abilitiesById.en = englishAbilitiesById;
+
+const englishSkinsById = {};
+for (const skin of Object.values(skins)) {
+  if (skin.Disabled) continue;
+  const skinConf = skinConfByName.get(skin.Conf);
+  const character = skinConf ? activeCharactersByName.get(skinConf.Character) : null;
+  if (!character) continue;
+  const englishName = getTranslation(englishTexts, skin.TID, "EN");
+  if (englishName) englishSkinsById[String(skin.id)] = englishName;
+}
+skinsById.en = englishSkinsById;
 
 for (const [index, [locale, , field]] of localeSources.entries()) {
   const texts = localizedTexts[index];
   const localeBrawlers = {};
+  const localeBrawlerDescriptions = {};
   const localeMaps = {};
   const localeModes = {};
+  const localeModeDescriptions = {};
+  const localeAbilitiesById = {};
+  const localeSkinsById = {};
 
   for (const mode of Object.values(modeVariations)) {
     const englishName = getTranslation(englishTexts, mode.TID, "EN");
@@ -88,6 +147,15 @@ for (const [index, [locale, , field]] of localeSources.entries()) {
     addAlias(localeModes, modeKey, localizedName);
     addAlias(localeModes, englishName, localizedName);
     addAlias(localeModes, toTitleCase(englishName), localizedName);
+
+    const localizedDescription =
+      getTranslation(texts, mode.IntroDescText, field) ??
+      getTranslation(texts, mode.IntroDescText2, field);
+    addAlias(localeModeDescriptions, mode.Name, localizedDescription);
+    addAlias(localeModeDescriptions, mode.ShortName, localizedDescription);
+    addAlias(localeModeDescriptions, modeKey, localizedDescription);
+    addAlias(localeModeDescriptions, englishName, localizedDescription);
+    addAlias(localeModeDescriptions, toTitleCase(englishName), localizedDescription);
   }
 
   for (const location of Object.values(locations)) {
@@ -103,11 +171,39 @@ for (const [index, [locale, , field]] of localeSources.entries()) {
     if (!englishName || character.Disabled || !character.ItemName || !localizedName) continue;
     localeBrawlers[englishName.toUpperCase()] = localizedName;
     localeBrawlers[englishName] = localizedName;
+
+    const localizedDescription = getTranslation(texts, `${character.TID}_DESC`, field);
+    addAlias(localeBrawlerDescriptions, englishName.toUpperCase(), localizedDescription);
+    addAlias(localeBrawlerDescriptions, englishName, localizedDescription);
+  }
+
+  for (const card of Object.values(cards)) {
+    if (
+      (card.MetaType !== 4 && card.MetaType !== 5 && card.MetaType !== 6) ||
+      card.Disabled
+    ) {
+      continue;
+    }
+    const localizedName = getTranslation(texts, card.TID, field);
+    if (localizedName) localeAbilitiesById[String(card.id)] = localizedName;
+  }
+
+  for (const skin of Object.values(skins)) {
+    if (skin.Disabled) continue;
+    const skinConf = skinConfByName.get(skin.Conf);
+    const character = skinConf ? activeCharactersByName.get(skinConf.Character) : null;
+    if (!character) continue;
+    const localizedSkinName = getTranslation(texts, skin.TID, field);
+    if (localizedSkinName) localeSkinsById[String(skin.id)] = localizedSkinName;
   }
 
   brawlers[locale] = localeBrawlers;
+  brawlerDescriptions[locale] = localeBrawlerDescriptions;
   maps[locale] = localeMaps;
   modes[locale] = localeModes;
+  modeDescriptions[locale] = localeModeDescriptions;
+  abilitiesById[locale] = localeAbilitiesById;
+  skinsById[locale] = localeSkinsById;
 }
 
 const source = `// Generated by scripts/update-brawl-additional-translations.mjs.
@@ -115,6 +211,12 @@ const source = `// Generated by scripts/update-brawl-additional-translations.mjs
 
 export const generatedAdditionalBrawlerDicts: Record<string, Record<string, string>> = ${JSON.stringify(
   sortNestedRecord(brawlers),
+  null,
+  2,
+)};
+
+export const generatedAdditionalBrawlerDescriptionDicts: Record<string, Record<string, string>> = ${JSON.stringify(
+  sortNestedRecord(brawlerDescriptions),
   null,
   2,
 )};
@@ -130,6 +232,24 @@ export const generatedAdditionalModeDicts: Record<string, Record<string, string>
   null,
   2,
 )};
+
+export const generatedAdditionalModeDescriptionDicts: Record<string, Record<string, string>> = ${JSON.stringify(
+  sortNestedRecord(modeDescriptions),
+  null,
+  2,
+)};
+
+export const generatedAdditionalAbilityByIdDicts: Record<string, Record<string, string>> = ${JSON.stringify(
+  sortNestedRecord(abilitiesById),
+  null,
+  2,
+)};
+
+export const generatedAdditionalSkinByIdDicts: Record<string, Record<string, string>> = ${JSON.stringify(
+  sortNestedRecord(skinsById),
+  null,
+  2,
+)};
 `;
 
 await mkdir(dirname(outputPath), { recursive: true });
@@ -137,6 +257,6 @@ await writeFile(outputPath, source, "utf8");
 
 for (const [locale] of localeSources) {
   console.log(
-    `${locale}: ${Object.keys(brawlers[locale]).length} brawler aliases, ${Object.keys(maps[locale]).length} maps, ${Object.keys(modes[locale]).length} mode aliases`,
+    `${locale}: ${Object.keys(brawlers[locale]).length} brawler aliases, ${Object.keys(brawlerDescriptions[locale]).length} brawler descriptions, ${Object.keys(maps[locale]).length} maps, ${Object.keys(modes[locale]).length} mode aliases, ${Object.keys(modeDescriptions[locale]).length} mode descriptions, ${Object.keys(abilitiesById[locale]).length} abilities, ${Object.keys(skinsById[locale]).length} skins`,
   );
 }

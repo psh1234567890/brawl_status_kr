@@ -7,8 +7,9 @@
 ### Added
 
 - 핵심 화면에 한국어·영어·일본어·브라질 포르투갈어·스페인어·튀르키예어·독일어·프랑스어·이탈리아어·러시아어 UI와 언어 선택기를 추가하고, 첫 방문 시 저장된 선택 또는 브라우저 `Accept-Language`로 적절한 홈으로 안내
-- BrawlAPI 게임 로컬라이징 원본에서 브롤러·맵·모드 표시명을 생성하는 `translations:ja:update`, `translations:additional:update` 스크립트와 회귀 테스트 추가
-- 10개 언어 핵심 URL의 canonical/hreflang 및 sitemap alternate 연결 추가
+- BrawlAPI 게임 로컬라이징 원본에서 브롤러·맵·모드뿐 아니라 브롤러/모드 설명, 능력과 스킨 표시명을 생성하는 `translations:ja:update`, `translations:additional:update` 스크립트와 회귀 테스트 추가
+- 맵·브롤러·게임모드 도감/상세, 이벤트, 스킨, 클럽, 소개·방법론·개인정보·이용 안내·문의까지 10개 언어 지원 범위 확장
+- 10개 언어의 정적 페이지와 맵·브롤러·게임모드 상세 URL에 canonical/hreflang 및 sitemap alternate 연결 추가
 
 ### Fixed
 

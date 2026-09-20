@@ -2,17 +2,26 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
+import { localeAlternates, numberLocales, localizedHref, type Locale } from "../../i18n/config";
+import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
 import { getBrawlifyMaps } from "../../server/brawlify";
 import { translateMapName, translateModeName } from "../../utils/brawlTranslations";
 import { selectIndexableMaps } from "../../utils/seoIndexing";
 
+const koCopy = getCatalogPageMessages("ko").maps;
+
 export const metadata: Metadata = {
-  title: "브롤스타즈 맵 도감",
-  description: "Brawlify 맵 데이터를 기반으로 브롤스타즈 맵, 게임모드, 최근 활성 정보를 확인합니다.",
-  alternates: { canonical: "/maps" },
+  title: koCopy.metadata.title,
+  description: koCopy.metadata.description,
+  alternates: { canonical: "/maps", languages: localeAlternates("/maps") },
 };
 
 export default async function MapsPage() {
+  return <MapsPageContent locale="ko" />;
+}
+
+export async function MapsPageContent({ locale }: { locale: Locale }) {
+  const copy = getCatalogPageMessages(locale).maps;
   const maps = (await getBrawlifyMaps().catch(() => ({ list: [] }))).list;
   const activeMaps = maps.filter((map) => !map.disabled);
   const modes = new Set(maps.map((map) => map.gameMode?.name).filter(Boolean));
@@ -20,21 +29,22 @@ export default async function MapsPage() {
 
   return (
     <PortalLayout
-      title="맵 도감"
-      eyebrow="맵 도감"
-      description="맵 이미지, 게임모드, 최근 활성 여부를 한곳에서 확인합니다. 각 맵 상세에서 같은 모드의 다른 맵과 DB 추천으로 이어갈 수 있습니다."
-      actions={<LinkButton href="/events">현재 로테이션</LinkButton>}
+      locale={locale}
+      title={copy.list.title}
+      eyebrow={copy.list.eyebrow}
+      description={copy.list.description}
+      actions={<LinkButton href={localizedHref(locale, "/events")}>{copy.list.action}</LinkButton>}
     >
       <section className="grid gap-3 sm:grid-cols-3">
-        <StatPill label="전체 맵" value={maps.length.toLocaleString("ko-KR")} />
-        <StatPill label="활성 맵" value={activeMaps.length.toLocaleString("ko-KR")} />
-        <StatPill label="게임모드" value={modes.size.toLocaleString("ko-KR")} />
+        <StatPill label={copy.list.totalMaps} value={maps.length.toLocaleString(numberLocales[locale])} />
+        <StatPill label={copy.list.activeMaps} value={activeMaps.length.toLocaleString(numberLocales[locale])} />
+        <StatPill label={copy.list.gameModes} value={modes.size.toLocaleString(numberLocales[locale])} />
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {displayMaps.map((map) => {
-          const displayName = translateMapName(map.name);
-          const displayMode = translateModeName(map.gameMode?.name) || "기타";
+          const displayName = translateMapName(map.name, locale);
+          const displayMode = translateModeName(map.gameMode?.name, locale) || copy.list.other;
 
           return (
           <article key={map.id} className="overflow-hidden rounded-lg border border-white bg-white shadow-sm">
@@ -60,13 +70,13 @@ export default async function MapsPage() {
                 {displayName}
               </h2>
               <p className="mt-2 text-xs font-bold text-gray-400">
-                최근 활성: {formatUnixDate(map.lastActive)}
+                {copy.list.recentActive}: {formatUnixDate(map.lastActive, locale)}
               </p>
               <Link
-                href={`/maps/${map.id}`}
+                href={localizedHref(locale, `/maps/${map.id}`)}
                 className="mt-4 inline-block rounded-full bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
               >
-                상세 보기
+                {copy.list.detailView}
               </Link>
             </div>
           </article>
@@ -77,9 +87,9 @@ export default async function MapsPage() {
   );
 }
 
-function formatUnixDate(value?: number) {
+function formatUnixDate(value: number | undefined, locale: Locale) {
   if (!value) return "-";
-  return new Intl.DateTimeFormat("ko-KR", {
+  return new Intl.DateTimeFormat(numberLocales[locale], {
     year: "numeric",
     month: "short",
     day: "numeric",

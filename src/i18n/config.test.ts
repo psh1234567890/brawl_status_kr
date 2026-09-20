@@ -7,8 +7,11 @@ describe("i18n route helpers", () => {
     expect(localizedHref("ja", "/teams")).toBe("/ja/teams");
     expect(localizedHref("pt-br", "/counters")).toBe("/pt-br/counters");
     expect(localizedHref("es", "/rankings")).toBe("/es/rankings");
+    expect(localizedHref("fr", "/maps")).toBe("/fr/maps");
+    expect(localizedHref("de", "/maps/15000000")).toBe("/de/maps/15000000");
+    expect(localizedHref("ru", "/privacy")).toBe("/ru/privacy");
     expect(localizedHref("ko", "/meta")).toBe("/meta");
-    expect(localizedHref("en", "/skins")).toBe("/skins");
+    expect(localizedHref("en", "/unsupported-page")).toBe("/unsupported-page");
   });
 
   it("strips supported locale prefixes", () => {

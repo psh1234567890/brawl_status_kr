@@ -21,32 +21,37 @@ const siteUrl = "https://www.brawl-o1.site";
 
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
-const staticRoutes: SitemapEntry[] = [
-  localizedRoute("", "weekly", 1),
-  localizedRoute("/meta", "daily", 0.9),
-  route("/skins", "monthly", 0.8),
-  route("/events", "hourly", 0.7),
-  route("/maps", "weekly", 0.7),
-  route("/gamemodes", "weekly", 0.6),
-  route("/brawlers", "weekly", 0.7),
-  route("/clubs", "weekly", 0.5),
-  localizedRoute("/rankings", "daily", 0.6),
-  localizedRoute("/teams", "daily", 0.6),
-  localizedRoute("/counters", "daily", 0.6),
-  localizedRoute("/status", "daily", 0.4),
-  route("/methodology", "monthly", 0.5),
-  route("/about", "monthly", 0.5),
-  route("/privacy", "yearly", 0.4),
-  route("/terms", "yearly", 0.4),
-  route("/contact", "yearly", 0.4),
+const localizedStaticConfig: Array<
+  [string, SitemapEntry["changeFrequency"], number]
+> = [
+  ["", "weekly", 1],
+  ["/meta", "daily", 0.9],
+  ["/skins", "monthly", 0.8],
+  ["/events", "hourly", 0.7],
+  ["/maps", "weekly", 0.7],
+  ["/gamemodes", "weekly", 0.6],
+  ["/brawlers", "weekly", 0.7],
+  ["/clubs", "weekly", 0.5],
+  ["/rankings", "daily", 0.6],
+  ["/teams", "daily", 0.6],
+  ["/counters", "daily", 0.6],
+  ["/status", "daily", 0.4],
+  ["/methodology", "monthly", 0.5],
+  ["/about", "monthly", 0.5],
+  ["/privacy", "yearly", 0.4],
+  ["/terms", "yearly", 0.4],
+  ["/contact", "yearly", 0.4],
 ];
 
-const localizedCopies: SitemapEntry[] = localizedLocales.flatMap((locale) => [
-  localizedCopy(locale, "", "weekly", 0.9),
-  ...["/meta", "/rankings", "/teams", "/counters", "/status"].map((path) =>
-    localizedCopy(locale, path, "daily", path === "/meta" ? 0.85 : 0.55),
+const staticRoutes: SitemapEntry[] = localizedStaticConfig.map(
+  ([path, changeFrequency, priority]) => localizedRoute(path, changeFrequency, priority),
+);
+
+const localizedCopies: SitemapEntry[] = localizedLocales.flatMap((locale) =>
+  localizedStaticConfig.map(([path, changeFrequency, priority]) =>
+    localizedCopy(locale, path, changeFrequency, Math.max(0.3, priority - 0.05)),
   ),
-]);
+);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [brawlersResult, mapsResult, modesResult] = await Promise.allSettled([
@@ -58,20 +63,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticRoutes,
     ...localizedCopies,
-    ...entriesFromResult(
+    ...localizedEntriesFromResult(
       brawlersResult,
       selectIndexableBrawlers,
-      (item) => route(`/brawlers/${item.id}`, "weekly", 0.55),
+      (item) => `/brawlers/${item.id}`,
+      "weekly",
+      0.55,
     ),
-    ...entriesFromResult(
+    ...localizedEntriesFromResult(
       mapsResult,
       selectIndexableMaps,
-      (item) => route(`/maps/${item.id}`, "weekly", 0.55),
+      (item) => `/maps/${item.id}`,
+      "weekly",
+      0.55,
     ),
-    ...entriesFromResult(
+    ...localizedEntriesFromResult(
       modesResult,
       selectIndexableGameModes,
-      (item) => route(`/gamemodes/${item.id}`, "weekly", 0.45),
+      (item) => `/gamemodes/${item.id}`,
+      "weekly",
+      0.45,
     ),
   ];
 }
@@ -125,13 +136,23 @@ function route(
   };
 }
 
-function entriesFromResult<T extends { id: number | string }>(
+function localizedEntriesFromResult<T extends { id: number | string }>(
   result: PromiseSettledResult<{ list: T[] }>,
   selector: (items: T[]) => T[],
-  mapper: (item: T) => SitemapEntry,
+  pathFor: (item: T) => string,
+  changeFrequency: SitemapEntry["changeFrequency"],
+  priority: number,
 ) {
   if (result.status !== "fulfilled") return [];
-  return selector(
-    result.value.list.filter((item) => item.id !== undefined && item.id !== null),
-  ).map(mapper);
+  return selector(result.value.list.filter((item) => item.id !== undefined && item.id !== null)).flatMap(
+    (item) => {
+      const path = pathFor(item);
+      return [
+        localizedRoute(path, changeFrequency, priority),
+        ...localizedLocales.map((locale) =>
+          localizedCopy(locale, path, changeFrequency, Math.max(0.3, priority - 0.05)),
+        ),
+      ];
+    },
+  );
 }

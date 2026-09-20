@@ -2,39 +2,50 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
+import { localeAlternates, localizedHref, type Locale } from "../../i18n/config";
+import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
 import { getBrawlifyGameModes } from "../../server/brawlify";
 import { translateModeDescription, translateModeName } from "../../utils/brawlTranslations";
 import { selectIndexableGameModes } from "../../utils/seoIndexing";
 
+const koCopy = getCatalogPageMessages("ko").gamemodes;
+
 export const metadata: Metadata = {
-  title: "브롤스타즈 게임모드 도감",
-  description: "Brawlify 게임모드 데이터를 기반으로 브롤스타즈 모드 설명과 이미지를 확인합니다.",
-  alternates: { canonical: "/gamemodes" },
+  title: koCopy.metadata.title,
+  description: koCopy.metadata.description,
+  alternates: { canonical: "/gamemodes", languages: localeAlternates("/gamemodes") },
 };
 
 export default async function GameModesPage() {
+  return <GameModesPageContent locale="ko" />;
+}
+
+export async function GameModesPageContent({ locale }: { locale: Locale }) {
+  const copy = getCatalogPageMessages(locale).gamemodes;
   const modes = (await getBrawlifyGameModes().catch(() => ({ list: [] }))).list;
   const enabled = selectIndexableGameModes(modes);
 
   return (
     <PortalLayout
-      title="게임모드 도감"
-      eyebrow="모드 도감"
-      description="모드별 목표와 설명을 빠르게 확인할 수 있는 도감입니다. 맵 도감과 로테이션 페이지로 이어서 현재 플레이할 맵까지 확인할 수 있습니다."
-      actions={<LinkButton href="/maps">맵 도감</LinkButton>}
+      locale={locale}
+      title={copy.list.title}
+      eyebrow={copy.list.eyebrow}
+      description={copy.list.description}
+      actions={<LinkButton href={localizedHref(locale, "/maps")}>{copy.list.action}</LinkButton>}
     >
       <section className="grid gap-3 sm:grid-cols-3">
-        <StatPill label="전체 모드" value={modes.length} />
-        <StatPill label="활성 모드" value={enabled.length} />
-        <StatPill label="비활성/이벤트 포함" value={modes.length - enabled.length} />
+        <StatPill label={copy.list.totalModes} value={modes.length} />
+        <StatPill label={copy.list.activeModes} value={enabled.length} />
+        <StatPill label={copy.list.inactiveIncluded} value={modes.length - enabled.length} />
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {enabled.map((mode) => {
-          const displayName = translateModeName(mode.name);
+          const displayName = translateModeName(mode.name, locale);
           const description = translateModeDescription(
             mode.name,
             mode.shortDescription ?? mode.description,
+            locale,
           );
 
           return (
@@ -56,13 +67,13 @@ export default async function GameModesPage() {
             <div className="min-w-0">
               <h2 className="text-lg font-black text-gray-900">{displayName}</h2>
               <p className="mt-1 line-clamp-3 text-sm font-medium leading-6 text-gray-500">
-                {description || "설명 데이터가 없습니다."}
+                {description || copy.list.noDescription}
               </p>
               <Link
-                href={`/gamemodes/${mode.id}`}
+                href={localizedHref(locale, `/gamemodes/${mode.id}`)}
                 className="mt-3 inline-block rounded-full bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
               >
-                상세 보기
+                {copy.list.detailView}
               </Link>
             </div>
           </article>

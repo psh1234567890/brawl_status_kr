@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  translateAbilityName,
+  translateBrawlerDescription,
   translateBrawlerName,
   translateMapName,
   translateModeName,
+  translateSkinName,
 } from "./brawlTranslations";
 
 describe("localized Brawl game names", () => {
@@ -26,5 +29,13 @@ describe("localized Brawl game names", () => {
     expect(translateMapName("Backyard Bowl", "fr")).toBe("Ligue junior");
     expect(translateMapName("Backyard Bowl", "it")).toBe("Campetto");
     expect(translateBrawlerName("SHELLY", "ru")).toBe("Шелли");
+  });
+
+  it("uses official descriptions, abilities, and skins for catalog pages", () => {
+    const fallback = "fallback description";
+    expect(translateBrawlerDescription("SHELLY", fallback, "es")).not.toBe(fallback);
+    expect(translateAbilityName(23000076, "SHELL SHOCK", "ja")).toBe("シェルショック");
+    expect(translateSkinName(29000002, "Rockstar Colt", "en")).toBe("Rockstar Colt");
+    expect(translateSkinName(29000002, "Rockstar Colt", "ru")).toBe("Рок-Звезда Кольт");
   });
 });

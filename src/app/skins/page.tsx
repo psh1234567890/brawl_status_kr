@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 import {
   generatedSkinCatalog,
   type GeneratedSkinCatalogItem,
 } from "../../constants/generatedSkinCatalog";
+import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
+import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
+import { translateBrawlerName, translateSkinName } from "../../utils/brawlTranslations";
 
 const PAGE_SIZE = 120;
 const ALL = "ALL";
@@ -15,35 +19,8 @@ const ALL = "ALL";
 type SaleStatus = "ALL" | "CATALOG" | "UNAVAILABLE" | "DEFAULT" | "PAID";
 type SortMode = "RARITY" | "NEWEST" | "NAME" | "BRAWLER" | "PRICE_DESC" | "PRICE_ASC";
 
-const rarityLabels: Record<string, string> = {
-  ALL: "전체 희귀도",
-  DEFAULT: "기본 / 한정",
-  RARE: "레어",
-  SUPER_RARE: "슈퍼 레어",
-  EPIC: "에픽",
-  MYTHIC: "신화",
-  LEGENDARY: "전설",
-  HYPERCHARGE: "하이퍼차지",
-  COLLECTORS: "컬렉터",
-  RANKED_PASS: "랭크 패스",
-};
-
-const saleStatusLabels: Record<SaleStatus, string> = {
-  ALL: "전체 판매 상태",
-  CATALOG: "카탈로그 판매",
-  UNAVAILABLE: "현재 미판매",
-  DEFAULT: "기본 스킨",
-  PAID: "유료 스킨",
-};
-
-const sortLabels: Record<SortMode, string> = {
-  RARITY: "희귀도 높은순",
-  NEWEST: "신규 ID순",
-  NAME: "스킨 이름순",
-  BRAWLER: "브롤러 이름순",
-  PRICE_DESC: "가격 높은순",
-  PRICE_ASC: "가격 낮은순",
-};
+const saleStatuses: SaleStatus[] = ["ALL", "CATALOG", "UNAVAILABLE", "DEFAULT", "PAID"];
+const sortModes: SortMode[] = ["RARITY", "NEWEST", "NAME", "BRAWLER", "PRICE_DESC", "PRICE_ASC"];
 
 const rarityWeight: Record<string, number> = {
   DEFAULT: 0,
@@ -57,13 +34,16 @@ const rarityWeight: Record<string, number> = {
   LEGENDARY: 5,
 };
 
-function formatPrice(skin: GeneratedSkinCatalogItem) {
-  if (skin.isDefault) return "기본 제공";
-  if (skin.gems > 0 && skin.bling > 0) return `${skin.gems} 보석 / ${skin.bling} 블링`;
-  if (skin.gems > 0) return `${skin.gems} 보석`;
-  if (skin.bling > 0) return `${skin.bling} 블링`;
-  if (skin.coins > 0) return `${skin.coins} 코인`;
-  return skin.isCatalogReleased ? "획득 경로 확인 필요" : "현재 카탈로그 미판매";
+function formatPrice(skin: GeneratedSkinCatalogItem, locale: Locale) {
+  const copy = getCatalogPageMessages(locale).skins.price;
+  if (skin.isDefault) return copy.defaultProvided;
+  if (skin.gems > 0 && skin.bling > 0) {
+    return `${skin.gems} ${copy.gems}${copy.separator}${skin.bling} ${copy.bling}`;
+  }
+  if (skin.gems > 0) return `${skin.gems} ${copy.gems}`;
+  if (skin.bling > 0) return `${skin.bling} ${copy.bling}`;
+  if (skin.coins > 0) return `${skin.coins} ${copy.coins}`;
+  return skin.isCatalogReleased ? copy.acquisitionUnknown : copy.catalogUnavailable;
 }
 
 function getPriceValue(skin: GeneratedSkinCatalogItem) {
@@ -81,10 +61,11 @@ function isPaidSkin(skin: GeneratedSkinCatalogItem) {
   return skin.gems > 0 || skin.bling > 0 || skin.coins > 0;
 }
 
-function getSaleLabel(skin: GeneratedSkinCatalogItem) {
-  if (skin.isDefault) return "기본";
-  if (skin.isCatalogReleased) return "판매 중";
-  return "미판매";
+function getSaleLabel(skin: GeneratedSkinCatalogItem, locale: Locale) {
+  const copy = getCatalogPageMessages(locale).skins.saleLabel;
+  if (skin.isDefault) return copy.DEFAULT;
+  if (skin.isCatalogReleased) return copy.CATALOG;
+  return copy.UNAVAILABLE;
 }
 
 function matchesSaleStatus(skin: GeneratedSkinCatalogItem, status: SaleStatus) {
@@ -95,15 +76,25 @@ function matchesSaleStatus(skin: GeneratedSkinCatalogItem, status: SaleStatus) {
   return isPaidSkin(skin);
 }
 
-function compareSkins(left: GeneratedSkinCatalogItem, right: GeneratedSkinCatalogItem, sortMode: SortMode) {
+function compareSkins(
+  left: GeneratedSkinCatalogItem,
+  right: GeneratedSkinCatalogItem,
+  sortMode: SortMode,
+  locale: Locale,
+) {
+  const localeName = numberLocales[locale];
+  const leftSkinName = translateSkinName(left.id, left.name, locale);
+  const rightSkinName = translateSkinName(right.id, right.name, locale);
+  const leftBrawlerName = translateBrawlerName(left.brawlerName, locale);
+  const rightBrawlerName = translateBrawlerName(right.brawlerName, locale);
   if (sortMode === "NAME") {
-    return left.name.localeCompare(right.name, "ko") || left.id - right.id;
+    return leftSkinName.localeCompare(rightSkinName, localeName) || left.id - right.id;
   }
 
   if (sortMode === "BRAWLER") {
     return (
-      left.brawlerNameKo.localeCompare(right.brawlerNameKo, "ko") ||
-      left.name.localeCompare(right.name, "ko") ||
+      leftBrawlerName.localeCompare(rightBrawlerName, localeName) ||
+      leftSkinName.localeCompare(rightSkinName, localeName) ||
       left.id - right.id
     );
   }
@@ -123,7 +114,8 @@ function compareSkins(left: GeneratedSkinCatalogItem, right: GeneratedSkinCatalo
   return getRarityWeight(right) - getRarityWeight(left) || right.id - left.id;
 }
 
-export default function SkinCatalogPage() {
+export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) {
+  const copy = getCatalogPageMessages(locale).skins;
   const [query, setQuery] = useState("");
   const [rarity, setRarity] = useState(ALL);
   const [brawlerId, setBrawlerId] = useState(ALL);
@@ -134,9 +126,13 @@ export default function SkinCatalogPage() {
 
   const brawlers = useMemo(() => {
     const byId = new Map<number, string>();
-    for (const skin of generatedSkinCatalog) byId.set(skin.brawlerId, skin.brawlerNameKo);
-    return [...byId.entries()].sort(([, left], [, right]) => left.localeCompare(right, "ko"));
-  }, []);
+    for (const skin of generatedSkinCatalog) {
+      byId.set(skin.brawlerId, translateBrawlerName(skin.brawlerName, locale));
+    }
+    return [...byId.entries()].sort(([, left], [, right]) =>
+      left.localeCompare(right, numberLocales[locale]),
+    );
+  }, [locale]);
 
   const rarities = useMemo(
     () =>
@@ -150,8 +146,12 @@ export default function SkinCatalogPage() {
     const cleanQuery = query.trim().toLowerCase();
     return generatedSkinCatalog
       .filter((skin) => {
+        const localizedSkinName = translateSkinName(skin.id, skin.name, locale).toLowerCase();
+        const localizedBrawlerName = translateBrawlerName(skin.brawlerName, locale).toLowerCase();
         const matchesQuery =
           cleanQuery === "" ||
+          localizedSkinName.includes(cleanQuery) ||
+          localizedBrawlerName.includes(cleanQuery) ||
           skin.name.toLowerCase().includes(cleanQuery) ||
           skin.brawlerName.toLowerCase().includes(cleanQuery) ||
           skin.brawlerNameKo.toLowerCase().includes(cleanQuery);
@@ -161,8 +161,8 @@ export default function SkinCatalogPage() {
         const matchesDefaultVisibility = !hideDefaults || !skin.isDefault;
         return matchesQuery && matchesRarity && matchesBrawler && matchesStatus && matchesDefaultVisibility;
       })
-      .sort((left, right) => compareSkins(left, right, sortMode));
-  }, [brawlerId, hideDefaults, query, rarity, saleStatus, sortMode]);
+      .sort((left, right) => compareSkins(left, right, sortMode, locale));
+  }, [brawlerId, hideDefaults, locale, query, rarity, saleStatus, sortMode]);
 
   const summary = useMemo(() => {
     let catalog = 0;
@@ -197,34 +197,37 @@ export default function SkinCatalogPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-black text-indigo-950 sm:text-4xl">스킨 카탈로그</h1>
+            <h1 className="text-3xl font-black text-indigo-950 sm:text-4xl">{copy.title}</h1>
             <p className="mt-2 text-sm font-bold text-indigo-700">
-              브롤러 스킨 {generatedSkinCatalog.length.toLocaleString("ko-KR")}종
+              {copy.catalogCountPrefix} {generatedSkinCatalog.length.toLocaleString(numberLocales[locale])}{copy.catalogCountUnit}
             </p>
           </div>
-          <Link
-            href="/"
-            className="rounded-full border border-indigo-200 bg-white px-5 py-2 text-sm font-black text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
-          >
-            전적 검색으로 돌아가기
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={localizedHref(locale, "/")}
+              className="rounded-full border border-indigo-200 bg-white px-5 py-2 text-sm font-black text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
+            >
+              {copy.back}
+            </Link>
+            <LanguageSwitcher locale={locale} />
+          </div>
         </div>
 
         <section className="mb-5 rounded-lg border border-indigo-100 bg-white p-4 shadow-sm">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
             <input
               type="search"
-              aria-label="스킨 또는 브롤러 검색"
+              aria-label={copy.searchAria}
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value);
                 resetVisibleCount();
               }}
-              placeholder="스킨 또는 브롤러 검색"
+              placeholder={copy.searchPlaceholder}
               className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             />
             <select
-              aria-label="스킨 브롤러"
+              aria-label={copy.brawlerAria}
               value={brawlerId}
               onChange={(event) => {
                 setBrawlerId(event.target.value);
@@ -232,7 +235,7 @@ export default function SkinCatalogPage() {
               }}
               className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             >
-              <option value={ALL}>전체 브롤러</option>
+              <option value={ALL}>{copy.allBrawlers}</option>
               {brawlers.map(([id, name]) => (
                 <option key={id} value={id}>
                   {name}
@@ -240,7 +243,7 @@ export default function SkinCatalogPage() {
               ))}
             </select>
             <select
-              aria-label="스킨 희귀도"
+              aria-label={copy.rarityAria}
               value={rarity}
               onChange={(event) => {
                 setRarity(event.target.value);
@@ -248,15 +251,15 @@ export default function SkinCatalogPage() {
               }}
               className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             >
-              <option value={ALL}>{rarityLabels.ALL}</option>
+              <option value={ALL}>{copy.rarity.ALL}</option>
               {rarities.map((value) => (
                 <option key={value} value={value}>
-                  {rarityLabels[value] ?? value}
+                  {copy.rarity[value as keyof typeof copy.rarity] ?? value}
                 </option>
               ))}
             </select>
             <select
-              aria-label="스킨 판매 상태"
+              aria-label={copy.saleAria}
               value={saleStatus}
               onChange={(event) => {
                 setSaleStatus(event.target.value as SaleStatus);
@@ -264,14 +267,14 @@ export default function SkinCatalogPage() {
               }}
               className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             >
-              {(Object.keys(saleStatusLabels) as SaleStatus[]).map((value) => (
+              {saleStatuses.map((value) => (
                 <option key={value} value={value}>
-                  {saleStatusLabels[value]}
+                  {copy.saleFilter[value]}
                 </option>
               ))}
             </select>
             <select
-              aria-label="스킨 정렬"
+              aria-label={copy.sortAria}
               value={sortMode}
               onChange={(event) => {
                 setSortMode(event.target.value as SortMode);
@@ -279,9 +282,9 @@ export default function SkinCatalogPage() {
               }}
               className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             >
-              {(Object.keys(sortLabels) as SortMode[]).map((value) => (
+              {sortModes.map((value) => (
                 <option key={value} value={value}>
-                  {sortLabels[value]}
+                  {copy.sort[value]}
                 </option>
               ))}
             </select>
@@ -297,24 +300,27 @@ export default function SkinCatalogPage() {
               }}
               className="h-4 w-4 accent-indigo-600"
             />
-            기본 스킨 숨기기
+            {copy.hideDefaults}
           </label>
         </section>
 
         <section className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <StatChip label="검색 결과" value={summary.total} />
-          <StatChip label="판매 중" value={summary.catalog} />
-          <StatChip label="현재 미판매" value={summary.unavailable} />
-          <StatChip label="유료 스킨" value={summary.paid} />
-          <StatChip label="기본 스킨" value={summary.defaults} />
+          <StatChip label={copy.stats.results} value={summary.total} locale={locale} />
+          <StatChip label={copy.stats.onSale} value={summary.catalog} locale={locale} />
+          <StatChip label={copy.stats.unavailable} value={summary.unavailable} locale={locale} />
+          <StatChip label={copy.stats.paid} value={summary.paid} locale={locale} />
+          <StatChip label={copy.stats.defaults} value={summary.defaults} locale={locale} />
         </section>
 
         <p className="mb-4 text-sm font-bold text-gray-600">
-          {visibleSkins.length.toLocaleString("ko-KR")}종 표시 중
+          {visibleSkins.length.toLocaleString(numberLocales[locale])}{copy.shownUnit}
         </p>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visibleSkins.map((skin) => (
+          {visibleSkins.map((skin) => {
+            const displaySkinName = translateSkinName(skin.id, skin.name, locale);
+            const displayBrawlerName = translateBrawlerName(skin.brawlerName, locale);
+            return (
             <article
               key={skin.id}
               className="min-w-0 overflow-hidden rounded-lg border border-white bg-white shadow-sm"
@@ -325,17 +331,17 @@ export default function SkinCatalogPage() {
                 </span>
                 <BrawlImage
                   src={`https://cdn.brawlify.com/brawlers/borders/${skin.brawlerId}.png`}
-                  alt={skin.brawlerNameKo}
+                  alt={displayBrawlerName}
                   width={96}
                   height={96}
                   className="h-24 w-24 rounded-md object-contain"
-                  title="스킨 전용 이미지가 없어 브롤러 기본 이미지를 표시합니다."
+                  title={copy.imageFallbackTitle}
                 />
               </div>
               <div className="p-4">
                 <div className="mb-2 flex flex-wrap gap-1.5">
                   <span className="rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-black text-indigo-700">
-                    {rarityLabels[skin.rarity] ?? skin.rarity}
+                    {copy.rarity[skin.rarity as keyof typeof copy.rarity] ?? skin.rarity}
                   </span>
                   <span
                     className={`rounded-full px-2 py-1 text-[11px] font-black ${
@@ -344,22 +350,23 @@ export default function SkinCatalogPage() {
                         : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {getSaleLabel(skin)}
+                    {getSaleLabel(skin, locale)}
                   </span>
                 </div>
-                <h2 className="truncate text-sm font-black text-gray-900" title={skin.name}>
-                  {skin.name}
+                <h2 className="truncate text-sm font-black text-gray-900" title={displaySkinName}>
+                  {displaySkinName}
                 </h2>
-                <p className="mt-1 truncate text-xs font-bold text-indigo-700">{skin.brawlerNameKo}</p>
-                <p className="mt-3 text-sm font-black text-gray-800">{formatPrice(skin)}</p>
+                <p className="mt-1 truncate text-xs font-bold text-indigo-700">{displayBrawlerName}</p>
+                <p className="mt-3 text-sm font-black text-gray-800">{formatPrice(skin, locale)}</p>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
 
         {filteredSkins.length === 0 ? (
           <p className="rounded-lg border border-indigo-100 bg-white p-8 text-center text-sm font-bold text-gray-500">
-            조건에 맞는 스킨이 없습니다.
+            {copy.empty}
           </p>
         ) : null}
 
@@ -370,7 +377,7 @@ export default function SkinCatalogPage() {
               onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
               className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
             >
-              더 보기
+              {copy.more}
             </button>
           </div>
         ) : null}
@@ -379,11 +386,11 @@ export default function SkinCatalogPage() {
   );
 }
 
-function StatChip({ label, value }: { label: string; value: number }) {
+function StatChip({ label, value, locale }: { label: string; value: number; locale: Locale }) {
   return (
     <div className="rounded-lg border border-indigo-100 bg-white p-4 shadow-sm">
       <p className="text-xs font-black text-indigo-600">{label}</p>
-      <p className="mt-1 text-2xl font-black text-indigo-950">{value.toLocaleString("ko-KR")}</p>
+      <p className="mt-1 text-2xl font-black text-indigo-950">{value.toLocaleString(numberLocales[locale])}</p>
     </div>
   );
 }

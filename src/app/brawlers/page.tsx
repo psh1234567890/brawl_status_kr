@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
+import { localeAlternates, localizedHref, type Locale } from "../../i18n/config";
+import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
 import { getBrawlifyBrawlers } from "../../server/brawlify";
 import {
   translateBrawlerClassName,
@@ -11,34 +13,42 @@ import {
 } from "../../utils/brawlTranslations";
 import { selectIndexableBrawlers } from "../../utils/seoIndexing";
 
+const koCopy = getCatalogPageMessages("ko").brawlers;
+
 export const metadata: Metadata = {
-  title: "브롤러 도감",
-  description: "Brawlify 브롤러 데이터를 기반으로 브롤러 등급, 클래스, 가젯, 스타파워 정보를 확인합니다.",
-  alternates: { canonical: "/brawlers" },
+  title: koCopy.metadata.title,
+  description: koCopy.metadata.description,
+  alternates: { canonical: "/brawlers", languages: localeAlternates("/brawlers") },
 };
 
 export default async function BrawlersPage() {
+  return <BrawlersPageContent locale="ko" />;
+}
+
+export async function BrawlersPageContent({ locale }: { locale: Locale }) {
+  const copy = getCatalogPageMessages(locale).brawlers;
   const brawlers = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list;
   const released = selectIndexableBrawlers(brawlers);
   const rarities = new Set(brawlers.map((brawler) => brawler.rarity?.name).filter(Boolean));
 
   return (
     <PortalLayout
-      title="브롤러 도감"
-      eyebrow="브롤러 명단"
-      description="브롤러의 등급, 클래스, 설명, 가젯과 스타파워를 확인합니다. 플레이어 검색 화면에서는 실제 보유 상태와 승률도 함께 볼 수 있습니다."
-      actions={<LinkButton href="/">내 브롤러 보기</LinkButton>}
+      locale={locale}
+      title={copy.list.title}
+      eyebrow={copy.list.eyebrow}
+      description={copy.list.description}
+      actions={<LinkButton href={localizedHref(locale, "/")}>{copy.list.action}</LinkButton>}
     >
       <section className="grid gap-3 sm:grid-cols-3">
-        <StatPill label="전체 브롤러" value={brawlers.length} />
-        <StatPill label="출시 브롤러" value={released.length} />
-        <StatPill label="등급 수" value={rarities.size} />
+        <StatPill label={copy.list.totalBrawlers} value={brawlers.length} />
+        <StatPill label={copy.list.releasedBrawlers} value={released.length} />
+        <StatPill label={copy.list.rarityCount} value={rarities.size} />
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {released.map((brawler) => {
-          const displayName = translateBrawlerName(brawler.name);
-          const description = translateBrawlerDescription(brawler.name, brawler.description);
+          const displayName = translateBrawlerName(brawler.name, locale);
+          const description = translateBrawlerDescription(brawler.name, brawler.description, locale);
 
           return (
           <article key={brawler.id} className="rounded-lg border border-white bg-white p-4 shadow-sm">
@@ -55,18 +65,18 @@ export default async function BrawlersPage() {
                 <h2 className="truncate text-lg font-black text-gray-900">
                   {displayName}
                 </h2>
-                <p className="text-xs font-bold text-indigo-600">{translateRarityName(brawler.rarity?.name) || "알 수 없음"}</p>
-                <p className="text-xs font-bold text-gray-400">{translateBrawlerClassName(brawler.class?.name) || "-"}</p>
+                <p className="text-xs font-bold text-indigo-600">{translateRarityName(brawler.rarity?.name, locale) || copy.list.unknown}</p>
+                <p className="text-xs font-bold text-gray-400">{translateBrawlerClassName(brawler.class?.name, locale) || "-"}</p>
               </div>
             </div>
             <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-gray-500">
-              {description || "설명 데이터가 없습니다."}
+              {description || copy.list.noDescription}
             </p>
             <Link
-              href={`/brawlers/${brawler.id}`}
+              href={localizedHref(locale, `/brawlers/${brawler.id}`)}
               className="mt-4 inline-block rounded-full bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
             >
-              상세 보기
+              {copy.list.detailView}
             </Link>
           </article>
           );

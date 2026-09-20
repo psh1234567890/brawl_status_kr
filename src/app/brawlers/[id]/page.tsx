@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import BrawlImage from "../../../components/BrawlImage";
 import PortalLayout, { StatPill } from "../../../components/PortalLayout";
+import { localeAlternates, localizedHref, type Locale } from "../../../i18n/config";
+import { getCatalogPageMessages } from "../../../i18n/catalogPageMessages";
 import { getBrawlifyBrawlers } from "../../../server/brawlify";
 import {
   translateAbilityName,
@@ -19,34 +21,49 @@ interface BrawlerDetailPageProps {
 
 export async function generateMetadata({ params }: BrawlerDetailPageProps): Promise<Metadata> {
   const { id } = await params;
+  return getBrawlerDetailMetadata(id, "ko");
+}
+
+export async function getBrawlerDetailMetadata(id: string, locale: Locale): Promise<Metadata> {
+  const copy = getCatalogPageMessages(locale).brawlers;
   const brawlers = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list;
   const brawler = brawlers.find((item) => String(item.id) === id);
-  const name = brawler ? translateBrawlerName(brawler.name) : "브롤러";
+  const name = brawler ? translateBrawlerName(brawler.name, locale) : copy.metadata.detailNameFallback;
   const shouldIndex = brawler
     ? selectIndexableBrawlers(brawlers).some((item) => item.id === brawler.id)
     : false;
 
+  const basePath = `/brawlers/${id}`;
   return {
-    title: `${name} 브롤러 상세`,
-    alternates: { canonical: `/brawlers/${id}` },
+    title: `${name}${copy.metadata.detailTitleSuffix}`,
+    alternates: {
+      canonical: localizedHref(locale, basePath),
+      languages: localeAlternates(basePath),
+    },
     robots: shouldIndex ? undefined : { index: false, follow: true },
   };
 }
 
 export default async function BrawlerDetailPage({ params }: BrawlerDetailPageProps) {
   const { id } = await params;
+  return <BrawlerDetailPageContent id={id} locale="ko" />;
+}
+
+export async function BrawlerDetailPageContent({ id, locale }: { id: string; locale: Locale }) {
+  const copy = getCatalogPageMessages(locale).brawlers;
   const brawler = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list.find((item) => String(item.id) === id);
   if (!brawler) notFound();
 
-  const displayName = translateBrawlerName(brawler.name);
-  const description = translateBrawlerDescription(brawler.name, brawler.description);
+  const displayName = translateBrawlerName(brawler.name, locale);
+  const description = translateBrawlerDescription(brawler.name, brawler.description, locale);
 
   return (
     <PortalLayout
+      locale={locale}
       title={displayName}
-      eyebrow={`${translateRarityName(brawler.rarity?.name) || "알 수 없음"} · ${translateBrawlerClassName(brawler.class?.name) || "역할"}`}
-      description={description || "Brawlify 브롤러 데이터 기반 상세 화면입니다."}
-      actions={<LinkButton href="/">내 전적에서 보기</LinkButton>}
+      eyebrow={`${translateRarityName(brawler.rarity?.name, locale) || copy.detail.unknown} · ${translateBrawlerClassName(brawler.class?.name, locale) || copy.detail.role}`}
+      description={description || copy.detail.descriptionFallback}
+      actions={<LinkButton href={localizedHref(locale, "/")}>{copy.detail.action}</LinkButton>}
     >
       <section className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <BrawlImage
@@ -58,16 +75,16 @@ export default async function BrawlerDetailPage({ params }: BrawlerDetailPagePro
           fallbackText={displayName.slice(0, 1)}
         />
         <div className="grid content-start gap-3 sm:grid-cols-2">
-          <StatPill label="브롤러 ID" value={brawler.id} />
-          <StatPill label="등급" value={translateRarityName(brawler.rarity?.name) || "-"} />
-          <StatPill label="클래스" value={translateBrawlerClassName(brawler.class?.name) || "-"} />
-          <StatPill label="출시 여부" value={brawler.released === false ? "미출시" : "출시"} />
+          <StatPill label={copy.detail.brawlerId} value={brawler.id} />
+          <StatPill label={copy.detail.rarity} value={translateRarityName(brawler.rarity?.name, locale) || "-"} />
+          <StatPill label={copy.detail.className} value={translateBrawlerClassName(brawler.class?.name, locale) || "-"} />
+          <StatPill label={copy.detail.releaseStatus} value={brawler.released === false ? copy.detail.unreleased : copy.detail.released} />
         </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <AbilityPanel title="가젯" items={brawler.gadgets ?? []} imageType="gadgets" />
-        <AbilityPanel title="스타파워" items={brawler.starPowers ?? []} imageType="star-powers" />
+        <AbilityPanel title={copy.detail.gadgets} items={brawler.gadgets ?? []} imageType="gadgets" locale={locale} emptyText={copy.detail.noData} />
+        <AbilityPanel title={copy.detail.starPowers} items={brawler.starPowers ?? []} imageType="star-powers" locale={locale} emptyText={copy.detail.noData} />
       </section>
     </PortalLayout>
   );
@@ -77,10 +94,14 @@ function AbilityPanel({
   title,
   items,
   imageType,
+  locale,
+  emptyText,
 }: {
   title: string;
   items: { id: number; name: string }[];
   imageType: string;
+  locale: Locale;
+  emptyText: string;
 }) {
   return (
     <section className="rounded-lg border border-white bg-white p-5 shadow-sm">
@@ -88,7 +109,7 @@ function AbilityPanel({
       {items.length ? (
         <div className="flex flex-col gap-3">
           {items.map((item) => {
-            const displayName = translateAbilityName(item.id, item.name);
+            const displayName = translateAbilityName(item.id, item.name, locale);
 
             return (
             <div key={item.id} className="flex items-center gap-3 rounded-lg bg-indigo-50 p-3">
@@ -106,7 +127,7 @@ function AbilityPanel({
           })}
         </div>
       ) : (
-        <p className="text-sm font-bold text-gray-400">데이터가 없습니다.</p>
+        <p className="text-sm font-bold text-gray-400">{emptyText}</p>
       )}
     </section>
   );

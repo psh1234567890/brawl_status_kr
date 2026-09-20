@@ -370,11 +370,11 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             </p>
           </div>
           <nav className="flex flex-wrap gap-3" aria-label={copy.home.siteInfo}>
-            <Link href="/about" className="hover:text-slate-950 hover:underline">{copy.home.about}</Link>
-            <Link href="/methodology" className="hover:text-slate-950 hover:underline">{copy.common.methodology}</Link>
-            <Link href="/privacy" className="hover:text-slate-950 hover:underline">{copy.common.privacy}</Link>
-            <Link href="/terms" className="hover:text-slate-950 hover:underline">{copy.home.terms}</Link>
-            <Link href="/contact" className="hover:text-slate-950 hover:underline">{copy.home.contact}</Link>
+            <Link href={localizedHref(locale, "/about")} className="hover:text-slate-950 hover:underline">{copy.home.about}</Link>
+            <Link href={localizedHref(locale, "/methodology")} className="hover:text-slate-950 hover:underline">{copy.common.methodology}</Link>
+            <Link href={localizedHref(locale, "/privacy")} className="hover:text-slate-950 hover:underline">{copy.common.privacy}</Link>
+            <Link href={localizedHref(locale, "/terms")} className="hover:text-slate-950 hover:underline">{copy.home.terms}</Link>
+            <Link href={localizedHref(locale, "/contact")} className="hover:text-slate-950 hover:underline">{copy.home.contact}</Link>
             <a
               href="https://github.com/psh1234567890/brawl_status_kr"
               target="_blank"

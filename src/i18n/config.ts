@@ -74,7 +74,20 @@ export const localizedCorePaths = new Set([
   "/counters",
   "/rankings",
   "/status",
+  "/maps",
+  "/brawlers",
+  "/gamemodes",
+  "/events",
+  "/skins",
+  "/clubs",
+  "/about",
+  "/methodology",
+  "/privacy",
+  "/terms",
+  "/contact",
 ]);
+
+const localizedDynamicPrefixes = ["/maps/", "/brawlers/", "/gamemodes/"] as const;
 
 export function isLocale(value: string): value is Locale {
   return locales.includes(value as Locale);
@@ -96,8 +109,16 @@ export function stripLocalePrefix(pathname: string) {
 export function localizedHref(locale: Locale, pathname: string) {
   const basePath = stripLocalePrefix(pathname);
   if (locale === "ko") return basePath;
-  if (!localizedCorePaths.has(basePath)) return basePath;
+  if (!isLocalizedPath(basePath)) return basePath;
   return basePath === "/" ? `/${locale}` : `/${locale}${basePath}`;
+}
+
+export function isLocalizedPath(pathname: string) {
+  const basePath = stripLocalePrefix(pathname);
+  return (
+    localizedCorePaths.has(basePath) ||
+    localizedDynamicPrefixes.some((prefix) => basePath.startsWith(prefix))
+  );
 }
 
 export function localeAlternates(pathname: string) {

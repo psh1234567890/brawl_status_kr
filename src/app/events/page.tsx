@@ -2,40 +2,51 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlImage from "../../components/BrawlImage";
 import PortalLayout, { EmptyState, StatPill } from "../../components/PortalLayout";
+import { localeAlternates, localizedHref, numberLocales, type Locale } from "../../i18n/config";
+import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
 import { getBrawlifyEvents } from "../../server/brawlify";
 import type { BrawlifyEvent } from "../../types/brawlify";
 import { translateMapName, translateModeName } from "../../utils/brawlTranslations";
 
+const koCopy = getCatalogPageMessages("ko").events;
+
 export const metadata: Metadata = {
-  title: "현재 맵 로테이션",
-  description: "Brawlify 공개 API 기반으로 브롤스타즈 현재/예정 이벤트 로테이션을 확인합니다.",
-  alternates: { canonical: "/events" },
+  title: koCopy.metadata.title,
+  description: koCopy.metadata.description,
+  alternates: { canonical: "/events", languages: localeAlternates("/events") },
 };
 
 export default async function EventsPage() {
+  return <EventsPageContent locale="ko" />;
+}
+
+export async function EventsPageContent({ locale }: { locale: Locale }) {
+  const copy = getCatalogPageMessages(locale).events;
   const events = await getBrawlifyEvents().catch(() => ({ active: [], upcoming: [] }));
   const total = events.active.length + events.upcoming.length;
 
   return (
     <PortalLayout
-      title="현재 맵 로테이션"
-      eyebrow="현재 로테이션"
-      description="Brawlify 이벤트 데이터를 기반으로 현재 열려 있는 맵과 예정 맵을 보여줍니다. 저장된 전투 표본이 있는 맵은 맵 추천 페이지에서 우리 DB 기반 승률도 함께 확인할 수 있습니다."
-      actions={<LinkButton href="/meta">DB 추천 보기</LinkButton>}
+      locale={locale}
+      title={copy.title}
+      eyebrow={copy.eyebrow}
+      description={copy.description}
+      actions={<LinkButton href={localizedHref(locale, "/meta")}>{copy.action}</LinkButton>}
     >
       <section className="grid gap-3 sm:grid-cols-3">
-        <StatPill label="현재 이벤트" value={events.active.length} />
-        <StatPill label="예정 이벤트" value={events.upcoming.length} />
-        <StatPill label="전체 슬롯" value={total} />
+        <StatPill label={copy.currentEvents} value={events.active.length} />
+        <StatPill label={copy.upcomingEvents} value={events.upcoming.length} />
+        <StatPill label={copy.totalSlots} value={total} />
       </section>
 
-      <EventSection title="진행 중" events={events.active} />
-      <EventSection title="예정" events={events.upcoming} />
+      <EventSection title={copy.activeSection} events={events.active} locale={locale} />
+      <EventSection title={copy.upcomingSection} events={events.upcoming} locale={locale} />
     </PortalLayout>
   );
 }
 
-function EventSection({ title, events }: { title: string; events: BrawlifyEvent[] }) {
+function EventSection({ title, events, locale }: { title: string; events: BrawlifyEvent[]; locale: Locale }) {
+  const copy = getCatalogPageMessages(locale).events;
   return (
     <section className="flex flex-col gap-4">
       <h2 className="text-2xl font-black text-indigo-950">{title}</h2>
@@ -45,8 +56,8 @@ function EventSection({ title, events }: { title: string; events: BrawlifyEvent[
             const map = event.map;
             const modeName = map?.gameMode?.name ?? event.slot?.name;
             const mapName = map?.name;
-            const displayMode = translateModeName(modeName) || "알 수 없음";
-            const displayMap = translateMapName(mapName) || "알 수 없는 맵";
+            const displayMode = translateModeName(modeName, locale) || copy.unknown;
+            const displayMap = translateMapName(mapName, locale) || copy.unknownMap;
             return (
               <article key={`${title}-${map?.id ?? index}-${event.startTime ?? ""}`} className="overflow-hidden rounded-lg border border-white bg-white shadow-sm">
                 {map?.imageUrl ? (
@@ -69,12 +80,12 @@ function EventSection({ title, events }: { title: string; events: BrawlifyEvent[
                     <h3 className="mt-1 text-xl font-black text-gray-900">{displayMap}</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs font-bold text-gray-500">
-                    <span>시작: {formatDate(event.startTime)}</span>
-                    <span>종료: {formatDate(event.endTime)}</span>
+                    <span>{copy.start}: {formatDate(event.startTime, locale)}</span>
+                    <span>{copy.end}: {formatDate(event.endTime, locale)}</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {map?.id ? <LinkButton href={`/maps/${map.id}`}>맵 상세</LinkButton> : null}
-                    <LinkButton href={`/meta`}>추천 보기</LinkButton>
+                    {map?.id ? <LinkButton href={localizedHref(locale, `/maps/${map.id}`)}>{copy.mapDetail}</LinkButton> : null}
+                    <LinkButton href={localizedHref(locale, "/meta")}>{copy.recommendation}</LinkButton>
                   </div>
                 </div>
               </article>
@@ -82,17 +93,17 @@ function EventSection({ title, events }: { title: string; events: BrawlifyEvent[
           })}
         </div>
       ) : (
-        <EmptyState text="현재 공개 API에서 반환된 이벤트가 없습니다. Brawlify API 응답이 비어 있으면 이 영역도 비어 보입니다." />
+        <EmptyState text={copy.empty} />
       )}
     </section>
   );
 }
 
-function formatDate(value?: string) {
+function formatDate(value: string | undefined, locale: Locale) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("ko-KR", {
+  return new Intl.DateTimeFormat(numberLocales[locale], {
     month: "short",
     day: "numeric",
     hour: "2-digit",

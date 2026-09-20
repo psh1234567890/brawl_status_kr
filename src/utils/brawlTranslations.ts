@@ -14,9 +14,13 @@ import {
   generatedJapaneseModeDisplayDict,
 } from "../constants/generatedBrawlJapaneseTranslations";
 import {
+  generatedAdditionalAbilityByIdDicts,
   generatedAdditionalBrawlerDicts,
+  generatedAdditionalBrawlerDescriptionDicts,
   generatedAdditionalMapDicts,
   generatedAdditionalModeDicts,
+  generatedAdditionalModeDescriptionDicts,
+  generatedAdditionalSkinByIdDicts,
 } from "../constants/generatedBrawlAdditionalTranslations";
 import { numberLocales, type Locale } from "../i18n/config";
 
@@ -107,6 +111,84 @@ const brawlerClassNameDict: Record<string, string> = {
   Support: "서포터",
   Tank: "탱커",
   Unknown: "알 수 없음",
+};
+
+const rarityNamesByLocale: Partial<Record<Locale, Record<string, string>>> = {
+  en: {
+    Common: "Common", Epic: "Epic", Legendary: "Legendary", Mythic: "Mythic",
+    Rare: "Rare", "Super Rare": "Super Rare", "Ultra Legendary": "Ultra Legendary", Unknown: "Unknown",
+  },
+  ja: {
+    Common: "ノーマル", Epic: "エピック", Legendary: "レジェンド", Mythic: "ミシック",
+    Rare: "レア", "Super Rare": "スーパーレア", "Ultra Legendary": "ウルトラレジェンド", Unknown: "不明",
+  },
+  "pt-br": {
+    Common: "Comum", Epic: "Épico", Legendary: "Lendário", Mythic: "Mítico",
+    Rare: "Raro", "Super Rare": "Super-raro", "Ultra Legendary": "Ultralendário", Unknown: "Desconhecido",
+  },
+  es: {
+    Common: "Común", Epic: "Épico", Legendary: "Legendario", Mythic: "Mítico",
+    Rare: "Raro", "Super Rare": "Superraro", "Ultra Legendary": "Ultralegendario", Unknown: "Desconocido",
+  },
+  tr: {
+    Common: "Yaygın", Epic: "Epik", Legendary: "Efsanevi", Mythic: "Mitik",
+    Rare: "Nadir", "Super Rare": "Süper Nadir", "Ultra Legendary": "Ultra Efsanevi", Unknown: "Bilinmiyor",
+  },
+  de: {
+    Common: "Gewöhnlich", Epic: "Episch", Legendary: "Legendär", Mythic: "Mythisch",
+    Rare: "Selten", "Super Rare": "Superselten", "Ultra Legendary": "Ultralegendär", Unknown: "Unbekannt",
+  },
+  fr: {
+    Common: "Commun", Epic: "Épique", Legendary: "Légendaire", Mythic: "Mythique",
+    Rare: "Rare", "Super Rare": "Super rare", "Ultra Legendary": "Ultra légendaire", Unknown: "Inconnu",
+  },
+  it: {
+    Common: "Comune", Epic: "Epico", Legendary: "Leggendario", Mythic: "Mitico",
+    Rare: "Raro", "Super Rare": "Super raro", "Ultra Legendary": "Ultra leggendario", Unknown: "Sconosciuto",
+  },
+  ru: {
+    Common: "Обычный", Epic: "Эпический", Legendary: "Легендарный", Mythic: "Мифический",
+    Rare: "Редкий", "Super Rare": "Сверхредкий", "Ultra Legendary": "Ультралегендарный", Unknown: "Неизвестно",
+  },
+};
+
+const classNamesByLocale: Partial<Record<Locale, Record<string, string>>> = {
+  en: {
+    Artillery: "Artillery", Assassin: "Assassin", Controller: "Controller", "Damage Dealer": "Damage Dealer",
+    Marksman: "Marksman", Support: "Support", Tank: "Tank", Unknown: "Unknown",
+  },
+  ja: {
+    Artillery: "投げ", Assassin: "アサシン", Controller: "コントローラー", "Damage Dealer": "ダメージディーラー",
+    Marksman: "スナイパー", Support: "サポート", Tank: "タンク", Unknown: "不明",
+  },
+  "pt-br": {
+    Artillery: "Artilharia", Assassin: "Assassino", Controller: "Controle", "Damage Dealer": "Dano",
+    Marksman: "Atirador", Support: "Suporte", Tank: "Tanque", Unknown: "Desconhecido",
+  },
+  es: {
+    Artillery: "Artillería", Assassin: "Asesino", Controller: "Control", "Damage Dealer": "Daño",
+    Marksman: "Tirador", Support: "Apoyo", Tank: "Tanque", Unknown: "Desconocido",
+  },
+  tr: {
+    Artillery: "Topçu", Assassin: "Suikastçı", Controller: "Kontrolcü", "Damage Dealer": "Hasar Veren",
+    Marksman: "Nişancı", Support: "Destek", Tank: "Tank", Unknown: "Bilinmiyor",
+  },
+  de: {
+    Artillery: "Artillerie", Assassin: "Assassine", Controller: "Kontrolle", "Damage Dealer": "Schadensausteiler",
+    Marksman: "Scharfschütze", Support: "Unterstützung", Tank: "Tank", Unknown: "Unbekannt",
+  },
+  fr: {
+    Artillery: "Artillerie", Assassin: "Assassin", Controller: "Contrôle", "Damage Dealer": "Dégâts",
+    Marksman: "Tireur", Support: "Soutien", Tank: "Tank", Unknown: "Inconnu",
+  },
+  it: {
+    Artillery: "Artiglieria", Assassin: "Assassino", Controller: "Controllo", "Damage Dealer": "Danno",
+    Marksman: "Tiratore", Support: "Supporto", Tank: "Tank", Unknown: "Sconosciuto",
+  },
+  ru: {
+    Artillery: "Артиллерия", Assassin: "Убийца", Controller: "Контроль", "Damage Dealer": "Урон",
+    Marksman: "Стрелок", Support: "Поддержка", Tank: "Танк", Unknown: "Неизвестно",
+  },
 };
 
 const brawlerNameFallbackDict: Record<string, string> = {
@@ -245,8 +327,14 @@ function formatLocalizedDisplayName(value: string, locale: Locale) {
 export function translateBrawlerDescription(
   name: string | null | undefined,
   fallback: string | null | undefined,
+  locale: Locale = "ko",
 ) {
   const clean = cleanName(name);
+  if (locale === "en") return cleanName(fallback);
+  const localizedDescriptions = generatedAdditionalBrawlerDescriptionDicts[locale];
+  if (localizedDescriptions) {
+    return lookupByName(localizedDescriptions, clean) ?? cleanName(fallback);
+  }
   return (
     lookupByName(generatedBrawlerDescriptionDict, clean) ??
     lookupByName(brawlerDescriptionFallbackDict, clean) ??
@@ -257,18 +345,26 @@ export function translateBrawlerDescription(
 export function translateModeDescription(
   name: string | null | undefined,
   fallback: string | null | undefined,
+  locale: Locale = "ko",
 ) {
   const clean = cleanName(name);
+  if (locale === "en") return cleanName(fallback);
+  const localizedDescriptions = generatedAdditionalModeDescriptionDicts[locale];
+  if (localizedDescriptions) {
+    return lookupByName(localizedDescriptions, clean) ?? cleanName(fallback);
+  }
   return lookupByName(generatedModeDescriptionDict, clean) ?? cleanName(fallback);
 }
 
-export function translateRarityName(name: string | null | undefined) {
+export function translateRarityName(name: string | null | undefined, locale: Locale = "ko") {
   const clean = cleanName(name);
+  if (locale !== "ko") return rarityNamesByLocale[locale]?.[clean] ?? clean;
   return lookupByName(rarityNameDict, clean) ?? clean;
 }
 
-export function translateBrawlerClassName(name: string | null | undefined) {
+export function translateBrawlerClassName(name: string | null | undefined, locale: Locale = "ko") {
   const clean = cleanName(name);
+  if (locale !== "ko") return classNamesByLocale[locale]?.[clean] ?? clean;
   return lookupByName(brawlerClassNameDict, clean) ?? clean;
 }
 
@@ -278,7 +374,12 @@ export function translateAbilityName(
   locale: Locale = "ko",
 ) {
   const clean = cleanName(name);
-  if (locale !== "ko") return clean;
+  if (locale !== "ko") {
+    return formatLocalizedDisplayName(
+      generatedAdditionalAbilityByIdDicts[locale]?.[String(id)] ?? clean,
+      locale,
+    );
+  }
   return (
     (id === undefined ? undefined : generatedAbilityDictById[String(id)]) ??
     lookupByName(generatedAbilityDictByName, clean) ??
@@ -307,7 +408,12 @@ export function translateSkinName(
   locale: Locale = "ko",
 ) {
   const clean = cleanName(name);
-  if (locale !== "ko") return clean;
+  if (locale !== "ko") {
+    return formatLocalizedDisplayName(
+      generatedAdditionalSkinByIdDicts[locale]?.[String(id)] ?? clean,
+      locale,
+    );
+  }
   return (
     (id === undefined ? undefined : generatedSkinNameById[String(id)]) ??
     lookupByName(skinNameFallbackDict, clean) ??

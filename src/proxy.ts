@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isLocale, type Locale } from "./i18n/config";
 
 const localeCookie = "brawl-locale";
 
 function preferredLocale(request: NextRequest) {
   const saved = request.cookies.get(localeCookie)?.value;
-  if (saved === "en" || saved === "ja" || saved === "ko") return saved;
+  if (saved && isLocale(saved)) return saved;
 
   const acceptLanguage = request.headers.get("accept-language")?.toLowerCase() ?? "";
+  if (!acceptLanguage.trim()) return "ko";
   const ordered = acceptLanguage
     .split(",")
     .map((entry) => {
@@ -17,12 +19,26 @@ function preferredLocale(request: NextRequest) {
     .sort((left, right) => right.q - left.q);
 
   for (const entry of ordered) {
-    if (entry.tag === "ja" || entry.tag.startsWith("ja-")) return "ja";
-    if (entry.tag === "en" || entry.tag.startsWith("en-")) return "en";
-    if (entry.tag === "ko" || entry.tag.startsWith("ko-")) return "ko";
+    const locale = mapLanguageTag(entry.tag);
+    if (locale) return locale;
   }
 
-  return "ko";
+  return "en";
+}
+
+function mapLanguageTag(tag: string): Locale | null {
+  const base = tag.split("-")[0];
+  if (base === "pt") return "pt-br";
+  if (base === "ko") return "ko";
+  if (base === "en") return "en";
+  if (base === "ja") return "ja";
+  if (base === "es") return "es";
+  if (base === "tr") return "tr";
+  if (base === "de") return "de";
+  if (base === "fr") return "fr";
+  if (base === "it") return "it";
+  if (base === "ru") return "ru";
+  return null;
 }
 
 export function proxy(request: NextRequest) {

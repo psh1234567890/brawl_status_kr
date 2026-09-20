@@ -11,7 +11,8 @@
     "db:check": "node scripts/check-db.mjs",
     "db:migrate": "node scripts/migrate-db.mjs",
     "translations:update": "node scripts/update-brawl-translations.mjs",
-    "translations:ja:update": "node scripts/update-brawl-japanese-translations.mjs"
+    "translations:ja:update": "node scripts/update-brawl-japanese-translations.mjs",
+    "translations:additional:update": "node scripts/update-brawl-additional-translations.mjs"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

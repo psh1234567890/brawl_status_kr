@@ -1,5 +1,7 @@
 import { rankDict } from "../constants/brawl";
 import { numberLocales, type Locale } from "../i18n/config";
+import { getComponentMessages } from "../i18n/componentMessages";
+import { formatDays, formatDuration } from "../i18n/formatters";
 import type { PlayerData } from "../types/brawl";
 import { getPlayerIconUrl } from "../utils/brawlAssets";
 import BrawlImage from "./BrawlImage";
@@ -19,7 +21,7 @@ export default function PlayerProfile({
   playTime,
   locale = "ko",
 }: PlayerProfileProps) {
-  const copy = getProfileCopy(locale);
+  const copy = getComponentMessages(locale).profile;
   return (
     <section className="mb-4 w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -51,14 +53,14 @@ export default function PlayerProfile({
         <div className="flex flex-wrap gap-2 sm:justify-end">
           <Badge label={copy.currentTrophies} value={playerData.trophies.toLocaleString(numberLocales[locale])} />
           <Badge label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} />
-          {streakCount > 0 ? <Badge label={copy.streak} value={copy.days(streakCount)} tone="orange" /> : null}
+          {streakCount > 0 ? <Badge label={copy.streak} value={formatDays(locale, streakCount)} tone="orange" /> : null}
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
         <Stat
           label={copy.playEstimate}
-          value={copy.duration(playTime.hours, playTime.minutes)}
+          value={formatDuration(locale, playTime.hours, playTime.minutes)}
           title={copy.playEstimateTitle}
           wide
         />
@@ -81,31 +83,9 @@ export default function PlayerProfile({
 
 function formatRank(rank: string | undefined, elo: number | undefined, locale: Locale) {
   const displayRank = locale === "ko" && rank ? rankDict[rank] ?? rank : rank;
-  return displayRank ? `${displayRank} (${elo ?? 0})` : getProfileCopy(locale).noRecord;
-}
-
-function getProfileCopy(locale: Locale) {
-  if (locale === "en") return {
-    profileIcon: "Profile icon", club: "Club", noClub: "No club", currentTrophies: "Current trophies", highest: "Highest", streak: "Play streak",
-    playEstimate: "Unofficial playtime estimate", playEstimateTitle: "A rough estimate based on wins and experience level, not actual playtime.", expLevel: "Experience level",
-    victories3v3: "3v3 wins", solo: "Solo Showdown", duo: "Duo Showdown", allTimeRanked: "All-time Ranked", currentRanked: "Current Ranked",
-    roboRumble: "Robo Rumble", bigBrawler: "Big Brawler", championship: "Championship qualifier", qualified: "Qualified", notQualified: "Not qualified", noRecord: "No record",
-    days: (n: number) => `${n} days`, duration: (h: number, m: number) => `${h}h ${m}m`,
-  } as const;
-  if (locale === "ja") return {
-    profileIcon: "プロフィールアイコン", club: "クラブ", noClub: "クラブ未所属", currentTrophies: "現在のトロフィー", highest: "最高", streak: "連続プレイ",
-    playEstimate: "非公式プレイ時間推定", playEstimateTitle: "勝利数と経験値レベルから算出した概算で、実際のプレイ時間ではありません。", expLevel: "経験値レベル",
-    victories3v3: "3v3勝利", solo: "ソロショーダウン", duo: "デュオショーダウン", allTimeRanked: "歴代ランク", currentRanked: "現在のランク",
-    roboRumble: "ロボランブル", bigBrawler: "ビッグブロウラー", championship: "チャンピオンシップ予選", qualified: "通過", notQualified: "未通過", noRecord: "記録なし",
-    days: (n: number) => `${n}日`, duration: (h: number, m: number) => `${h}時間 ${m}分`,
-  } as const;
-  return {
-    profileIcon: "프로필 아이콘", club: "클럽", noClub: "소속 클럽 없음", currentTrophies: "현재 트로피", highest: "최고", streak: "연속 플레이",
-    playEstimate: "비공식 플레이 추정", playEstimateTitle: "승리 수와 경험치 레벨을 바탕으로 계산한 단순 추정치이며 실제 플레이 시간이 아닙니다.", expLevel: "경험치 레벨",
-    victories3v3: "3v3 승리", solo: "솔로 쇼다운", duo: "듀오 쇼다운", allTimeRanked: "역대 경쟁전", currentRanked: "현재 경쟁전",
-    roboRumble: "로보 럼블", bigBrawler: "빅 브롤러", championship: "챔피언십 예선", qualified: "통과", notQualified: "미통과", noRecord: "기록 없음",
-    days: (n: number) => `${n}일`, duration: (h: number, m: number) => `${h}시간 ${m}분`,
-  } as const;
+  return displayRank
+    ? `${displayRank} (${elo ?? 0})`
+    : getComponentMessages(locale).profile.noRecord;
 }
 
 function Badge({

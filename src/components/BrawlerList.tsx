@@ -1,5 +1,11 @@
 import type { Brawler, PlayerSkinInventoryResponse, PlayerSkinInventoryStatus } from "../types/brawl";
 import { numberLocales, type Locale } from "../i18n/config";
+import { getComponentMessages } from "../i18n/componentMessages";
+import {
+  formatBrawlerDetailsAria,
+  formatBrawlerListDescription,
+  formatOwnedCount,
+} from "../i18n/formatters";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
 
@@ -20,7 +26,7 @@ export default function BrawlerList({
   onSelectBrawler,
   locale = "ko",
 }: BrawlerListProps) {
-  const copy = getBrawlerListCopy(locale);
+  const copy = getComponentMessages(locale).brawlerList;
   const isSkinLoading = skinInventoryStatus === "loading" && !skinInventory;
   const skinStatusLabel =
     skinInventoryStatus === "loading"
@@ -39,7 +45,7 @@ export default function BrawlerList({
             {copy.title}
           </h2>
           <p className="mt-1 text-sm font-bold text-slate-500">
-            {copy.description(brawlers.length)}
+            {formatBrawlerListDescription(locale, brawlers.length)}
           </p>
         </div>
         <span
@@ -62,7 +68,7 @@ export default function BrawlerList({
                 type="button"
                 key={brawler.id}
                 onClick={() => onSelectBrawler(brawler)}
-                aria-label={copy.detailsAria(displayName)}
+                aria-label={formatBrawlerDetailsAria(locale, displayName)}
                 className="group flex min-h-[238px] flex-col rounded-lg border border-slate-200 bg-white p-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -92,7 +98,7 @@ export default function BrawlerList({
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
                   <div className="flex items-center justify-between gap-2 text-xs font-black text-slate-700">
                     <span>{copy.skins}</span>
-                    <span>{isSkinLoading ? copy.loading : copy.count(skinCount)}</span>
+                    <span>{isSkinLoading ? copy.loading : formatOwnedCount(locale, skinCount)}</span>
                   </div>
                 </div>
 
@@ -114,27 +120,6 @@ export default function BrawlerList({
       </div>
     </section>
   );
-}
-
-function getBrawlerListCopy(locale: Locale) {
-  if (locale === "en") return {
-    title: "Owned Brawlers", skinLoading: "Loading owned skins", skinError: "Some owned skins unavailable", skinReady: "Owned skins loaded",
-    clickForDetails: "Select a brawler for details", skins: "Skins", loading: "Loading", trophies: "Trophies", highest: "Highest",
-    description: (count: number) => `${count} owned. Select a card to view skins, gadgets, Star Powers, and gears.`,
-    detailsAria: (name: string) => `View ${name} details`, count: (count: number) => `${count}`,
-  } as const;
-  if (locale === "ja") return {
-    title: "所持ブロウラー", skinLoading: "所持スキン取得中", skinError: "一部の所持スキンを表示できません", skinReady: "所持スキン取得完了",
-    clickForDetails: "ブロウラーを選択して詳細を確認", skins: "スキン", loading: "取得中", trophies: "トロフィー", highest: "最高",
-    description: (count: number) => `${count}体所持。カードを選ぶとスキン、ガジェット、スターパワー、ギアを確認できます。`,
-    detailsAria: (name: string) => `${name}の詳細を見る`, count: (count: number) => `${count}個`,
-  } as const;
-  return {
-    title: "보유 브롤러", skinLoading: "보유 스킨 조회 중", skinError: "보유 스킨 일부 미표시", skinReady: "보유 스킨 조회 완료",
-    clickForDetails: "브롤러 클릭 후 상세 확인", skins: "스킨", loading: "조회 중", trophies: "트로피", highest: "최고",
-    description: (count: number) => `${count}개 보유. 카드를 누르면 스킨, 가젯, 스타파워, 기어를 확인할 수 있습니다.`,
-    detailsAria: (name: string) => `${name} 상세 보기`, count: (count: number) => `${count}개`,
-  } as const;
 }
 
 function SmallStat({ label, value }: { label: string; value: number }) {

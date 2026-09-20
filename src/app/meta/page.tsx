@@ -6,7 +6,19 @@ import BrawlImage from "../../components/BrawlImage";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import { mapToModeDict } from "../../constants/brawl";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
-import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
+import { localizedHref, type Locale } from "../../i18n/config";
+import {
+  formatConfidenceOnly,
+  formatMetaAllCandidates,
+  formatMetaCandidateCount,
+  formatMetaMinimumOption,
+  formatMetaMinimumSample,
+  formatMetaShowAll,
+  formatMetaTopWinRate,
+  formatMetaWinRateSample,
+  formatOtherLabel,
+  formatSamples,
+} from "../../i18n/formatters";
 import { getMessages } from "../../i18n/messages";
 import { translateBrawlerName, translateMapName, translateModeName } from "../../utils/brawlTranslations";
 
@@ -86,9 +98,9 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   };
   const confidenceFilterLabels: Record<ConfidenceFilter, string> = {
     ALL: copy.meta.all,
-    HIGH: locale === "ko" ? "높음만" : locale === "ja" ? "高のみ" : "High only",
-    MEDIUM: locale === "ko" ? "보통만" : locale === "ja" ? "中のみ" : "Medium only",
-    LOW: locale === "ko" ? "낮음만" : locale === "ja" ? "低のみ" : "Low only",
+    HIGH: formatConfidenceOnly(locale, "high", copy.meta.high),
+    MEDIUM: formatConfidenceOnly(locale, "medium", copy.meta.medium),
+    LOW: formatConfidenceOnly(locale, "low", copy.meta.low),
   };
   const sortModeLabels: Record<MetaSortMode, string> = {
     SCORE: copy.meta.scoreSort,
@@ -200,7 +212,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
             <section className="w-full max-w-3xl rounded-3xl border border-white bg-white/80 p-8 shadow-2xl backdrop-blur-md">
               <h2 className="mb-6 flex flex-col gap-2 border-b-2 border-indigo-100 pb-4 text-2xl font-black sm:flex-row sm:items-end sm:justify-between">
                 <span>{translateMapName(selectedMap, locale)} {copy.meta.recommendation}</span>
-                <span className="text-sm font-bold text-gray-400">{formatMinimumSample(locale, minPlays)}</span>
+                <span className="text-sm font-bold text-gray-400">{formatMetaMinimumSample(locale, minPlays)}</span>
               </h2>
 
               <div className="mb-6 grid gap-3 sm:grid-cols-3">
@@ -214,7 +226,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                     className="w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm font-black text-indigo-950 outline-none focus:border-indigo-400"
                   >
                     {MIN_PLAY_OPTIONS.map((value) => (
-                      <option key={value} value={value}>{formatMinimumOption(locale, value)}</option>
+                      <option key={value} value={value}>{formatMetaMinimumOption(locale, value)}</option>
                     ))}
                   </select>
                 </FilterField>
@@ -251,14 +263,14 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
               <div className="mb-6 grid gap-3 sm:grid-cols-3">
                 <SummaryStat
                   label={copy.meta.candidates}
-                  value={formatCandidateCount(locale, filteredCurrentData.length)}
-                  subValue={formatAllCandidateCount(locale, currentData.length)}
+                  value={formatMetaCandidateCount(locale, filteredCurrentData.length)}
+                  subValue={formatMetaAllCandidates(locale, currentData.length)}
                 />
-                <SummaryStat label={copy.meta.aggregatedSamples} value={formatSampleCount(locale, mapSummary.totalSamples)} />
+                <SummaryStat label={copy.meta.aggregatedSamples} value={formatSamples(locale, mapSummary.totalSamples)} />
                 <SummaryStat
                   label={copy.meta.highConfidence}
-                  value={formatCandidateCount(locale, mapSummary.reliableCount)}
-                  subValue={formatTopWinRate(locale, mapSummary.topWinRate)}
+                  value={formatMetaCandidateCount(locale, mapSummary.reliableCount)}
+                  subValue={formatMetaTopWinRate(locale, mapSummary.topWinRate)}
                 />
               </div>
 
@@ -292,7 +304,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                       <div className="flex w-full flex-col gap-3 border-t border-gray-100 pt-3 sm:w-[300px] sm:border-0 sm:pt-0">
                         <div className="flex justify-between gap-4 text-left sm:text-right">
                           <Stat label={copy.common.recommendationScore} value={formatScore(locale, brawler.score)} />
-                          <Stat label={copy.common.winRate} value={formatWinRateSample(locale, brawler.winRate, brawler.plays)} />
+                          <Stat label={copy.common.winRate} value={formatMetaWinRateSample(locale, brawler.winRate, brawler.plays)} />
                         </div>
                         <ConfidenceMeter stat={brawler} label={copy.meta.sampleConfidence} confidenceLabels={confidenceLabels} />
                       </div>
@@ -313,7 +325,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                     onClick={() => setShowAll((current) => !current)}
                     className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
                   >
-                    {formatShowAll(locale, showAll, filteredCurrentData.length)}
+                    {formatMetaShowAll(locale, showAll, filteredCurrentData.length)}
                   </button>
                 </div>
               ) : null}
@@ -424,67 +436,12 @@ const modeKeyByKoreanLabel: Record<string, string> = {
 };
 
 function translateMetaModeLabel(modeName: string, locale: Locale) {
-  if (modeName === "기타") return locale === "ko" ? "기타" : locale === "ja" ? "その他" : "Other";
+  if (modeName === "기타") return formatOtherLabel(locale);
   return translateModeName(modeKeyByKoreanLabel[modeName] ?? modeName, locale);
-}
-
-function formatMinimumSample(locale: Locale, value: number) {
-  if (locale === "ko") return `DB 전체 표본 기준: 최소 ${value}판 이상`;
-  if (locale === "ja") return `DB全体サンプル基準：${value}戦以上`;
-  return `Across all DB samples: at least ${value} battles`;
-}
-
-function formatMinimumOption(locale: Locale, value: number) {
-  if (locale === "ko") return `${value}전 이상`;
-  if (locale === "ja") return `${value}戦以上`;
-  return `${value}+ battles`;
-}
-
-function formatCandidateCount(locale: Locale, value: number) {
-  const formatted = value.toLocaleString(numberLocales[locale]);
-  if (locale === "ko") return `${formatted}명`;
-  if (locale === "ja") return `${formatted}体`;
-  return formatted;
-}
-
-function formatAllCandidateCount(locale: Locale, value: number) {
-  const count = formatCandidateCount(locale, value);
-  if (locale === "ko") return `전체 ${count}`;
-  if (locale === "ja") return `全体 ${count}`;
-  return `${count} total`;
-}
-
-function formatSampleCount(locale: Locale, value: number) {
-  const formatted = value.toLocaleString(numberLocales[locale]);
-  if (locale === "ko") return `${formatted}건`;
-  if (locale === "ja") return `${formatted}件`;
-  return formatted;
-}
-
-function formatTopWinRate(locale: Locale, value: number) {
-  if (locale === "ko") return `최고 승률 ${value}%`;
-  if (locale === "ja") return `最高勝率 ${value}%`;
-  return `Top win rate ${value}%`;
 }
 
 function formatScore(locale: Locale, value: number) {
   if (locale === "ko") return `${value}점`;
   if (locale === "ja") return `${value}点`;
   return String(value);
-}
-
-function formatWinRateSample(locale: Locale, winRate: number, plays: number) {
-  if (locale === "ko") return `${winRate}% (${plays}전)`;
-  if (locale === "ja") return `${winRate}% (${plays}戦)`;
-  return `${winRate}% (${plays} battles)`;
-}
-
-function formatShowAll(locale: Locale, showAll: boolean, count: number) {
-  if (showAll) {
-    return locale === "ko" ? "상위 15개만 보기" : locale === "ja" ? "上位15件のみ表示" : "Show top 15 only";
-  }
-  const formatted = count.toLocaleString(numberLocales[locale]);
-  if (locale === "ko") return `전체 후보 ${formatted}명 보기`;
-  if (locale === "ja") return `候補 ${formatted}体をすべて表示`;
-  return `Show all ${formatted} candidates`;
 }

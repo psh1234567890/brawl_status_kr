@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import { numberLocales, type Locale } from "../i18n/config";
 import type { BattleLogItem, BattleLogResponse, RecentBattleSummary } from "../types/brawl";
 import {
   checkIsFriendly,
@@ -21,13 +22,16 @@ interface BattleLogListProps {
   battleLog: BattleLogResponse;
   summary: RecentBattleSummary;
   onSelectBattle: (match: BattleLogItem) => void;
+  locale?: Locale;
 }
 
 export default function BattleLogList({
   battleLog,
   summary,
   onSelectBattle,
+  locale = "ko",
 }: BattleLogListProps) {
+  const copy = getBattleLogCopy(locale);
   const displayItems = battleLog.items;
   const [resultFilter, setResultFilter] = useState("ALL");
   const [modeFilter, setModeFilter] = useState("ALL");
@@ -49,11 +53,11 @@ export default function BattleLogList({
     }
 
     return {
-      modes: [...modes].sort((left, right) => translateModeName(left).localeCompare(translateModeName(right), "ko-KR")),
-      maps: [...maps].sort((left, right) => translateMapName(left).localeCompare(translateMapName(right), "ko-KR")),
-      brawlers: [...brawlers].sort((left, right) => translateBrawlerName(left).localeCompare(translateBrawlerName(right), "ko-KR")),
+      modes: [...modes].sort((left, right) => translateModeName(left, locale).localeCompare(translateModeName(right, locale), numberLocales[locale])),
+      maps: [...maps].sort((left, right) => translateMapName(left, locale).localeCompare(translateMapName(right, locale), numberLocales[locale])),
+      brawlers: [...brawlers].sort((left, right) => translateBrawlerName(left, locale).localeCompare(translateBrawlerName(right, locale), numberLocales[locale])),
     };
-  }, [displayItems]);
+  }, [displayItems, locale]);
 
   const filteredItems = useMemo(
     () =>
@@ -80,46 +84,46 @@ export default function BattleLogList({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 id="battle-log-title" className="text-lg font-black text-slate-950">
-            전투 기록
+            {copy.title}
           </h2>
           <p className="mt-1 text-sm font-bold text-slate-500">
-            최근 최대 25경기를 표시합니다. 친선 경기는 목록에만 표시됩니다.
+            {copy.description}
           </p>
         </div>
         <span className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-600">
-          {filteredItems.length}/{displayItems.length} 표시
+          {filteredItems.length}/{displayItems.length} {copy.shown}
         </span>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <SummaryCell label="승률" value={`${summary.winRate}%`} detail={`${summary.total}전`} />
-        <SummaryCell label="승리" value={`${summary.wins}승`} detail={`${summary.defeats}패 ${summary.draws}무`} />
-        <SummaryCell label="강세 모드" value={translateModeName(summary.bestMode)} detail={summary.maxModeWins > 0 ? `${summary.maxModeWins}승` : "부족"} />
+        <SummaryCell label={copy.winRate} value={`${summary.winRate}%`} detail={formatBattles(locale, summary.total)} />
+        <SummaryCell label={copy.wins} value={formatWins(locale, summary.wins)} detail={formatLossDraw(locale, summary.defeats, summary.draws)} />
+        <SummaryCell label={copy.bestMode} value={translateModeName(summary.bestMode, locale)} detail={summary.maxModeWins > 0 ? formatWins(locale, summary.maxModeWins) : copy.notEnough} />
       </div>
 
       <div className="mt-4 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-4">
-        <FilterSelect label="결과" value={resultFilter} onChange={setResultFilter}>
-          <option value="ALL">전체 결과</option>
-          <option value="victory">승리</option>
-          <option value="defeat">패배</option>
-          <option value="draw">무승부</option>
+        <FilterSelect label={copy.result} value={resultFilter} onChange={setResultFilter}>
+          <option value="ALL">{copy.allResults}</option>
+          <option value="victory">{copy.victory}</option>
+          <option value="defeat">{copy.defeat}</option>
+          <option value="draw">{copy.draw}</option>
         </FilterSelect>
-        <FilterSelect label="모드" value={modeFilter} onChange={setModeFilter}>
-          <option value="ALL">전체 모드</option>
+        <FilterSelect label={copy.mode} value={modeFilter} onChange={setModeFilter}>
+          <option value="ALL">{copy.allModes}</option>
           {filterOptions.modes.map((mode) => (
-            <option key={mode} value={mode}>{translateModeName(mode)}</option>
+            <option key={mode} value={mode}>{translateModeName(mode, locale)}</option>
           ))}
         </FilterSelect>
-        <FilterSelect label="맵" value={mapFilter} onChange={setMapFilter}>
-          <option value="ALL">전체 맵</option>
+        <FilterSelect label={copy.map} value={mapFilter} onChange={setMapFilter}>
+          <option value="ALL">{copy.allMaps}</option>
           {filterOptions.maps.map((map) => (
-            <option key={map} value={map}>{translateMapName(map)}</option>
+            <option key={map} value={map}>{translateMapName(map, locale)}</option>
           ))}
         </FilterSelect>
-        <FilterSelect label="브롤러" value={brawlerFilter} onChange={setBrawlerFilter}>
-          <option value="ALL">전체 브롤러</option>
+        <FilterSelect label={copy.brawler} value={brawlerFilter} onChange={setBrawlerFilter}>
+          <option value="ALL">{copy.allBrawlers}</option>
           {filterOptions.brawlers.map((brawler) => (
-            <option key={brawler} value={brawler}>{translateBrawlerName(brawler)}</option>
+            <option key={brawler} value={brawler}>{translateBrawlerName(brawler, locale)}</option>
           ))}
         </FilterSelect>
       </div>
@@ -145,22 +149,22 @@ export default function BattleLogList({
               >
                 <span className="min-w-0">
                   <span className="mb-1 flex flex-wrap items-center gap-2">
-                    <BattleTypeBadge friendly={isFriendly} ranked={isRanked} />
-                    <span className="text-xs font-bold text-slate-400">{formatBattleTime(match.battleTime)}</span>
+                    <BattleTypeBadge friendly={isFriendly} ranked={isRanked} locale={locale} />
+                    <span className="text-xs font-bold text-slate-400">{formatBattleTime(match.battleTime, locale)}</span>
                   </span>
                   <span className="block truncate text-base font-black text-slate-950">
-                    {translateModeName(match.event.mode) || "친선"} · {translateMapName(match.event.map) || "친선 경기"}
+                    {translateModeName(match.event.mode, locale) || copy.friendly} · {translateMapName(match.event.map, locale) || copy.friendlyBattle}
                   </span>
                 </span>
                 <span className="text-right">
                   <span className={`block text-xl font-black ${info.resultColor}`}>
-                    {info.resultText}
+                    {formatOutcome(getNormalizedBattleResult(match), locale)}
                     {match.battle.rank ? <span className="ml-1 text-sm">#{match.battle.rank}</span> : null}
                   </span>
                   {match.battle.trophyChange !== undefined && !isRanked && !isFriendly ? (
                     <span className={`mt-1 block text-xs font-black ${match.battle.trophyChange > 0 ? "text-amber-600" : "text-red-600"}`}>
                       {match.battle.trophyChange > 0 ? "+" : ""}
-                      {match.battle.trophyChange} 트로피
+                      {match.battle.trophyChange} {copy.trophies}
                     </span>
                   ) : null}
                 </span>
@@ -169,7 +173,7 @@ export default function BattleLogList({
           })
         ) : (
           <div className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm font-bold text-slate-500">
-            선택한 필터에 맞는 전투 기록이 없습니다.
+            {copy.empty}
           </div>
         )}
       </div>
@@ -198,11 +202,14 @@ function SummaryCell({
 function BattleTypeBadge({
   friendly,
   ranked,
+  locale,
 }: {
   friendly: boolean;
   ranked: boolean;
+  locale: Locale;
 }) {
-  const label = friendly ? "친선" : ranked ? "경쟁전" : "일반";
+  const copy = getBattleLogCopy(locale);
+  const label = friendly ? copy.friendly : ranked ? copy.ranked : copy.normal;
   const className = friendly
     ? "border-amber-200 bg-amber-50 text-amber-700"
     : ranked
@@ -241,13 +248,54 @@ function FilterSelect({
   );
 }
 
-function formatBattleTime(battleTime: string) {
+function formatBattleTime(battleTime: string, locale: Locale) {
   const date = parseBattleTime(battleTime);
-  if (!date) return "시간 정보 없음";
-  return date.toLocaleString("ko-KR", {
+  if (!date) return getBattleLogCopy(locale).noTime;
+  return date.toLocaleString(numberLocales[locale], {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatOutcome(outcome: "victory" | "defeat" | "draw", locale: Locale) {
+  const copy = getBattleLogCopy(locale);
+  return outcome === "victory" ? copy.victory : outcome === "defeat" ? copy.defeat : copy.draw;
+}
+
+function formatBattles(locale: Locale, value: number) {
+  return locale === "ko" ? `${value}전` : locale === "ja" ? `${value}戦` : `${value} battles`;
+}
+
+function formatWins(locale: Locale, value: number) {
+  return locale === "ko" ? `${value}승` : locale === "ja" ? `${value}勝` : `${value} wins`;
+}
+
+function formatLossDraw(locale: Locale, losses: number, draws: number) {
+  return locale === "ko" ? `${losses}패 ${draws}무` : locale === "ja" ? `${losses}敗 ${draws}分` : `${losses}L ${draws}D`;
+}
+
+function getBattleLogCopy(locale: Locale) {
+  if (locale === "en") return {
+    title: "Battle History", description: "Shows up to the latest 25 battles. Friendly battles appear only in the list.", shown: "shown",
+    winRate: "Win rate", wins: "Wins", bestMode: "Best mode", notEnough: "Not enough data", result: "Result", allResults: "All results",
+    victory: "Victory", defeat: "Defeat", draw: "Draw", mode: "Mode", allModes: "All modes", map: "Map", allMaps: "All maps",
+    brawler: "Brawler", allBrawlers: "All brawlers", friendly: "Friendly", friendlyBattle: "Friendly battle", ranked: "Ranked", normal: "Normal",
+    trophies: "trophies", empty: "No battles match the selected filters.", noTime: "Time unavailable",
+  } as const;
+  if (locale === "ja") return {
+    title: "バトル履歴", description: "直近最大25戦を表示します。フレンドバトルは一覧にのみ表示されます。", shown: "表示",
+    winRate: "勝率", wins: "勝利", bestMode: "得意モード", notEnough: "データ不足", result: "結果", allResults: "すべての結果",
+    victory: "勝利", defeat: "敗北", draw: "引き分け", mode: "モード", allModes: "すべてのモード", map: "マップ", allMaps: "すべてのマップ",
+    brawler: "ブロウラー", allBrawlers: "すべてのブロウラー", friendly: "フレンド", friendlyBattle: "フレンドバトル", ranked: "ランク", normal: "通常",
+    trophies: "トロフィー", empty: "選択したフィルターに一致するバトル履歴がありません。", noTime: "時間情報なし",
+  } as const;
+  return {
+    title: "전투 기록", description: "최근 최대 25경기를 표시합니다. 친선 경기는 목록에만 표시됩니다.", shown: "표시",
+    winRate: "승률", wins: "승리", bestMode: "강세 모드", notEnough: "부족", result: "결과", allResults: "전체 결과",
+    victory: "승리", defeat: "패배", draw: "무승부", mode: "모드", allModes: "전체 모드", map: "맵", allMaps: "전체 맵",
+    brawler: "브롤러", allBrawlers: "전체 브롤러", friendly: "친선", friendlyBattle: "친선 경기", ranked: "경쟁전", normal: "일반",
+    trophies: "트로피", empty: "선택한 필터에 맞는 전투 기록이 없습니다.", noTime: "시간 정보 없음",
+  } as const;
 }

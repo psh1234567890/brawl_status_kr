@@ -15,23 +15,32 @@ const siteUrl = "https://www.brawl-o1.site";
 type SitemapEntry = MetadataRoute.Sitemap[number];
 
 const staticRoutes: SitemapEntry[] = [
-  route("", "weekly", 1),
-  route("/meta", "daily", 0.9),
+  localizedRoute("", "weekly", 1),
+  localizedRoute("/meta", "daily", 0.9),
   route("/skins", "monthly", 0.8),
   route("/events", "hourly", 0.7),
   route("/maps", "weekly", 0.7),
   route("/gamemodes", "weekly", 0.6),
   route("/brawlers", "weekly", 0.7),
   route("/clubs", "weekly", 0.5),
-  route("/rankings", "daily", 0.6),
-  route("/teams", "daily", 0.6),
-  route("/counters", "daily", 0.6),
-  route("/status", "daily", 0.4),
+  localizedRoute("/rankings", "daily", 0.6),
+  localizedRoute("/teams", "daily", 0.6),
+  localizedRoute("/counters", "daily", 0.6),
+  localizedRoute("/status", "daily", 0.4),
   route("/methodology", "monthly", 0.5),
   route("/about", "monthly", 0.5),
   route("/privacy", "yearly", 0.4),
   route("/terms", "yearly", 0.4),
   route("/contact", "yearly", 0.4),
+];
+
+const localizedCopies: SitemapEntry[] = [
+  localizedCopy("/en", "weekly", 0.9, ""),
+  localizedCopy("/ja", "weekly", 0.9, ""),
+  ...["/meta", "/rankings", "/teams", "/counters", "/status"].flatMap((path) => [
+    localizedCopy(`/en${path}`, "daily", path === "/meta" ? 0.85 : 0.55, path),
+    localizedCopy(`/ja${path}`, "daily", path === "/meta" ? 0.85 : 0.55, path),
+  ]),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -43,6 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
+    ...localizedCopies,
     ...entriesFromResult(
       brawlersResult,
       selectIndexableBrawlers,
@@ -59,6 +69,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       (item) => route(`/gamemodes/${item.id}`, "weekly", 0.45),
     ),
   ];
+}
+
+function localizedRoute(
+  path: string,
+  changeFrequency: SitemapEntry["changeFrequency"],
+  priority: number,
+): SitemapEntry {
+  return {
+    ...route(path, changeFrequency, priority),
+    alternates: {
+      languages: {
+        "ko-KR": `${siteUrl}${path}`,
+        en: `${siteUrl}/en${path}`,
+        ja: `${siteUrl}/ja${path}`,
+      },
+    },
+  };
+}
+
+function localizedCopy(
+  path: string,
+  changeFrequency: SitemapEntry["changeFrequency"],
+  priority: number,
+  basePath: string,
+): SitemapEntry {
+  return {
+    ...route(path, changeFrequency, priority),
+    alternates: {
+      languages: {
+        "ko-KR": `${siteUrl}${basePath}`,
+        en: `${siteUrl}/en${basePath}`,
+        ja: `${siteUrl}/ja${basePath}`,
+      },
+    },
+  };
 }
 
 function route(

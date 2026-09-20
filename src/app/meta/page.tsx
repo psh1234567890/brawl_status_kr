@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 import { mapToModeDict } from "../../constants/brawl";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
-import { translateBrawlerName, translateMapName } from "../../utils/brawlTranslations";
+import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
+import { getMessages } from "../../i18n/messages";
+import { translateBrawlerName, translateMapName, translateModeName } from "../../utils/brawlTranslations";
 
 const MODE_LIST = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
 const DEFAULT_VISIBLE_COUNT = 15;
@@ -29,7 +32,8 @@ type BrawlerMapStat = {
 
 type MapStatsResponse = Record<string, BrawlerMapStat[]>;
 
-export default function MetaDashboard() {
+export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
+  const copy = getMessages(locale);
   const [data, setData] = useState<MapStatsResponse>({});
   const [selectedMode, setSelectedMode] = useState("젬 그랩");
   const [selectedMap, setSelectedMap] = useState("");
@@ -49,7 +53,9 @@ export default function MetaDashboard() {
         const json = (await response.json().catch(() => ({}))) as MapStatsResponse & {
           error?: string;
         };
-        if (!response.ok) throw new Error(json.error ?? "메타 통계를 불러오지 못했습니다.");
+        if (!response.ok) {
+          throw new Error(locale === "ko" ? json.error ?? copy.meta.error : copy.meta.error);
+        }
 
         const maps = Object.keys(json);
         setData(json);
@@ -62,7 +68,7 @@ export default function MetaDashboard() {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "메타 통계를 불러오지 못했습니다.",
+            : copy.meta.error,
         );
       } finally {
         setLoading(false);
@@ -71,7 +77,24 @@ export default function MetaDashboard() {
 
     void loadMetaStats();
     return () => controller.abort();
-  }, []);
+  }, [copy.meta.error, locale]);
+
+  const confidenceLabels: Record<SampleConfidence, string> = {
+    HIGH: copy.meta.high,
+    MEDIUM: copy.meta.medium,
+    LOW: copy.meta.low,
+  };
+  const confidenceFilterLabels: Record<ConfidenceFilter, string> = {
+    ALL: copy.meta.all,
+    HIGH: locale === "ko" ? "높음만" : locale === "ja" ? "高のみ" : "High only",
+    MEDIUM: locale === "ko" ? "보통만" : locale === "ja" ? "中のみ" : "Medium only",
+    LOW: locale === "ko" ? "낮음만" : locale === "ja" ? "低のみ" : "Low only",
+  };
+  const sortModeLabels: Record<MetaSortMode, string> = {
+    SCORE: copy.meta.scoreSort,
+    WIN_RATE: copy.meta.winRateSort,
+    PLAYS: copy.meta.playsSort,
+  };
 
   const filteredMaps = useMemo(
     () => Object.keys(data).filter((mapName) => getMapMode(mapName) === selectedMode),
@@ -112,17 +135,20 @@ export default function MetaDashboard() {
     <main className="flex min-h-screen flex-col items-center bg-gradient-to-br from-blue-50 to-indigo-100 p-6 sm:p-10">
       <header className="mb-10 text-center">
         <h1 className="mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-4xl font-black text-transparent drop-shadow-sm">
-          맵별 추천 브롤러
+          {copy.meta.title}
         </h1>
-        <p className="font-bold text-gray-500">전체 저장 전투 표본 기반 가중 승률 추천</p>
-        <Link href="/" className="mt-6 inline-block rounded-full border border-indigo-200 bg-white px-6 py-2 font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50">
-          전적 검색으로 돌아가기
-        </Link>
+        <p className="font-bold text-gray-500">{copy.meta.subtitle}</p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <Link href={localizedHref(locale, "/")} className="inline-block rounded-full border border-indigo-200 bg-white px-6 py-2 font-bold text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50">
+            {copy.meta.back}
+          </Link>
+          <LanguageSwitcher locale={locale} />
+        </div>
       </header>
 
       {loading ? (
         <div className="mt-20 rounded-full bg-white px-8 py-4 text-2xl font-black text-indigo-500 shadow-md">
-          메타 통계를 불러오는 중...
+          {copy.meta.loading}
         </div>
       ) : error ? (
         <div className="rounded-lg border-l-4 border-red-500 bg-red-100 px-6 py-4 font-bold text-red-700 shadow-md">
@@ -142,7 +168,7 @@ export default function MetaDashboard() {
                     : "bg-white text-gray-500 hover:bg-gray-100"
                 }`}
               >
-                {modeName}
+                {translateMetaModeLabel(modeName, locale)}
               </button>
             ))}
           </div>
@@ -160,12 +186,12 @@ export default function MetaDashboard() {
                       : "border-gray-200 bg-white/80 text-gray-500 hover:bg-white"
                   }`}
                 >
-                  {translateMapName(mapName)}
+                  {translateMapName(mapName, locale)}
                 </button>
               ))
             ) : (
               <div className="rounded-full border border-dashed border-gray-300 bg-white/40 px-6 py-2 text-sm font-bold text-gray-400">
-                아직 저장된 맵 데이터가 없습니다.
+                {copy.meta.noMaps}
               </div>
             )}
           </div>
@@ -173,12 +199,12 @@ export default function MetaDashboard() {
           {currentData.length ? (
             <section className="w-full max-w-3xl rounded-3xl border border-white bg-white/80 p-8 shadow-2xl backdrop-blur-md">
               <h2 className="mb-6 flex flex-col gap-2 border-b-2 border-indigo-100 pb-4 text-2xl font-black sm:flex-row sm:items-end sm:justify-between">
-                <span>{translateMapName(selectedMap)} 추천</span>
-                <span className="text-sm font-bold text-gray-400">DB 전체 표본 기준: 최소 {minPlays}판 이상</span>
+                <span>{translateMapName(selectedMap, locale)} {copy.meta.recommendation}</span>
+                <span className="text-sm font-bold text-gray-400">{formatMinimumSample(locale, minPlays)}</span>
               </h2>
 
               <div className="mb-6 grid gap-3 sm:grid-cols-3">
-                <FilterField label="최소 표본">
+                <FilterField label={copy.meta.minimumSample}>
                   <select
                     value={minPlays}
                     onChange={(event) => {
@@ -188,11 +214,11 @@ export default function MetaDashboard() {
                     className="w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm font-black text-indigo-950 outline-none focus:border-indigo-400"
                   >
                     {MIN_PLAY_OPTIONS.map((value) => (
-                      <option key={value} value={value}>{value}전 이상</option>
+                      <option key={value} value={value}>{formatMinimumOption(locale, value)}</option>
                     ))}
                   </select>
                 </FilterField>
-                <FilterField label="신뢰도">
+                <FilterField label={copy.meta.confidence}>
                   <select
                     value={confidenceFilter}
                     onChange={(event) => {
@@ -206,7 +232,7 @@ export default function MetaDashboard() {
                     ))}
                   </select>
                 </FilterField>
-                <FilterField label="정렬">
+                <FilterField label={copy.meta.sort}>
                   <select
                     value={sortMode}
                     onChange={(event) => {
@@ -224,22 +250,22 @@ export default function MetaDashboard() {
 
               <div className="mb-6 grid gap-3 sm:grid-cols-3">
                 <SummaryStat
-                  label="추천 후보"
-                  value={`${filteredCurrentData.length.toLocaleString("ko-KR")}명`}
-                  subValue={`전체 ${currentData.length.toLocaleString("ko-KR")}명`}
+                  label={copy.meta.candidates}
+                  value={formatCandidateCount(locale, filteredCurrentData.length)}
+                  subValue={formatAllCandidateCount(locale, currentData.length)}
                 />
-                <SummaryStat label="집계 표본" value={`${mapSummary.totalSamples.toLocaleString("ko-KR")}건`} />
+                <SummaryStat label={copy.meta.aggregatedSamples} value={formatSampleCount(locale, mapSummary.totalSamples)} />
                 <SummaryStat
-                  label="고신뢰 후보"
-                  value={`${mapSummary.reliableCount.toLocaleString("ko-KR")}명`}
-                  subValue={`최고 승률 ${mapSummary.topWinRate}%`}
+                  label={copy.meta.highConfidence}
+                  value={formatCandidateCount(locale, mapSummary.reliableCount)}
+                  subValue={formatTopWinRate(locale, mapSummary.topWinRate)}
                 />
               </div>
 
               {filteredCurrentData.length ? (
                 <div className="flex flex-col gap-4">
                   {visibleData.map((brawler, index) => {
-                  const displayName = translateBrawlerName(brawler.name);
+                  const displayName = translateBrawlerName(brawler.name, locale);
                   const brawlerId =
                     brawler.id ??
                     generatedBrawlerImageIdByName[brawler.name] ??
@@ -265,10 +291,10 @@ export default function MetaDashboard() {
                       </div>
                       <div className="flex w-full flex-col gap-3 border-t border-gray-100 pt-3 sm:w-[300px] sm:border-0 sm:pt-0">
                         <div className="flex justify-between gap-4 text-left sm:text-right">
-                          <Stat label="추천 점수" value={`${brawler.score}점`} />
-                          <Stat label="표본 승률" value={`${brawler.winRate}% (${brawler.plays}전)`} />
+                          <Stat label={copy.common.recommendationScore} value={formatScore(locale, brawler.score)} />
+                          <Stat label={copy.common.winRate} value={formatWinRateSample(locale, brawler.winRate, brawler.plays)} />
                         </div>
-                        <ConfidenceMeter stat={brawler} />
+                        <ConfidenceMeter stat={brawler} label={copy.meta.sampleConfidence} confidenceLabels={confidenceLabels} />
                       </div>
                     </article>
                   );
@@ -276,7 +302,7 @@ export default function MetaDashboard() {
                 </div>
               ) : (
                 <p className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50 px-4 py-8 text-center text-sm font-bold text-indigo-500">
-                  현재 필터 조건에 맞는 추천 후보가 없습니다.
+                  {copy.meta.noCandidates}
                 </p>
               )}
 
@@ -287,14 +313,14 @@ export default function MetaDashboard() {
                     onClick={() => setShowAll((current) => !current)}
                     className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
                   >
-                    {showAll ? "상위 15개만 보기" : `전체 후보 ${filteredCurrentData.length.toLocaleString("ko-KR")}명 보기`}
+                    {formatShowAll(locale, showAll, filteredCurrentData.length)}
                   </button>
                 </div>
               ) : null}
             </section>
           ) : (
             <div className="mt-10 w-full max-w-3xl rounded-full bg-white px-8 py-4 text-center text-xl font-bold text-gray-500 shadow-md">
-              선택한 맵에는 아직 충분한 표본이 없습니다.
+              {copy.meta.insufficient}
             </div>
           )}
         </div>
@@ -335,14 +361,22 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ConfidenceMeter({ stat }: { stat: BrawlerMapStat }) {
-  const label = confidenceLabels[stat.confidence];
+function ConfidenceMeter({
+  stat,
+  label,
+  confidenceLabels,
+}: {
+  stat: BrawlerMapStat;
+  label: string;
+  confidenceLabels: Record<SampleConfidence, string>;
+}) {
+  const confidenceLabel = confidenceLabels[stat.confidence];
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-3">
-        <span className="text-xs font-bold text-gray-500">표본 신뢰도</span>
+        <span className="text-xs font-bold text-gray-500">{label}</span>
         <span className={`rounded-full px-2 py-1 text-[11px] font-black ${confidenceBadgeClasses[stat.confidence]}`}>
-          {label}
+          {confidenceLabel}
         </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-gray-100">
@@ -354,25 +388,6 @@ function ConfidenceMeter({ stat }: { stat: BrawlerMapStat }) {
     </div>
   );
 }
-
-const confidenceLabels: Record<SampleConfidence, string> = {
-  HIGH: "높음",
-  MEDIUM: "보통",
-  LOW: "낮음",
-};
-
-const confidenceFilterLabels: Record<ConfidenceFilter, string> = {
-  ALL: "전체",
-  HIGH: "높음만",
-  MEDIUM: "보통만",
-  LOW: "낮음만",
-};
-
-const sortModeLabels: Record<MetaSortMode, string> = {
-  SCORE: "추천 점수순",
-  WIN_RATE: "승률순",
-  PLAYS: "표본 많은순",
-};
 
 const confidenceBadgeClasses: Record<SampleConfidence, string> = {
   HIGH: "bg-emerald-100 text-emerald-700",
@@ -396,4 +411,80 @@ function compareMetaStat(left: BrawlerMapStat, right: BrawlerMapStat, mode: Meta
   }
 
   return right.score - left.score || right.plays - left.plays || right.winRate - left.winRate;
+}
+
+const modeKeyByKoreanLabel: Record<string, string> = {
+  "젬 그랩": "gemGrab",
+  "브롤 볼": "brawlBall",
+  "하이스트": "heist",
+  "바운티": "bounty",
+  "핫 존": "hotZone",
+  "녹아웃": "knockout",
+  "쇼다운": "soloShowdown",
+};
+
+function translateMetaModeLabel(modeName: string, locale: Locale) {
+  if (modeName === "기타") return locale === "ko" ? "기타" : locale === "ja" ? "その他" : "Other";
+  return translateModeName(modeKeyByKoreanLabel[modeName] ?? modeName, locale);
+}
+
+function formatMinimumSample(locale: Locale, value: number) {
+  if (locale === "ko") return `DB 전체 표본 기준: 최소 ${value}판 이상`;
+  if (locale === "ja") return `DB全体サンプル基準：${value}戦以上`;
+  return `Across all DB samples: at least ${value} battles`;
+}
+
+function formatMinimumOption(locale: Locale, value: number) {
+  if (locale === "ko") return `${value}전 이상`;
+  if (locale === "ja") return `${value}戦以上`;
+  return `${value}+ battles`;
+}
+
+function formatCandidateCount(locale: Locale, value: number) {
+  const formatted = value.toLocaleString(numberLocales[locale]);
+  if (locale === "ko") return `${formatted}명`;
+  if (locale === "ja") return `${formatted}体`;
+  return formatted;
+}
+
+function formatAllCandidateCount(locale: Locale, value: number) {
+  const count = formatCandidateCount(locale, value);
+  if (locale === "ko") return `전체 ${count}`;
+  if (locale === "ja") return `全体 ${count}`;
+  return `${count} total`;
+}
+
+function formatSampleCount(locale: Locale, value: number) {
+  const formatted = value.toLocaleString(numberLocales[locale]);
+  if (locale === "ko") return `${formatted}건`;
+  if (locale === "ja") return `${formatted}件`;
+  return formatted;
+}
+
+function formatTopWinRate(locale: Locale, value: number) {
+  if (locale === "ko") return `최고 승률 ${value}%`;
+  if (locale === "ja") return `最高勝率 ${value}%`;
+  return `Top win rate ${value}%`;
+}
+
+function formatScore(locale: Locale, value: number) {
+  if (locale === "ko") return `${value}점`;
+  if (locale === "ja") return `${value}点`;
+  return String(value);
+}
+
+function formatWinRateSample(locale: Locale, winRate: number, plays: number) {
+  if (locale === "ko") return `${winRate}% (${plays}전)`;
+  if (locale === "ja") return `${winRate}% (${plays}戦)`;
+  return `${winRate}% (${plays} battles)`;
+}
+
+function formatShowAll(locale: Locale, showAll: boolean, count: number) {
+  if (showAll) {
+    return locale === "ko" ? "상위 15개만 보기" : locale === "ja" ? "上位15件のみ表示" : "Show top 15 only";
+  }
+  const formatted = count.toLocaleString(numberLocales[locale]);
+  if (locale === "ko") return `전체 후보 ${formatted}명 보기`;
+  if (locale === "ja") return `候補 ${formatted}体をすべて表示`;
+  return `Show all ${formatted} candidates`;
 }

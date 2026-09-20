@@ -1,4 +1,5 @@
 import type { Brawler, PlayerSkinInventoryResponse, PlayerSkinInventoryStatus } from "../types/brawl";
+import { numberLocales, type Locale } from "../i18n/config";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
 
@@ -8,6 +9,7 @@ interface BrawlerListProps {
   skinInventoryStatus?: PlayerSkinInventoryStatus;
   skinInventoryError?: string;
   onSelectBrawler: (brawler: Brawler) => void;
+  locale?: Locale;
 }
 
 export default function BrawlerList({
@@ -16,26 +18,28 @@ export default function BrawlerList({
   skinInventoryStatus = "idle",
   skinInventoryError = "",
   onSelectBrawler,
+  locale = "ko",
 }: BrawlerListProps) {
+  const copy = getBrawlerListCopy(locale);
   const isSkinLoading = skinInventoryStatus === "loading" && !skinInventory;
   const skinStatusLabel =
     skinInventoryStatus === "loading"
-      ? "보유 스킨 조회 중"
+      ? copy.skinLoading
       : skinInventoryStatus === "error"
-        ? "보유 스킨 일부 미표시"
+        ? copy.skinError
         : skinInventoryStatus === "ready"
-          ? "보유 스킨 조회 완료"
-          : "브롤러 클릭 후 상세 확인";
+          ? copy.skinReady
+          : copy.clickForDetails;
 
   return (
     <section className="w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="brawler-list-title">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 id="brawler-list-title" className="text-lg font-black text-slate-950">
-            보유 브롤러
+            {copy.title}
           </h2>
           <p className="mt-1 text-sm font-bold text-slate-500">
-            {brawlers.length}개 보유. 카드를 누르면 스킨, 가젯, 스타파워, 기어를 확인할 수 있습니다.
+            {copy.description(brawlers.length)}
           </p>
         </div>
         <span
@@ -50,7 +54,7 @@ export default function BrawlerList({
         {[...brawlers]
           .sort((left, right) => right.trophies - left.trophies)
           .map((brawler) => {
-            const displayName = translateBrawlerName(brawler.name);
+            const displayName = translateBrawlerName(brawler.name, locale);
             const skinCount = getSkinCount(brawler, skinInventory);
 
             return (
@@ -58,7 +62,7 @@ export default function BrawlerList({
                 type="button"
                 key={brawler.id}
                 onClick={() => onSelectBrawler(brawler)}
-                aria-label={`${displayName} 상세 보기`}
+                aria-label={copy.detailsAria(displayName)}
                 className="group flex min-h-[238px] flex-col rounded-lg border border-slate-200 bg-white p-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -87,20 +91,20 @@ export default function BrawlerList({
 
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
                   <div className="flex items-center justify-between gap-2 text-xs font-black text-slate-700">
-                    <span>스킨</span>
-                    <span>{isSkinLoading ? "조회 중" : `${skinCount}개`}</span>
+                    <span>{copy.skins}</span>
+                    <span>{isSkinLoading ? copy.loading : copy.count(skinCount)}</span>
                   </div>
                 </div>
 
                 <div className="mt-auto pt-3">
                   <div className="flex items-end justify-between gap-2">
                     <span>
-                      <span className="block text-[11px] font-black text-slate-500">트로피</span>
-                      <span className="block text-lg font-black text-slate-950">{brawler.trophies.toLocaleString("ko-KR")}</span>
+                      <span className="block text-[11px] font-black text-slate-500">{copy.trophies}</span>
+                      <span className="block text-lg font-black text-slate-950">{brawler.trophies.toLocaleString(numberLocales[locale])}</span>
                     </span>
                     <span className="text-right">
-                      <span className="block text-[11px] font-black text-slate-500">최고</span>
-                      <span className="block text-sm font-black text-slate-700">{brawler.highestTrophies.toLocaleString("ko-KR")}</span>
+                      <span className="block text-[11px] font-black text-slate-500">{copy.highest}</span>
+                      <span className="block text-sm font-black text-slate-700">{brawler.highestTrophies.toLocaleString(numberLocales[locale])}</span>
                     </span>
                   </div>
                 </div>
@@ -110,6 +114,27 @@ export default function BrawlerList({
       </div>
     </section>
   );
+}
+
+function getBrawlerListCopy(locale: Locale) {
+  if (locale === "en") return {
+    title: "Owned Brawlers", skinLoading: "Loading owned skins", skinError: "Some owned skins unavailable", skinReady: "Owned skins loaded",
+    clickForDetails: "Select a brawler for details", skins: "Skins", loading: "Loading", trophies: "Trophies", highest: "Highest",
+    description: (count: number) => `${count} owned. Select a card to view skins, gadgets, Star Powers, and gears.`,
+    detailsAria: (name: string) => `View ${name} details`, count: (count: number) => `${count}`,
+  } as const;
+  if (locale === "ja") return {
+    title: "所持ブロウラー", skinLoading: "所持スキン取得中", skinError: "一部の所持スキンを表示できません", skinReady: "所持スキン取得完了",
+    clickForDetails: "ブロウラーを選択して詳細を確認", skins: "スキン", loading: "取得中", trophies: "トロフィー", highest: "最高",
+    description: (count: number) => `${count}体所持。カードを選ぶとスキン、ガジェット、スターパワー、ギアを確認できます。`,
+    detailsAria: (name: string) => `${name}の詳細を見る`, count: (count: number) => `${count}個`,
+  } as const;
+  return {
+    title: "보유 브롤러", skinLoading: "보유 스킨 조회 중", skinError: "보유 스킨 일부 미표시", skinReady: "보유 스킨 조회 완료",
+    clickForDetails: "브롤러 클릭 후 상세 확인", skins: "스킨", loading: "조회 중", trophies: "트로피", highest: "최고",
+    description: (count: number) => `${count}개 보유. 카드를 누르면 스킨, 가젯, 스타파워, 기어를 확인할 수 있습니다.`,
+    detailsAria: (name: string) => `${name} 상세 보기`, count: (count: number) => `${count}개`,
+  } as const;
 }
 
 function SmallStat({ label, value }: { label: string; value: number }) {

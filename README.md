@@ -23,6 +23,7 @@
 - Brawlify CDN 기반 게임 이미지
 - Brawlace 기반 보유 스킨 조회와 Jina Reader fallback
 - 모바일 결과 탭, 최근 검색, 브라우저별 즐겨찾기
+- 핵심 화면의 한국어·영어·일본어 UI와 브라우저 언어 감지 (`/`, `/en`, `/ja`)
 
 ## 화면
 
@@ -99,6 +100,14 @@ npm.cmd run lint
 npm.cmd run test
 npm.cmd run build
 ```
+
+일본어 게임 고유명사 카탈로그를 BrawlAPI 원본에서 다시 생성하려면 다음 명령을 사용합니다.
+
+```powershell
+npm.cmd run translations:ja:update
+```
+
+현재 영어·일본어 1차 지원 범위는 전적 검색, 맵 메타, 팀 조합, 카운터, 랭킹, 수집 현황입니다. 그 밖의 도감·정책 문서는 기존 한국어 페이지를 유지합니다.
 
 CI는 API 키와 운영 DB 없이 lint·test·`npm audit --audit-level=high`·build를 실행하도록 구성돼 있습니다. DB 연동과 라이브 저장 검증은 별도의 승인된 환경이 필요합니다.
 

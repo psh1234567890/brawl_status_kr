@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### Added
+
+- 핵심 화면에 영어(`/en`)·일본어(`/ja`) 로케일 경로와 언어 선택기를 추가하고 첫 방문 시 브라우저 `Accept-Language`를 이용해 영어·일본어 홈으로 안내
+- BrawlAPI의 일본어 게임 로컬라이징 원본에서 브롤러·맵·모드 표시명을 생성하는 `translations:ja:update` 스크립트와 회귀 테스트 추가
+- 한국어·영어·일본어 핵심 URL의 canonical/hreflang 및 sitemap alternate 연결 추가
+
 ### Fixed
 
 - 카운터 집계가 선택 브롤러의 실제 팀 관점을 복원한 뒤 승패를 계산하도록 수정

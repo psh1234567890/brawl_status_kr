@@ -3,6 +3,8 @@ import { connection } from "next/server";
 import { sql } from "drizzle-orm";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
 import { db } from "../../db";
+import { numberLocales, type Locale } from "../../i18n/config";
+import { getMessages } from "../../i18n/messages";
 import { translateBrawlerName, translateMapName } from "../../utils/brawlTranslations";
 
 export const metadata: Metadata = {
@@ -25,8 +27,13 @@ type PopularRow = {
   plays: number | string;
 };
 
-export default async function StatusPage() {
+export default function StatusPage() {
+  return <StatusPageContent locale="ko" />;
+}
+
+export async function StatusPageContent({ locale }: { locale: Locale }) {
   await connection();
+  const copy = getMessages(locale).status;
 
   const [summaryResult, popularMapsResult, popularBrawlersResult] = await Promise.all([
     db.execute<StatusRow>(sql`
@@ -67,22 +74,23 @@ export default async function StatusPage() {
 
   return (
     <PortalLayout
-      title="데이터 수집 현황"
-      eyebrow="데이터 현황"
-      description="사이트 이용자가 플레이어 태그를 검색할 때 저장된 전투 표본 현황입니다. 검색 기반 표본이므로 전체 이용자를 대표하지 않으며, 수집량과 고유 전투 규모를 함께 표시합니다."
+      locale={locale}
+      title={copy.title}
+      eyebrow={copy.eyebrow}
+      description={copy.description}
     >
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-        <StatPill label="저장 전투 행" value={Number(summary.totalBattles).toLocaleString("ko-KR")} />
-        <StatPill label="고유 전투 지문" value={Number(summary.uniqueBattles).toLocaleString("ko-KR")} />
-        <StatPill label="저장된 고유 태그" value={Number(summary.players).toLocaleString("ko-KR")} />
-        <StatPill label="맵" value={Number(summary.maps).toLocaleString("ko-KR")} />
-        <StatPill label="브롤러" value={Number(summary.brawlers).toLocaleString("ko-KR")} />
-        <StatPill label="최근 수집" value={formatDate(summary.latestBattle)} />
+        <StatPill label={copy.totalRows} value={Number(summary.totalBattles).toLocaleString(numberLocales[locale])} />
+        <StatPill label={copy.uniqueBattles} value={Number(summary.uniqueBattles).toLocaleString(numberLocales[locale])} />
+        <StatPill label={copy.uniqueTags} value={Number(summary.players).toLocaleString(numberLocales[locale])} />
+        <StatPill label={copy.maps} value={Number(summary.maps).toLocaleString(numberLocales[locale])} />
+        <StatPill label={copy.brawlers} value={Number(summary.brawlers).toLocaleString(numberLocales[locale])} />
+        <StatPill label={copy.latest} value={formatDate(summary.latestBattle, locale)} />
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
-        <RankingPanel title="많이 수집된 맵" rows={popularMapsResult.rows} translate={translateMapName} />
-        <RankingPanel title="많이 수집된 브롤러" rows={popularBrawlersResult.rows} translate={translateBrawlerName} />
+        <RankingPanel title={copy.popularMaps} rows={popularMapsResult.rows} translate={(name) => translateMapName(name, locale)} locale={locale} battlesLabel={copy.battles} />
+        <RankingPanel title={copy.popularBrawlers} rows={popularBrawlersResult.rows} translate={(name) => translateBrawlerName(name, locale)} locale={locale} battlesLabel={copy.battles} />
       </section>
     </PortalLayout>
   );
@@ -92,10 +100,14 @@ function RankingPanel({
   title,
   rows,
   translate,
+  locale,
+  battlesLabel,
 }: {
   title: string;
   rows: PopularRow[];
   translate: (name: string) => string;
+  locale: Locale;
+  battlesLabel: string;
 }) {
   return (
     <section className="rounded-lg border border-white bg-white p-5 shadow-sm">
@@ -105,7 +117,7 @@ function RankingPanel({
           <div key={row.name} className="flex items-center justify-between rounded-lg bg-indigo-50 p-3">
             <span className="font-black text-gray-800">#{index + 1} {translate(row.name)}</span>
             <span className="text-sm font-black text-indigo-700">
-              {Number(row.plays).toLocaleString("ko-KR")}전
+              {Number(row.plays).toLocaleString(numberLocales[locale])} {battlesLabel}
             </span>
           </div>
         ))}
@@ -114,11 +126,11 @@ function RankingPanel({
   );
 }
 
-function formatDate(value: string | null) {
+function formatDate(value: string | null, locale: Locale) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat("ko-KR", {
+  return new Intl.DateTimeFormat(numberLocales[locale], {
     month: "short",
     day: "numeric",
     hour: "2-digit",

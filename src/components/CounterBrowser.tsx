@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Locale } from "../i18n/config";
+import { getMessages } from "../i18n/messages";
 import type { BrawlifyBrawler } from "../types/brawlify";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 
@@ -12,7 +14,14 @@ type CounterItem = {
   score: number | string;
 };
 
-export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler[] }) {
+export default function CounterBrowser({
+  brawlers,
+  locale = "ko",
+}: {
+  brawlers: BrawlifyBrawler[];
+  locale?: Locale;
+}) {
+  const copy = getMessages(locale);
   const released = brawlers.filter((brawler) => brawler.released !== false);
   const catalogUnavailable = released.length === 0;
   const [selected, setSelected] = useState(released[0]?.name ?? "");
@@ -26,13 +35,15 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
     fetch(`/api/meta/counters?brawler=${encodeURIComponent(selected)}`)
       .then(async (response) => {
         const data = (await response.json().catch(() => ({}))) as { items?: CounterItem[]; error?: string };
-        if (!response.ok) throw new Error(data.error ?? "카운터를 불러오지 못했습니다.");
+        if (!response.ok) {
+          throw new Error(locale === "ko" ? data.error ?? copy.counters.error : copy.counters.error);
+        }
         if (alive) setItems(data.items ?? []);
       })
       .catch((requestError) => {
         if (alive) {
           setItems([]);
-          setError(requestError instanceof Error ? requestError.message : "카운터를 불러오지 못했습니다.");
+          setError(requestError instanceof Error ? requestError.message : copy.counters.error);
         }
       })
       .finally(() => {
@@ -41,7 +52,7 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
     return () => {
       alive = false;
     };
-  }, [selected]);
+  }, [copy.counters.error, locale, selected]);
 
   function selectBrawler(value: string) {
     setLoading(true);
@@ -53,7 +64,7 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
     <div className="flex flex-col gap-5">
       <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
         <label htmlFor="counter-brawler" className="mb-2 block text-xs font-black text-indigo-500">
-          카운터 기준 브롤러
+          {copy.counters.select}
         </label>
         <select
           id="counter-brawler"
@@ -63,7 +74,7 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
         >
           {released.map((brawler) => (
             <option key={brawler.id} value={brawler.name}>
-              {translateBrawlerName(brawler.name)}
+              {translateBrawlerName(brawler.name, locale)}
             </option>
           ))}
         </select>
@@ -71,11 +82,11 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
 
       {catalogUnavailable ? (
         <div role="status" className="rounded-lg border border-dashed border-amber-200 bg-amber-50 p-8 text-center text-sm font-bold text-amber-700">
-          브롤러 목록을 불러오지 못해 카운터를 선택할 수 없습니다. 잠시 후 다시 시도해 주세요.
+          {copy.counters.catalogUnavailable}
         </div>
       ) : loading ? (
         <div className="rounded-lg bg-white p-8 text-center text-lg font-black text-indigo-600 shadow-sm">
-          카운터를 계산하는 중...
+          {copy.counters.loading}
         </div>
       ) : error ? (
         <div role="alert" className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
@@ -87,21 +98,25 @@ export default function CounterBrowser({ brawlers }: { brawlers: BrawlifyBrawler
             <article key={item.brawler} className="rounded-lg border border-white bg-white p-5 shadow-sm">
               <p className="text-xs font-black text-indigo-300">#{index + 1}</p>
               <h2 className="mt-1 text-xl font-black text-gray-900">
-                {translateBrawlerName(item.brawler)}
+                {translateBrawlerName(item.brawler, locale)}
               </h2>
               <p className="mt-3 text-sm font-bold text-gray-500">
-                선택 브롤러를 상대로 {item.winRate}% 승률
+                {locale === "ko"
+                  ? `선택 브롤러를 상대로 ${item.winRate}% 승률`
+                  : locale === "ja"
+                    ? `選択したブロウラーに対して勝率 ${item.winRate}%`
+                    : `${item.winRate}% win rate against the selected brawler`}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-center">
-                <Metric label="추천 점수" value={String(item.score)} />
-                <Metric label="표본" value={`${item.plays}전`} />
+                <Metric label={copy.common.recommendationScore} value={String(item.score)} />
+                <Metric label={copy.common.sample} value={String(item.plays)} />
               </div>
             </article>
           ))}
         </section>
       ) : (
         <div className="rounded-lg border border-dashed border-indigo-200 bg-white/70 p-8 text-center text-sm font-bold text-gray-500">
-          아직 충분한 카운터 표본이 없습니다.
+          {copy.counters.empty}
         </div>
       )}
     </div>

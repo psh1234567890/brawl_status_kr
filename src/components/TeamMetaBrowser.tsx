@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { numberLocales, type Locale } from "../i18n/config";
+import { getMessages } from "../i18n/messages";
 import { translateBrawlerName, translateMapName } from "../utils/brawlTranslations";
 
 type TeamComp = {
@@ -12,7 +14,8 @@ type TeamComp = {
   score: number | string;
 };
 
-export default function TeamMetaBrowser() {
+export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) {
+  const copy = getMessages(locale);
   const [mapName, setMapName] = useState("");
   const [items, setItems] = useState<TeamComp[]>([]);
   const [maps, setMaps] = useState<string[]>([]);
@@ -30,7 +33,9 @@ export default function TeamMetaBrowser() {
           maps?: string[];
           error?: string;
         };
-        if (!response.ok) throw new Error(data.error ?? "팀 조합을 불러오지 못했습니다.");
+        if (!response.ok) {
+          throw new Error(locale === "ko" ? data.error ?? copy.teams.error : copy.teams.error);
+        }
         if (alive) {
           setItems(data.items ?? []);
           setMaps(data.maps ?? []);
@@ -39,7 +44,7 @@ export default function TeamMetaBrowser() {
       .catch((requestError) => {
         if (alive) {
           setItems([]);
-          setError(requestError instanceof Error ? requestError.message : "팀 조합을 불러오지 못했습니다.");
+          setError(requestError instanceof Error ? requestError.message : copy.teams.error);
         }
       })
       .finally(() => {
@@ -48,7 +53,7 @@ export default function TeamMetaBrowser() {
     return () => {
       alive = false;
     };
-  }, [mapName]);
+  }, [copy.teams.error, locale, mapName]);
 
   function selectMap(value: string) {
     setLoading(true);
@@ -57,14 +62,17 @@ export default function TeamMetaBrowser() {
   }
 
   const sortedMaps = [...new Set(maps)].sort((left, right) =>
-    translateMapName(left).localeCompare(translateMapName(right), "ko-KR"),
+    translateMapName(left, locale).localeCompare(
+      translateMapName(right, locale),
+      numberLocales[locale],
+    ),
   );
 
   return (
     <div className="flex flex-col gap-5">
       <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
         <label htmlFor="team-meta-map" className="mb-2 block text-xs font-black text-indigo-500">
-          맵 선택
+          {copy.teams.mapSelect}
         </label>
         <select
           id="team-meta-map"
@@ -72,16 +80,16 @@ export default function TeamMetaBrowser() {
           onChange={(event) => selectMap(event.target.value)}
           className="w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400 sm:max-w-sm"
         >
-          <option value="">전체 맵</option>
+          <option value="">{copy.teams.allMaps}</option>
           {sortedMaps.map((map) => (
-            <option key={map} value={map}>{translateMapName(map)}</option>
+            <option key={map} value={map}>{translateMapName(map, locale)}</option>
           ))}
         </select>
       </section>
 
       {loading ? (
         <div className="rounded-lg bg-white p-8 text-center text-lg font-black text-indigo-600 shadow-sm">
-          팀 조합을 계산하는 중...
+          {copy.teams.loading}
         </div>
       ) : error ? (
         <div role="alert" className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
@@ -91,27 +99,27 @@ export default function TeamMetaBrowser() {
         <section className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
             <article key={`${item.map}-${item.team}`} className="rounded-lg border border-white bg-white p-5 shadow-sm">
-              <p className="text-xs font-black text-indigo-500">{translateMapName(item.map)}</p>
-              <h2 className="mt-1 text-xl font-black text-gray-900">{translateTeamName(item.team)}</h2>
+              <p className="text-xs font-black text-indigo-500">{translateMapName(item.map, locale)}</p>
+              <h2 className="mt-1 text-xl font-black text-gray-900">{translateTeamName(item.team, locale)}</h2>
               <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                <Metric label="추천 점수" value={String(item.score)} />
-                <Metric label="승률" value={`${item.winRate}%`} />
-                <Metric label="표본" value={`${item.plays}전`} />
+                <Metric label={copy.common.recommendationScore} value={String(item.score)} />
+                <Metric label={copy.common.winRate} value={`${item.winRate}%`} />
+                <Metric label={copy.common.sample} value={String(item.plays)} />
               </div>
             </article>
           ))}
         </section>
       ) : (
         <div className="rounded-lg border border-dashed border-indigo-200 bg-white/70 p-8 text-center text-sm font-bold text-gray-500">
-          아직 충분한 팀 조합 표본이 없습니다.
+          {copy.teams.empty}
         </div>
       )}
     </div>
   );
 }
 
-function translateTeamName(team: string) {
-  return team.split(" + ").map((name) => translateBrawlerName(name)).join(" + ");
+function translateTeamName(team: string, locale: Locale) {
+  return team.split(" + ").map((name) => translateBrawlerName(name, locale)).join(" + ");
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

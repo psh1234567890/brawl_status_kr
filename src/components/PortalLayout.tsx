@@ -1,5 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { localizedHref, type Locale } from "../i18n/config";
+import { getMessages } from "../i18n/messages";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 interface PortalLayoutProps {
   title: string;
@@ -7,22 +10,23 @@ interface PortalLayoutProps {
   description?: string;
   children: ReactNode;
   actions?: ReactNode;
+  locale?: Locale;
 }
 
 const navItems = [
-  { href: "/", label: "전적 검색" },
-  { href: "/events", label: "로테이션" },
-  { href: "/meta", label: "맵 추천" },
-  { href: "/maps", label: "맵 도감" },
-  { href: "/gamemodes", label: "모드" },
-  { href: "/brawlers", label: "브롤러" },
-  { href: "/skins", label: "스킨" },
-  { href: "/clubs", label: "클럽" },
-  { href: "/rankings", label: "랭킹" },
-  { href: "/teams", label: "팀 조합" },
-  { href: "/counters", label: "카운터" },
-  { href: "/status", label: "수집 현황" },
-];
+  { href: "/", key: "home" },
+  { href: "/events", key: "events" },
+  { href: "/meta", key: "meta" },
+  { href: "/maps", key: "maps" },
+  { href: "/gamemodes", key: "modes" },
+  { href: "/brawlers", key: "brawlers" },
+  { href: "/skins", key: "skins" },
+  { href: "/clubs", key: "clubs" },
+  { href: "/rankings", key: "rankings" },
+  { href: "/teams", key: "teams" },
+  { href: "/counters", key: "counters" },
+  { href: "/status", key: "status" },
+] as const;
 
 export default function PortalLayout({
   title,
@@ -30,19 +34,22 @@ export default function PortalLayout({
   description,
   children,
   actions,
+  locale = "ko",
 }: PortalLayoutProps) {
+  const copy = getMessages(locale).common;
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8 sm:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
         <header className="flex flex-col gap-6">
-          <nav className="flex flex-wrap gap-2" aria-label="주요 기능">
+          <nav className="flex flex-wrap gap-2" aria-label={copy.mainNavigation}>
             {navItems.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                href={localizedHref(locale, item.href)}
                 className="rounded-full border border-indigo-100 bg-white px-4 py-2 text-sm font-black text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
               >
-                {item.label}
+                {copy[item.key]}
               </Link>
             ))}
           </nav>
@@ -60,14 +67,17 @@ export default function PortalLayout({
                 </p>
               ) : null}
             </div>
-            {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {actions}
+              <LanguageSwitcher locale={locale} />
+            </div>
           </div>
         </header>
         <AdSlot />
         {children}
         <footer className="flex flex-col justify-between gap-3 border-t border-indigo-100 py-6 text-xs font-bold text-gray-500 sm:flex-row sm:items-center">
           <p>
-            이 자료는 비공식이며 Supercell의 승인을 받지 않았습니다.{" "}
+            {copy.fanDisclaimer}{" "}
             <a
               href="https://supercell.com/en/fan-content-policy/"
               target="_blank"
@@ -77,12 +87,12 @@ export default function PortalLayout({
               Fan Content Policy
             </a>
           </p>
-          <nav className="flex flex-wrap gap-3" aria-label="프로젝트 정보">
+          <nav className="flex flex-wrap gap-3" aria-label={copy.projectInfo}>
             <Link href="/methodology" className="hover:text-indigo-700 hover:underline">
-              데이터 산정 방식
+              {copy.methodology}
             </Link>
             <Link href="/privacy" className="hover:text-indigo-700 hover:underline">
-              개인정보처리방침
+              {copy.privacy}
             </Link>
             <a
               href="https://github.com/psh1234567890/brawl_status_kr"
@@ -90,7 +100,7 @@ export default function PortalLayout({
               rel="noopener noreferrer"
               className="hover:text-indigo-700 hover:underline"
             >
-              오픈소스·기여하기
+              {copy.openSource}
             </a>
           </nav>
         </footer>

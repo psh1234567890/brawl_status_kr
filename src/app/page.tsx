@@ -5,9 +5,12 @@ import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
 import { usePlayerSearch } from "../hooks/usePlayerSearch";
+import { localizedHref, numberLocales, type Locale } from "../i18n/config";
+import { getMessages } from "../i18n/messages";
 import type {
   BattleLogItem,
   Brawler,
@@ -29,32 +32,11 @@ const BrawlerDetailsModal = dynamic(() => import("../components/BrawlerDetailsMo
 
 type ResultPanel = "overview" | "matches" | "brawlers" | "history";
 
-const RESULT_TABS: { id: ResultPanel; label: string }[] = [
-  { id: "overview", label: "요약" },
-  { id: "matches", label: "전투" },
-  { id: "brawlers", label: "브롤러" },
-  { id: "history", label: "누적" },
-];
+const RESULT_TAB_IDS: ResultPanel[] = ["overview", "matches", "brawlers", "history"];
 
-const PRIMARY_LINKS = [
-  { href: "/meta", label: "맵 추천", description: "DB 전체 전투 데이터 기반" },
-  { href: "/skins", label: "스킨 카탈로그", description: "브롤러별 전체 스킨 보기" },
-];
-
-const UTILITY_LINKS = [
-  ["/events", "로테이션"],
-  ["/maps", "맵"],
-  ["/gamemodes", "모드"],
-  ["/brawlers", "브롤러"],
-  ["/clubs", "클럽"],
-  ["/rankings", "랭킹"],
-  ["/teams", "팀 조합"],
-  ["/counters", "카운터"],
-  ["/status", "수집 현황"],
-] as const;
-
-export default function Home() {
-  const search = usePlayerSearch();
+export default function Home({ locale = "ko" }: { locale?: Locale }) {
+  const copy = getMessages(locale);
+  const search = usePlayerSearch(locale);
   const [activePanel, setActivePanel] = useState<ResultPanel>("overview");
   const [selectedBrawler, setSelectedBrawler] = useState<Brawler | null>(null);
   const [selectedBattle, setSelectedBattle] = useState<BattleLogItem | null>(null);
@@ -100,6 +82,22 @@ export default function Home() {
   const isFavorite = normalizedCurrentTag
     ? search.favoriteSearches.includes(normalizedCurrentTag)
     : false;
+  const resultTabs = RESULT_TAB_IDS.map((id) => ({ id, label: copy.home.tabs[id] }));
+  const primaryLinks = [
+    { href: "/meta", label: copy.common.meta, description: copy.home.mapMetaDescription },
+    { href: "/skins", label: copy.home.skinCatalog, description: copy.home.skinCatalogDescription },
+  ];
+  const utilityLinks = [
+    ["/events", copy.common.events],
+    ["/maps", copy.common.maps],
+    ["/gamemodes", copy.common.modes],
+    ["/brawlers", copy.common.brawlers],
+    ["/clubs", copy.common.clubs],
+    ["/rankings", copy.common.rankings],
+    ["/teams", copy.common.teams],
+    ["/counters", copy.common.counters],
+    ["/status", copy.common.status],
+  ] as const;
 
   function runSearch(targetTag?: string) {
     setActivePanel("overview");
@@ -111,29 +109,32 @@ export default function Home() {
       <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
         <header className="sticky top-0 z-30 -mx-4 border-b border-slate-200/80 bg-[#f6f7fb]/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-5">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/" className="min-w-0" aria-label="홈으로 이동">
+            <Link href={localizedHref(locale, "/")} className="min-w-0" aria-label={copy.home.homeAria}>
               <h1 className="block text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
                 Brawl Status KR
               </h1>
               <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
-                전투 기록, 브롤러 보유 현황, DB 기반 추천
+                {copy.home.brandSubtitle}
               </span>
             </Link>
-            <nav className="hidden items-center gap-2 md:flex" aria-label="주요 기능">
-              {PRIMARY_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-800 shadow-sm transition-colors hover:border-blue-300 hover:text-blue-700"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+            <div className="flex items-center gap-2">
+              <nav className="hidden items-center gap-2 md:flex" aria-label={copy.common.mainNavigation}>
+                {primaryLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={localizedHref(locale, link.href)}
+                    className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-800 shadow-sm transition-colors hover:border-blue-300 hover:text-blue-700"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+              <LanguageSwitcher locale={locale} />
+            </div>
           </div>
         </header>
 
-        <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label="플레이어 검색">
+        <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label={copy.home.playerSearchAria}>
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
               <label className="min-w-0 flex-1">
@@ -147,8 +148,8 @@ export default function Home() {
                   onKeyDown={(event) => {
                     if (event.key === "Enter") runSearch();
                   }}
-                  placeholder="예: 9C82J8YPP"
-                  aria-label="플레이어 태그"
+                  placeholder={copy.home.playerTagPlaceholder}
+                  aria-label={copy.home.playerTag}
                   className="mt-2 h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-base font-black text-slate-950 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 />
               </label>
@@ -158,16 +159,16 @@ export default function Home() {
                 disabled={search.loading}
                 className="h-12 rounded-lg bg-blue-600 px-6 text-base font-black text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 sm:min-w-32"
               >
-                {search.loading ? "검색 중" : "검색"}
+                {search.loading ? copy.home.searching : copy.home.search}
               </button>
             </div>
 
             <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
               <p className="text-lg font-black text-blue-900 sm:text-2xl">
-                25경기마다 검색하는 것을 권장합니다
+                {copy.home.searchEvery25Title}
               </p>
               <p className="mt-1 text-sm font-bold leading-6 text-blue-700">
-                공식 전투 기록은 최근 최대 25경기만 제공됩니다. 자주 검색할수록 누적 DB 통계와 맵 추천이 더 정확해집니다.
+                {copy.home.searchEvery25Body}
               </p>
             </div>
 
@@ -178,38 +179,40 @@ export default function Home() {
                   onClick={() => search.toggleFavorite(search.playerData?.tag)}
                   className="min-h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-800 transition-colors hover:border-blue-300 hover:text-blue-700"
                 >
-                  {isFavorite ? "즐겨찾기 해제" : "즐겨찾기 추가"}
+                  {isFavorite ? copy.home.removeFavorite : copy.home.addFavorite}
                 </button>
                 <span className="text-xs font-bold text-slate-500">
-                  현재 태그 {normalizedCurrentTag}
+                  {copy.home.currentTag} {normalizedCurrentTag}
                 </span>
               </div>
             ) : null}
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <SearchChipGroup
-                label="즐겨찾기"
-                emptyLabel="아직 즐겨찾기가 없습니다"
+                label={copy.home.favorites}
+                emptyLabel={copy.home.noFavorites}
                 tags={search.favoriteSearches}
                 onSearch={runSearch}
+                locale={locale}
                 strong
               />
               <SearchChipGroup
-                label="최근 검색"
-                emptyLabel="검색 후 자동으로 저장됩니다"
+                label={copy.home.recentSearches}
+                emptyLabel={copy.home.recentSearchesEmpty}
                 tags={search.recentSearches}
                 onSearch={runSearch}
+                locale={locale}
               />
             </div>
           </div>
 
           <aside className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-black text-slate-950">바로가기</h2>
+            <h2 className="text-sm font-black text-slate-950">{copy.home.shortcuts}</h2>
             <div className="mt-3 grid gap-2">
-              {PRIMARY_LINKS.map((link) => (
+              {primaryLinks.map((link) => (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={localizedHref(locale, link.href)}
                   className="rounded-lg border border-slate-200 px-3 py-3 transition-colors hover:border-blue-300 hover:bg-blue-50"
                 >
                   <span className="block text-sm font-black text-slate-900">{link.label}</span>
@@ -217,11 +220,11 @@ export default function Home() {
                 </Link>
               ))}
             </div>
-            <nav className="mt-4 flex flex-wrap gap-2" aria-label="확장 기능">
-              {UTILITY_LINKS.map(([href, label]) => (
+            <nav className="mt-4 flex flex-wrap gap-2" aria-label={copy.home.extendedFeatures}>
+              {utilityLinks.map(([href, label]) => (
                 <Link
                   key={href}
-                  href={href}
+                  href={localizedHref(locale, href)}
                   className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 transition-colors hover:border-blue-300 hover:bg-white hover:text-blue-700"
                 >
                   {label}
@@ -235,18 +238,19 @@ export default function Home() {
         {search.notice ? <Message text={search.notice} tone="notice" /> : null}
 
         {search.playerData ? (
-          <section className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label="검색 결과">
+          <section className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label={copy.home.results}>
             <div className="min-w-0">
               <PlayerProfile
                 playerData={search.playerData}
                 nameColor={nameColor}
                 streakCount={summary.streakCount}
                 playTime={playTime}
+                locale={locale}
               />
 
               <div className="sticky top-[73px] z-20 -mx-4 border-y border-slate-200 bg-[#f6f7fb]/95 px-4 py-2 backdrop-blur sm:static sm:mx-0 sm:mb-4 sm:rounded-xl sm:border sm:bg-white sm:p-1">
                 <div className="grid grid-cols-4 gap-1">
-                  {RESULT_TABS.map((tab) => (
+                  {resultTabs.map((tab) => (
                     <button
                       type="button"
                       key={tab.id}
@@ -265,6 +269,7 @@ export default function Home() {
 
               {activePanel === "overview" ? (
                 <OverviewPanel
+                  locale={locale}
                   summary={summary}
                   history={search.playerHistory}
                   brawlerCount={search.playerData.brawlers.length}
@@ -279,9 +284,10 @@ export default function Home() {
                     battleLog={search.battleLog}
                     summary={summary}
                     onSelectBattle={setSelectedBattle}
+                    locale={locale}
                   />
                 ) : (
-                  <EmptyPanel title="전투 기록을 불러오지 못했습니다" body="프로필은 표시되지만 최근 경기 데이터가 비어 있습니다." />
+                  <EmptyPanel title={copy.home.battleMissingTitle} body={copy.home.battleMissingBody} />
                 )
               ) : null}
               {activePanel === "brawlers" ? (
@@ -291,26 +297,27 @@ export default function Home() {
                   skinInventoryStatus={search.skinInventoryStatus}
                   skinInventoryError={search.skinInventoryError}
                   onSelectBrawler={setSelectedBrawler}
+                  locale={locale}
                 />
               ) : null}
               {activePanel === "history" ? (
                 search.playerHistory ? (
-                  <PlayerHistoryPanel history={search.playerHistory} />
+                  <PlayerHistoryPanel history={search.playerHistory} locale={locale} />
                 ) : (
-                  <EmptyPanel title="누적 기록을 준비 중입니다" body="검색이 누적되면 일별 기록과 자주 플레이한 맵, 모드가 표시됩니다." />
+                  <EmptyPanel title={copy.home.historyPreparingTitle} body={copy.home.historyPreparingBody} />
                 )
               ) : null}
             </div>
 
             <aside className="hidden flex-col gap-4 lg:flex">
-              <SideSummary title="최근 승률" value={`${summary.winRate}%`} detail={`${summary.wins}승 ${summary.defeats}패 ${summary.draws}무`} />
-              <SideSummary title="많이 이긴 모드" value={translateModeName(summary.bestMode)} detail={summary.maxModeWins > 0 ? `${summary.maxModeWins}승` : "전투 기록 부족"} />
-              <SideSummary title="보유 브롤러" value={`${search.playerData.brawlers.length}개`} detail="브롤러 탭에서 상세 확인" />
-              <SideSummary title="저장된 전투" value={`${search.playerHistory?.totalTrackedGames ?? 0}개`} detail="친선 경기는 통계에서 제외" />
+              <SideSummary title={copy.home.recentWinRate} value={`${summary.winRate}%`} detail={formatRecord(locale, summary.wins, summary.defeats, summary.draws)} />
+              <SideSummary title={copy.home.bestMode} value={translateModeName(summary.bestMode, locale)} detail={summary.maxModeWins > 0 ? formatWins(locale, summary.maxModeWins) : copy.home.battleDataShort} />
+              <SideSummary title={copy.home.ownedBrawlers} value={formatItems(locale, search.playerData.brawlers.length)} detail={copy.home.brawlerTabDetail} />
+              <SideSummary title={copy.home.storedBattles} value={formatBattles(locale, search.playerHistory?.totalTrackedGames ?? 0)} detail={copy.home.friendlyExcluded} />
             </aside>
           </section>
         ) : (
-          <EmptyStart />
+          <EmptyStart locale={locale} />
         )}
 
         {selectedBrawler && recentBrawlerStat ? (
@@ -321,12 +328,14 @@ export default function Home() {
             skinInventoryError={search.skinInventoryError}
             recentStat={recentBrawlerStat}
             dbStat={dbBrawlerStat}
+            locale={locale}
             onClose={() => setSelectedBrawler(null)}
           />
         ) : null}
         {selectedBattle ? (
           <BattleDetailsModal
             battle={selectedBattle}
+            locale={locale}
             onClose={() => setSelectedBattle(null)}
             onSelectPlayer={(playerTag) => {
               setSelectedBattle(null);
@@ -339,10 +348,10 @@ export default function Home() {
           <div>
             <p>2026 Brawl Stars Analytics. All rights reserved.</p>
             <p className="mt-1 text-xs font-medium text-slate-400">
-              버그 제보 및 기능 건의: seunghunbag76@gmail.com
+              {copy.home.bugContact}: seunghunbag76@gmail.com
             </p>
             <p className="mt-1 max-w-xl text-xs font-medium text-slate-400">
-              이 자료는 비공식이며 Supercell의 승인을 받지 않았습니다.{" "}
+              {copy.common.fanDisclaimer}{" "}
               <a
                 href="https://supercell.com/en/fan-content-policy/"
                 target="_blank"
@@ -353,25 +362,25 @@ export default function Home() {
               </a>
             </p>
           </div>
-          <nav className="flex flex-wrap gap-3" aria-label="사이트 정보">
-            <Link href="/about" className="hover:text-slate-950 hover:underline">소개</Link>
-            <Link href="/methodology" className="hover:text-slate-950 hover:underline">데이터 산정 방식</Link>
-            <Link href="/privacy" className="hover:text-slate-950 hover:underline">개인정보처리방침</Link>
-            <Link href="/terms" className="hover:text-slate-950 hover:underline">이용 안내</Link>
-            <Link href="/contact" className="hover:text-slate-950 hover:underline">문의</Link>
+          <nav className="flex flex-wrap gap-3" aria-label={copy.home.siteInfo}>
+            <Link href="/about" className="hover:text-slate-950 hover:underline">{copy.home.about}</Link>
+            <Link href="/methodology" className="hover:text-slate-950 hover:underline">{copy.common.methodology}</Link>
+            <Link href="/privacy" className="hover:text-slate-950 hover:underline">{copy.common.privacy}</Link>
+            <Link href="/terms" className="hover:text-slate-950 hover:underline">{copy.home.terms}</Link>
+            <Link href="/contact" className="hover:text-slate-950 hover:underline">{copy.home.contact}</Link>
             <a
               href="https://github.com/psh1234567890/brawl_status_kr"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-slate-950 hover:underline"
             >
-              오픈소스·기여하기
+              {copy.common.openSource}
             </a>
           </nav>
         </footer>
       </div>
 
-      <MobileNavigation />
+      <MobileNavigation locale={locale} />
     </main>
   );
 }
@@ -380,12 +389,14 @@ function SearchChipGroup({
   label,
   emptyLabel,
   tags,
+  locale,
   strong = false,
   onSearch,
 }: {
   label: string;
   emptyLabel: string;
   tags: string[];
+  locale: Locale;
   strong?: boolean;
   onSearch: (tag: string) => void;
 }) {
@@ -393,7 +404,7 @@ function SearchChipGroup({
     <div>
       <div className="mb-2 flex items-center justify-between">
         <span className="text-xs font-black text-slate-500">{label}</span>
-        <span className="text-[11px] font-bold text-slate-400">{tags.length}개</span>
+        <span className="text-[11px] font-bold text-slate-400">{formatItems(locale, tags.length)}</span>
       </div>
       {tags.length ? (
         <div className="flex flex-wrap gap-2">
@@ -422,6 +433,7 @@ function SearchChipGroup({
 }
 
 function OverviewPanel({
+  locale,
   summary,
   history,
   brawlerCount,
@@ -429,6 +441,7 @@ function OverviewPanel({
   skinError,
   onOpenPanel,
 }: {
+  locale: Locale;
   summary: RecentBattleSummary;
   history: PlayerHistoryResponse | null;
   brawlerCount: number;
@@ -436,41 +449,42 @@ function OverviewPanel({
   skinError: string;
   onOpenPanel: (panel: ResultPanel) => void;
 }) {
+  const copy = getMessages(locale);
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="text-lg font-black text-slate-950">이번 검색 요약</h2>
+          <h2 className="text-lg font-black text-slate-950">{copy.home.overviewTitle}</h2>
           <p className="mt-1 text-sm font-bold leading-6 text-slate-500">
-            친선 경기는 목록에는 표시하지만 승률과 추천 통계에는 반영하지 않습니다.
+            {copy.home.overviewBody}
           </p>
         </div>
-        <StatusPill status={skinStatus} error={skinError} />
+        <StatusPill status={skinStatus} error={skinError} locale={locale} />
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <OverviewMetric
-          label="최근 승률"
+          label={copy.home.recentWinRate}
           value={`${summary.winRate}%`}
-          detail={`${summary.total}전 ${summary.wins}승 ${summary.defeats}패`}
+          detail={formatOverviewRecord(locale, summary.total, summary.wins, summary.defeats)}
           onClick={() => onOpenPanel("matches")}
         />
         <OverviewMetric
-          label="많이 이긴 모드"
-          value={translateModeName(summary.bestMode)}
-          detail={summary.maxModeWins > 0 ? `${summary.maxModeWins}승 기록` : "데이터 부족"}
+          label={copy.home.bestMode}
+          value={translateModeName(summary.bestMode, locale)}
+          detail={summary.maxModeWins > 0 ? formatWinsRecord(locale, summary.maxModeWins) : copy.home.dataShort}
           onClick={() => onOpenPanel("matches")}
         />
         <OverviewMetric
-          label="보유 브롤러"
-          value={`${brawlerCount}개`}
-          detail="가젯, 스타파워, 기어 확인"
+          label={copy.home.ownedBrawlers}
+          value={formatItems(locale, brawlerCount)}
+          detail={copy.home.gearDetail}
           onClick={() => onOpenPanel("brawlers")}
         />
         <OverviewMetric
-          label="저장된 전투"
-          value={`${history?.totalTrackedGames ?? 0}개`}
-          detail="검색할수록 누적됩니다"
+          label={copy.home.storedBattles}
+          value={formatBattles(locale, history?.totalTrackedGames ?? 0)}
+          detail={copy.home.accumulates}
           onClick={() => onOpenPanel("history")}
         />
       </div>
@@ -505,18 +519,21 @@ function OverviewMetric({
 function StatusPill({
   status,
   error,
+  locale,
 }: {
   status: PlayerSkinInventoryStatus;
   error: string;
+  locale: Locale;
 }) {
+  const copy = getMessages(locale).home;
   const label =
     status === "loading"
-      ? "스킨 조회 중"
+      ? copy.skinLoading
       : status === "ready"
-        ? "스킨 조회 완료"
+        ? copy.skinReady
         : status === "error"
-          ? "스킨 일부 미표시"
-          : "스킨 대기";
+          ? copy.skinError
+          : copy.skinIdle;
   const className =
     status === "ready"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -561,13 +578,13 @@ function EmptyPanel({ title, body }: { title: string; body: string }) {
   );
 }
 
-function EmptyStart() {
+function EmptyStart({ locale }: { locale: Locale }) {
+  const copy = getMessages(locale).home;
   return (
     <section className="mt-5 rounded-xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-black text-slate-950">플레이어 태그를 검색해 보세요</h2>
+      <h2 className="text-lg font-black text-slate-950">{copy.emptyStartTitle}</h2>
       <p className="mt-2 max-w-2xl text-sm font-bold leading-6 text-slate-500">
-        프로필, 최근 전투, 브롤러 보유 현황, 스킨 조회 상태, 누적 DB 기록을 한 화면에서 확인할 수 있습니다.
-        모바일에서는 결과 탭을 눌러 필요한 정보만 빠르게 볼 수 있습니다.
+        {copy.emptyStartBody}
       </p>
     </section>
   );
@@ -588,19 +605,20 @@ function Message({ text, tone }: { text: string; tone: "error" | "notice" }) {
   );
 }
 
-function MobileNavigation() {
+function MobileNavigation({ locale }: { locale: Locale }) {
+  const copy = getMessages(locale);
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 py-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden" aria-label="모바일 빠른 이동">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 py-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden" aria-label={copy.home.mobileNav}>
       <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
         {[
-          ["/", "홈"],
-          ["/meta", "추천"],
-          ["/skins", "스킨"],
-          ["/rankings", "랭킹"],
+          ["/", copy.home.mobileHome],
+          ["/meta", copy.home.mobileMeta],
+          ["/skins", copy.common.skins],
+          ["/rankings", copy.common.rankings],
         ].map(([href, label]) => (
           <Link
             key={href}
-            href={href}
+            href={localizedHref(locale, href)}
             className="min-h-11 rounded-lg px-2 py-2 text-center text-xs font-black text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
           >
             {label}
@@ -623,4 +641,42 @@ function normalizeBrawlerSkinKey(value: string) {
     .toUpperCase()
     .replace(/&/g, "AND")
     .replace(/[^A-Z0-9]+/g, "");
+}
+
+function formatItems(locale: Locale, value: number) {
+  const formatted = value.toLocaleString(numberLocales[locale]);
+  if (locale === "ko") return `${formatted}개`;
+  if (locale === "ja") return `${formatted}件`;
+  return formatted;
+}
+
+function formatBattles(locale: Locale, value: number) {
+  const formatted = value.toLocaleString(numberLocales[locale]);
+  if (locale === "ko") return `${formatted}개`;
+  if (locale === "ja") return `${formatted}戦`;
+  return `${formatted} battles`;
+}
+
+function formatWins(locale: Locale, value: number) {
+  if (locale === "ko") return `${value}승`;
+  if (locale === "ja") return `${value}勝`;
+  return `${value} wins`;
+}
+
+function formatWinsRecord(locale: Locale, value: number) {
+  if (locale === "ko") return `${value}승 기록`;
+  if (locale === "ja") return `${value}勝`;
+  return `${value} wins`;
+}
+
+function formatRecord(locale: Locale, wins: number, defeats: number, draws: number) {
+  if (locale === "ko") return `${wins}승 ${defeats}패 ${draws}무`;
+  if (locale === "ja") return `${wins}勝 ${defeats}敗 ${draws}分`;
+  return `${wins}W ${defeats}L ${draws}D`;
+}
+
+function formatOverviewRecord(locale: Locale, total: number, wins: number, defeats: number) {
+  if (locale === "ko") return `${total}전 ${wins}승 ${defeats}패`;
+  if (locale === "ja") return `${total}戦 ${wins}勝 ${defeats}敗`;
+  return `${total} battles · ${wins}W ${defeats}L`;
 }

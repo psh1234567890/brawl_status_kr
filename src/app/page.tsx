@@ -9,7 +9,14 @@ import LanguageSwitcher from "../components/LanguageSwitcher";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
 import { usePlayerSearch } from "../hooks/usePlayerSearch";
-import { localizedHref, numberLocales, type Locale } from "../i18n/config";
+import { localizedHref, type Locale } from "../i18n/config";
+import {
+  formatBattleRecord,
+  formatBattles,
+  formatItems,
+  formatWinLossDraw,
+  formatWins,
+} from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
 import type {
   BattleLogItem,
@@ -310,7 +317,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             </div>
 
             <aside className="hidden flex-col gap-4 lg:flex">
-              <SideSummary title={copy.home.recentWinRate} value={`${summary.winRate}%`} detail={formatRecord(locale, summary.wins, summary.defeats, summary.draws)} />
+              <SideSummary title={copy.home.recentWinRate} value={`${summary.winRate}%`} detail={formatWinLossDraw(locale, summary.wins, summary.defeats, summary.draws)} />
               <SideSummary title={copy.home.bestMode} value={translateModeName(summary.bestMode, locale)} detail={summary.maxModeWins > 0 ? formatWins(locale, summary.maxModeWins) : copy.home.battleDataShort} />
               <SideSummary title={copy.home.ownedBrawlers} value={formatItems(locale, search.playerData.brawlers.length)} detail={copy.home.brawlerTabDetail} />
               <SideSummary title={copy.home.storedBattles} value={formatBattles(locale, search.playerHistory?.totalTrackedGames ?? 0)} detail={copy.home.friendlyExcluded} />
@@ -466,13 +473,13 @@ function OverviewPanel({
         <OverviewMetric
           label={copy.home.recentWinRate}
           value={`${summary.winRate}%`}
-          detail={formatOverviewRecord(locale, summary.total, summary.wins, summary.defeats)}
+          detail={formatBattleRecord(locale, summary.total, summary.wins, summary.defeats)}
           onClick={() => onOpenPanel("matches")}
         />
         <OverviewMetric
           label={copy.home.bestMode}
           value={translateModeName(summary.bestMode, locale)}
-          detail={summary.maxModeWins > 0 ? formatWinsRecord(locale, summary.maxModeWins) : copy.home.dataShort}
+          detail={summary.maxModeWins > 0 ? formatWins(locale, summary.maxModeWins) : copy.home.dataShort}
           onClick={() => onOpenPanel("matches")}
         />
         <OverviewMetric
@@ -641,42 +648,4 @@ function normalizeBrawlerSkinKey(value: string) {
     .toUpperCase()
     .replace(/&/g, "AND")
     .replace(/[^A-Z0-9]+/g, "");
-}
-
-function formatItems(locale: Locale, value: number) {
-  const formatted = value.toLocaleString(numberLocales[locale]);
-  if (locale === "ko") return `${formatted}개`;
-  if (locale === "ja") return `${formatted}件`;
-  return formatted;
-}
-
-function formatBattles(locale: Locale, value: number) {
-  const formatted = value.toLocaleString(numberLocales[locale]);
-  if (locale === "ko") return `${formatted}개`;
-  if (locale === "ja") return `${formatted}戦`;
-  return `${formatted} battles`;
-}
-
-function formatWins(locale: Locale, value: number) {
-  if (locale === "ko") return `${value}승`;
-  if (locale === "ja") return `${value}勝`;
-  return `${value} wins`;
-}
-
-function formatWinsRecord(locale: Locale, value: number) {
-  if (locale === "ko") return `${value}승 기록`;
-  if (locale === "ja") return `${value}勝`;
-  return `${value} wins`;
-}
-
-function formatRecord(locale: Locale, wins: number, defeats: number, draws: number) {
-  if (locale === "ko") return `${wins}승 ${defeats}패 ${draws}무`;
-  if (locale === "ja") return `${wins}勝 ${defeats}敗 ${draws}分`;
-  return `${wins}W ${defeats}L ${draws}D`;
-}
-
-function formatOverviewRecord(locale: Locale, total: number, wins: number, defeats: number) {
-  if (locale === "ko") return `${total}전 ${wins}승 ${defeats}패`;
-  if (locale === "ja") return `${total}戦 ${wins}勝 ${defeats}敗`;
-  return `${total} battles · ${wins}W ${defeats}L`;
 }

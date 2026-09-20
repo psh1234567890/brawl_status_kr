@@ -1,4 +1,11 @@
 import type { Locale } from "./config";
+import { deMessages } from "./locales/de";
+import { esMessages } from "./locales/es";
+import { frMessages } from "./locales/fr";
+import { itMessages } from "./locales/it";
+import { ptBrMessages } from "./locales/pt-br";
+import { ruMessages } from "./locales/ru";
+import { trMessages } from "./locales/tr";
 
 export const messages = {
   ko: {
@@ -487,6 +494,13 @@ export const messages = {
       playsSort: "サンプル数順",
     },
   },
+  "pt-br": ptBrMessages,
+  es: esMessages,
+  tr: trMessages,
+  de: deMessages,
+  fr: frMessages,
+  it: itMessages,
+  ru: ruMessages,
 } as const;
 
 export type Messages = (typeof messages)["ko"];

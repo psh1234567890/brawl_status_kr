@@ -6,9 +6,9 @@
 
 ### Added
 
-- 핵심 화면에 영어(`/en`)·일본어(`/ja`) 로케일 경로와 언어 선택기를 추가하고 첫 방문 시 브라우저 `Accept-Language`를 이용해 영어·일본어 홈으로 안내
-- BrawlAPI의 일본어 게임 로컬라이징 원본에서 브롤러·맵·모드 표시명을 생성하는 `translations:ja:update` 스크립트와 회귀 테스트 추가
-- 한국어·영어·일본어 핵심 URL의 canonical/hreflang 및 sitemap alternate 연결 추가
+- 핵심 화면에 한국어·영어·일본어·브라질 포르투갈어·스페인어·튀르키예어·독일어·프랑스어·이탈리아어·러시아어 UI와 언어 선택기를 추가하고, 첫 방문 시 저장된 선택 또는 브라우저 `Accept-Language`로 적절한 홈으로 안내
+- BrawlAPI 게임 로컬라이징 원본에서 브롤러·맵·모드 표시명을 생성하는 `translations:ja:update`, `translations:additional:update` 스크립트와 회귀 테스트 추가
+- 10개 언어 핵심 URL의 canonical/hreflang 및 sitemap alternate 연결 추가
 
 ### Fixed
 

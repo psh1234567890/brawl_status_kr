@@ -2,6 +2,8 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { numberLocales, type Locale } from "../i18n/config";
+import { getComponentMessages } from "../i18n/componentMessages";
+import { formatBattles, formatLossDraw, formatWins } from "../i18n/formatters";
 import type { BattleLogItem, BattleLogResponse, RecentBattleSummary } from "../types/brawl";
 import {
   checkIsFriendly,
@@ -31,7 +33,7 @@ export default function BattleLogList({
   onSelectBattle,
   locale = "ko",
 }: BattleLogListProps) {
-  const copy = getBattleLogCopy(locale);
+  const copy = getComponentMessages(locale).battleLog;
   const displayItems = battleLog.items;
   const [resultFilter, setResultFilter] = useState("ALL");
   const [modeFilter, setModeFilter] = useState("ALL");
@@ -208,7 +210,7 @@ function BattleTypeBadge({
   ranked: boolean;
   locale: Locale;
 }) {
-  const copy = getBattleLogCopy(locale);
+  const copy = getComponentMessages(locale).battleLog;
   const label = friendly ? copy.friendly : ranked ? copy.ranked : copy.normal;
   const className = friendly
     ? "border-amber-200 bg-amber-50 text-amber-700"
@@ -250,7 +252,7 @@ function FilterSelect({
 
 function formatBattleTime(battleTime: string, locale: Locale) {
   const date = parseBattleTime(battleTime);
-  if (!date) return getBattleLogCopy(locale).noTime;
+  if (!date) return getComponentMessages(locale).battleLog.noTime;
   return date.toLocaleString(numberLocales[locale], {
     month: "2-digit",
     day: "2-digit",
@@ -260,42 +262,6 @@ function formatBattleTime(battleTime: string, locale: Locale) {
 }
 
 function formatOutcome(outcome: "victory" | "defeat" | "draw", locale: Locale) {
-  const copy = getBattleLogCopy(locale);
+  const copy = getComponentMessages(locale).battleLog;
   return outcome === "victory" ? copy.victory : outcome === "defeat" ? copy.defeat : copy.draw;
-}
-
-function formatBattles(locale: Locale, value: number) {
-  return locale === "ko" ? `${value}전` : locale === "ja" ? `${value}戦` : `${value} battles`;
-}
-
-function formatWins(locale: Locale, value: number) {
-  return locale === "ko" ? `${value}승` : locale === "ja" ? `${value}勝` : `${value} wins`;
-}
-
-function formatLossDraw(locale: Locale, losses: number, draws: number) {
-  return locale === "ko" ? `${losses}패 ${draws}무` : locale === "ja" ? `${losses}敗 ${draws}分` : `${losses}L ${draws}D`;
-}
-
-function getBattleLogCopy(locale: Locale) {
-  if (locale === "en") return {
-    title: "Battle History", description: "Shows up to the latest 25 battles. Friendly battles appear only in the list.", shown: "shown",
-    winRate: "Win rate", wins: "Wins", bestMode: "Best mode", notEnough: "Not enough data", result: "Result", allResults: "All results",
-    victory: "Victory", defeat: "Defeat", draw: "Draw", mode: "Mode", allModes: "All modes", map: "Map", allMaps: "All maps",
-    brawler: "Brawler", allBrawlers: "All brawlers", friendly: "Friendly", friendlyBattle: "Friendly battle", ranked: "Ranked", normal: "Normal",
-    trophies: "trophies", empty: "No battles match the selected filters.", noTime: "Time unavailable",
-  } as const;
-  if (locale === "ja") return {
-    title: "バトル履歴", description: "直近最大25戦を表示します。フレンドバトルは一覧にのみ表示されます。", shown: "表示",
-    winRate: "勝率", wins: "勝利", bestMode: "得意モード", notEnough: "データ不足", result: "結果", allResults: "すべての結果",
-    victory: "勝利", defeat: "敗北", draw: "引き分け", mode: "モード", allModes: "すべてのモード", map: "マップ", allMaps: "すべてのマップ",
-    brawler: "ブロウラー", allBrawlers: "すべてのブロウラー", friendly: "フレンド", friendlyBattle: "フレンドバトル", ranked: "ランク", normal: "通常",
-    trophies: "トロフィー", empty: "選択したフィルターに一致するバトル履歴がありません。", noTime: "時間情報なし",
-  } as const;
-  return {
-    title: "전투 기록", description: "최근 최대 25경기를 표시합니다. 친선 경기는 목록에만 표시됩니다.", shown: "표시",
-    winRate: "승률", wins: "승리", bestMode: "강세 모드", notEnough: "부족", result: "결과", allResults: "전체 결과",
-    victory: "승리", defeat: "패배", draw: "무승부", mode: "모드", allModes: "전체 모드", map: "맵", allMaps: "전체 맵",
-    brawler: "브롤러", allBrawlers: "전체 브롤러", friendly: "친선", friendlyBattle: "친선 경기", ranked: "경쟁전", normal: "일반",
-    trophies: "트로피", empty: "선택한 필터에 맞는 전투 기록이 없습니다.", noTime: "시간 정보 없음",
-  } as const;
 }

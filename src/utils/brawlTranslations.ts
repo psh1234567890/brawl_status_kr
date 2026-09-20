@@ -13,7 +13,12 @@ import {
   generatedJapaneseMapDict,
   generatedJapaneseModeDisplayDict,
 } from "../constants/generatedBrawlJapaneseTranslations";
-import type { Locale } from "../i18n/config";
+import {
+  generatedAdditionalBrawlerDicts,
+  generatedAdditionalMapDicts,
+  generatedAdditionalModeDicts,
+} from "../constants/generatedBrawlAdditionalTranslations";
+import { numberLocales, type Locale } from "../i18n/config";
 
 const abilityNameFallbackDict: Record<string, string> = {
   "A STARR IS BORN": "스타 탄생",
@@ -160,6 +165,13 @@ export function translateBrawlerName(
   if (locale === "ja") {
     return lookupByName(generatedJapaneseBrawlerDict, clean) ?? clean;
   }
+  const localizedBrawlers = generatedAdditionalBrawlerDicts[locale];
+  if (localizedBrawlers) {
+    return formatLocalizedDisplayName(
+      lookupByName(localizedBrawlers, clean) ?? clean,
+      locale,
+    );
+  }
   return lookupByName(brawlerDict, clean) ?? lookupByName(brawlerNameFallbackDict, clean) ?? clean;
 }
 
@@ -172,6 +184,8 @@ export function translateMapName(
   if (locale === "ja") {
     return lookupByName(generatedJapaneseMapDict, clean) ?? clean;
   }
+  const localizedMaps = generatedAdditionalMapDicts[locale];
+  if (localizedMaps) return lookupByName(localizedMaps, clean) ?? clean;
   return lookupByName(mapDict, clean) ?? clean;
 }
 
@@ -187,6 +201,13 @@ export function translateModeName(
   }
   if (locale === "ja") {
     return lookupByName(generatedJapaneseModeDisplayDict, clean) ?? clean;
+  }
+  const localizedModes = generatedAdditionalModeDicts[locale];
+  if (localizedModes) {
+    return formatLocalizedDisplayName(
+      lookupByName(localizedModes, clean) ?? clean,
+      locale,
+    );
   }
   return (
     lookupByName(modeDict, clean) ??
@@ -206,6 +227,19 @@ function formatEnglishDisplayName(value: string) {
     )
     .replace(/\b5v5\b/gi, "5v5")
     .replace(/\b3v3\b/gi, "3v3");
+}
+
+function formatLocalizedDisplayName(value: string, locale: Locale) {
+  if (!value || value !== value.toLocaleUpperCase(numberLocales[locale])) return value;
+  if (value === "8-BIT") return value;
+  const localeName = numberLocales[locale];
+  return value
+    .toLocaleLowerCase(localeName)
+    .replace(/(^|[\s-])(\p{L})/gu, (_, prefix: string, letter: string) =>
+      `${prefix}${letter.toLocaleUpperCase(localeName)}`,
+    )
+    .replace(/\b5v5\b/giu, "5v5")
+    .replace(/\b3v3\b/giu, "3v3");
 }
 
 export function translateBrawlerDescription(

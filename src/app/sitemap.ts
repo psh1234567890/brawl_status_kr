@@ -1,5 +1,12 @@
 import type { MetadataRoute } from "next";
 import {
+  hreflangByLocale,
+  locales,
+  localizedHref,
+  localizedLocales,
+  type Locale,
+} from "../i18n/config";
+import {
   getBrawlifyBrawlers,
   getBrawlifyGameModes,
   getBrawlifyMaps,
@@ -34,14 +41,12 @@ const staticRoutes: SitemapEntry[] = [
   route("/contact", "yearly", 0.4),
 ];
 
-const localizedCopies: SitemapEntry[] = [
-  localizedCopy("/en", "weekly", 0.9, ""),
-  localizedCopy("/ja", "weekly", 0.9, ""),
-  ...["/meta", "/rankings", "/teams", "/counters", "/status"].flatMap((path) => [
-    localizedCopy(`/en${path}`, "daily", path === "/meta" ? 0.85 : 0.55, path),
-    localizedCopy(`/ja${path}`, "daily", path === "/meta" ? 0.85 : 0.55, path),
-  ]),
-];
+const localizedCopies: SitemapEntry[] = localizedLocales.flatMap((locale) => [
+  localizedCopy(locale, "", "weekly", 0.9),
+  ...["/meta", "/rankings", "/teams", "/counters", "/status"].map((path) =>
+    localizedCopy(locale, path, "daily", path === "/meta" ? 0.85 : 0.55),
+  ),
+]);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [brawlersResult, mapsResult, modesResult] = await Promise.allSettled([
@@ -79,31 +84,33 @@ function localizedRoute(
   return {
     ...route(path, changeFrequency, priority),
     alternates: {
-      languages: {
-        "ko-KR": `${siteUrl}${path}`,
-        en: `${siteUrl}/en${path}`,
-        ja: `${siteUrl}/ja${path}`,
-      },
+      languages: absoluteLanguageAlternates(path || "/"),
     },
   };
 }
 
 function localizedCopy(
-  path: string,
+  locale: Locale,
+  basePath: string,
   changeFrequency: SitemapEntry["changeFrequency"],
   priority: number,
-  basePath: string,
 ): SitemapEntry {
+  const localizedPath = localizedHref(locale, basePath || "/");
   return {
-    ...route(path, changeFrequency, priority),
+    ...route(localizedPath === "/" ? "" : localizedPath, changeFrequency, priority),
     alternates: {
-      languages: {
-        "ko-KR": `${siteUrl}${basePath}`,
-        en: `${siteUrl}/en${basePath}`,
-        ja: `${siteUrl}/ja${basePath}`,
-      },
+      languages: absoluteLanguageAlternates(basePath || "/"),
     },
   };
+}
+
+function absoluteLanguageAlternates(pathname: string) {
+  return Object.fromEntries(
+    locales.map((locale) => {
+      const path = localizedHref(locale, pathname);
+      return [hreflangByLocale[locale], `${siteUrl}${path === "/" ? "" : path}`];
+    }),
+  );
 }
 
 function route(

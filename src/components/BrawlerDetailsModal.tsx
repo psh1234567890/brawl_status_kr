@@ -2,6 +2,16 @@
 
 import { useEffect } from "react";
 import { numberLocales, type Locale } from "../i18n/config";
+import { getComponentMessages } from "../i18n/componentMessages";
+import {
+  formatBattles,
+  formatCurrentBrawlerLine,
+  formatDefaultSkin,
+  formatNoneOwned,
+  formatOwnedCount,
+  formatTopMode,
+  formatWins,
+} from "../i18n/formatters";
 import type {
   BrawlAbility,
   Brawler,
@@ -40,7 +50,7 @@ export default function BrawlerDetailsModal({
   locale = "ko",
 }: BrawlerDetailsModalProps) {
   useCloseOnEscape(onClose);
-  const copy = getBrawlerDetailsCopy(locale);
+  const copy = getComponentMessages(locale).brawlerDetails;
   const ownedSkins = getOwnedSkins(brawler, externalSkins, locale);
   const displayName = translateBrawlerName(brawler.name, locale);
   const isSkinLoading = skinInventoryStatus === "loading";
@@ -77,15 +87,15 @@ export default function BrawlerDetailsModal({
               {displayName}
             </h2>
             <p className="mt-1 text-sm font-bold text-slate-500">
-              {copy.currentLine(brawler.trophies.toLocaleString(numberLocales[locale]), brawler.power)}
+              {formatCurrentBrawlerLine(locale, brawler.trophies.toLocaleString(numberLocales[locale]), brawler.power)}
             </p>
           </div>
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           <MiniMetric label={copy.highestTrophies} value={brawler.highestTrophies.toLocaleString(numberLocales[locale])} />
-          <MiniMetric label={copy.gadgets} value={copy.count(brawler.gadgets?.length ?? 0)} />
-          <MiniMetric label={copy.starPowers} value={copy.count(brawler.starPowers?.length ?? 0)} />
+          <MiniMetric label={copy.gadgets} value={formatOwnedCount(locale, brawler.gadgets?.length ?? 0)} />
+          <MiniMetric label={copy.starPowers} value={formatOwnedCount(locale, brawler.starPowers?.length ?? 0)} />
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
@@ -94,7 +104,7 @@ export default function BrawlerDetailsModal({
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-black text-slate-950">{copy.skins}</h3>
                 <span className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-black text-slate-600">
-                  {copy.count(ownedSkins.length)}
+                  {formatOwnedCount(locale, ownedSkins.length)}
                 </span>
               </div>
 
@@ -164,9 +174,9 @@ export default function BrawlerDetailsModal({
             <section className="rounded-xl border border-slate-200 bg-white p-4">
               <h3 className="mb-3 text-sm font-black text-slate-950">{copy.ownedEquipment}</h3>
               <div className="grid gap-4">
-                <AbilityGroup label={copy.gadgets} abilities={brawler.gadgets} imageType="gadgets" tone="green" locale={locale} emptyText={copy.noneOwned(copy.gadgets)} />
-                <AbilityGroup label={copy.starPowers} abilities={brawler.starPowers} imageType="star-powers" tone="amber" locale={locale} emptyText={copy.noneOwned(copy.starPowers)} />
-                <AbilityGroup label={copy.hypercharge} abilities={brawler.hyperCharges} imageType="hypercharges" tone="violet" locale={locale} emptyText={copy.noneOwned(copy.hypercharge)} />
+                <AbilityGroup label={copy.gadgets} abilities={brawler.gadgets} imageType="gadgets" tone="green" locale={locale} emptyText={formatNoneOwned(locale, copy.gadgets)} />
+                <AbilityGroup label={copy.starPowers} abilities={brawler.starPowers} imageType="star-powers" tone="amber" locale={locale} emptyText={formatNoneOwned(locale, copy.starPowers)} />
+                <AbilityGroup label={copy.hypercharge} abilities={brawler.hyperCharges} imageType="hypercharges" tone="violet" locale={locale} emptyText={formatNoneOwned(locale, copy.hypercharge)} />
                 <GearGroup brawler={brawler} locale={locale} />
               </div>
             </section>
@@ -200,7 +210,7 @@ export default function BrawlerDetailsModal({
             <StatsCard
               title={copy.recentStats}
               stat={recentStat}
-              extra={recentStat.plays > 0 ? copy.topMode(translateModeName(recentStat.topMode, locale)) : undefined}
+              extra={recentStat.plays > 0 ? formatTopMode(locale, translateModeName(recentStat.topMode, locale)) : undefined}
               locale={locale}
             />
             <StatsCard title={copy.dbStats} stat={dbStat} locale={locale} />
@@ -281,9 +291,7 @@ function formatSkinName(
 ) {
   if (skin.id !== undefined) return translateSkinName(skin.id, skin.name, locale);
   if (normalizeSkinName(skin.name) === normalizeSkinName(brawlerName)) {
-    if (locale === "en") return `${displayBrawlerName} Default Skin`;
-    if (locale === "ja") return `${displayBrawlerName} デフォルトスキン`;
-    return `${displayBrawlerName} 기본 스킨`;
+    return formatDefaultSkin(locale, displayBrawlerName);
   }
   return toTitleCase(skin.name);
 }
@@ -368,7 +376,7 @@ function AbilityGroup({
 }
 
 function GearGroup({ brawler, locale }: { brawler: Brawler; locale: Locale }) {
-  const copy = getBrawlerDetailsCopy(locale);
+  const copy = getComponentMessages(locale).brawlerDetails;
   return (
     <div>
       <h4 className="mb-2 text-xs font-black text-slate-500">{copy.gears}</h4>
@@ -392,7 +400,7 @@ function GearGroup({ brawler, locale }: { brawler: Brawler; locale: Locale }) {
         </div>
       ) : (
         <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs font-bold text-slate-400">
-          {copy.noneOwned(copy.gears)}
+          {formatNoneOwned(locale, copy.gears)}
         </p>
       )}
     </div>
@@ -410,7 +418,7 @@ function StatsCard({
   extra?: string;
   locale: Locale;
 }) {
-  const copy = getBrawlerDetailsCopy(locale);
+  const copy = getComponentMessages(locale).brawlerDetails;
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4">
       <h3 className="text-sm font-black text-slate-950">{title}</h3>
@@ -422,7 +430,7 @@ function StatsCard({
           </div>
           <div className="flex justify-between gap-3">
             <span>{copy.plays}</span>
-            <span>{copy.playRecord(stat.plays, stat.wins)}</span>
+            <span>{formatBattles(locale, stat.plays)} · {formatWins(locale, stat.wins)}</span>
           </div>
           {extra ? <p className="rounded-lg bg-slate-50 p-2 text-xs font-black text-slate-600">{extra}</p> : null}
         </div>
@@ -433,36 +441,6 @@ function StatsCard({
       )}
     </section>
   );
-}
-
-function getBrawlerDetailsCopy(locale: Locale) {
-  if (locale === "en") return {
-    close: "Close brawler details", highestTrophies: "Highest trophies", gadgets: "Gadgets", starPowers: "Star Powers", hypercharge: "Hypercharge", hyperShort: "Hyper",
-    skins: "Skins", skinImageFallback: "A dedicated skin image is unavailable, so the default brawler image is shown.", defaultSkin: "Default skin", equippedInfo: "Currently equipped",
-    officialApi: "Official API", brawlaceLookup: "Brawlace lookup", equipped: "Equipped", skinLoading: "Loading owned skins.", skinPartial: "The supplemental lookup failed; showing skins available from the official API only.",
-    noOwnedSkins: "No owned skins were found.", skinLookupFailed: "Could not complete the supplemental owned-skin lookup.", ownedEquipment: "Owned equipment", buffieStatus: "Buffie upgrade status",
-    recentStats: "Recent 25-battle stats", dbStats: "All stored DB stats", gears: "Gears", winRate: "Win rate", plays: "Plays", noStats: "No recorded stats yet.",
-    currentLine: (trophies: string, power: number) => `${trophies} trophies · Power ${power}`, count: (n: number) => `${n}`,
-    noneOwned: (label: string) => `No ${label.toLowerCase()} owned.`, topMode: (mode: string) => `Top mode: ${mode}`, playRecord: (plays: number, wins: number) => `${plays} battles · ${wins} wins`,
-  } as const;
-  if (locale === "ja") return {
-    close: "ブロウラー詳細を閉じる", highestTrophies: "最高トロフィー", gadgets: "ガジェット", starPowers: "スターパワー", hypercharge: "ハイパーチャージ", hyperShort: "ハイパー",
-    skins: "スキン", skinImageFallback: "スキン専用画像がないため、ブロウラーの基本画像を表示しています。", defaultSkin: "デフォルトスキン", equippedInfo: "現在装備中",
-    officialApi: "公式API", brawlaceLookup: "Brawlace補助取得", equipped: "装備中", skinLoading: "所持スキンを取得中です。", skinPartial: "補助取得に失敗したため、公式APIで取得できるスキンのみ表示します。",
-    noOwnedSkins: "所持スキンが見つかりませんでした。", skinLookupFailed: "所持スキンの補助取得に失敗しました。", ownedEquipment: "所持装備", buffieStatus: "バフィー強化状況",
-    recentStats: "直近25戦の個人記録", dbStats: "保存DB全体の記録", gears: "ギア", winRate: "勝率", plays: "プレイ", noStats: "記録データがまだありません。",
-    currentLine: (trophies: string, power: number) => `現在 ${trophies} トロフィー · パワー ${power}`, count: (n: number) => `${n}個`,
-    noneOwned: (label: string) => `所持している${label}はありません。`, topMode: (mode: string) => `得意モード: ${mode}`, playRecord: (plays: number, wins: number) => `${plays}戦 ${wins}勝`,
-  } as const;
-  return {
-    close: "브롤러 상세 닫기", highestTrophies: "최고 트로피", gadgets: "가젯", starPowers: "스타파워", hypercharge: "하이퍼차지", hyperShort: "하이퍼",
-    skins: "스킨", skinImageFallback: "현재 스킨 이미지는 공식 API에서 직접 제공되지 않아 기본 브롤러 이미지를 표시합니다.", defaultSkin: "기본 스킨", equippedInfo: "현재 착용 정보",
-    officialApi: "공식 API", brawlaceLookup: "Brawlace 보조 조회", equipped: "현재 착용", skinLoading: "보유 스킨 목록을 조회 중입니다.", skinPartial: "보조 조회에 실패해 공식 API에서 제공되는 스킨만 표시합니다.",
-    noOwnedSkins: "보유 스킨 목록을 찾지 못했습니다.", skinLookupFailed: "보유 스킨 보조 조회에 실패했습니다.", ownedEquipment: "보유 장비", buffieStatus: "버피 강화 상태",
-    recentStats: "최근 25전 개인 기록", dbStats: "전체 저장 DB 기록", gears: "기어", winRate: "승률", plays: "플레이", noStats: "아직 기록 데이터가 없습니다.",
-    currentLine: (trophies: string, power: number) => `현재 ${trophies} 트로피 · 파워 ${power}`, count: (n: number) => `${n}개`,
-    noneOwned: (label: string) => `보유한 ${label}이 없습니다.`, topMode: (mode: string) => `주력 모드: ${mode}`, playRecord: (plays: number, wins: number) => `${plays}전 ${wins}승`,
-  } as const;
 }
 
 function useCloseOnEscape(onClose: () => void) {

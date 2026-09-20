@@ -17,4 +17,14 @@ describe("localized Brawl game names", () => {
     expect(translateMapName("Backyard Bowl", "ja")).toBe("鉄壁の護り");
     expect(translateModeName("brawlBall", "ja")).toBe("ブロストライカー");
   });
+
+  it("uses official additional localization data", () => {
+    expect(translateMapName("Backyard Bowl", "pt-br")).toBe("Bocha");
+    expect(translateModeName("brawlBall", "es")).toBe("Balón Brawl");
+    expect(translateModeName("brawlBall", "tr")).toBe("Savaş Topu");
+    expect(translateMapName("Backyard Bowl", "de")).toBe("Hinterhofstadion");
+    expect(translateMapName("Backyard Bowl", "fr")).toBe("Ligue junior");
+    expect(translateMapName("Backyard Bowl", "it")).toBe("Campetto");
+    expect(translateBrawlerName("SHELLY", "ru")).toBe("Шелли");
+  });
 });

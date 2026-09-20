@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 import type { Locale } from "../i18n/config";
+import { getComponentMessages } from "../i18n/componentMessages";
+import { formatBattles, formatDays } from "../i18n/formatters";
 import type { PlayerHistoryResponse } from "../types/brawl";
 import { translateMapName, translateModeName } from "../utils/brawlTranslations";
 
@@ -11,7 +13,7 @@ interface PlayerHistoryPanelProps {
 }
 
 export default function PlayerHistoryPanel({ history, locale = "ko" }: PlayerHistoryPanelProps) {
-  const copy = getHistoryCopy(locale);
+  const copy = getComponentMessages(locale).history;
   const orderedDays = useMemo(
     () => [...(history?.daily ?? [])].reverse(),
     [history],
@@ -29,8 +31,8 @@ export default function PlayerHistoryPanel({ history, locale = "ko" }: PlayerHis
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <Metric label={copy.totalBattles} value={copy.battles(history.totalTrackedGames)} />
-        <Metric label={copy.trackedDays} value={copy.days(history.trackedDays)} />
+        <Metric label={copy.totalBattles} value={formatBattles(locale, history.totalTrackedGames)} />
+        <Metric label={copy.trackedDays} value={formatDays(locale, history.trackedDays)} />
         <Metric label={copy.trophyDelta} value={`${history.totalTrophyDelta > 0 ? "+" : ""}${history.totalTrophyDelta}`} />
       </div>
 
@@ -48,7 +50,7 @@ export default function PlayerHistoryPanel({ history, locale = "ko" }: PlayerHis
                     style={{ width: `${Math.max(8, (day.plays / maxPlays) * 100)}%` }}
                   />
                 </div>
-                <span className="text-right">{copy.battles(day.plays)} · {Math.floor((day.wins / Math.max(1, day.plays)) * 100)}%</span>
+                <span className="text-right">{formatBattles(locale, day.plays)} · {Math.floor((day.wins / Math.max(1, day.plays)) * 100)}%</span>
               </div>
             ))}
           </div>
@@ -87,7 +89,7 @@ function BucketList({
   translate: (name: string) => string;
   locale: Locale;
 }) {
-  const copy = getHistoryCopy(locale);
+  const copy = getComponentMessages(locale).history;
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
       <h3 className="mb-3 text-sm font-black text-slate-950">{title}</h3>
@@ -97,7 +99,7 @@ function BucketList({
             <div key={row.name} className="flex min-w-0 items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
               <span className="min-w-0 truncate text-sm font-black text-slate-800">{translate(row.name)}</span>
               <span className="shrink-0 text-xs font-bold text-blue-700">
-                {row.winRate}% · {copy.battles(row.plays)} · {row.trophyDelta > 0 ? "+" : ""}{row.trophyDelta}
+                {row.winRate}% · {formatBattles(locale, row.plays)} · {row.trophyDelta > 0 ? "+" : ""}{row.trophyDelta}
               </span>
             </div>
           ))}
@@ -107,25 +109,4 @@ function BucketList({
       )}
     </div>
   );
-}
-
-function getHistoryCopy(locale: Locale) {
-  if (locale === "en") return {
-    title: "Accumulated Activity", description: "Based on search records stored in the database. Friendly battles are excluded from statistics.", totalBattles: "Total stored battles",
-    trackedDays: "Tracked days", trophyDelta: "Total trophy change", graphTitle: "Recent activity", graphDescription: "Shows the latest 21 of up to 60 active days.",
-    empty: "No accumulated history yet. Long-term analysis fills in as you keep searching.", topModes: "Most played modes", topMaps: "Most played maps", noData: "No data.",
-    battles: (n: number) => `${n} battles`, days: (n: number) => `${n} days`,
-  } as const;
-  if (locale === "ja") return {
-    title: "累積アクティビティ", description: "DBに保存された検索履歴を基にしています。フレンドバトルは統計から除外されます。", totalBattles: "保存バトル合計",
-    trackedDays: "記録日数", trophyDelta: "トロフィー変化合計", graphTitle: "最近のアクティビティ", graphDescription: "最大60活動日のうち直近21日を表示します。",
-    empty: "累積履歴はまだありません。検索するほど長期分析が充実します。", topModes: "よく遊ぶモード", topMaps: "よく遊ぶマップ", noData: "データがありません。",
-    battles: (n: number) => `${n}戦`, days: (n: number) => `${n}日`,
-  } as const;
-  return {
-    title: "누적 활동 분석", description: "DB에 저장된 검색 기록 기반입니다. 친선전은 통계에서 제외됩니다.", totalBattles: "전체 저장 전투",
-    trackedDays: "전체 기록 일수", trophyDelta: "전체 트로피 변화", graphTitle: "최근 활동 그래프", graphDescription: "최근 최대 60개 활동일 중 마지막 21개를 표시합니다.",
-    empty: "아직 누적 기록이 없습니다. 검색할수록 장기 분석이 채워집니다.", topModes: "자주 플레이한 모드", topMaps: "자주 플레이한 맵", noData: "데이터가 없습니다.",
-    battles: (n: number) => `${n}전`, days: (n: number) => `${n}일`,
-  } as const;
 }

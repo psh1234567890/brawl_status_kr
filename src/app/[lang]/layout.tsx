@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import LocaleHtmlSync from "../../components/LocaleHtmlSync";
-import { isLocalizedLocale } from "../../i18n/config";
+import { isLocalizedLocale, localizedLocales } from "../../i18n/config";
 
 export function generateStaticParams() {
-  return [{ lang: "en" }, { lang: "ja" }];
+  return localizedLocales.map((lang) => ({ lang }));
 }
 
 export default async function LocalizedLayout({

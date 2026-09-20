@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import type { Locale } from "../i18n/config";
+import { numberLocales, type Locale } from "../i18n/config";
 
 export default function LocaleHtmlSync({ locale }: { locale: Locale }) {
   useEffect(() => {
-    document.documentElement.lang = locale;
+    document.documentElement.lang = numberLocales[locale];
     return () => {
       document.documentElement.lang = "ko";
     };

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { localeAlternates } from "../i18n/config";
 import "./globals.css";
 
 const siteUrl = "https://www.brawl-o1.site";
@@ -30,11 +31,7 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: "/",
-    languages: {
-      "ko-KR": "/",
-      en: "/en",
-      ja: "/ja",
-    },
+    languages: localeAlternates("/"),
   },
   openGraph: {
     title: `${siteName} | Brawl Status KR`,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Locale } from "../i18n/config";
+import { formatCounterWinRate } from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
 import type { BrawlifyBrawler } from "../types/brawlify";
 import { translateBrawlerName } from "../utils/brawlTranslations";
@@ -101,11 +102,7 @@ export default function CounterBrowser({
                 {translateBrawlerName(item.brawler, locale)}
               </h2>
               <p className="mt-3 text-sm font-bold text-gray-500">
-                {locale === "ko"
-                  ? `선택 브롤러를 상대로 ${item.winRate}% 승률`
-                  : locale === "ja"
-                    ? `選択したブロウラーに対して勝率 ${item.winRate}%`
-                    : `${item.winRate}% win rate against the selected brawler`}
+                {formatCounterWinRate(locale, Number(item.winRate))}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-center">
                 <Metric label={copy.common.recommendationScore} value={String(item.score)} />

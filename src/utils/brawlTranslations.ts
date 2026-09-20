@@ -7,6 +7,13 @@ import {
   generatedModeDisplayDict,
   generatedSkinNameById,
 } from "../constants/generatedBrawlTranslations";
+import {
+  generatedEnglishModeDisplayDict,
+  generatedJapaneseBrawlerDict,
+  generatedJapaneseMapDict,
+  generatedJapaneseModeDisplayDict,
+} from "../constants/generatedBrawlJapaneseTranslations";
+import type { Locale } from "../i18n/config";
 
 const abilityNameFallbackDict: Record<string, string> = {
   "A STARR IS BORN": "스타 탄생",
@@ -144,24 +151,61 @@ function lookupByName(record: Record<string, string>, name: string | null | unde
   return record[clean] ?? record[clean.toUpperCase()];
 }
 
-export function translateBrawlerName(name: string | null | undefined) {
+export function translateBrawlerName(
+  name: string | null | undefined,
+  locale: Locale = "ko",
+) {
   const clean = cleanName(name);
+  if (locale === "en") return formatEnglishDisplayName(clean);
+  if (locale === "ja") {
+    return lookupByName(generatedJapaneseBrawlerDict, clean) ?? clean;
+  }
   return lookupByName(brawlerDict, clean) ?? lookupByName(brawlerNameFallbackDict, clean) ?? clean;
 }
 
-export function translateMapName(name: string | null | undefined) {
+export function translateMapName(
+  name: string | null | undefined,
+  locale: Locale = "ko",
+) {
   const clean = cleanName(name);
+  if (locale === "en") return clean;
+  if (locale === "ja") {
+    return lookupByName(generatedJapaneseMapDict, clean) ?? clean;
+  }
   return lookupByName(mapDict, clean) ?? clean;
 }
 
-export function translateModeName(name: string | null | undefined) {
+export function translateModeName(
+  name: string | null | undefined,
+  locale: Locale = "ko",
+) {
   const clean = cleanName(name);
+  if (locale === "en") {
+    return formatEnglishDisplayName(
+      lookupByName(generatedEnglishModeDisplayDict, clean) ?? clean,
+    );
+  }
+  if (locale === "ja") {
+    return lookupByName(generatedJapaneseModeDisplayDict, clean) ?? clean;
+  }
   return (
     lookupByName(modeDict, clean) ??
     lookupByName(generatedModeDisplayDict, clean) ??
     lookupByName(modeNameFallbackDict, clean) ??
     clean
   );
+}
+
+function formatEnglishDisplayName(value: string) {
+  if (!value || value !== value.toUpperCase()) return value;
+  if (value === "8-BIT") return value;
+  return value
+    .toLowerCase()
+    .replace(/(^|[\s-])([a-z])/g, (_, prefix: string, letter: string) =>
+      `${prefix}${letter.toUpperCase()}`,
+    )
+    .replace(/\b5v5\b/gi, "5v5")
+    .replace(/\b3v3\b/gi, "3v3");
 }
 
 export function translateBrawlerDescription(
@@ -194,8 +238,13 @@ export function translateBrawlerClassName(name: string | null | undefined) {
   return lookupByName(brawlerClassNameDict, clean) ?? clean;
 }
 
-export function translateAbilityName(id: number | string | undefined, name: string) {
+export function translateAbilityName(
+  id: number | string | undefined,
+  name: string,
+  locale: Locale = "ko",
+) {
   const clean = cleanName(name);
+  if (locale !== "ko") return clean;
   return (
     (id === undefined ? undefined : generatedAbilityDictById[String(id)]) ??
     lookupByName(generatedAbilityDictByName, clean) ??
@@ -204,8 +253,13 @@ export function translateAbilityName(id: number | string | undefined, name: stri
   );
 }
 
-export function translateGearName(id: number | string | undefined, name: string) {
+export function translateGearName(
+  id: number | string | undefined,
+  name: string,
+  locale: Locale = "ko",
+) {
   const clean = cleanName(name);
+  if (locale !== "ko") return clean;
   return (
     (id === undefined ? undefined : gearNameById[String(id)]) ??
     lookupByName(gearNameFallbackDict, clean) ??
@@ -213,8 +267,13 @@ export function translateGearName(id: number | string | undefined, name: string)
   );
 }
 
-export function translateSkinName(id: number | string | undefined, name: string) {
+export function translateSkinName(
+  id: number | string | undefined,
+  name: string,
+  locale: Locale = "ko",
+) {
   const clean = cleanName(name);
+  if (locale !== "ko") return clean;
   return (
     (id === undefined ? undefined : generatedSkinNameById[String(id)]) ??
     lookupByName(skinNameFallbackDict, clean) ??

@@ -10,6 +10,7 @@ import type {
   PlayerSkinInventoryStatus,
 } from "../types/brawl";
 import { normalizePlayerTag } from "../utils/playerTag";
+import type { Locale } from "../i18n/config";
 
 const RECENT_TAGS_KEY = "recentTags";
 const FAVORITE_TAGS_KEY = "favoriteTags";
@@ -42,11 +43,16 @@ function parseStoredTags(snapshot: string) {
   }
 }
 
-async function fetchJson<T>(url: string, init?: RequestInit) {
+async function fetchJson<T>(
+  url: string,
+  init: RequestInit | undefined,
+  fallbackError: string,
+  useServerError: boolean,
+) {
   const response = await fetch(url, init);
   const data = (await response.json().catch(() => ({}))) as T & { error?: string };
   if (!response.ok) {
-    throw new Error(data.error ?? "데이터를 불러오지 못했습니다.");
+    throw new Error(useServerError ? data.error ?? fallbackError : fallbackError);
   }
   return data;
 }
@@ -55,7 +61,8 @@ function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
 }
 
-export function usePlayerSearch() {
+export function usePlayerSearch(locale: Locale = "ko") {
+  const copy = getSearchCopy(locale);
   const [tag, setTag] = useState("");
   const [playerData, setPlayerData] = useState<PlayerData | null>(null);
   const [battleLog, setBattleLog] = useState<BattleLogResponse | null>(null);
@@ -87,7 +94,7 @@ export function usePlayerSearch() {
     async (searchTag?: string) => {
       const targetTag = normalizePlayerTag(searchTag ?? tag);
       if (!targetTag) {
-        setError("플레이어 태그를 입력해 주세요.");
+        setError(copy.enterTag);
         return;
       }
 
@@ -112,9 +119,12 @@ export function usePlayerSearch() {
       setSkinInventoryError("");
 
       try {
-        const skinInventoryRequest = fetchJson<PlayerSkinInventoryResponse>(`/api/player/skins?tag=${safeTag}`, {
-          signal: controller.signal,
-        })
+        const skinInventoryRequest = fetchJson<PlayerSkinInventoryResponse>(
+          `/api/player/skins?tag=${safeTag}`,
+          { signal: controller.signal },
+          copy.dataLoad,
+          locale === "ko",
+        )
           .then((skins) => {
             if (!isCurrent()) return;
             setSkinInventory(skins);
@@ -126,18 +136,23 @@ export function usePlayerSearch() {
             setSkinInventoryError(
               skinError instanceof Error
                 ? skinError.message
-                : "보유 스킨 목록을 불러오지 못했습니다.",
+                : copy.skinLoad,
             );
           });
 
         const [profileResult, battleResult] = await Promise.allSettled([
-          fetchJson<PlayerData>(`/api/player?tag=${safeTag}`, {
-            signal: controller.signal,
-          }),
-          fetchJson<BattleLogResponse>(`/api/player/matches?tag=${safeTag}`, {
-            method: "POST",
-            signal: controller.signal,
-          }),
+          fetchJson<PlayerData>(
+            `/api/player?tag=${safeTag}`,
+            { signal: controller.signal },
+            copy.dataLoad,
+            locale === "ko",
+          ),
+          fetchJson<BattleLogResponse>(
+            `/api/player/matches?tag=${safeTag}`,
+            { method: "POST", signal: controller.signal },
+            copy.dataLoad,
+            locale === "ko",
+          ),
         ]);
 
         if (!isCurrent()) return;
@@ -157,29 +172,35 @@ export function usePlayerSearch() {
         if (battleResult.status === "fulfilled") {
           setBattleLog(battleResult.value);
         } else if (!isAbortError(battleResult.reason)) {
-          setNotice("프로필은 불러왔지만 최근 전투 기록은 갱신하지 못했습니다.");
+          setNotice(copy.battleNotice);
         }
 
         try {
           const [stats, history] = await Promise.allSettled([
-            fetchJson<PlayerDbStats>(`/api/player/db-stats?tag=${safeTag}`, {
-              signal: controller.signal,
-            }),
-            fetchJson<PlayerHistoryResponse>(`/api/player/history?tag=${safeTag}`, {
-              signal: controller.signal,
-            }),
+            fetchJson<PlayerDbStats>(
+              `/api/player/db-stats?tag=${safeTag}`,
+              { signal: controller.signal },
+              copy.dataLoad,
+              locale === "ko",
+            ),
+            fetchJson<PlayerHistoryResponse>(
+              `/api/player/history?tag=${safeTag}`,
+              { signal: controller.signal },
+              copy.dataLoad,
+              locale === "ko",
+            ),
           ]);
           if (isCurrent()) {
             if (stats.status === "fulfilled") setDbStats(stats.value);
             if (history.status === "fulfilled") setPlayerHistory(history.value);
             if (stats.status === "rejected" || history.status === "rejected") {
-              setNotice("프로필은 불러왔지만 누적 통계는 갱신하지 못했습니다.");
+              setNotice(copy.statsNotice);
             }
           }
           await skinInventoryRequest;
         } catch (statsError) {
           if (!isAbortError(statsError) && isCurrent()) {
-            setNotice("프로필은 불러왔지만 누적 통계는 갱신하지 못했습니다.");
+            setNotice(copy.statsNotice);
           }
         }
       } catch (requestError) {
@@ -189,14 +210,14 @@ export function usePlayerSearch() {
           setError(
             requestError instanceof Error
               ? requestError.message
-              : "서버와 연결할 수 없습니다.",
+              : copy.serverConnection,
           );
         }
       } finally {
         if (isCurrent()) setLoading(false);
       }
     },
-    [recentSearches, tag],
+    [copy, locale, recentSearches, tag],
   );
 
   const toggleFavorite = useCallback(
@@ -232,4 +253,37 @@ export function usePlayerSearch() {
     handleSearch,
     toggleFavorite,
   };
+}
+
+function getSearchCopy(locale: Locale) {
+  if (locale === "en") {
+    return {
+      dataLoad: "Could not load the requested data.",
+      enterTag: "Enter a player tag.",
+      skinLoad: "Could not load the owned-skin list.",
+      battleNotice: "The profile loaded, but the recent battle log could not be refreshed.",
+      statsNotice: "The profile loaded, but accumulated statistics could not be refreshed.",
+      serverConnection: "Could not connect to the server.",
+    } as const;
+  }
+
+  if (locale === "ja") {
+    return {
+      dataLoad: "データを読み込めませんでした。",
+      enterTag: "プレイヤータグを入力してください。",
+      skinLoad: "所持スキン一覧を読み込めませんでした。",
+      battleNotice: "プロフィールは読み込めましたが、最近のバトル履歴を更新できませんでした。",
+      statsNotice: "プロフィールは読み込めましたが、累積統計を更新できませんでした。",
+      serverConnection: "サーバーに接続できませんでした。",
+    } as const;
+  }
+
+  return {
+    dataLoad: "데이터를 불러오지 못했습니다.",
+    enterTag: "플레이어 태그를 입력해 주세요.",
+    skinLoad: "보유 스킨 목록을 불러오지 못했습니다.",
+    battleNotice: "프로필은 불러왔지만 최근 전투 기록은 갱신하지 못했습니다.",
+    statsNotice: "프로필은 불러왔지만 누적 통계는 갱신하지 못했습니다.",
+    serverConnection: "서버와 연결할 수 없습니다.",
+  } as const;
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { numberLocales, type Locale } from "../i18n/config";
+import { getMessages } from "../i18n/messages";
 import type { BrawlifyBrawler } from "../types/brawlify";
 import type { RankingItem, RankingsResponse } from "../types/brawl";
 import { getClubBadgeUrl, getPlayerIconUrl } from "../utils/brawlAssets";
@@ -9,18 +11,30 @@ import BrawlImage from "./BrawlImage";
 
 type RankingType = "players" | "clubs" | "brawlers";
 
-async function fetchRankings(type: RankingType, country: string, brawlerId: string) {
+async function fetchRankings(
+  type: RankingType,
+  country: string,
+  brawlerId: string,
+  errorText: string,
+) {
   const params = new URLSearchParams({ type, country });
   if (type === "brawlers") params.set("brawlerId", brawlerId);
   const response = await fetch(`/api/rankings?${params}`);
   const data = (await response.json().catch(() => ({}))) as RankingsResponse & {
     error?: string;
   };
-  if (!response.ok) throw new Error(data.error ?? "랭킹 정보를 불러오지 못했습니다.");
+  if (!response.ok) throw new Error(errorText);
   return data.items ?? [];
 }
 
-export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawler[] }) {
+export default function RankingsBrowser({
+  brawlers,
+  locale = "ko",
+}: {
+  brawlers: BrawlifyBrawler[];
+  locale?: Locale;
+}) {
+  const copy = getMessages(locale);
   const [type, setType] = useState<RankingType>("players");
   const [country, setCountry] = useState("global");
   const [brawlerId, setBrawlerId] = useState(String(brawlers[0]?.id ?? ""));
@@ -35,14 +49,14 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
 
   useEffect(() => {
     let alive = true;
-    fetchRankings(type, country, brawlerId)
+    fetchRankings(type, country, brawlerId, copy.rankings.error)
       .then((nextItems) => {
         if (alive) setItems(nextItems);
       })
       .catch((requestError) => {
         if (alive) {
           setItems([]);
-          setError(requestError instanceof Error ? requestError.message : "랭킹 정보를 불러오지 못했습니다.");
+          setError(requestError instanceof Error ? requestError.message : copy.rankings.error);
         }
       })
       .finally(() => {
@@ -51,7 +65,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
     return () => {
       alive = false;
     };
-  }, [brawlerId, country, type]);
+  }, [brawlerId, copy.rankings.error, country, type]);
 
   function beginReload() {
     setLoading(true);
@@ -62,7 +76,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
     <div className="flex flex-col gap-5">
       <section className="grid gap-3 rounded-lg border border-white bg-white p-4 shadow-sm md:grid-cols-4">
         <select
-          aria-label="랭킹 종류"
+          aria-label={copy.rankings.type}
           value={type}
           onChange={(event) => {
             beginReload();
@@ -70,12 +84,12 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
           }}
           className="rounded-md border border-gray-200 bg-white px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400"
         >
-          <option value="players">플레이어 랭킹</option>
-          <option value="clubs">클럽 랭킹</option>
-          <option value="brawlers">브롤러 랭킹</option>
+          <option value="players">{copy.rankings.players}</option>
+          <option value="clubs">{copy.rankings.clubs}</option>
+          <option value="brawlers">{copy.rankings.brawlers}</option>
         </select>
         <select
-          aria-label="랭킹 국가"
+          aria-label={copy.rankings.country}
           value={country}
           onChange={(event) => {
             beginReload();
@@ -83,13 +97,13 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
           }}
           className="rounded-md border border-gray-200 bg-white px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400"
         >
-          <option value="global">글로벌</option>
-          <option value="kr">한국</option>
-          <option value="jp">일본</option>
-          <option value="us">미국</option>
+          <option value="global">{copy.rankings.global}</option>
+          <option value="kr">{copy.rankings.korea}</option>
+          <option value="jp">{copy.rankings.japan}</option>
+          <option value="us">{copy.rankings.usa}</option>
         </select>
         <select
-          aria-label="랭킹 브롤러"
+          aria-label={copy.rankings.brawler}
           value={brawlerId}
           onChange={(event) => {
             beginReload();
@@ -100,7 +114,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
         >
           {releasedBrawlers.map((brawler) => (
             <option key={brawler.id} value={brawler.id}>
-              {translateBrawlerName(brawler.name)}
+              {translateBrawlerName(brawler.name, locale)}
             </option>
           ))}
         </select>
@@ -108,7 +122,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
 
       {loading ? (
         <div className="rounded-lg bg-white p-8 text-center text-lg font-black text-indigo-600 shadow-sm">
-          랭킹을 불러오는 중...
+          {copy.rankings.loading}
         </div>
       ) : error ? (
         <div role="alert" className="rounded-lg border-l-4 border-red-500 bg-red-100 p-5 font-bold text-red-700">
@@ -116,7 +130,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
         </div>
       ) : items.length === 0 ? (
         <div role="status" className="rounded-lg border border-dashed border-indigo-200 bg-white/70 p-8 text-center text-sm font-bold text-gray-500">
-          선택한 조건의 랭킹 기록이 없습니다.
+          {copy.rankings.empty}
         </div>
       ) : (
         <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
@@ -128,7 +142,7 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
                   {type === "clubs" && item.badgeId ? (
                     <BrawlImage
                       src={getClubBadgeUrl(item.badgeId)}
-                      alt={`${item.name} 클럽 배지`}
+                      alt={locale === "ko" ? `${item.name} 클럽 배지` : item.name}
                       width={40}
                       height={40}
                       className="h-10 w-10 rounded-md bg-white p-1"
@@ -148,12 +162,12 @@ export default function RankingsBrowser({ brawlers }: { brawlers: BrawlifyBrawle
                     <p className="truncate font-black text-gray-900">{item.name}</p>
                     <p className="text-xs font-bold text-gray-500">
                       {item.club?.name ? `${item.club.name} · ` : ""}
-                      {item.tag ?? `${item.memberCount ?? 0}명`}
+                      {item.tag ?? `${item.memberCount ?? 0} ${copy.rankings.members}`}
                     </p>
                   </div>
                 </div>
                 <span className="shrink-0 text-sm font-black text-indigo-700">
-                  {item.trophies.toLocaleString("ko-KR")} 트로피
+                  {item.trophies.toLocaleString(numberLocales[locale])} {copy.rankings.trophies}
                 </span>
               </article>
             ))}

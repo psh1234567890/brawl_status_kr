@@ -30,6 +30,11 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: "/",
+    languages: {
+      "ko-KR": "/",
+      en: "/en",
+      ja: "/ja",
+    },
   },
   openGraph: {
     title: `${siteName} | Brawl Status KR`,

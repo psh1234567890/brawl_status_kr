@@ -12,6 +12,7 @@ import {
 import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
 import { translateBrawlerName, translateSkinName } from "../../utils/brawlTranslations";
+import { replaceBrowserSearch, useBrowserSearch } from "../../utils/urlState";
 
 const PAGE_SIZE = 120;
 const ALL = "ALL";
@@ -116,12 +117,25 @@ function compareSkins(
 
 export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) {
   const copy = getCatalogPageMessages(locale).skins;
-  const [query, setQuery] = useState("");
-  const [rarity, setRarity] = useState(ALL);
-  const [brawlerId, setBrawlerId] = useState(ALL);
-  const [saleStatus, setSaleStatus] = useState<SaleStatus>("ALL");
-  const [sortMode, setSortMode] = useState<SortMode>("RARITY");
-  const [hideDefaults, setHideDefaults] = useState(true);
+  const search = useBrowserSearch();
+  const params = useMemo(() => new URLSearchParams(search), [search]);
+  const query = params.get("q") ?? "";
+  const requestedBrawler = params.get("brawler");
+  const brawlerId =
+    requestedBrawler &&
+    generatedSkinCatalog.some((skin) => String(skin.brawlerId) === requestedBrawler)
+      ? requestedBrawler
+      : ALL;
+  const requestedRarity = params.get("rarity");
+  const rarity =
+    requestedRarity && generatedSkinCatalog.some((skin) => skin.rarity === requestedRarity)
+      ? requestedRarity
+      : ALL;
+  const requestedSale = params.get("sale") as SaleStatus | null;
+  const saleStatus = requestedSale && saleStatuses.includes(requestedSale) ? requestedSale : "ALL";
+  const requestedSort = params.get("sort") as SortMode | null;
+  const sortMode = requestedSort && sortModes.includes(requestedSort) ? requestedSort : "RARITY";
+  const hideDefaults = params.get("defaults") !== "show";
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const brawlers = useMemo(() => {
@@ -220,8 +234,9 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
               aria-label={copy.searchAria}
               value={query}
               onChange={(event) => {
-                setQuery(event.target.value);
+                const value = event.target.value;
                 resetVisibleCount();
+                replaceBrowserSearch({ q: value || null });
               }}
               placeholder={copy.searchPlaceholder}
               className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
@@ -230,8 +245,9 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
               aria-label={copy.brawlerAria}
               value={brawlerId}
               onChange={(event) => {
-                setBrawlerId(event.target.value);
+                const value = event.target.value;
                 resetVisibleCount();
+                replaceBrowserSearch({ brawler: value === ALL ? null : value });
               }}
               className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             >
@@ -246,8 +262,9 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
               aria-label={copy.rarityAria}
               value={rarity}
               onChange={(event) => {
-                setRarity(event.target.value);
+                const value = event.target.value;
                 resetVisibleCount();
+                replaceBrowserSearch({ rarity: value === ALL ? null : value });
               }}
               className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             >
@@ -262,8 +279,9 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
               aria-label={copy.saleAria}
               value={saleStatus}
               onChange={(event) => {
-                setSaleStatus(event.target.value as SaleStatus);
+                const value = event.target.value as SaleStatus;
                 resetVisibleCount();
+                replaceBrowserSearch({ sale: value === "ALL" ? null : value });
               }}
               className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             >
@@ -277,8 +295,9 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
               aria-label={copy.sortAria}
               value={sortMode}
               onChange={(event) => {
-                setSortMode(event.target.value as SortMode);
+                const value = event.target.value as SortMode;
                 resetVisibleCount();
+                replaceBrowserSearch({ sort: value === "RARITY" ? null : value });
               }}
               className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
             >
@@ -295,8 +314,9 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
               type="checkbox"
               checked={hideDefaults}
               onChange={(event) => {
-                setHideDefaults(event.target.checked);
+                const checked = event.target.checked;
                 resetVisibleCount();
+                replaceBrowserSearch({ defaults: checked ? null : "show" });
               }}
               className="h-4 w-4 accent-indigo-600"
             />

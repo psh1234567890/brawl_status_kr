@@ -18,10 +18,11 @@ export default function LanguageSwitcher({ locale }: { locale: Locale }) {
   function changeLocale(nextLocale: Locale) {
     document.cookie = `brawl-locale=${nextLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
     const currentPath = stripLocalePrefix(pathname || "/");
-    const target =
+    const targetPath =
       nextLocale !== "ko" && !localizedCorePaths.has(currentPath)
         ? `/${nextLocale}`
         : localizedHref(nextLocale, currentPath);
+    const target = `${targetPath}${window.location.search}${window.location.hash}`;
     router.push(target);
   }
 

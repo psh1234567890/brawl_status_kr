@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { fetchBrawlaceSkinInventory } from "../../../../server/brawlaceSkins";
+import {
+  BrawlaceSkinLookupError,
+  fetchBrawlaceSkinInventory,
+} from "../../../../server/brawlaceSkins";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
 import { isValidPlayerTag } from "../../../../utils/playerTag";
 
@@ -19,10 +22,12 @@ export async function GET(request: Request) {
   try {
     return NextResponse.json(await fetchBrawlaceSkinInventory(tag));
   } catch (error) {
-    console.error("Failed to fetch player skins:", error);
+    const disabled = error instanceof BrawlaceSkinLookupError && error.status === 503;
+    if (!disabled) console.error("Failed to fetch player skins:", error);
+    const status = disabled ? 503 : 502;
     return NextResponse.json(
       { error: "보유 스킨 목록을 불러오지 못했습니다." },
-      { status: 502 },
+      { status },
     );
   }
 }

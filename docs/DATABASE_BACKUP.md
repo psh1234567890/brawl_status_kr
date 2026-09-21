@@ -4,6 +4,8 @@
 
 2026-09-21 실제 복구 연습에서는 PostgreSQL 17 운영 DB의 `public` 스키마를 custom archive로 백업한 뒤 별도 PostgreSQL 17 임시 DB에 복구했다. `battle_logs` 60,229행, archive가 보존한 인덱스 8개, fingerprint/timestamp/JSON 누락 수, RLS ON 및 FORCE RLS OFF가 원본 manifest와 일치함을 확인했다.
 
+2026-09-22에는 새 운영 읽기 전용 백업(60,268행)을 다시 만들고 별도 PostgreSQL 17 DB에 복구한 뒤, 실제 production build를 그 복구 DB와 로컬 HTTPS mock upstream에 연결해 저장 흐름을 검증했다. 합성 태그의 battlelog 1건을 `POST /api/player/matches`로 저장했을 때 row 수가 60,268→60,269로 1행 증가했고 fingerprint/timestamp/JSON이 모두 생성됐다. 같은 요청을 두 번째로 실행했을 때 row 수가 그대로 60,269여서 UNIQUE + `ON CONFLICT DO NOTHING` 중복 방지가 실제 라우트에서도 동작함을 확인했다. 테스트 컨테이너와 임시 TLS 인증서는 검증 후 삭제했으며 운영 DB에는 이 과정에서 쓰기 작업을 하지 않았다.
+
 ## 준비
 
 - 기본 helper 사용 시 Docker Desktop을 실행한다. helper는 운영 서버 major와 같은 공식 `postgres:<major>-alpine` 이미지를 사용한다. 수동 방식은 PostgreSQL 공식 클라이언트(pg_dump, pg_restore)를 별도로 설치해도 된다.

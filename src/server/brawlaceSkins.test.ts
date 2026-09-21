@@ -80,7 +80,18 @@ describe("brawlace skin parser", () => {
     ]);
   });
 
+  it("keeps the Brawlace network lookup disabled by default", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchBrawlaceSkinInventory("#2PYLQ")).rejects.toMatchObject({
+      status: 503,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("does not use Jina Reader by default when direct lookup fails", async () => {
+    vi.stubEnv("BRAWLACE_SKIN_LOOKUP_ENABLED", "true");
     const fetchMock = vi.fn().mockResolvedValueOnce(new Response("blocked", { status: 403 }));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -91,6 +102,7 @@ describe("brawlace skin parser", () => {
   });
 
   it("uses the opted-in Jina Reader fallback when direct lookup fails", async () => {
+    vi.stubEnv("BRAWLACE_SKIN_LOOKUP_ENABLED", "true");
     vi.stubEnv("BRAWLACE_JINA_READER_ENABLED", "true");
     const fetchMock = vi
       .fn()
@@ -114,6 +126,7 @@ describe("brawlace skin parser", () => {
   });
 
   it("sends an optional Jina API key only to the opted-in reader request", async () => {
+    vi.stubEnv("BRAWLACE_SKIN_LOOKUP_ENABLED", "true");
     vi.stubEnv("BRAWLACE_JINA_READER_ENABLED", "true");
     vi.stubEnv("JINA_READER_API_KEY", "jina_test_key");
     const fetchMock = vi

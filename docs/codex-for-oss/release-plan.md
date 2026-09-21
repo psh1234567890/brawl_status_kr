@@ -25,10 +25,10 @@
 - [x] 출처 불명 게임 아이콘 제거와 고유 문자 아이콘 교체
 - [x] Brawlify CDN 공개 사용 조건과 Supercell 정책 연결 확인
 - [x] BrawlAPI 현재 공개 API 접근 조건(no auth/static API) 확인 및 Supercell 권리 경계 문서화
-- [ ] Brawlace 공개 페이지의 제3자 자동 조회·재사용 허용 조건 확인 또는 해당 보조 기능 제거
+- [x] Brawlace 제3자 자동 조회·재사용 허용이 명시되지 않아 runtime 보조 조회를 기본 비활성·명시적 opt-in으로 제한
 - [x] Jina Reader 자동 fallback을 기본 비활성으로 변경하고 명시적 opt-in으로 제한
 - [x] CI가 공개 GitHub PR #1에서 통과
-- [ ] 운영 저장 흐름 승인 테스트
+- [x] 실제 운영 백업을 격리 DB에 복구한 뒤 production build + 로컬 HTTPS mock upstream으로 저장 1행·중복 0행·fingerprint/timestamp/JSON 생성 검증
 - [x] 모바일·데스크톱 smoke test
 - [x] 무인증 기록 삭제 API 제거
 - [x] 묵시적 제3자 프록시 기본값 제거

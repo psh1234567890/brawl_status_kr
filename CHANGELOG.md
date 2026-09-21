@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- Brawlace 보유 스킨 보조 조회도 기본 비활성·명시적 opt-in으로 전환하고, 자동 TTL이 없는 현재 전투 기록 보관 정책과 격리 복구 DB의 실제 저장·중복 방지 검증 결과를 문서화
 - 제3자 조건이 불명확한 Jina Reader fallback을 기본 비활성·명시적 opt-in으로 변경하고, 선택적 서버 API 키 지원과 BrawlAPI/Brawlify/Brawlace 조건 검토 상태를 문서화
 
 ## 0.1.0-rc.2 - 2026-09-22

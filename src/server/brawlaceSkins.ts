@@ -12,6 +12,10 @@ export class BrawlaceSkinLookupError extends Error {
 }
 
 export async function fetchBrawlaceSkinInventory(tag: string): Promise<PlayerSkinInventoryResponse> {
+  if (!isBrawlaceSkinLookupEnabled()) {
+    throw new BrawlaceSkinLookupError("보유 스킨 보조 조회가 비활성화되어 있습니다.", 503);
+  }
+
   const cleanTag = normalizePlayerTag(tag);
   const skins = await fetchBrawlaceSkins(cleanTag);
 
@@ -112,6 +116,10 @@ async function fetchBrawlaceReaderMarkdown(cleanTag: string) {
   }
 
   return markdown;
+}
+
+function isBrawlaceSkinLookupEnabled() {
+  return process.env.BRAWLACE_SKIN_LOOKUP_ENABLED?.trim().toLowerCase() === "true";
 }
 
 function isJinaReaderFallbackEnabled() {

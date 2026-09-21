@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { localizedHref, type Locale } from "../i18n/config";
 import { getMessages } from "../i18n/messages";
+import AdSenseUnit from "./AdSenseUnit";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 interface PortalLayoutProps {
@@ -132,14 +133,7 @@ export function AdSlot() {
   if (clientId && slotId) {
     return (
       <aside>
-        <ins
-          className="adsbygoogle"
-          style={{ display: "block" }}
-          data-ad-client={clientId}
-          data-ad-slot={slotId}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
+        <AdSenseUnit clientId={clientId} slotId={slotId} />
       </aside>
     );
   }

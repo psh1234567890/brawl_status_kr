@@ -79,10 +79,12 @@ npm.cmd run dev
 | `DIRECT_URL` | 마이그레이션 시 | DB 점검·마이그레이션 직접 연결 |
 | `BRAWL_STARS_API_KEY` | 예 | 서버의 Brawl Stars API 인증 |
 | `BRAWL_STARS_API_BASE_URL` | 예 | 공식 API 또는 직접 관리하거나 명시적으로 신뢰한 HTTPS 프록시 |
-| `NEXT_PUBLIC_ADSENSE_CLIENT_ID` | 선택 | 광고 클라이언트 ID |
-| `NEXT_PUBLIC_ADSENSE_SLOT_ID` | 선택 | 광고 슬롯 ID |
+| `NEXT_PUBLIC_ADSENSE_CLIENT_ID` | 선택 | AdSense `ca-pub-...` client ID. 설정 시 사이트 연결 코드와 `/ads.txt` 생성에 사용 |
+| `NEXT_PUBLIC_ADSENSE_SLOT_ID` | 선택 | 실제 반응형 광고 단위 slot ID. client ID와 함께 있을 때만 광고 슬롯 렌더링 |
 
 실제 값을 커밋하지 마세요. `.env.example`에는 변수 이름과 빈 값만 있습니다. 묵시적 기본 프록시는 없으며, 운영자가 `BRAWL_STARS_API_BASE_URL`을 명시해야만 서버 API 키가 전송됩니다.
+
+AdSense 활성화 전 체크는 [AdSense 운영 준비](docs/ADSENSE.md)를 참고하세요.
 
 ## 데이터베이스
 

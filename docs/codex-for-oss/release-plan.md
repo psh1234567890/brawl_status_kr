@@ -17,7 +17,7 @@
 - 계정 없는 서비스라 자동 기록 삭제 대신 운영자 검토 요청을 사용
 - 명시한 API 또는 프록시의 신뢰·고정 IP·키 회전 운영 확인 필요
 - 외부 Brawlify/BrawlAPI 데이터 가용성
-- 의존성 high advisory 잔여
+- 정식 릴리스 전 제3자 데이터 조건과 장기 운영 상태를 계속 확인할 필요
 
 ## 릴리스 전 체크
 
@@ -33,6 +33,9 @@
 - [x] PR #1을 `main`에 병합하고 canonical 프로덕션 배포 검증
 - [x] changelog 날짜와 `v0.1.0-rc.1` tag 확정
 - [x] 공개 저장소 description·topics·homepage 수정
+- [x] 실제 PostgreSQL 백업·격리 복구 drill과 앱 smoke 검증
+- [x] 주요 API observability·health endpoint와 Playwright E2E를 CI에 연결
+- [x] 핵심 사용자 화면·도감·안내 문서의 10개 언어 지원과 hreflang/sitemap 확장
 
 ## 커밋 후보
 
@@ -42,4 +45,4 @@
 4. `docs: publish data methodology and self-hosting guide`
 5. `feat: expose methodology and contribution links`
 
-사용자는 2026-07-25 공개 변경 진행을 승인했고 PR #1은 `main`에 병합됐다. 프로덕션 배포와 읽기 흐름은 검증됐지만, 실제 `v0.1.0` 태그와 GitHub Release는 제3자 데이터 조건·운영 저장 흐름·남은 advisory를 검토한 뒤 진행한다.
+사용자는 2026-07-25 공개 변경 진행을 승인했고 PR #1은 `main`에 병합됐다. 이후 rc.2 후보에서는 다국어, SEO, DB 복구 drill, observability, E2E/CI, 공유 URL과 광고 비활성 기본값까지 운영 준비도를 보강했다. 실제 `v0.1.0` 태그와 정식 GitHub Release는 제3자 데이터 조건과 장기 운영 상태를 추가로 확인한 뒤 진행한다.

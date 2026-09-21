@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## 0.1.0-rc.2 - 2026-09-22
+
 - AdSense client ID가 있을 때만 올바른 `/ads.txt`를 생성하고, 반응형 광고 단위의 공식 `adsbygoogle.push({})` 초기화와 초기 HTML head 스크립트 로딩을 준비
 - `/meta`, `/counters`, `/skins`의 선택·필터 상태를 query string과 동기화해 링크로 그대로 공유할 수 있게 하고, 언어 전환 시 query/hash를 유지
 - CI runner를 `ubuntu-24.04`로 고정하고 `actions/checkout`/`actions/setup-node`를 최신 v7 계열로 갱신해 GitHub Actions 런타임 전환 리스크를 줄임

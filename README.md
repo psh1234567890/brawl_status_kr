@@ -21,7 +21,7 @@
 - 팀전 참가자를 펼친 팀 조합·카운터 집계
 - BrawlAPI 기반 이벤트·맵·모드·브롤러 정보와 한국어 번역·스킨 카탈로그 원본
 - Brawlify CDN 기반 게임 이미지
-- Brawlace 기반 보유 스킨 조회와 Jina Reader fallback
+- Brawlace 기반 보유 스킨 보조 조회와 운영자가 명시적으로 켠 경우에만 사용하는 Jina Reader fallback
 - 모바일 결과 탭, 최근 검색, 브라우저별 즐겨찾기
 - 전적 검색·메타·도감·스킨·클럽·주요 안내 문서의 10개 언어 UI와 브라우저 언어 감지: 한국어(`/`), 영어(`/en`), 일본어(`/ja`), 브라질 포르투갈어(`/pt-br`), 스페인어(`/es`), 튀르키예어(`/tr`), 독일어(`/de`), 프랑스어(`/fr`), 이탈리아어(`/it`), 러시아어(`/ru`)
 
@@ -79,6 +79,8 @@ npm.cmd run dev
 | `DIRECT_URL` | 마이그레이션 시 | DB 점검·마이그레이션 직접 연결 |
 | `BRAWL_STARS_API_KEY` | 예 | 서버의 Brawl Stars API 인증 |
 | `BRAWL_STARS_API_BASE_URL` | 예 | 공식 API 또는 직접 관리하거나 명시적으로 신뢰한 HTTPS 프록시 |
+| `BRAWLACE_JINA_READER_ENABLED` | 선택 | `true`일 때만 Brawlace 직접 조회 실패 시 Jina Reader fallback 사용. 기본값은 비활성 |
+| `JINA_READER_API_KEY` | 선택 | opt-in Jina Reader 요청에만 보내는 서버 전용 API 키 |
 | `NEXT_PUBLIC_ADSENSE_CLIENT_ID` | 선택 | AdSense `ca-pub-...` client ID. 설정 시 사이트 연결 코드와 `/ads.txt` 생성에 사용 |
 | `NEXT_PUBLIC_ADSENSE_SLOT_ID` | 선택 | 실제 반응형 광고 단위 slot ID. client ID와 함께 있을 때만 광고 슬롯 렌더링 |
 
@@ -124,7 +126,8 @@ CI는 API 키와 운영 DB 없이 lint·test·`npm audit --audit-level=high`·bu
 - Brawl Stars API 또는 설정된 프록시: 공개 게임 프로필·전투·클럽·랭킹
 - BrawlAPI: 맵·모드·브롤러·이벤트 메타데이터와 번역·스킨 카탈로그 생성 원본
 - Brawlify: 브롤러·맵·모드·프로필·배지 등 원격 이미지 CDN
-- Brawlace/Jina Reader: 검색된 공개 플레이어 태그의 보유 스킨 보조 조회
+- Brawlace: 검색된 공개 플레이어 태그의 보유 스킨 보조 조회
+- Jina Reader: 운영자가 별도로 opt-in한 경우에만 Brawlace 직접 조회 실패 시 사용하는 보조 reader
 
 각 제공자의 현재 정책과 라이선스가 우선합니다. 자세한 내용과 아직 확인할 항목은 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 기록합니다.
 

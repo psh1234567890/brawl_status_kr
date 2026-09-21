@@ -2,7 +2,7 @@ import type { PlayerOwnedSkin, PlayerSkinInventoryResponse } from "../types/braw
 import { normalizePlayerTag } from "../utils/playerTag";
 
 const BRAWLACE_BASE_URL = "https://brawlace.com";
-const BRAWLACE_READER_BASE_URL = "https://r.jina.ai/http://";
+const BRAWLACE_READER_BASE_URL = "https://r.jina.ai/";
 const MAX_BRAWLACE_SKINS_HTML_BYTES = 1_000_000;
 
 export class BrawlaceSkinLookupError extends Error {
@@ -30,7 +30,18 @@ async function fetchBrawlaceSkins(cleanTag: string) {
     if (skins.length > 0) return skins;
     throw new BrawlaceSkinLookupError("보유 스킨 표를 찾지 못했습니다.");
   } catch (error) {
-    console.warn("Brawlace direct skin lookup failed; trying reader fallback:", getLookupLog(error));
+    if (!isJinaReaderFallbackEnabled()) {
+      console.warn(
+        "Brawlace direct skin lookup failed; reader fallback is disabled:",
+        getLookupLog(error),
+      );
+      throw toBrawlaceLookupError(error);
+    }
+
+    console.warn(
+      "Brawlace direct skin lookup failed; trying opted-in reader fallback:",
+      getLookupLog(error),
+    );
   }
 
   const markdown = await fetchBrawlaceReaderMarkdown(cleanTag);
@@ -74,11 +85,15 @@ async function fetchBrawlaceDirectHtml(cleanTag: string) {
 
 async function fetchBrawlaceReaderMarkdown(cleanTag: string) {
   const targetUrl = `${BRAWLACE_BASE_URL}/players/%23${cleanTag}/skins`;
+  const headers: Record<string, string> = {
+    accept: "text/plain,*/*",
+    "user-agent": "Brawl Status KR skin lookup",
+  };
+  const apiKey = process.env.JINA_READER_API_KEY?.trim();
+  if (apiKey) headers.authorization = `Bearer ${apiKey}`;
+
   const response = await fetch(`${BRAWLACE_READER_BASE_URL}${targetUrl}`, {
-    headers: {
-      accept: "text/plain,*/*",
-      "user-agent": "Brawl Status KR skin lookup",
-    },
+    headers,
     signal: AbortSignal.timeout(15_000),
   });
 
@@ -97,6 +112,15 @@ async function fetchBrawlaceReaderMarkdown(cleanTag: string) {
   }
 
   return markdown;
+}
+
+function isJinaReaderFallbackEnabled() {
+  return process.env.BRAWLACE_JINA_READER_ENABLED?.trim().toLowerCase() === "true";
+}
+
+function toBrawlaceLookupError(error: unknown) {
+  if (error instanceof BrawlaceSkinLookupError) return error;
+  return new BrawlaceSkinLookupError("보유 스킨 보조 조회에 실패했습니다.");
 }
 
 export function parseBrawlaceSkinTable(html: string): PlayerOwnedSkin[] {

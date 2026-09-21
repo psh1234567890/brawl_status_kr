@@ -2,15 +2,15 @@
 
 This file records third-party services and data sources. It is not a substitute for each provider's current terms.
 
-| Source | Use in this project | Current action |
+| Source | Use in this project | Current status / action (checked 2026-09-22) |
 | --- | --- | --- |
 | Supercell / Brawl Stars API | Public player, battle, club, and ranking data | Follow the developer terms and Fan Content Policy; keep the required unofficial notice |
 | Supercell assets | Game names used to identify and discuss the game; no bundled game-art icon | Excluded from the repository MIT License; keep runtime or remote assets under their provider's terms |
-| BrawlAPI | Map, mode, brawler, and event metadata at runtime/build time; translation and skin-catalog source for `scripts/update-brawl-translations.mjs` | Confirm the upstream data/license terms and record the exact version or retrieval date |
-| Brawlify | Remote image CDN used for brawler, map, mode, profile, badge, ability, and gear images | Follow the provider's asset/API terms and preserve source attribution where required |
-| Brawlace | Player-tag based owned-skin lookup | Verify the provider's terms and disclose that a searched public player tag may be sent for this optional lookup |
-| Jina Reader | Fallback reader when the direct Brawlace skin page cannot be parsed | Verify the service terms and disclose the fallback data flow |
+| BrawlAPI | Map, mode, brawler, and event metadata at runtime/build time; translation and skin-catalog source for `scripts/update-brawl-translations.mjs` | Current public docs describe a free static JSON API with no authentication or rate limit. Game data rights still remain subject to Supercell's terms/Fan Content Policy; no separate content-license grant was found on the API reference. |
+| Brawlify CDN | Remote image CDN used for brawler, map, mode, profile, badge, ability, and gear images | The verified Brawlify GitHub CDN repository is MIT-licensed and explicitly permits direct linking, downloading, and programmatic fetch without Brawlify credit, while requiring compliance with Supercell's terms/Fan Content Policy. |
+| Brawlace | Player-tag based owned-skin lookup | Privacy Policy was reviewed and the public-tag data flow is disclosed. No explicit third-party automation/reuse/API permission was found on the public site, so this remains a `v0.1.0` review item. |
+| Jina Reader | Optional fallback reader when the direct Brawlace skin page cannot be parsed | Disabled by default. It runs only when `BRAWLACE_JINA_READER_ENABLED=true`; an optional server-only API key is supported. Enabling it does not itself establish permission to reuse the target page, so the operator must review both Jina and target-site terms first. |
 | RoyaleAPI proxy or another proxy | Optional, explicitly configured Brawl Stars API proxy | No code default; use only when deliberately configured and trusted because the server API key is sent to it |
 | npm packages | Runtime and development dependencies | Each package remains under its own license; inspect `package-lock.json` and package notices for redistribution |
 
-BrawlAPI, Brawlify, Brawlace, and Jina Reader terms still require verification before `v0.1.0`; see `docs/codex-for-oss/license-recommendation.md`.
+Brawlify CDN usage has an explicit public permission statement. BrawlAPI access behavior is documented publicly but underlying game-data rights remain governed by Supercell. Brawlace automated/reuse permission remains unresolved; Jina Reader is therefore not used as an automatic fallback by default. See `docs/codex-for-oss/license-recommendation.md` for the project-level license boundary.

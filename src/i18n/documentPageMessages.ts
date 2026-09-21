@@ -155,7 +155,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "전적 검색으로 돌아가기",
       title: "개인정보처리방침",
-      effectiveDate: "시행일: 2026년 6월 4일",
+      effectiveDate: "시행일: 2026년 9월 22일",
       intro:
         "Brawl Status KR은 이용자의 개인정보를 불필요하게 수집하지 않으며, 서비스 제공과 품질 개선에 필요한 최소한의 정보만 처리합니다.",
       sections: [
@@ -447,7 +447,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "Back to player search",
       title: "Privacy Policy",
-      effectiveDate: "Effective date: June 4, 2026",
+      effectiveDate: "Effective date: September 22, 2026",
       intro:
         "Brawl Status KR does not collect personal information unnecessarily and processes only the minimum information needed to provide and improve the service.",
       sections: [
@@ -739,7 +739,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "戦績検索に戻る",
       title: "プライバシーポリシー",
-      effectiveDate: "施行日: 2026年6月4日",
+      effectiveDate: "施行日: 2026年9月22日",
       intro:
         "Brawl Status KRは利用者の個人情報を不必要に収集せず、サービス提供と品質改善に必要な最小限の情報のみを処理します。",
       sections: [
@@ -1031,7 +1031,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "Voltar à busca de jogador",
       title: "Política de Privacidade",
-      effectiveDate: "Data de vigência: 4 de junho de 2026",
+      effectiveDate: "Data de vigência: 22 de setembro de 2026",
       intro:
         "O Brawl Status KR não coleta informações pessoais desnecessariamente e processa apenas o mínimo necessário para prestar e melhorar o serviço.",
       sections: [
@@ -1323,7 +1323,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "Volver a la búsqueda de jugador",
       title: "Política de Privacidad",
-      effectiveDate: "Fecha de entrada en vigor: 4 de junio de 2026",
+      effectiveDate: "Fecha de entrada en vigor: 22 de septiembre de 2026",
       intro:
         "Brawl Status KR no recopila información personal de forma innecesaria y solo procesa la información mínima necesaria para prestar y mejorar el servicio.",
       sections: [
@@ -1615,7 +1615,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "Oyuncu aramasına dön",
       title: "Gizlilik Politikası",
-      effectiveDate: "Yürürlük tarihi: 4 Haziran 2026",
+      effectiveDate: "Yürürlük tarihi: 22 Eylül 2026",
       intro:
         "Brawl Status KR gereksiz kişisel bilgi toplamaz ve yalnızca hizmeti sunmak ve iyileştirmek için gereken asgari bilgileri işler.",
       sections: [
@@ -1907,7 +1907,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "Zurück zur Spielersuche",
       title: "Datenschutzerklärung",
-      effectiveDate: "Gültig ab: 4. Juni 2026",
+      effectiveDate: "Gültig ab: 22. September 2026",
       intro:
         "Brawl Status KR erhebt personenbezogene Daten nicht unnötig und verarbeitet nur die Mindestinformationen, die für die Bereitstellung und Verbesserung des Dienstes erforderlich sind.",
       sections: [
@@ -2199,7 +2199,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "Retour à la recherche de joueur",
       title: "Politique de confidentialité",
-      effectiveDate: "Date d'entrée en vigueur : 4 juin 2026",
+      effectiveDate: "Date d'entrée en vigueur : 22 septembre 2026",
       intro:
         "Brawl Status KR ne collecte pas inutilement de données personnelles et ne traite que les informations minimales nécessaires au fonctionnement et à l'amélioration du service.",
       sections: [
@@ -2491,7 +2491,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "Torna alla ricerca giocatore",
       title: "Informativa sulla privacy",
-      effectiveDate: "Data di entrata in vigore: 4 giugno 2026",
+      effectiveDate: "Data di entrata in vigore: 22 settembre 2026",
       intro:
         "Brawl Status KR non raccoglie dati personali inutilmente e tratta solo le informazioni minime necessarie per fornire e migliorare il servizio.",
       sections: [
@@ -2783,7 +2783,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       },
       back: "Вернуться к поиску игрока",
       title: "Политика конфиденциальности",
-      effectiveDate: "Дата вступления в силу: 4 июня 2026 г.",
+      effectiveDate: "Дата вступления в силу: 22 сентября 2026 г.",
       intro:
         "Brawl Status KR не собирает лишние персональные данные и обрабатывает только минимальный объём информации, необходимый для работы и улучшения сервиса.",
       sections: [

@@ -1,6 +1,6 @@
 {
   "name": "brawl-status-kr",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

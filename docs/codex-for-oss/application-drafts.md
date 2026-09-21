@@ -10,7 +10,7 @@
 
 ### Why does this repository qualify?
 
-Brawl Status KR은 한국어 Brawl Stars 이용자를 위한 공개 분석 서비스입니다. 검색 시 받은 최근 전투를 중복 제거해 맵·팀·카운터 표본 통계를 만들고 계산 기준과 편향을 공개합니다. 2026-07-25 기준 5,864개 전투와 130개 고유 저장 태그가 있으나 태그를 사용자 수로 부르지 않습니다. [제출 전: 라이선스, 공개 CI, 릴리스, 실제 피드백 근거 링크 추가]
+Brawl Status KR은 한국어 Brawl Stars 이용자를 위한 공개 분석 서비스입니다. 검색 시 받은 최근 전투를 중복 제거해 맵·팀·카운터 표본 통계를 만들고 계산 기준과 편향을 공개합니다. 2026-09-22 기준 60,268개 저장 전투와 1,606개 고유 저장 태그가 있으나 태그를 사용자 수로 부르지 않습니다. [제출 전: 최신 릴리스·실제 외부 피드백 근거 링크 재확인]
 
 ### How will you use API credits for your project?
 
@@ -28,7 +28,7 @@ I am the repository owner and primary maintainer. I am responsible for product d
 
 ### Why does this repository qualify?
 
-Brawl Status KR is a public analytics service for Korean Brawl Stars players. It deduplicates recent battles gathered through searches, builds sample-based map, team, and counter statistics, and documents methodology and bias. On 2026-07-25 it held 5,864 battles and 130 unique stored tags; tags are not claimed as users. [Before submission: add public license, CI, release, and real feedback evidence.]
+Brawl Status KR is a public analytics service for Korean Brawl Stars players. It deduplicates recent battles gathered through searches, builds sample-based map, team, and counter statistics, and documents methodology and bias. On 2026-09-22 it held 60,268 stored battles and 1,606 unique stored tags; tags are not claimed as users. [Before submission: recheck the latest release and real external-feedback evidence.]
 
 ### How will you use API credits for your project?
 

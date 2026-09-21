@@ -1,10 +1,12 @@
 # 수동 DB 백업과 복구 계획
 
-2026-09-18 점검: PATH와 Windows 기본 PostgreSQL 설치 폴더에서 pg_dump를 찾지 못했다. 실제 백업 및 복구는 실행하지 않았다. Docker 설정과 운영 DB/RLS는 변경하지 않는다.
+2026-09-21부터는 로컬 PostgreSQL 설치가 없어도 Docker Desktop과 공식 `postgres:<server-major>-alpine` 이미지의 `pg_dump`/`pg_restore`를 이용하는 helper를 제공한다. 운영 DB에는 읽기 전용 조회와 `pg_dump`만 수행하고, 복구 연습은 별도 임시 PostgreSQL 컨테이너에서 수행한다. 운영 DB/RLS는 변경하지 않는다.
+
+2026-09-21 실제 복구 연습에서는 PostgreSQL 17 운영 DB의 `public` 스키마를 custom archive로 백업한 뒤 별도 PostgreSQL 17 임시 DB에 복구했다. `battle_logs` 60,229행, archive가 보존한 인덱스 8개, fingerprint/timestamp/JSON 누락 수, RLS ON 및 FORCE RLS OFF가 원본 manifest와 일치함을 확인했다.
 
 ## 준비
 
-- PostgreSQL 공식 배포판의 클라이언트 도구(pg_dump, pg_restore)를 설치한다. 서버 major 버전 이상인 pg_dump를 사용한다. Docker는 필요하지 않다.
+- 기본 helper 사용 시 Docker Desktop을 실행한다. helper는 운영 서버 major와 같은 공식 `postgres:<major>-alpine` 이미지를 사용한다. 수동 방식은 PostgreSQL 공식 클라이언트(pg_dump, pg_restore)를 별도로 설치해도 된다.
 - Supabase 대시보드에서 서버 버전과 직접 연결 또는 session pooler 연결을 확인한다. transaction pooler는 백업 연결로 사용하지 않는다.
 - 연결 정보는 로컬 PostgreSQL service 파일 및 비밀번호 파일에 저장하고 현재 사용자만 읽도록 권한을 제한한다. 서비스 이름은 `brawl_backup`으로 정한다. 암호나 연결 URL을 명령행, 로그, Git에 넣지 않는다.
 - 백업 목적지는 저장소 밖의 접근 제한 폴더로 정한다. `.gitignore`에도 `/backups/`, `*.dump`, `*.backup`을 제외했다. SQL 내보내기 역시 저장소 밖에 둔다.
@@ -21,6 +23,17 @@ pg_restore --list "C:\PrivateBackups\brawl-YYYYMMDD-HHMMSS.dump"
 if ($LASTEXITCODE -ne 0) { throw '백업 목록 검사 실패' }
 Get-FileHash -Algorithm SHA256 "C:\PrivateBackups\brawl-YYYYMMDD-HHMMSS.dump"
 ```
+
+## 프로젝트 helper
+
+`.env.local`의 `DIRECT_URL`을 우선 사용하고, 비밀번호는 명령행이나 로그로 출력하지 않는다. helper는 임시 libpq service/password 파일을 사용자 임시 폴더에 만들고 실행 직후 삭제한다. 백업은 저장소 밖 `%LOCALAPPDATA%\BrawlStatusKR\backups`에 저장되며, archive와 함께 SHA-256·원본 row 수·인덱스·RLS 상태가 담긴 manifest JSON을 만든다.
+
+```powershell
+npm.cmd run db:backup
+npm.cmd run db:restore:test -- --backup "C:\...\brawl-YYYYMMDDTHHMMSSZ.dump"
+```
+
+복구 테스트는 localhost에만 임시 포트를 열고 별도 `brawl_restore_test` DB에 restore한 뒤 `battle_logs` row 수, 필수 인덱스, fingerprint/timestamp/JSON 누락 수, RLS/ FORCE RLS 상태를 원본 manifest와 비교한다. 검증 종료 후 컨테이너는 삭제한다.
 
 이 범위는 앱의 public 스키마와 데이터다. Supabase 전체 프로젝트 백업이 아니며 Auth, Storage 파일, 외부 스키마 의존성, 프로젝트 설정, 역할은 별도다. 목록 검사와 해시만으로 복구 가능성이 증명되지는 않는다. 성공 파일은 암호화된 별도 저장소에도 보관하고 정기적으로 복구 연습한다.
 
@@ -40,7 +53,7 @@ if ($LASTEXITCODE -ne 0) { throw '복구 연습 실패' }
 
 ## 향후 helper 설계
 
-`scripts/backup-db.mjs`를 구현할 경우 실행 파일과 버전을 먼저 확인하고, 연결은 libpq service/보호된 password 파일로 전달한다. 저장소 외부 경로만 허용하고 고유 `.partial` 파일에 기록한 뒤 성공 및 목록 검증 후 이름을 바꾼다. 자식 프로세스 오류에 연결 정보가 섞일 수 있으므로 원문을 무조건 출력하지 않는다. 현재는 미설치 상태라 실제 dump/restore 검증 없이 helper를 제공하지 않았다.
+`scripts/backup-db.mjs`는 Docker/클라이언트 버전을 확인하고, 임시 libpq service/password 파일을 사용한다. 저장소 외부 경로만 허용하고 고유 `.partial` 파일에 기록한 뒤 archive 목록 검사와 SHA-256 계산이 성공해야 최종 이름으로 바꾼다. 자식 프로세스 실패 시 원문 stderr를 그대로 출력하지 않아 연결 정보가 로그에 섞이는 것을 피한다.
 
 ## 공식 문서
 

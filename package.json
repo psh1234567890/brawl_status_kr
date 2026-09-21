@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "db:backup": "node scripts/backup-db.mjs",
     "db:check": "node scripts/check-db.mjs",
     "db:migrate": "node scripts/migrate-db.mjs",
+    "db:restore:test": "node scripts/restore-db-test.mjs",
     "translations:update": "node scripts/update-brawl-translations.mjs",
     "translations:ja:update": "node scripts/update-brawl-japanese-translations.mjs",
     "translations:additional:update": "node scripts/update-brawl-additional-translations.mjs"

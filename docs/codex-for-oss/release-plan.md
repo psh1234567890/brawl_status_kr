@@ -1,4 +1,4 @@
-# v0.1.0 릴리스 후보 계획
+# v0.1.0 릴리스 계획
 
 ## 포함할 내용
 
@@ -17,7 +17,7 @@
 - 계정 없는 서비스라 자동 기록 삭제 대신 운영자 검토 요청을 사용
 - 명시한 API 또는 프록시의 신뢰·고정 IP·키 회전 운영 확인 필요
 - 외부 Brawlify/BrawlAPI 데이터 가용성
-- 정식 릴리스 전 제3자 데이터 조건과 장기 운영 상태를 계속 확인할 필요
+- 릴리스 후에도 제3자 데이터 조건, 의존성, 장기 운영 상태를 정기적으로 재확인할 필요
 
 ## 릴리스 전 체크
 
@@ -48,4 +48,4 @@
 4. `docs: publish data methodology and self-hosting guide`
 5. `feat: expose methodology and contribution links`
 
-사용자는 2026-07-25 공개 변경 진행을 승인했고 PR #1은 `main`에 병합됐다. 이후 rc.2 후보에서는 다국어, SEO, DB 복구 drill, observability, E2E/CI, 공유 URL과 광고 비활성 기본값까지 운영 준비도를 보강했다. 실제 `v0.1.0` 태그와 정식 GitHub Release는 제3자 데이터 조건과 장기 운영 상태를 추가로 확인한 뒤 진행한다.
+사용자는 2026-07-25 공개 변경 진행을 승인했고 PR #1은 `main`에 병합됐다. 이후 rc.2와 후속 hardening에서 다국어, SEO, DB 복구 drill, observability, E2E/CI, 공유 URL, 광고 비활성 기본값, 제3자 보조 조회 opt-in, 실제 저장·중복 방지 검증까지 운영 준비도를 보강했다. 위 릴리스 전 체크를 모두 통과한 `main` 커밋에만 `v0.1.0` 태그와 정식 GitHub Release를 생성한다.

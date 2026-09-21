@@ -74,3 +74,40 @@
   - 해당 배포의 error·fatal 런타임 로그: 0
 
 운영 DB 쓰기 요청은 실행하지 않았고, 태그·Release도 아직 만들지 않았다.
+
+## 2026-09-22
+
+### 정식 릴리스 준비 스냅샷
+
+- GitHub: 별 5, 포크 0, watcher 0
+- 열린 일반 이슈: 0
+- 열린 PR: 7, 전부 Dependabot bot이 생성한 의존성 업데이트 PR
+- 공개 기여자: 저장소 소유자 1명, 외부 기여자 0명
+- 공개 릴리스: `v0.1.0-rc.1`, `v0.1.0-rc.2`
+- 기본 브랜치: `main`
+- 라이선스: MIT
+- homepage: <https://www.brawl-o1.site/>
+
+### 라이브 서비스와 운영 데이터
+
+- 홈과 `/status`: HTTP 200 확인
+- 라이브 `/status`:
+  - 저장 전투 60,268
+  - 고유 전투 지문 57,919
+  - 고유 저장 태그 1,606
+  - 맵 254
+  - 브롤러 107
+  - 최근 수집 2026-09-22 표시
+- `1,606`은 고유 사용자 수가 아니라 DB의 서로 다른 정규화 플레이어 태그 수다.
+
+### 릴리스 검증
+
+- 로컬 unit test: 20 files / 67 tests 통과
+- Playwright Chromium E2E: 10개 통과
+- lint, production build, `npm audit --omit=dev`: 통과, audit 0 vulnerabilities
+- `main` CI: lint·unit test·audit·build·Chromium E2E 통과
+- Vercel production deployment: 성공
+- 새 운영 읽기 전용 백업 60,268행을 격리 PostgreSQL 17에 복구
+- production build를 복구 DB와 로컬 HTTPS mock upstream에 연결해 합성 battlelog 1건 저장 시 +1행, 동일 요청 재실행 시 +0행을 확인
+- 저장된 합성 row의 fingerprint, timestamp, JSON 필드 생성 확인
+- 테스트 컨테이너와 임시 TLS 인증서는 검증 후 삭제했고 운영 DB에는 쓰기 작업을 하지 않음

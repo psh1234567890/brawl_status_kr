@@ -4,8 +4,12 @@
 
 ## Unreleased
 
-- Brawlace 보유 스킨 보조 조회도 기본 비활성·명시적 opt-in으로 전환하고, 자동 TTL이 없는 현재 전투 기록 보관 정책과 격리 복구 DB의 실제 저장·중복 방지 검증 결과를 문서화
-- 제3자 조건이 불명확한 Jina Reader fallback을 기본 비활성·명시적 opt-in으로 변경하고, 선택적 서버 API 키 지원과 BrawlAPI/Brawlify/Brawlace 조건 검토 상태를 문서화
+## 0.1.0 - 2026-09-22
+
+- 첫 정식 공개 릴리스. rc.2 이후 제3자 조건이 명확하지 않은 Brawlace 보유 스킨 보조 조회와 Jina Reader fallback을 모두 기본 비활성·명시적 opt-in으로 전환
+- 자동 TTL이 없는 현재 전투 기록 보관 정책을 명문화하고, 실제 운영 읽기 전용 백업 60,268행을 격리 PostgreSQL 17에 복구한 뒤 production build의 저장 1행·동일 요청 중복 0행·fingerprint/timestamp/JSON 생성을 검증
+- 개인정보처리방침 10개 언어의 제3자 보조 조회·보관 정책과 시행일을 실제 운영 상태에 맞춰 갱신
+- BrawlAPI/Brawlify/Brawlace/Jina Reader의 현재 조건 검토 상태와 선택적 Jina 서버 API 키 경로를 README·Privacy·Third-party 문서에 맞춰 정리
 
 ## 0.1.0-rc.2 - 2026-09-22
 
@@ -77,7 +81,3 @@
 ### Security
 
 - 현재 파일과 Git 기록의 비밀정보 패턴 감사
-
-## 0.1.0 - 예정
-
-첫 정식 공개 릴리스입니다. 제3자 데이터 조건, 운영 저장 흐름과 남은 의존성 경고를 검토한 뒤 확정합니다.

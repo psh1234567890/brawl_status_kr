@@ -112,3 +112,11 @@ test("core document routes render their main heading", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   }
 });
+
+test("AdSense stays disabled cleanly when publisher settings are absent", async ({ page, request }) => {
+  const adsTxt = await request.get("/ads.txt");
+  expect(adsTxt.status()).toBe(404);
+
+  await page.goto("/maps");
+  await expect(page.locator(".adsbygoogle")).toHaveCount(0);
+});

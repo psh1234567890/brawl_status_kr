@@ -145,8 +145,8 @@ export const messages = {
       battles: "전",
     },
     meta: {
-      title: "맵별 추천 브롤러",
-      subtitle: "전체 저장 전투 표본 기반 가중 승률 추천",
+      title: "브롤스타즈 맵별 추천 브롤러",
+      subtitle: "맵별 브롤러 승률·표본·추천 점수를 전체 저장 전투 기록으로 비교합니다.",
       back: "전적 검색으로 돌아가기",
       loading: "메타 통계를 불러오는 중...",
       error: "메타 통계를 불러오지 못했습니다.",

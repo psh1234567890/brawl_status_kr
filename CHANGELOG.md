@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- Search Console 실적에서 확인된 검색 의도에 맞춰 한국어 맵 도감·스킨 카탈로그·맵별 추천 브롤러의 title/description과 화면 설명을 개선하고, `/meta` 한국어 canonical/hreflang 연결을 보완
 ### Added
 
 - 핵심 화면에 한국어·영어·일본어·브라질 포르투갈어·스페인어·튀르키예어·독일어·프랑스어·이탈리아어·러시아어 UI와 언어 선택기를 추가하고, 첫 방문 시 저장된 선택 또는 브라우저 `Accept-Language`로 적절한 홈으로 안내

@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "db:backup": "node scripts/backup-db.mjs",
     "db:check": "node scripts/check-db.mjs",
     "db:migrate": "node scripts/migrate-db.mjs",
@@ -28,6 +30,7 @@
     "postcss": "8.5.28"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",

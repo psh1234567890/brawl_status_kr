@@ -23,3 +23,14 @@
 `GET /api/health`는 DB에 `SELECT 1`을 실행한다. 정상일 때 HTTP 200과 DB latency를, 실패할 때 HTTP 503과 `ok: false`만 반환한다. DB 호스트, 연결 문자열, 오류 message 같은 내부 정보는 응답하지 않는다. 응답은 `no-store`이며 별도 rate limit이 있다.
 
 외부 uptime 도구를 연결할 때는 `/api/health`의 HTTP status만 기준으로 감시하고, 과도하게 짧은 polling 주기는 사용하지 않는다.
+
+## E2E 회귀 테스트
+
+Playwright Chromium E2E는 build 산출물을 `next start`로 띄운 뒤 실행한다. player search는 외부 Brawl Stars API나 운영 DB를 사용하지 않고 브라우저 네트워크 mock으로 전체 UI 흐름을 검증한다. 스킨 필터, 언어 전환, 모바일 빠른 내비게이션, 주요 문서 경로도 함께 검사한다.
+
+```powershell
+npm.cmd run build
+npm.cmd run test:e2e
+```
+
+CI에서는 production secret 없이 build한 뒤 Chromium과 시스템 의존성을 설치하고 같은 E2E suite를 실행한다.

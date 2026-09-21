@@ -205,7 +205,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "보유 스킨 조회를 위해 이용자가 검색한 공개 플레이어 태그가 Brawlace에 전달될 수 있으며, 직접 조회에 실패하면 Jina Reader를 통해 같은 공개 스킨 페이지를 읽는 보조 경로를 사용할 수 있습니다.",
+              text: "보유 스킨 보조 조회는 기본적으로 비활성화되어 있습니다. 운영자가 명시적으로 활성화한 경우에만 이용자가 검색한 공개 플레이어 태그가 Brawlace에 전달될 수 있으며, Jina Reader도 별도로 활성화한 경우에만 직접 조회 실패 시 같은 공개 스킨 페이지를 읽는 보조 경로로 사용됩니다.",
             },
             {
               type: "paragraph",
@@ -218,7 +218,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "전투 기록과 통계 데이터는 서비스 제공과 통계 품질 유지를 위해 보관될 수 있습니다. 문의 메일은 문의 처리와 분쟁 대응에 필요한 기간 동안 보관됩니다.",
+              text: "현재 자동 TTL 삭제는 적용하지 않습니다. 전투 기록과 통계 데이터는 서비스 제공과 통계 품질 유지를 위해 서비스 운영 기간 동안 보관되며, 서비스 종료·운영 데이터 재설정 또는 검증된 기록 요청을 처리하는 경우 삭제될 수 있습니다. 문의 메일은 문의 처리와 분쟁 대응에 필요한 기간 동안 보관됩니다.",
             },
             {
               type: "paragraph",
@@ -497,7 +497,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "To look up owned skins, the public player tag searched by the user may be sent to Brawlace. If a direct lookup fails, Jina Reader may be used as a fallback to read the same public skin page.",
+              text: "Owned-skin auxiliary lookup is disabled by default. Only when the operator explicitly enables it may the public player tag searched by the user be sent to Brawlace; Jina Reader is used after a direct lookup failure only if its fallback is separately enabled.",
             },
             {
               type: "paragraph",
@@ -510,7 +510,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Battle history and statistical data may be retained to provide the service and maintain statistical quality. Inquiry emails are retained for the period needed to handle the inquiry and respond to disputes.",
+              text: "No automatic TTL deletion is currently applied. Battle history and statistical data are retained while the service operates to provide the service and maintain statistical quality, and may be deleted when the service ends, operational data is reset, or a verified record request is handled. Inquiry emails are retained for the period needed to handle the inquiry and respond to disputes.",
             },
             {
               type: "paragraph",
@@ -789,7 +789,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "所持スキンの確認のため、利用者が検索した公開プレイヤータグがBrawlaceに送信される場合があります。直接取得に失敗した場合は、Jina Readerを通じて同じ公開スキンページを読む補助経路を使用することがあります。",
+              text: "所持スキンの補助取得はデフォルトで無効です。運営者が明示的に有効化した場合に限り、利用者が検索した公開プレイヤータグがBrawlaceに送信されることがあります。Jina Readerも別途有効化されている場合に限り、直接取得失敗時の補助経路として同じ公開スキンページを読み取ります。",
             },
             {
               type: "paragraph",
@@ -802,7 +802,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "バトル履歴と統計データは、サービス提供と統計品質の維持のため保存される場合があります。問い合わせメールは、問い合わせ対応と紛争対応に必要な期間保存されます。",
+              text: "現在、自動TTL削除は行っていません。バトル履歴と統計データは、サービス提供と統計品質維持のためサービス運営期間中保存され、サービス終了、運用データのリセット、または確認済みの記録依頼への対応時に削除されることがあります。問い合わせメールは、問い合わせ対応と紛争対応に必要な期間保存されます。",
             },
             {
               type: "paragraph",
@@ -1081,7 +1081,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Para consultar skins possuídas, a tag pública pesquisada pelo usuário pode ser enviada ao Brawlace. Se a consulta direta falhar, o Jina Reader pode ser usado como rota auxiliar para ler a mesma página pública de skins.",
+              text: "A consulta auxiliar de skins possuídas fica desativada por padrão. Somente quando o operador a ativa explicitamente, a tag pública pesquisada pelo usuário pode ser enviada ao Brawlace; o Jina Reader só é usado após falha da consulta direta se o fallback também tiver sido ativado separadamente.",
             },
             {
               type: "paragraph",
@@ -1094,7 +1094,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Histórico de batalhas e dados estatísticos podem ser mantidos para prestar o serviço e preservar a qualidade das estatísticas. E-mails de contato são mantidos pelo período necessário para tratar a solicitação e eventuais disputas.",
+              text: "Atualmente não há exclusão automática por TTL. O histórico de batalhas e os dados estatísticos são mantidos durante a operação do serviço para prestar o serviço e preservar a qualidade das estatísticas, podendo ser excluídos quando o serviço for encerrado, os dados operacionais forem redefinidos ou uma solicitação de registro verificada for atendida. E-mails de contato são mantidos pelo período necessário para tratar a solicitação e eventuais disputas.",
             },
             {
               type: "paragraph",
@@ -1373,7 +1373,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Para consultar los aspectos que posee un jugador, la etiqueta pública buscada por el usuario puede enviarse a Brawlace. Si falla la consulta directa, se puede usar Jina Reader como vía auxiliar para leer la misma página pública de aspectos.",
+              text: "La consulta auxiliar de aspectos poseídos está desactivada de forma predeterminada. Solo cuando el operador la activa explícitamente, la etiqueta pública buscada por el usuario puede enviarse a Brawlace; Jina Reader solo se usa tras un fallo de la consulta directa si su vía de respaldo también se activa por separado.",
             },
             {
               type: "paragraph",
@@ -1386,7 +1386,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "El historial de batallas y los datos estadísticos pueden conservarse para prestar el servicio y mantener la calidad de las estadísticas. Los correos de consulta se conservan durante el tiempo necesario para atender la consulta y posibles disputas.",
+              text: "Actualmente no se aplica eliminación automática por TTL. El historial de batallas y los datos estadísticos se conservan mientras el servicio está operativo para prestar el servicio y mantener la calidad de las estadísticas, y pueden eliminarse cuando el servicio finaliza, se restablecen los datos operativos o se atiende una solicitud de registros verificada. Los correos de consulta se conservan durante el tiempo necesario para atender la consulta y posibles disputas.",
             },
             {
               type: "paragraph",
@@ -1665,7 +1665,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Sahip olunan kostümleri sorgulamak için kullanıcının aradığı herkese açık oyuncu etiketi Brawlace'e gönderilebilir. Doğrudan sorgu başarısız olursa aynı herkese açık kostüm sayfasını okumak için Jina Reader yardımcı yol olarak kullanılabilir.",
+              text: "Sahip olunan kostümler için yardımcı sorgu varsayılan olarak devre dışıdır. Yalnızca operatör açıkça etkinleştirdiğinde kullanıcının aradığı herkese açık oyuncu etiketi Brawlace'e gönderilebilir; Jina Reader da ancak yedek yol ayrıca etkinleştirilmişse doğrudan sorgu başarısız olduktan sonra kullanılır.",
             },
             {
               type: "paragraph",
@@ -1678,7 +1678,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Savaş geçmişi ve istatistik verileri hizmeti sunmak ve istatistik kalitesini korumak için saklanabilir. İletişim e-postaları, talebi işlemek ve olası uyuşmazlıklara yanıt vermek için gereken süre boyunca saklanır.",
+              text: "Şu anda otomatik TTL silme uygulanmaz. Savaş geçmişi ve istatistik verileri, hizmeti sunmak ve istatistik kalitesini korumak için hizmet çalıştığı sürece saklanır; hizmet sona erdiğinde, işletim verileri sıfırlandığında veya doğrulanmış bir kayıt talebi işlendiğinde silinebilir. İletişim e-postaları, talebi işlemek ve olası uyuşmazlıklara yanıt vermek için gereken süre boyunca saklanır.",
             },
             {
               type: "paragraph",
@@ -1957,7 +1957,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Zur Abfrage eigener Skins kann der vom Nutzer gesuchte öffentliche Spieler-Tag an Brawlace übermittelt werden. Schlägt der direkte Abruf fehl, kann Jina Reader als Hilfsweg verwendet werden, um dieselbe öffentliche Skin-Seite zu lesen.",
+              text: "Die zusätzliche Abfrage eigener Skins ist standardmäßig deaktiviert. Nur wenn der Betreiber sie ausdrücklich aktiviert, kann der vom Nutzer gesuchte öffentliche Spieler-Tag an Brawlace übermittelt werden; Jina Reader wird nach einem fehlgeschlagenen Direktabruf nur verwendet, wenn auch dieser Fallback separat aktiviert wurde.",
             },
             {
               type: "paragraph",
@@ -1970,7 +1970,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Kampfverläufe und statistische Daten können zur Bereitstellung des Dienstes und zur Sicherung der Statistikqualität gespeichert werden. Kontakt-E-Mails werden so lange aufbewahrt, wie es für die Bearbeitung der Anfrage und mögliche Streitfälle erforderlich ist.",
+              text: "Derzeit erfolgt keine automatische TTL-Löschung. Kampfverläufe und statistische Daten werden während des Betriebs des Dienstes zur Bereitstellung und zur Sicherung der Statistikqualität gespeichert und können bei Einstellung des Dienstes, Zurücksetzen der Betriebsdaten oder Bearbeitung einer verifizierten Datenanfrage gelöscht werden. Kontakt-E-Mails werden so lange aufbewahrt, wie es für die Bearbeitung der Anfrage und mögliche Streitfälle erforderlich ist.",
             },
             {
               type: "paragraph",
@@ -2249,7 +2249,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Pour consulter les skins possédés, le tag joueur public recherché par l'utilisateur peut être transmis à Brawlace. Si la consultation directe échoue, Jina Reader peut servir de voie de secours pour lire la même page publique de skins.",
+              text: "La consultation auxiliaire des skins possédés est désactivée par défaut. Ce n'est que si l'opérateur l'active explicitement que le tag joueur public recherché peut être transmis à Brawlace ; Jina Reader n'est utilisé après l'échec de la consultation directe que si ce secours a lui aussi été activé séparément.",
             },
             {
               type: "paragraph",
@@ -2262,7 +2262,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "L'historique des combats et les données statistiques peuvent être conservés afin de fournir le service et de maintenir la qualité des statistiques. Les e-mails de contact sont conservés pendant la durée nécessaire au traitement de la demande et à la gestion d'éventuels litiges.",
+              text: "Aucune suppression automatique par TTL n'est actuellement appliquée. L'historique des combats et les données statistiques sont conservés pendant l'exploitation du service afin de fournir celui-ci et de maintenir la qualité des statistiques, et peuvent être supprimés lors de l'arrêt du service, d'une réinitialisation des données d'exploitation ou du traitement d'une demande de données vérifiée. Les e-mails de contact sont conservés pendant la durée nécessaire au traitement de la demande et à la gestion d'éventuels litiges.",
             },
             {
               type: "paragraph",
@@ -2541,7 +2541,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Per consultare le skin possedute, il tag pubblico cercato dall'utente può essere inviato a Brawlace. Se la richiesta diretta fallisce, Jina Reader può essere usato come percorso di supporto per leggere la stessa pagina pubblica delle skin.",
+              text: "La consultazione ausiliaria delle skin possedute è disattivata per impostazione predefinita. Solo quando l'operatore la abilita esplicitamente il tag pubblico cercato dall'utente può essere inviato a Brawlace; Jina Reader viene usato dopo un errore della richiesta diretta solo se anche questo fallback è stato abilitato separatamente.",
             },
             {
               type: "paragraph",
@@ -2554,7 +2554,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "La cronologia delle battaglie e i dati statistici possono essere conservati per fornire il servizio e mantenere la qualità delle statistiche. Le e-mail di contatto vengono conservate per il tempo necessario a gestire la richiesta e le eventuali controversie.",
+              text: "Attualmente non viene applicata alcuna eliminazione automatica tramite TTL. La cronologia delle battaglie e i dati statistici vengono conservati durante il funzionamento del servizio per fornire il servizio e mantenere la qualità delle statistiche e possono essere eliminati quando il servizio termina, i dati operativi vengono reimpostati o viene gestita una richiesta verificata relativa ai dati. Le e-mail di contatto vengono conservate per il tempo necessario a gestire la richiesta e le eventuali controversie.",
             },
             {
               type: "paragraph",
@@ -2833,7 +2833,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Для получения списка имеющихся скинов публичный тег игрока, который искал пользователь, может передаваться Brawlace. Если прямой запрос не удаётся, Jina Reader может использоваться как резервный путь для чтения той же публичной страницы скинов.",
+              text: "Вспомогательный запрос списка имеющихся скинов по умолчанию отключён. Публичный тег игрока может передаваться Brawlace только если оператор явно включил эту функцию; Jina Reader используется после ошибки прямого запроса только если резервный путь также включён отдельно.",
             },
             {
               type: "paragraph",
@@ -2846,7 +2846,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "История боёв и статистические данные могут храниться для предоставления сервиса и поддержания качества статистики. Письма с обращениями хранятся в течение срока, необходимого для обработки запроса и возможных споров.",
+              text: "Автоматическое удаление по TTL сейчас не применяется. История боёв и статистические данные хранятся в течение работы сервиса для его предоставления и поддержания качества статистики и могут быть удалены при завершении работы сервиса, сбросе операционных данных или обработке подтверждённого запроса, связанного с записями. Письма с обращениями хранятся в течение срока, необходимого для обработки запроса и возможных споров.",
             },
             {
               type: "paragraph",

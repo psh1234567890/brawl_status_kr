@@ -7,7 +7,7 @@
 - Brawl Stars API 또는 설정된 API 프록시
 - BrawlAPI의 맵·모드·브롤러·이벤트 메타데이터와 번역·스킨 카탈로그 원본
 - Brawlify CDN의 게임 이미지
-- 보유 스킨 보조 조회를 위한 Brawlace와 기본 비활성·명시적 opt-in 방식의 Jina Reader fallback
+- 기본 비활성·명시적 opt-in 방식의 Brawlace 보유 스킨 보조 조회와 Jina Reader fallback
 
 ## 플레이어 검색 흐름
 

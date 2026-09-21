@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- 주요 API에 개인정보를 남기지 않는 구조화 요청/DB 작업 로그, `Server-Timing`/request ID, DB pool 오류 로그와 `/api/health` DB 상태 점검 endpoint를 추가하고, 무거운 meta 통계의 cache 재검증 주기와 client query timeout 여유를 조정
 - Docker 기반 PostgreSQL custom archive 백업과 격리된 restore drill helper를 추가하고, 실제 운영 public 스키마 백업을 별도 PostgreSQL 17 테스트 DB에 복구해 row 수·인덱스·RLS 상태를 검증
 - Search Console 실적에서 확인된 검색 의도에 맞춰 한국어 맵 도감·스킨 카탈로그·맵별 추천 브롤러의 title/description과 화면 설명을 개선하고, `/meta` 한국어 canonical/hreflang 연결을 보완
 ### Added

@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import { queryMapMetaStats } from "../../../server/metaStats";
+import { observeServerOperation, withApiMonitoring } from "../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 
 const MINIMUM_PLAYS = 5;
@@ -25,7 +26,11 @@ type MapStatsResponse = Record<string, BrawlerMapStat[]>;
 
 const getCachedMetaStats = unstable_cache(
   async () => {
-    const queryResult = await queryMapMetaStats(MINIMUM_PLAYS);
+    const queryResult = await observeServerOperation(
+      "db.meta.stats",
+      () => queryMapMetaStats(MINIMUM_PLAYS),
+      { slowMs: 5_000 },
+    );
 
     const result: MapStatsResponse = {};
     for (const row of queryResult.rows) {
@@ -57,7 +62,7 @@ const getCachedMetaStats = unstable_cache(
     return result;
   },
   ["meta-stats-v5"],
-  { revalidate: 60, tags: ["meta-stats"] },
+  { revalidate: 300, tags: ["meta-stats"] },
 );
 
 function getSampleConfidence(plays: number): SampleConfidence {
@@ -70,7 +75,7 @@ function getConfidenceScore(plays: number) {
   return Math.min(100, Math.round((plays / HIGH_CONFIDENCE_PLAYS) * 100));
 }
 
-export async function GET(request: Request) {
+async function getMeta(request: Request) {
   const rejected = rejectRateLimitedRequest(request, "meta", {
     limit: 90,
     windowMs: 60_000,
@@ -87,3 +92,5 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export const GET = withApiMonitoring("api.meta", getMeta, { slowMs: 1_500 });

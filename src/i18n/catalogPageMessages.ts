@@ -15,15 +15,15 @@ const koCatalog = {
   },
   maps: {
     metadata: {
-      title: "브롤스타즈 맵 도감",
-      description: "Brawlify 맵 데이터를 기반으로 브롤스타즈 맵, 게임모드, 최근 활성 정보를 확인합니다.",
+      title: "브롤스타즈 맵 도감 | 맵·모드 정보",
+      description: "브롤스타즈 맵 목록과 게임모드, 최근 활성 정보를 한곳에서 확인하고 현재 맵 로테이션과 맵별 추천 브롤러로 이어서 볼 수 있습니다.",
       detailFallbackTitle: "맵 상세",
       detailTitleSuffix: " 맵 상세",
     },
     list: {
       title: "맵 도감",
       eyebrow: "맵 도감",
-      description: "맵 이미지, 게임모드, 최근 활성 여부를 한곳에서 확인합니다. 각 맵 상세에서 같은 모드의 다른 맵과 DB 추천으로 이어갈 수 있습니다.",
+      description: "브롤스타즈 맵 목록을 이미지, 게임모드, 최근 활성 여부와 함께 확인합니다. 현재 맵 로테이션과 각 맵의 DB 기반 추천 브롤러로 바로 이어갈 수 있습니다.",
       action: "현재 로테이션",
       totalMaps: "전체 맵",
       activeMaps: "활성 맵",
@@ -153,10 +153,10 @@ const koCatalog = {
   },
   skins: {
     metadata: {
-      title: "브롤스타즈 스킨 카탈로그",
-      description: "브롤러별 스킨의 희귀도, 판매 상태, 가격 정보를 검색하고 필터링합니다.",
+      title: "브롤스타즈 스킨 도감·카탈로그 | 스킨 목록·가격",
+      description: "브롤스타즈 스킨 목록을 브롤러, 희귀도, 판매 상태, 가격별로 검색하고 필터링할 수 있는 스킨 도감·카탈로그입니다.",
     },
-    title: "스킨 카탈로그",
+    title: "브롤스타즈 스킨 도감·카탈로그",
     catalogCountPrefix: "브롤러 스킨",
     catalogCountUnit: "종",
     back: "전적 검색으로 돌아가기",

@@ -1,15 +1,21 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import { queryCounterStats } from "../../../../server/metaStats";
+import { observeServerOperation, withApiMonitoring } from "../../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
 
 const getCachedCounterStats = unstable_cache(
-  async (brawler: string) => (await queryCounterStats(brawler)).rows,
+  async (brawler: string) =>
+    (
+      await observeServerOperation("db.meta.counters", () => queryCounterStats(brawler), {
+        slowMs: 5_000,
+      })
+    ).rows,
   ["counter-meta-v2"],
   { revalidate: 60 },
 );
 
-export async function GET(request: Request) {
+async function getCounters(request: Request) {
   const rejected = rejectRateLimitedRequest(request, "meta-counters", {
     limit: 60,
     windowMs: 60_000,
@@ -31,3 +37,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "카운터 통계를 계산하지 못했습니다." }, { status: 500 });
   }
 }
+
+export const GET = withApiMonitoring("api.meta.counters", getCounters, { slowMs: 1_500 });

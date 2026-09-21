@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
+import { withApiMonitoring } from "../../../server/observability";
 import { fetchBrawlApi, UpstreamApiError } from "../../../server/upstream";
 import type { PlayerData } from "../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../utils/playerTag";
 
-export async function GET(request: Request) {
+async function getPlayer(request: Request) {
   const rejected = rejectRateLimitedRequest(request, "player-profile", {
     limit: 40,
     windowMs: 60_000,
@@ -34,3 +35,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+export const GET = withApiMonitoring("api.player", getPlayer, { slowMs: 1_500 });

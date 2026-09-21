@@ -1,21 +1,32 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import { queryTeamCompStats, queryTeamMaps } from "../../../../server/metaStats";
+import { observeServerOperation, withApiMonitoring } from "../../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
 
 const getCachedTeamItems = unstable_cache(
-  async (mapName: string) => (await queryTeamCompStats(mapName)).rows,
+  async (mapName: string) =>
+    (
+      await observeServerOperation("db.meta.teams", () => queryTeamCompStats(mapName), {
+        slowMs: 5_000,
+      })
+    ).rows,
   ["team-meta-v2"],
   { revalidate: 60 },
 );
 
 const getCachedTeamMaps = unstable_cache(
-  async () => (await queryTeamMaps()).rows.map((row) => row.map),
+  async () =>
+    (
+      await observeServerOperation("db.meta.team_maps", () => queryTeamMaps(), {
+        slowMs: 2_500,
+      })
+    ).rows.map((row) => row.map),
   ["team-map-list-v1"],
   { revalidate: 300 },
 );
 
-export async function GET(request: Request) {
+async function getTeams(request: Request) {
   const rejected = rejectRateLimitedRequest(request, "meta-teams", {
     limit: 60,
     windowMs: 60_000,
@@ -40,3 +51,5 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "팀 조합 통계를 계산하지 못했습니다." }, { status: 500 });
   }
 }
+
+export const GET = withApiMonitoring("api.meta.teams", getTeams, { slowMs: 1_500 });

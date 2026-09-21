@@ -21,6 +21,7 @@ import {
 } from "../../i18n/formatters";
 import { getMessages } from "../../i18n/messages";
 import { translateBrawlerName, translateMapName, translateModeName } from "../../utils/brawlTranslations";
+import { replaceBrowserSearch, useBrowserSearch } from "../../utils/urlState";
 
 const MODE_LIST = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
 const DEFAULT_VISIBLE_COUNT = 15;
@@ -47,14 +48,23 @@ type MapStatsResponse = Record<string, BrawlerMapStat[]>;
 export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   const copy = getMessages(locale);
   const [data, setData] = useState<MapStatsResponse>({});
-  const [selectedMode, setSelectedMode] = useState("젬 그랩");
-  const [selectedMap, setSelectedMap] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showAll, setShowAll] = useState(false);
-  const [minPlays, setMinPlays] = useState(5);
-  const [confidenceFilter, setConfidenceFilter] = useState<ConfidenceFilter>("ALL");
-  const [sortMode, setSortMode] = useState<MetaSortMode>("SCORE");
+  const search = useBrowserSearch();
+  const params = useMemo(() => new URLSearchParams(search), [search]);
+  const requestedMin = Number(params.get("min"));
+  const minPlays = MIN_PLAY_OPTIONS.includes(requestedMin) ? requestedMin : 5;
+  const requestedConfidence = params.get("confidence") as ConfidenceFilter | null;
+  const confidenceFilter =
+    requestedConfidence && ["ALL", "LOW", "MEDIUM", "HIGH"].includes(requestedConfidence)
+      ? requestedConfidence
+      : "ALL";
+  const requestedSort = params.get("sort") as MetaSortMode | null;
+  const sortMode =
+    requestedSort && ["SCORE", "WIN_RATE", "PLAYS"].includes(requestedSort)
+      ? requestedSort
+      : "SCORE";
+  const showAll = params.get("all") === "1";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -69,12 +79,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
           throw new Error(locale === "ko" ? json.error ?? copy.meta.error : copy.meta.error);
         }
 
-        const maps = Object.keys(json);
         setData(json);
-        const firstGemGrab = maps.find((mapName) => getMapMode(mapName) === "젬 그랩");
-        const firstMap = firstGemGrab ?? maps[0] ?? "";
-        setSelectedMap(firstMap);
-        if (firstMap) setSelectedMode(getMapMode(firstMap));
       } catch (loadError) {
         if (loadError instanceof DOMException && loadError.name === "AbortError") return;
         setError(
@@ -108,6 +113,20 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
     PLAYS: copy.meta.playsSort,
   };
 
+  const maps = Object.keys(data);
+  const requestedMap = params.get("map");
+  const requestedModeParam = params.get("mode");
+  const requestedMode = MODE_LIST.includes(requestedModeParam ?? "")
+    ? requestedModeParam ?? undefined
+    : undefined;
+  const selectedMap =
+    (requestedMap && maps.includes(requestedMap) ? requestedMap : undefined) ??
+    (requestedMode ? maps.find((mapName) => getMapMode(mapName) === requestedMode) : undefined) ??
+    maps.find((mapName) => getMapMode(mapName) === "젬 그랩") ??
+    maps[0] ??
+    "";
+  const selectedMode = selectedMap ? getMapMode(selectedMap) : requestedMode ?? "젬 그랩";
+
   const filteredMaps = useMemo(
     () => Object.keys(data).filter((mapName) => getMapMode(mapName) === selectedMode),
     [data, selectedMode],
@@ -133,14 +152,38 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   }, [filteredCurrentData]);
 
   function selectMode(modeName: string) {
-    setSelectedMode(modeName);
-    setSelectedMap(Object.keys(data).find((mapName) => getMapMode(mapName) === modeName) ?? "");
-    setShowAll(false);
+    const nextMap = Object.keys(data).find((mapName) => getMapMode(mapName) === modeName) ?? "";
+    syncMetaUrl({ mode: modeName, map: nextMap, showAll: false });
   }
 
   function selectMap(mapName: string) {
-    setSelectedMap(mapName);
-    setShowAll(false);
+    syncMetaUrl({ mode: getMapMode(mapName), map: mapName, showAll: false });
+  }
+
+  function syncMetaUrl(
+    overrides: Partial<{
+      mode: string;
+      map: string;
+      minPlays: number;
+      confidenceFilter: ConfidenceFilter;
+      sortMode: MetaSortMode;
+      showAll: boolean;
+    }> = {},
+  ) {
+    const nextMode = overrides.mode ?? selectedMode;
+    const nextMap = overrides.map ?? selectedMap;
+    const nextMinPlays = overrides.minPlays ?? minPlays;
+    const nextConfidence = overrides.confidenceFilter ?? confidenceFilter;
+    const nextSort = overrides.sortMode ?? sortMode;
+    const nextShowAll = overrides.showAll ?? showAll;
+    replaceBrowserSearch({
+      mode: nextMode || null,
+      map: nextMap || null,
+      min: nextMinPlays === 5 ? null : String(nextMinPlays),
+      confidence: nextConfidence === "ALL" ? null : nextConfidence,
+      sort: nextSort === "SCORE" ? null : nextSort,
+      all: nextShowAll ? "1" : null,
+    });
   }
 
   return (
@@ -220,8 +263,8 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                   <select
                     value={minPlays}
                     onChange={(event) => {
-                      setMinPlays(Number(event.target.value));
-                      setShowAll(false);
+                      const value = Number(event.target.value);
+                      syncMetaUrl({ minPlays: value, showAll: false });
                     }}
                     className="w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm font-black text-indigo-950 outline-none focus:border-indigo-400"
                   >
@@ -234,8 +277,8 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                   <select
                     value={confidenceFilter}
                     onChange={(event) => {
-                      setConfidenceFilter(event.target.value as ConfidenceFilter);
-                      setShowAll(false);
+                      const value = event.target.value as ConfidenceFilter;
+                      syncMetaUrl({ confidenceFilter: value, showAll: false });
                     }}
                     className="w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm font-black text-indigo-950 outline-none focus:border-indigo-400"
                   >
@@ -248,8 +291,8 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                   <select
                     value={sortMode}
                     onChange={(event) => {
-                      setSortMode(event.target.value as MetaSortMode);
-                      setShowAll(false);
+                      const value = event.target.value as MetaSortMode;
+                      syncMetaUrl({ sortMode: value, showAll: false });
                     }}
                     className="w-full rounded-lg border border-indigo-100 bg-white px-3 py-2 text-sm font-black text-indigo-950 outline-none focus:border-indigo-400"
                   >
@@ -322,7 +365,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                 <div className="mt-6 flex justify-center">
                   <button
                     type="button"
-                    onClick={() => setShowAll((current) => !current)}
+                    onClick={() => {
+                      const next = !showAll;
+                      syncMetaUrl({ showAll: next });
+                    }}
                     className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
                   >
                     {formatMetaShowAll(locale, showAll, filteredCurrentData.length)}

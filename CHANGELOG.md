@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- `/meta`, `/counters`, `/skins`의 선택·필터 상태를 query string과 동기화해 링크로 그대로 공유할 수 있게 하고, 언어 전환 시 query/hash를 유지
 - CI runner를 `ubuntu-24.04`로 고정하고 `actions/checkout`/`actions/setup-node`를 최신 v7 계열로 갱신해 GitHub Actions 런타임 전환 리스크를 줄임
 - Playwright Chromium E2E를 추가해 player 검색 mock 흐름, 스킨 필터, 언어 전환, 모바일 내비게이션, 핵심 문서 경로를 production build에서 검증하고 CI에 연결
 - 주요 API에 개인정보를 남기지 않는 구조화 요청/DB 작업 로그, `Server-Timing`/request ID, DB pool 오류 로그와 `/api/health` DB 상태 점검 endpoint를 추가하고, 무거운 meta 통계의 cache 재검증 주기와 client query timeout 여유를 조정

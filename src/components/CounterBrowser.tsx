@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Locale } from "../i18n/config";
 import { formatCounterWinRate } from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
 import type { BrawlifyBrawler } from "../types/brawlify";
 import { translateBrawlerName } from "../utils/brawlTranslations";
+import { replaceBrowserSearch, useBrowserSearch } from "../utils/urlState";
 
 type CounterItem = {
   brawler: string;
@@ -13,6 +14,12 @@ type CounterItem = {
   wins: number | string;
   winRate: number | string;
   score: number | string;
+};
+
+type CounterResult = {
+  brawler: string;
+  items: CounterItem[];
+  error: string;
 };
 
 export default function CounterBrowser({
@@ -23,12 +30,25 @@ export default function CounterBrowser({
   locale?: Locale;
 }) {
   const copy = getMessages(locale);
-  const released = brawlers.filter((brawler) => brawler.released !== false);
+  const released = useMemo(
+    () => brawlers.filter((brawler) => brawler.released !== false),
+    [brawlers],
+  );
   const catalogUnavailable = released.length === 0;
-  const [selected, setSelected] = useState(released[0]?.name ?? "");
-  const [items, setItems] = useState<CounterItem[]>([]);
-  const [loading, setLoading] = useState(() => Boolean(released[0]?.name));
-  const [error, setError] = useState("");
+  const search = useBrowserSearch();
+  const selected = useMemo(() => {
+    const requested = new URLSearchParams(search).get("brawler");
+    if (!requested) return released[0]?.name ?? "";
+    return (
+      released.find((brawler) => brawler.name.toUpperCase() === requested.toUpperCase())?.name ??
+      released[0]?.name ??
+      ""
+    );
+  }, [released, search]);
+  const [result, setResult] = useState<CounterResult>({ brawler: "", items: [], error: "" });
+  const loading = Boolean(selected && result.brawler !== selected);
+  const items = result.brawler === selected ? result.items : [];
+  const error = result.brawler === selected ? result.error : "";
 
   useEffect(() => {
     if (!selected) return;
@@ -39,16 +59,16 @@ export default function CounterBrowser({
         if (!response.ok) {
           throw new Error(locale === "ko" ? data.error ?? copy.counters.error : copy.counters.error);
         }
-        if (alive) setItems(data.items ?? []);
+        if (alive) setResult({ brawler: selected, items: data.items ?? [], error: "" });
       })
       .catch((requestError) => {
         if (alive) {
-          setItems([]);
-          setError(requestError instanceof Error ? requestError.message : copy.counters.error);
+          setResult({
+            brawler: selected,
+            items: [],
+            error: requestError instanceof Error ? requestError.message : copy.counters.error,
+          });
         }
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
       });
     return () => {
       alive = false;
@@ -56,9 +76,7 @@ export default function CounterBrowser({
   }, [copy.counters.error, locale, selected]);
 
   function selectBrawler(value: string) {
-    setLoading(true);
-    setError("");
-    setSelected(value);
+    replaceBrowserSearch({ brawler: value });
   }
 
   return (

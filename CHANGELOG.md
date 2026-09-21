@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- 제3자 조건이 불명확한 Jina Reader fallback을 기본 비활성·명시적 opt-in으로 변경하고, 선택적 서버 API 키 지원과 BrawlAPI/Brawlify/Brawlace 조건 검토 상태를 문서화
+
 ## 0.1.0-rc.2 - 2026-09-22
 
 - AdSense client ID가 있을 때만 올바른 `/ads.txt`를 생성하고, 반응형 광고 단위의 공식 `adsbygoogle.push({})` 초기화와 초기 HTML head 스크립트 로딩을 준비

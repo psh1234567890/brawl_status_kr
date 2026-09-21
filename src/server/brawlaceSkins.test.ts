@@ -10,6 +10,7 @@ import {
 describe("brawlace skin parser", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("extracts owned skin rows from the Brawlace table fragment", () => {
@@ -79,7 +80,18 @@ describe("brawlace skin parser", () => {
     ]);
   });
 
-  it("uses a single Jina Reader prefix when direct lookup fails", async () => {
+  it("does not use Jina Reader by default when direct lookup fails", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(new Response("blocked", { status: 403 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchBrawlaceSkinInventory("#2PYLQ")).rejects.toMatchObject({
+      status: 403,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("uses the opted-in Jina Reader fallback when direct lookup fails", async () => {
+    vi.stubEnv("BRAWLACE_JINA_READER_ENABLED", "true");
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response("blocked", { status: 403 }))
@@ -96,8 +108,29 @@ describe("brawlace skin parser", () => {
     });
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      "https://r.jina.ai/http://https://brawlace.com/players/%232PYLQ/skins",
+      "https://r.jina.ai/https://brawlace.com/players/%232PYLQ/skins",
       expect.any(Object),
     );
+  });
+
+  it("sends an optional Jina API key only to the opted-in reader request", async () => {
+    vi.stubEnv("BRAWLACE_JINA_READER_ENABLED", "true");
+    vi.stubEnv("JINA_READER_API_KEY", "jina_test_key");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("blocked", { status: 403 }))
+      .mockResolvedValueOnce(
+        new Response("| BRAWLERS | SKINS |\n| --- | --- |\n| OTIS | PHARAOTIS |", {
+          status: 200,
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchBrawlaceSkinInventory("#2PYLQ");
+
+    const directInit = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    const readerInit = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect(directInit.headers).not.toHaveProperty("authorization");
+    expect(readerInit.headers).toMatchObject({ authorization: "Bearer jina_test_key" });
   });
 });

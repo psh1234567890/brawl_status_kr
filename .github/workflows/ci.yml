@@ -44,3 +44,11 @@ jobs:
         run: npm run build
         env:
           CI: "1"
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+        env:
+          CI: "1"

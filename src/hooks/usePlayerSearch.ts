@@ -243,7 +243,9 @@ export function usePlayerSearch(locale: Locale = "ko") {
     const isCurrent = () => skinRequestSequence.current === sequence;
 
     const official = buildOfficialSkinInventory(playerData, targetTag);
-    setSkinInventory(official);
+    const cached = readCachedSupplementalInventory(targetTag);
+    const baseline = cached ? mergeSkinInventories(official, cached) : official;
+    setSkinInventory(baseline);
     setSkinInventoryStatus("loading");
     setSkinInventoryError("");
 
@@ -254,7 +256,7 @@ export function usePlayerSearch(locale: Locale = "ko") {
       );
       if (response.status === 204) {
         if (!isCurrent()) return;
-        setSkinInventory(official);
+        setSkinInventory(baseline);
         setSkinInventoryStatus("ready");
         return;
       }
@@ -263,7 +265,6 @@ export function usePlayerSearch(locale: Locale = "ko") {
       };
       if (!response.ok) {
         if (!isCurrent()) return;
-        const cached = readCachedSupplementalInventory(targetTag);
         setSkinInventory(
           cached
             ? mergeSkinInventories(official, cached)
@@ -278,7 +279,6 @@ export function usePlayerSearch(locale: Locale = "ko") {
       setSkinInventoryStatus("ready");
     } catch (skinError) {
       if (isAbortError(skinError) || !isCurrent()) return;
-      const cached = readCachedSupplementalInventory(targetTag);
       setSkinInventory(
         cached
           ? mergeSkinInventories(official, cached)

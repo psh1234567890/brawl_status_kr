@@ -76,7 +76,9 @@ export function usePlayerSearch(locale: Locale = "ko") {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const activeRequest = useRef<AbortController | null>(null);
+  const skinRequest = useRef<AbortController | null>(null);
   const requestSequence = useRef(0);
+  const skinRequestSequence = useRef(0);
 
   const recentSnapshot = useSyncExternalStore(
     (onStoreChange) => subscribeStoredTags(RECENT_TAGS_CHANGED_EVENT, onStoreChange),
@@ -100,6 +102,8 @@ export function usePlayerSearch(locale: Locale = "ko") {
       }
 
       activeRequest.current?.abort();
+      skinRequest.current?.abort();
+      skinRequestSequence.current += 1;
       const controller = new AbortController();
       activeRequest.current = controller;
       const sequence = requestSequence.current + 1;
@@ -116,31 +120,10 @@ export function usePlayerSearch(locale: Locale = "ko") {
       setDbStats(null);
       setPlayerHistory(null);
       setSkinInventory(null);
-      setSkinInventoryStatus("loading");
+      setSkinInventoryStatus("idle");
       setSkinInventoryError("");
 
       try {
-        const skinInventoryRequest = fetchJson<PlayerSkinInventoryResponse>(
-          `/api/player/skins?tag=${safeTag}`,
-          { signal: controller.signal },
-          copy.dataLoad,
-          locale === "ko",
-        )
-          .then((skins) => {
-            if (!isCurrent()) return;
-            setSkinInventory(skins);
-            setSkinInventoryStatus("ready");
-          })
-          .catch((skinError) => {
-            if (isAbortError(skinError) || !isCurrent()) return;
-            setSkinInventoryStatus("error");
-            setSkinInventoryError(
-              skinError instanceof Error
-                ? skinError.message
-                : copy.skinLoad,
-            );
-          });
-
         const [profileResult, battleResult] = await Promise.allSettled([
           fetchJson<PlayerData>(
             `/api/player?tag=${safeTag}`,
@@ -198,7 +181,6 @@ export function usePlayerSearch(locale: Locale = "ko") {
               setNotice(copy.statsNotice);
             }
           }
-          await skinInventoryRequest;
         } catch (statsError) {
           if (!isAbortError(statsError) && isCurrent()) {
             setNotice(copy.statsNotice);
@@ -220,6 +202,39 @@ export function usePlayerSearch(locale: Locale = "ko") {
     },
     [copy, locale, recentSearches, tag],
   );
+
+  const loadSkinInventory = useCallback(async () => {
+    const targetTag = normalizePlayerTag(playerData?.tag ?? "");
+    if (!targetTag) return;
+
+    skinRequest.current?.abort();
+    const controller = new AbortController();
+    skinRequest.current = controller;
+    const sequence = skinRequestSequence.current + 1;
+    skinRequestSequence.current = sequence;
+    const isCurrent = () => skinRequestSequence.current === sequence;
+
+    setSkinInventoryStatus("loading");
+    setSkinInventoryError("");
+
+    try {
+      const skins = await fetchJson<PlayerSkinInventoryResponse>(
+        `/api/player/skins?tag=${encodeURIComponent(targetTag)}`,
+        { signal: controller.signal },
+        copy.skinLoad,
+        locale === "ko",
+      );
+      if (!isCurrent()) return;
+      setSkinInventory(skins);
+      setSkinInventoryStatus("ready");
+    } catch (skinError) {
+      if (isAbortError(skinError) || !isCurrent()) return;
+      setSkinInventoryStatus("error");
+      setSkinInventoryError(
+        skinError instanceof Error ? skinError.message : copy.skinLoad,
+      );
+    }
+  }, [copy.skinLoad, locale, playerData?.tag]);
 
   const toggleFavorite = useCallback(
     (target?: string) => {
@@ -252,6 +267,7 @@ export function usePlayerSearch(locale: Locale = "ko") {
     recentSearches,
     favoriteSearches,
     handleSearch,
+    loadSkinInventory,
     toggleFavorite,
   };
 }

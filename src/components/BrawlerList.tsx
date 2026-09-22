@@ -14,6 +14,7 @@ interface BrawlerListProps {
   skinInventory?: PlayerSkinInventoryResponse | null;
   skinInventoryStatus?: PlayerSkinInventoryStatus;
   skinInventoryError?: string;
+  onLoadSkinInventory: () => void | Promise<void>;
   onSelectBrawler: (brawler: Brawler) => void;
   locale?: Locale;
 }
@@ -23,11 +24,13 @@ export default function BrawlerList({
   skinInventory,
   skinInventoryStatus = "idle",
   skinInventoryError = "",
+  onLoadSkinInventory,
   onSelectBrawler,
   locale = "ko",
 }: BrawlerListProps) {
   const copy = getComponentMessages(locale).brawlerList;
   const isSkinLoading = skinInventoryStatus === "loading" && !skinInventory;
+  const hasSkinInventory = Boolean(skinInventory);
   const skinStatusLabel =
     skinInventoryStatus === "loading"
       ? copy.skinLoading
@@ -35,7 +38,15 @@ export default function BrawlerList({
         ? copy.skinError
         : skinInventoryStatus === "ready"
           ? copy.skinReady
-          : copy.clickForDetails;
+          : copy.skinIdle;
+  const skinActionLabel =
+    skinInventoryStatus === "loading"
+      ? copy.loading
+      : skinInventoryStatus === "ready"
+        ? copy.skinRefresh
+        : skinInventoryStatus === "error"
+          ? copy.skinRetry
+          : copy.skinLookup;
 
   return (
     <section className="w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="brawler-list-title">
@@ -48,12 +59,22 @@ export default function BrawlerList({
             {formatBrawlerListDescription(locale, brawlers.length)}
           </p>
         </div>
-        <span
-          className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-600"
-          title={skinInventoryError || undefined}
-        >
-          {skinStatusLabel}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-600"
+            title={skinInventoryError || undefined}
+          >
+            {skinStatusLabel}
+          </span>
+          <button
+            type="button"
+            onClick={() => void onLoadSkinInventory()}
+            disabled={skinInventoryStatus === "loading"}
+            className="min-h-9 rounded-lg bg-blue-600 px-3 text-xs font-black text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500"
+          >
+            {skinActionLabel}
+          </button>
+        </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
@@ -98,7 +119,13 @@ export default function BrawlerList({
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
                   <div className="flex items-center justify-between gap-2 text-xs font-black text-slate-700">
                     <span>{copy.skins}</span>
-                    <span>{isSkinLoading ? copy.loading : formatOwnedCount(locale, skinCount)}</span>
+                    <span>
+                      {isSkinLoading
+                        ? copy.loading
+                        : hasSkinInventory
+                          ? formatOwnedCount(locale, skinCount)
+                          : "—"}
+                    </span>
                   </div>
                 </div>
 

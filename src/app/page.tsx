@@ -23,7 +23,6 @@ import type {
   Brawler,
   PlayerHistoryResponse,
   PlayerOwnedSkin,
-  PlayerSkinInventoryStatus,
   RecentBattleSummary,
 } from "../types/brawl";
 import {
@@ -280,8 +279,6 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                   summary={summary}
                   history={search.playerHistory}
                   brawlerCount={search.playerData.brawlers.length}
-                  skinStatus={search.skinInventoryStatus}
-                  skinError={search.skinInventoryError}
                   onOpenPanel={setActivePanel}
                 />
               ) : null}
@@ -303,6 +300,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                   skinInventory={search.skinInventory}
                   skinInventoryStatus={search.skinInventoryStatus}
                   skinInventoryError={search.skinInventoryError}
+                  onLoadSkinInventory={search.loadSkinInventory}
                   onSelectBrawler={setSelectedBrawler}
                   locale={locale}
                 />
@@ -444,29 +442,24 @@ function OverviewPanel({
   summary,
   history,
   brawlerCount,
-  skinStatus,
-  skinError,
   onOpenPanel,
 }: {
   locale: Locale;
   summary: RecentBattleSummary;
   history: PlayerHistoryResponse | null;
   brawlerCount: number;
-  skinStatus: PlayerSkinInventoryStatus;
-  skinError: string;
   onOpenPanel: (panel: ResultPanel) => void;
 }) {
   const copy = getMessages(locale);
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div>
         <div>
           <h2 className="text-lg font-black text-slate-950">{copy.home.overviewTitle}</h2>
           <p className="mt-1 text-sm font-bold leading-6 text-slate-500">
             {copy.home.overviewBody}
           </p>
         </div>
-        <StatusPill status={skinStatus} error={skinError} locale={locale} />
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -520,41 +513,6 @@ function OverviewMetric({
       <span className="mt-2 block truncate text-2xl font-black text-slate-950">{value}</span>
       <span className="mt-1 block text-xs font-bold text-slate-500">{detail}</span>
     </button>
-  );
-}
-
-function StatusPill({
-  status,
-  error,
-  locale,
-}: {
-  status: PlayerSkinInventoryStatus;
-  error: string;
-  locale: Locale;
-}) {
-  const copy = getMessages(locale).home;
-  const label =
-    status === "loading"
-      ? copy.skinLoading
-      : status === "ready"
-        ? copy.skinReady
-        : status === "error"
-          ? copy.skinError
-          : copy.skinIdle;
-  const className =
-    status === "ready"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : status === "error"
-        ? "border-amber-200 bg-amber-50 text-amber-700"
-        : "border-slate-200 bg-slate-50 text-slate-600";
-
-  return (
-    <span
-      className={`inline-flex min-h-9 items-center rounded-lg border px-3 text-xs font-black ${className}`}
-      title={error || undefined}
-    >
-      {label}
-    </span>
   );
 }
 

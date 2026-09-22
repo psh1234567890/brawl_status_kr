@@ -27,6 +27,22 @@ test("direct localized loads set the document language", async ({ page }) => {
   await expect.poll(() => page.evaluate(() => document.documentElement.lang)).toBe("ja-JP");
 });
 
+test("localized routes emit localized Open Graph and Twitter metadata", async ({ page }) => {
+  const response = await page.goto("/en/meta");
+  expect(response?.status()).toBe(200);
+
+  await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute("content", "en_US");
+  await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+    "content",
+    /Search Brawl Stars players/,
+  );
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary");
+  await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute(
+    "content",
+    /Search Brawl Stars players/,
+  );
+});
+
 test("skin filters hydrate from and write back to the shareable URL", async ({ page }) => {
   await page.goto("/skins?q=Shelly&sort=NAME&defaults=show");
 

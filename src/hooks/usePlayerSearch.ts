@@ -14,13 +14,15 @@ import {
   buildOfficialSkinInventory,
   mergeSkinInventories,
 } from "../utils/playerSkinInventory";
+import {
+  readPlayerSkinCache,
+  writePlayerSkinCache,
+} from "../utils/playerSkinCache";
 import type { Locale } from "../i18n/config";
 import { getComponentMessages } from "../i18n/componentMessages";
 
 const RECENT_TAGS_KEY = "recentTags";
 const FAVORITE_TAGS_KEY = "favoriteTags";
-const SKIN_CACHE_PREFIX = "skinInventoryCache:v1:";
-const SKIN_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const EMPTY_STORED_TAGS = "[]";
 const RECENT_TAGS_CHANGED_EVENT = "recentTagsChanged";
 const FAVORITE_TAGS_CHANGED_EVENT = "favoriteTagsChanged";
@@ -70,25 +72,7 @@ function isAbortError(error: unknown) {
 
 function readCachedSupplementalInventory(tag: string) {
   try {
-    const raw = window.localStorage.getItem(`${SKIN_CACHE_PREFIX}${tag}`);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as {
-      savedAt?: number;
-      inventory?: PlayerSkinInventoryResponse;
-    };
-    if (
-      typeof parsed.savedAt !== "number" ||
-      Date.now() - parsed.savedAt > SKIN_CACHE_MAX_AGE_MS ||
-      parsed.inventory?.coverage !== "owned"
-    ) {
-      window.localStorage.removeItem(`${SKIN_CACHE_PREFIX}${tag}`);
-      return null;
-    }
-    return {
-      ...parsed.inventory,
-      supplementalCachedAt: new Date(parsed.savedAt).toISOString(),
-      supplementalStatus: "stale" as const,
-    };
+    return readPlayerSkinCache(window.localStorage, tag);
   } catch {
     return null;
   }
@@ -100,10 +84,7 @@ function writeCachedSupplementalInventory(
 ) {
   if (inventory.coverage !== "owned" || inventory.supplementalStatus !== "ready") return;
   try {
-    window.localStorage.setItem(
-      `${SKIN_CACHE_PREFIX}${tag}`,
-      JSON.stringify({ savedAt: Date.now(), inventory }),
-    );
+    writePlayerSkinCache(window.localStorage, tag, inventory);
   } catch {
     // Browser storage can be unavailable or full. The live result still works without it.
   }

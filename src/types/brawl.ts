@@ -141,7 +141,8 @@ export interface PlayerSkinInventoryResponse {
   tag: string;
   source: "official" | "brawlace" | "mixed";
   coverage: "equipped" | "owned";
-  supplementalStatus: "disabled" | "ready" | "unavailable";
+  supplementalStatus: "disabled" | "ready" | "stale" | "unavailable";
+  supplementalCachedAt?: string;
   skins: PlayerOwnedSkin[];
   byBrawler: Record<string, PlayerOwnedSkin[]>;
 }

@@ -32,24 +32,50 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await expect(page.getByText("현재 착용 스킨 확인 완료")).toBeVisible();
 });
 
+test("owned-skin lookup falls back to the recent browser cache after a refresh failure", async ({ page }) => {
+  await page.unroute(/\/api\/player\/skins\?tag=/);
+  let skinRequests = 0;
+  await page.route(/\/api\/player\/skins\?tag=/, async (route) => {
+    skinRequests += 1;
+    if (skinRequests === 1) {
+      await route.fulfill({
+        json: {
+          tag,
+          source: "brawlace",
+          coverage: "owned",
+          supplementalStatus: "ready",
+          skins: [
+            { brawlerName: "SHELLY", name: "WITCH SHELLY", source: "brawlace" },
+          ],
+          byBrawler: {
+            SHELLY: [
+              { brawlerName: "SHELLY", name: "WITCH SHELLY", source: "brawlace" },
+            ],
+          },
+        },
+      });
+      return;
+    }
+    await route.fulfill({ status: 502, json: { error: "temporary failure" } });
+  });
+
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+  await page.getByRole("button", { name: "검색" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+
+  await page.getByRole("button", { name: "브롤러", exact: true }).click();
+  await page.getByRole("button", { name: "보유 스킨 조회" }).click();
+  await expect(page.getByText("보유 스킨 조회 완료")).toBeVisible();
+
+  await page.getByRole("button", { name: "새로 조회" }).click();
+  await expect.poll(() => skinRequests).toBe(2);
+  await expect(page.getByText("최근 보유 스킨 캐시 사용")).toBeVisible();
+});
+
 async function mockPlayerApis(page: Page) {
   await page.route(/\/api\/player\/skins\?tag=/, async (route) => {
-    await route.fulfill({
-      json: {
-        tag: tag,
-        source: "official",
-        coverage: "equipped",
-        supplementalStatus: "disabled",
-        skins: [
-          { id: 29000001, name: "STAR SHELLY", brawlerName: "SHELLY", source: "official" },
-        ],
-        byBrawler: {
-          SHELLY: [
-            { id: 29000001, name: "STAR SHELLY", brawlerName: "SHELLY", source: "official" },
-          ],
-        },
-      },
-    });
+    await route.fulfill({ status: 204 });
   });
 
   await page.route(/\/api\/player\/matches\?tag=/, async (route) => {

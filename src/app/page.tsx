@@ -330,6 +330,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             brawler={selectedBrawler}
             externalSkins={selectedExternalSkins}
             skinInventoryCoverage={search.skinInventory?.coverage}
+            skinSupplementalStatus={search.skinInventory?.supplementalStatus}
             skinInventoryStatus={search.skinInventoryStatus}
             skinInventoryError={search.skinInventoryError}
             recentStat={recentBrawlerStat}

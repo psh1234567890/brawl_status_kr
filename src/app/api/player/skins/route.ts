@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { withApiMonitoring } from "../../../../server/observability";
-import { fetchPlayerSkinInventory } from "../../../../server/playerSkinInventory";
+import {
+  fetchPlayerSkinInventory,
+  fetchSupplementalSkinInventory,
+} from "../../../../server/playerSkinInventory";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
 import { UpstreamApiError } from "../../../../server/upstream";
 import { isValidPlayerTag } from "../../../../utils/playerTag";
@@ -19,6 +22,11 @@ async function getPlayerSkins(request: Request) {
   }
 
   try {
+    if (searchParams.get("supplemental") === "1") {
+      const supplemental = await fetchSupplementalSkinInventory(tag);
+      if (!supplemental) return new Response(null, { status: 204 });
+      return NextResponse.json(supplemental);
+    }
     return NextResponse.json(await fetchPlayerSkinInventory(tag));
   } catch (error) {
     console.error("Failed to fetch player skin inventory:", error);

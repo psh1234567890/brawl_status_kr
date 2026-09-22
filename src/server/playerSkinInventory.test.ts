@@ -3,7 +3,7 @@ import type { PlayerData, PlayerSkinInventoryResponse } from "../types/brawl";
 import {
   buildOfficialSkinInventory,
   mergeSkinInventories,
-} from "./playerSkinInventory";
+} from "../utils/playerSkinInventory";
 
 const player = {
   brawlers: [

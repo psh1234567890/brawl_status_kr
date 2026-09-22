@@ -10,11 +10,17 @@ import type {
   PlayerSkinInventoryStatus,
 } from "../types/brawl";
 import { normalizePlayerTag } from "../utils/playerTag";
+import {
+  buildOfficialSkinInventory,
+  mergeSkinInventories,
+} from "../utils/playerSkinInventory";
 import type { Locale } from "../i18n/config";
 import { getComponentMessages } from "../i18n/componentMessages";
 
 const RECENT_TAGS_KEY = "recentTags";
 const FAVORITE_TAGS_KEY = "favoriteTags";
+const SKIN_CACHE_PREFIX = "skinInventoryCache:v1:";
+const SKIN_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const EMPTY_STORED_TAGS = "[]";
 const RECENT_TAGS_CHANGED_EVENT = "recentTagsChanged";
 const FAVORITE_TAGS_CHANGED_EVENT = "favoriteTagsChanged";
@@ -60,6 +66,47 @@ async function fetchJson<T>(
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === "AbortError";
+}
+
+function readCachedSupplementalInventory(tag: string) {
+  try {
+    const raw = window.localStorage.getItem(`${SKIN_CACHE_PREFIX}${tag}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      savedAt?: number;
+      inventory?: PlayerSkinInventoryResponse;
+    };
+    if (
+      typeof parsed.savedAt !== "number" ||
+      Date.now() - parsed.savedAt > SKIN_CACHE_MAX_AGE_MS ||
+      parsed.inventory?.coverage !== "owned"
+    ) {
+      window.localStorage.removeItem(`${SKIN_CACHE_PREFIX}${tag}`);
+      return null;
+    }
+    return {
+      ...parsed.inventory,
+      supplementalCachedAt: new Date(parsed.savedAt).toISOString(),
+      supplementalStatus: "stale" as const,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedSupplementalInventory(
+  tag: string,
+  inventory: PlayerSkinInventoryResponse,
+) {
+  if (inventory.coverage !== "owned" || inventory.supplementalStatus !== "ready") return;
+  try {
+    window.localStorage.setItem(
+      `${SKIN_CACHE_PREFIX}${tag}`,
+      JSON.stringify({ savedAt: Date.now(), inventory }),
+    );
+  } catch {
+    // Browser storage can be unavailable or full. The live result still works without it.
+  }
 }
 
 export function usePlayerSearch(locale: Locale = "ko") {
@@ -205,7 +252,7 @@ export function usePlayerSearch(locale: Locale = "ko") {
 
   const loadSkinInventory = useCallback(async () => {
     const targetTag = normalizePlayerTag(playerData?.tag ?? "");
-    if (!targetTag) return;
+    if (!targetTag || !playerData) return;
 
     skinRequest.current?.abort();
     const controller = new AbortController();
@@ -214,27 +261,51 @@ export function usePlayerSearch(locale: Locale = "ko") {
     skinRequestSequence.current = sequence;
     const isCurrent = () => skinRequestSequence.current === sequence;
 
+    const official = buildOfficialSkinInventory(playerData, targetTag);
+    setSkinInventory(official);
     setSkinInventoryStatus("loading");
     setSkinInventoryError("");
 
     try {
-      const skins = await fetchJson<PlayerSkinInventoryResponse>(
-        `/api/player/skins?tag=${encodeURIComponent(targetTag)}`,
+      const response = await fetch(
+        `/api/player/skins?tag=${encodeURIComponent(targetTag)}&supplemental=1`,
         { signal: controller.signal },
-        copy.skinLoad,
-        locale === "ko",
       );
+      if (response.status === 204) {
+        if (!isCurrent()) return;
+        setSkinInventory(official);
+        setSkinInventoryStatus("ready");
+        return;
+      }
+      const data = (await response.json().catch(() => ({}))) as PlayerSkinInventoryResponse & {
+        error?: string;
+      };
+      if (!response.ok) {
+        if (!isCurrent()) return;
+        const cached = readCachedSupplementalInventory(targetTag);
+        setSkinInventory(
+          cached
+            ? mergeSkinInventories(official, cached)
+            : { ...official, supplementalStatus: "unavailable" },
+        );
+        setSkinInventoryStatus("ready");
+        return;
+      }
       if (!isCurrent()) return;
-      setSkinInventory(skins);
+      writeCachedSupplementalInventory(targetTag, data);
+      setSkinInventory(mergeSkinInventories(official, data));
       setSkinInventoryStatus("ready");
     } catch (skinError) {
       if (isAbortError(skinError) || !isCurrent()) return;
-      setSkinInventoryStatus("error");
-      setSkinInventoryError(
-        skinError instanceof Error ? skinError.message : copy.skinLoad,
+      const cached = readCachedSupplementalInventory(targetTag);
+      setSkinInventory(
+        cached
+          ? mergeSkinInventories(official, cached)
+          : { ...official, supplementalStatus: "unavailable" },
       );
+      setSkinInventoryStatus("ready");
     }
-  }, [copy.skinLoad, locale, playerData?.tag]);
+  }, [playerData]);
 
   const toggleFavorite = useCallback(
     (target?: string) => {

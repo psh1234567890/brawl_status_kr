@@ -1,15 +1,18 @@
-import type {
-  PlayerData,
-  PlayerOwnedSkin,
-  PlayerSkinInventoryResponse,
-} from "../types/brawl";
+import type { PlayerData, PlayerSkinInventoryResponse } from "../types/brawl";
 import { normalizePlayerTag } from "../utils/playerTag";
 import {
-  fetchBrawlaceSkinInventory,
-  groupSkinsByBrawler,
-  normalizeLookupKey,
-} from "./brawlaceSkins";
+  buildOfficialSkinInventory,
+  mergeSkinInventories,
+} from "../utils/playerSkinInventory";
+import { fetchBrawlaceSkinInventory } from "./brawlaceSkins";
+import { createSkinInventoryCache } from "./skinInventoryCache";
 import { fetchBrawlApi } from "./upstream";
+
+const supplementalCache = createSkinInventoryCache({
+  freshMs: 6 * 60 * 60 * 1000,
+  staleMs: 24 * 60 * 60 * 1000,
+});
+const supplementalPending = new Map<string, Promise<PlayerSkinInventoryResponse>>();
 
 export async function fetchPlayerSkinInventory(
   tag: string,
@@ -18,65 +21,52 @@ export async function fetchPlayerSkinInventory(
   const player = await fetchBrawlApi<PlayerData>(`/players/%23${cleanTag}`, 30_000);
   const official = buildOfficialSkinInventory(player, cleanTag);
 
-  if (!isSupplementalLookupEnabled()) return official;
-
-  try {
-    const supplemental = await fetchBrawlaceSkinInventory(cleanTag);
-    return mergeSkinInventories(official, supplemental);
-  } catch (error) {
-    console.warn("Supplemental owned-skin lookup failed; using official equipped skins:",
+  const supplemental = await fetchSupplementalSkinInventory(cleanTag).catch((error) => {
+    console.warn(
+      "Supplemental owned-skin lookup failed; using official equipped skins:",
       getSupplementalErrorLog(error),
     );
-    return {
-      ...official,
-      supplementalStatus: "unavailable",
-    };
-  }
+    return null;
+  });
+
+  return supplemental
+    ? mergeSkinInventories(official, supplemental)
+    : {
+        ...official,
+        supplementalStatus: isSupplementalLookupEnabled() ? "unavailable" : "disabled",
+      };
 }
 
-export function buildOfficialSkinInventory(
-  player: Pick<PlayerData, "brawlers">,
-  cleanTag: string,
-): PlayerSkinInventoryResponse {
-  const skins: PlayerOwnedSkin[] = player.brawlers.map((brawler) => ({
-    brawlerName: brawler.name,
-    ...(brawler.skin ? { id: brawler.skin.id } : {}),
-    name: brawler.skin?.name ?? brawler.name,
-    source: "official",
-  }));
+export async function fetchSupplementalSkinInventory(
+  tag: string,
+): Promise<PlayerSkinInventoryResponse | null> {
+  if (!isSupplementalLookupEnabled()) return null;
 
-  return {
-    byBrawler: groupSkinsByBrawler(skins),
-    coverage: "equipped",
-    skins,
-    source: "official",
-    supplementalStatus: "disabled",
-    tag: cleanTag,
-  };
-}
+  const cleanTag = normalizePlayerTag(tag);
+  const fresh = supplementalCache.getFresh(cleanTag);
+  if (fresh) return fresh;
 
-export function mergeSkinInventories(
-  official: PlayerSkinInventoryResponse,
-  supplemental: PlayerSkinInventoryResponse,
-): PlayerSkinInventoryResponse {
-  const skins: PlayerOwnedSkin[] = [];
-  const seen = new Set<string>();
+  const pending = supplementalPending.get(cleanTag);
+  if (pending) return pending;
 
-  for (const skin of [...official.skins, ...supplemental.skins]) {
-    const key = `${normalizeLookupKey(skin.brawlerName)}:${normalizeLookupKey(skin.name)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    skins.push(skin);
+  const request = (async () => {
+    try {
+      const result = await fetchBrawlaceSkinInventory(cleanTag);
+      supplementalCache.set(cleanTag, result);
+      return result;
+    } catch (error) {
+      const stale = supplementalCache.getStale(cleanTag);
+      if (stale) return stale;
+      throw error;
+    }
+  })();
+
+  supplementalPending.set(cleanTag, request);
+  try {
+    return await request;
+  } finally {
+    supplementalPending.delete(cleanTag);
   }
-
-  return {
-    byBrawler: groupSkinsByBrawler(skins),
-    coverage: "owned",
-    skins,
-    source: "mixed",
-    supplementalStatus: "ready",
-    tag: official.tag,
-  };
 }
 
 function isSupplementalLookupEnabled() {

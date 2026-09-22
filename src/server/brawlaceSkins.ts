@@ -21,8 +21,10 @@ export async function fetchBrawlaceSkinInventory(tag: string): Promise<PlayerSki
 
   return {
     byBrawler: groupSkinsByBrawler(skins),
+    coverage: "owned",
     skins,
     source: "brawlace",
+    supplementalStatus: "ready",
     tag: cleanTag,
   };
 }

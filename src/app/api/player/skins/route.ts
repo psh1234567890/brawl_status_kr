@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import {
-  BrawlaceSkinLookupError,
-  fetchBrawlaceSkinInventory,
-} from "../../../../server/brawlaceSkins";
+import { withApiMonitoring } from "../../../../server/observability";
+import { fetchPlayerSkinInventory } from "../../../../server/playerSkinInventory";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import { UpstreamApiError } from "../../../../server/upstream";
 import { isValidPlayerTag } from "../../../../utils/playerTag";
 
-export async function GET(request: Request) {
+async function getPlayerSkins(request: Request) {
   const rejected = rejectRateLimitedRequest(request, "player-skins", {
     limit: 20,
     windowMs: 60_000,
@@ -20,14 +19,15 @@ export async function GET(request: Request) {
   }
 
   try {
-    return NextResponse.json(await fetchBrawlaceSkinInventory(tag));
+    return NextResponse.json(await fetchPlayerSkinInventory(tag));
   } catch (error) {
-    const disabled = error instanceof BrawlaceSkinLookupError && error.status === 503;
-    if (!disabled) console.error("Failed to fetch player skins:", error);
-    const status = disabled ? 503 : 502;
+    console.error("Failed to fetch player skin inventory:", error);
+    const status = error instanceof UpstreamApiError ? error.status : 502;
     return NextResponse.json(
-      { error: "보유 스킨 목록을 불러오지 못했습니다." },
+      { error: "스킨 정보를 불러오지 못했습니다." },
       { status },
     );
   }
 }
+
+export const GET = withApiMonitoring("api.player.skins", getPlayerSkins, { slowMs: 1_500 });

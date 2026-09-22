@@ -121,10 +121,7 @@ test("AdSense stays disabled cleanly when publisher settings are absent", async 
   await expect(page.locator(".adsbygoogle")).toHaveCount(0);
 });
 
-test("owned-skin auxiliary lookup stays disabled without explicit operator opt-in", async ({ request }) => {
-  const response = await request.get("/api/player/skins?tag=2PYLQ");
-  expect(response.status()).toBe(503);
-  await expect(response.json()).resolves.toMatchObject({
-    error: "보유 스킨 목록을 불러오지 못했습니다.",
-  });
+test("owned-skin endpoint validates player tags before upstream lookup", async ({ request }) => {
+  const response = await request.get("/api/player/skins?tag=INVALID!");
+  expect(response.status()).toBe(400);
 });

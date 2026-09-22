@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { observeServerOperation, withApiMonitoring } from "./observability";
+import {
+  logSkinSupplementalOutcome,
+  observeServerOperation,
+  withApiMonitoring,
+} from "./observability";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -76,5 +80,28 @@ describe("observeServerOperation", () => {
     expect(payload).toContain('"operation":"db.meta.stats"');
     expect(payload).toContain('"ok":false');
     expect(payload).not.toContain("sensitive database detail");
+  });
+});
+
+describe("logSkinSupplementalOutcome", () => {
+  it("logs only safe error metadata, never the raw error message", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const error = Object.assign(new Error("SECRET_PLAYER_TAG upstream detail"), {
+      status: 403,
+    });
+
+    logSkinSupplementalOutcome("unavailable", {
+      durationMs: 12.34,
+      error,
+    });
+
+    expect(warn).toHaveBeenCalledOnce();
+    const payload = String(warn.mock.calls[0]?.[0]);
+    expect(payload).toContain('"event":"skin_supplemental"');
+    expect(payload).toContain('"outcome":"unavailable"');
+    expect(payload).toContain('"errorName":"Error"');
+    expect(payload).toContain('"status":403');
+    expect(payload).not.toContain("SECRET_PLAYER_TAG");
+    expect(payload).not.toContain("upstream detail");
   });
 });

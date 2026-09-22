@@ -91,6 +91,28 @@ test("meta filters hydrate from and update the shareable URL", async ({ page }) 
   await expect(page).toHaveURL(/map=Double\+Swoosh/);
 });
 
+test("meta loading and failure states expose assistive roles", async ({ page }) => {
+  await page.route("**/api/meta", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await route.fulfill({ status: 500, json: { error: "테스트 메타 오류" } });
+  });
+
+  await page.goto("/meta");
+  await expect(page.getByRole("status")).toContainText("메타 통계를 불러오는 중");
+  await expect(page.locator('[role="alert"]').filter({ hasText: "테스트 메타 오류" })).toBeVisible();
+});
+
+test("team meta loading and empty states expose status semantics", async ({ page }) => {
+  await page.route("**/api/meta/teams?**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await route.fulfill({ json: { items: [], maps: [] } });
+  });
+
+  await page.goto("/teams");
+  await expect(page.getByRole("status")).toContainText("팀 조합을 계산하는 중");
+  await expect(page.getByRole("status")).toContainText("아직 충분한 팀 조합 표본이 없습니다.");
+});
+
 test("counter selection hydrates from and updates the shareable URL", async ({ page }) => {
   await page.route("**/api/meta/counters?brawler=*", async (route) => {
     await route.fulfill({ json: { items: [] } });

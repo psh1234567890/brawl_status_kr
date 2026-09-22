@@ -202,11 +202,18 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
       </header>
 
       {loading ? (
-        <div className="mt-20 rounded-full bg-white px-8 py-4 text-2xl font-black text-indigo-500 shadow-md">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-20 rounded-full bg-white px-8 py-4 text-2xl font-black text-indigo-500 shadow-md"
+        >
           {copy.meta.loading}
         </div>
       ) : error ? (
-        <div className="rounded-lg border-l-4 border-red-500 bg-red-100 px-6 py-4 font-bold text-red-700 shadow-md">
+        <div
+          role="alert"
+          className="rounded-lg border-l-4 border-red-500 bg-red-100 px-6 py-4 font-bold text-red-700 shadow-md"
+        >
           {error}
         </div>
       ) : (
@@ -245,7 +252,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                 </button>
               ))
             ) : (
-              <div className="rounded-full border border-dashed border-gray-300 bg-white/40 px-6 py-2 text-sm font-bold text-gray-400">
+              <div
+                role="status"
+                className="rounded-full border border-dashed border-gray-300 bg-white/40 px-6 py-2 text-sm font-bold text-gray-400"
+              >
                 {copy.meta.noMaps}
               </div>
             )}
@@ -356,7 +366,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                 })}
                 </div>
               ) : (
-                <p className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50 px-4 py-8 text-center text-sm font-bold text-indigo-500">
+                <p
+                  role="status"
+                  className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50 px-4 py-8 text-center text-sm font-bold text-indigo-500"
+                >
                   {copy.meta.noCandidates}
                 </p>
               )}
@@ -377,7 +390,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
               ) : null}
             </section>
           ) : (
-            <div className="mt-10 w-full max-w-3xl rounded-full bg-white px-8 py-4 text-center text-xl font-bold text-gray-500 shadow-md">
+            <div
+              role="status"
+              className="mt-10 w-full max-w-3xl rounded-full bg-white px-8 py-4 text-center text-xl font-bold text-gray-500 shadow-md"
+            >
               {copy.meta.insufficient}
             </div>
           )}

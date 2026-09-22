@@ -108,7 +108,11 @@ export default function CounterBrowser({
           {copy.counters.catalogUnavailable}
         </div>
       ) : loading ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-lg font-black text-blue-600 shadow-sm">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-slate-200 bg-white p-8 text-center text-lg font-black text-blue-600 shadow-sm"
+        >
           {copy.counters.loading}
         </div>
       ) : error ? (
@@ -134,7 +138,10 @@ export default function CounterBrowser({
           ))}
         </section>
       ) : (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-bold text-slate-500">
+        <div
+          role="status"
+          className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-bold text-slate-500"
+        >
           {copy.counters.empty}
         </div>
       )}

@@ -8,6 +8,21 @@ type OperationMonitorOptions = {
   slowMs?: number;
 };
 
+export type SkinSupplementalOutcome =
+  | "disabled"
+  | "fresh_cache"
+  | "shared_request"
+  | "provider_ready"
+  | "stale_cache"
+  | "unavailable"
+  | "direct_failed_no_fallback"
+  | "direct_failed_reader_fallback";
+
+type SkinSupplementalLogDetails = {
+  durationMs?: number;
+  error?: unknown;
+};
+
 export function withApiMonitoring(
   route: string,
   handler: ApiHandler,
@@ -88,6 +103,35 @@ export async function observeServerOperation<T>(
   }
 }
 
+export function logSkinSupplementalOutcome(
+  outcome: SkinSupplementalOutcome,
+  details: SkinSupplementalLogDetails = {},
+) {
+  const errorDetails = safeErrorDetails(details.error);
+  const payload = JSON.stringify({
+    event: "skin_supplemental",
+    outcome,
+    durationMs:
+      typeof details.durationMs === "number"
+        ? Math.round(details.durationMs * 10) / 10
+        : undefined,
+    ...errorDetails,
+    deployment: deploymentContext(),
+  });
+
+  if (
+    outcome === "unavailable" ||
+    outcome === "stale_cache" ||
+    outcome === "direct_failed_no_fallback" ||
+    outcome === "direct_failed_reader_fallback"
+  ) {
+    console.warn(payload);
+    return;
+  }
+
+  console.log(payload);
+}
+
 function emitApiLog(payload: {
   event: string;
   route: string;
@@ -115,6 +159,23 @@ function getRequestId(request: Request) {
 
 function elapsedMs(startedAt: number) {
   return Math.round((performance.now() - startedAt) * 10) / 10;
+}
+
+function safeErrorDetails(error: unknown) {
+  if (!error) return {};
+
+  const status =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number"
+      ? error.status
+      : undefined;
+
+  return {
+    errorName: error instanceof Error ? error.name : "UnknownError",
+    status,
+  };
 }
 
 function deploymentContext() {

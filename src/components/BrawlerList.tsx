@@ -37,7 +37,9 @@ export default function BrawlerList({
       : skinInventoryStatus === "error"
         ? copy.skinError
         : skinInventoryStatus === "ready"
-          ? copy.skinReady
+          ? skinInventory?.coverage === "equipped"
+            ? copy.skinEquippedReady
+            : copy.skinReady
           : copy.skinIdle;
   const skinActionLabel =
     skinInventoryStatus === "loading"
@@ -123,7 +125,9 @@ export default function BrawlerList({
                       {isSkinLoading
                         ? copy.loading
                         : hasSkinInventory
-                          ? formatOwnedCount(locale, skinCount)
+                          ? skinInventory?.coverage === "equipped"
+                            ? copy.equippedOnly
+                            : formatOwnedCount(locale, skinCount)
                           : "—"}
                     </span>
                   </div>

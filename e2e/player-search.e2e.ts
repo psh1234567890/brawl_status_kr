@@ -29,13 +29,26 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await expect(page.getByText("보유 스킨은 별도 조회")).toBeVisible();
   await page.getByRole("button", { name: "보유 스킨 조회" }).click();
   await expect.poll(() => skinRequests).toBe(1);
-  await expect(page.getByText("보유 스킨 조회 완료")).toBeVisible();
+  await expect(page.getByText("현재 착용 스킨 확인 완료")).toBeVisible();
 });
 
 async function mockPlayerApis(page: Page) {
   await page.route(/\/api\/player\/skins\?tag=/, async (route) => {
     await route.fulfill({
-      json: { tag: `#${tag}`, source: "brawlace", skins: [], byBrawler: {} },
+      json: {
+        tag: tag,
+        source: "official",
+        coverage: "equipped",
+        supplementalStatus: "disabled",
+        skins: [
+          { id: 29000001, name: "STAR SHELLY", brawlerName: "SHELLY", source: "official" },
+        ],
+        byBrawler: {
+          SHELLY: [
+            { id: 29000001, name: "STAR SHELLY", brawlerName: "SHELLY", source: "official" },
+          ],
+        },
+      },
     });
   });
 

@@ -139,7 +139,9 @@ export interface PlayerHistoryResponse {
 
 export interface PlayerSkinInventoryResponse {
   tag: string;
-  source: "brawlace";
+  source: "official" | "brawlace" | "mixed";
+  coverage: "equipped" | "owned";
+  supplementalStatus: "disabled" | "ready" | "unavailable";
   skins: PlayerOwnedSkin[];
   byBrawler: Record<string, PlayerOwnedSkin[]>;
 }

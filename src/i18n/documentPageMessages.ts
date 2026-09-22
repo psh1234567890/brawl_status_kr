@@ -205,7 +205,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "보유 스킨 보조 조회는 기본적으로 비활성화되어 있습니다. 운영자가 명시적으로 활성화한 경우에만 이용자가 검색한 공개 플레이어 태그가 Brawlace에 전달될 수 있으며, Jina Reader도 별도로 활성화한 경우에만 직접 조회 실패 시 같은 공개 스킨 페이지를 읽는 보조 경로로 사용됩니다.",
+              text: "보유 스킨 보조 조회는 기본적으로 비활성화되어 있습니다. 운영자가 명시적으로 활성화한 경우에만 이용자가 검색한 공개 플레이어 태그가 Brawlace에 전달될 수 있으며, Jina Reader도 별도로 활성화한 경우에만 직접 조회 실패 시 같은 공개 스킨 페이지를 읽는 보조 경로로 사용됩니다. 전체 보유 스킨 보조 조회가 성공한 경우 결과는 같은 브라우저의 localStorage에 최대 24시간 임시 캐시될 수 있으며, 보조 provider가 비활성화된 경우 이 캐시는 조회에 사용하지 않습니다.",
             },
             {
               type: "paragraph",
@@ -497,7 +497,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Owned-skin auxiliary lookup is disabled by default. Only when the operator explicitly enables it may the public player tag searched by the user be sent to Brawlace; Jina Reader is used after a direct lookup failure only if its fallback is separately enabled.",
+              text: "Owned-skin auxiliary lookup is disabled by default. Only when the operator explicitly enables it may the public player tag searched by the user be sent to Brawlace; Jina Reader is used after a direct lookup failure only if its fallback is separately enabled. When a full owned-skin lookup succeeds, the result may be cached in the same browser's localStorage for up to 24 hours; this cache is not used when the supplemental provider is disabled.",
             },
             {
               type: "paragraph",
@@ -789,7 +789,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "所持スキンの補助取得はデフォルトで無効です。運営者が明示的に有効化した場合に限り、利用者が検索した公開プレイヤータグがBrawlaceに送信されることがあります。Jina Readerも別途有効化されている場合に限り、直接取得失敗時の補助経路として同じ公開スキンページを読み取ります。",
+              text: "所持スキンの補助取得はデフォルトで無効です。運営者が明示的に有効化した場合に限り、利用者が検索した公開プレイヤータグがBrawlaceに送信されることがあります。Jina Readerも別途有効化されている場合に限り、直接取得失敗時の補助経路として同じ公開スキンページを読み取ります。全所持スキンの補助取得に成功した場合、その結果は同じブラウザのlocalStorageに最大24時間一時保存されることがあります。補助providerが無効な場合、このキャッシュは使用されません。",
             },
             {
               type: "paragraph",
@@ -1081,7 +1081,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "A consulta auxiliar de skins possuídas fica desativada por padrão. Somente quando o operador a ativa explicitamente, a tag pública pesquisada pelo usuário pode ser enviada ao Brawlace; o Jina Reader só é usado após falha da consulta direta se o fallback também tiver sido ativado separadamente.",
+              text: "A consulta auxiliar de skins possuídas fica desativada por padrão. Somente quando o operador a ativa explicitamente, a tag pública pesquisada pelo usuário pode ser enviada ao Brawlace; o Jina Reader só é usado após falha da consulta direta se o fallback também tiver sido ativado separadamente. Quando a consulta completa de skins possuídas é bem-sucedida, o resultado pode ser armazenado temporariamente no localStorage do mesmo navegador por até 24 horas; esse cache não é usado quando o provedor auxiliar está desativado.",
             },
             {
               type: "paragraph",
@@ -1373,7 +1373,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "La consulta auxiliar de aspectos poseídos está desactivada de forma predeterminada. Solo cuando el operador la activa explícitamente, la etiqueta pública buscada por el usuario puede enviarse a Brawlace; Jina Reader solo se usa tras un fallo de la consulta directa si su vía de respaldo también se activa por separado.",
+              text: "La consulta auxiliar de aspectos poseídos está desactivada de forma predeterminada. Solo cuando el operador la activa explícitamente, la etiqueta pública buscada por el usuario puede enviarse a Brawlace; Jina Reader solo se usa tras un fallo de la consulta directa si su vía de respaldo también se activa por separado. Cuando una consulta completa de aspectos poseídos se realiza correctamente, el resultado puede guardarse temporalmente en el localStorage del mismo navegador durante un máximo de 24 horas; esta caché no se usa si el proveedor auxiliar está desactivado.",
             },
             {
               type: "paragraph",
@@ -1665,7 +1665,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Sahip olunan kostümler için yardımcı sorgu varsayılan olarak devre dışıdır. Yalnızca operatör açıkça etkinleştirdiğinde kullanıcının aradığı herkese açık oyuncu etiketi Brawlace'e gönderilebilir; Jina Reader da ancak yedek yol ayrıca etkinleştirilmişse doğrudan sorgu başarısız olduktan sonra kullanılır.",
+              text: "Sahip olunan kostümler için yardımcı sorgu varsayılan olarak devre dışıdır. Yalnızca operatör açıkça etkinleştirdiğinde kullanıcının aradığı herkese açık oyuncu etiketi Brawlace'e gönderilebilir; Jina Reader da ancak yedek yol ayrıca etkinleştirilmişse doğrudan sorgu başarısız olduktan sonra kullanılır. Tam kostüm sorgusu başarıyla tamamlanırsa sonuç aynı tarayıcının localStorage alanında en fazla 24 saat geçici olarak saklanabilir; yardımcı sağlayıcı devre dışıysa bu önbellek kullanılmaz.",
             },
             {
               type: "paragraph",
@@ -1957,7 +1957,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Die zusätzliche Abfrage eigener Skins ist standardmäßig deaktiviert. Nur wenn der Betreiber sie ausdrücklich aktiviert, kann der vom Nutzer gesuchte öffentliche Spieler-Tag an Brawlace übermittelt werden; Jina Reader wird nach einem fehlgeschlagenen Direktabruf nur verwendet, wenn auch dieser Fallback separat aktiviert wurde.",
+              text: "Die zusätzliche Abfrage eigener Skins ist standardmäßig deaktiviert. Nur wenn der Betreiber sie ausdrücklich aktiviert, kann der vom Nutzer gesuchte öffentliche Spieler-Tag an Brawlace übermittelt werden; Jina Reader wird nach einem fehlgeschlagenen Direktabruf nur verwendet, wenn auch dieser Fallback separat aktiviert wurde. Nach einer erfolgreichen vollständigen Abfrage kann das Ergebnis bis zu 24 Stunden im localStorage desselben Browsers zwischengespeichert werden; bei deaktiviertem Zusatzanbieter wird dieser Cache nicht verwendet.",
             },
             {
               type: "paragraph",
@@ -2249,7 +2249,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "La consultation auxiliaire des skins possédés est désactivée par défaut. Ce n'est que si l'opérateur l'active explicitement que le tag joueur public recherché peut être transmis à Brawlace ; Jina Reader n'est utilisé après l'échec de la consultation directe que si ce secours a lui aussi été activé séparément.",
+              text: "La consultation auxiliaire des skins possédés est désactivée par défaut. Ce n'est que si l'opérateur l'active explicitement que le tag joueur public recherché peut être transmis à Brawlace ; Jina Reader n'est utilisé après l'échec de la consultation directe que si ce secours a lui aussi été activé séparément. Lorsqu'une consultation complète réussit, le résultat peut être mis en cache dans le localStorage du même navigateur pendant 24 heures au maximum ; ce cache n'est pas utilisé si le fournisseur auxiliaire est désactivé.",
             },
             {
               type: "paragraph",
@@ -2541,7 +2541,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "La consultazione ausiliaria delle skin possedute è disattivata per impostazione predefinita. Solo quando l'operatore la abilita esplicitamente il tag pubblico cercato dall'utente può essere inviato a Brawlace; Jina Reader viene usato dopo un errore della richiesta diretta solo se anche questo fallback è stato abilitato separatamente.",
+              text: "La consultazione ausiliaria delle skin possedute è disattivata per impostazione predefinita. Solo quando l'operatore la abilita esplicitamente il tag pubblico cercato dall'utente può essere inviato a Brawlace; Jina Reader viene usato dopo un errore della richiesta diretta solo se anche questo fallback è stato abilitato separatamente. Quando una consultazione completa riesce, il risultato può essere memorizzato temporaneamente nel localStorage dello stesso browser per un massimo di 24 ore; questa cache non viene usata se il provider ausiliario è disattivato.",
             },
             {
               type: "paragraph",
@@ -2833,7 +2833,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
             },
             {
               type: "paragraph",
-              text: "Вспомогательный запрос списка имеющихся скинов по умолчанию отключён. Публичный тег игрока может передаваться Brawlace только если оператор явно включил эту функцию; Jina Reader используется после ошибки прямого запроса только если резервный путь также включён отдельно.",
+              text: "Вспомогательный запрос списка имеющихся скинов по умолчанию отключён. Публичный тег игрока может передаваться Brawlace только если оператор явно включил эту функцию; Jina Reader используется после ошибки прямого запроса только если резервный путь также включён отдельно. После успешного получения полного списка результат может временно храниться в localStorage того же браузера до 24 часов; если дополнительный провайдер отключён, этот кэш не используется.",
             },
             {
               type: "paragraph",

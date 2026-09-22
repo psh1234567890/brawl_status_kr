@@ -39,7 +39,9 @@ export default function BrawlerList({
         : skinInventoryStatus === "ready"
           ? skinInventory?.coverage === "equipped"
             ? copy.skinEquippedReady
-            : copy.skinReady
+            : skinInventory?.supplementalStatus === "stale"
+              ? copy.skinStaleReady
+              : copy.skinReady
           : copy.skinIdle;
   const skinActionLabel =
     skinInventoryStatus === "loading"

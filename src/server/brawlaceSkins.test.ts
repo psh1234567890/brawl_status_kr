@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   fetchBrawlaceSkinInventory,
-  groupSkinsByBrawler,
-  normalizeLookupKey,
   parseBrawlaceSkinMarkdown,
   parseBrawlaceSkinTable,
 } from "./brawlaceSkins";
+import {
+  groupSkinsByBrawler,
+  normalizeSkinLookupKey,
+} from "../utils/playerSkinInventory";
 
 describe("brawlace skin parser", () => {
   afterEach(() => {
@@ -54,7 +56,7 @@ describe("brawlace skin parser", () => {
       },
     ]);
 
-    expect(normalizeLookupKey("Larry & Lawrie")).toBe("LARRYANDLAWRIE");
+    expect(normalizeSkinLookupKey("Larry & Lawrie")).toBe("LARRYANDLAWRIE");
     expect(grouped.LARRYANDLAWRIE).toHaveLength(1);
   });
 

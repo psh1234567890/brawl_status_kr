@@ -17,6 +17,7 @@ import type {
   Brawler,
   BrawlerStat,
   PlayerOwnedSkin,
+  PlayerSkinInventoryResponse,
   PlayerSkinInventoryStatus,
 } from "../types/brawl";
 import {
@@ -32,6 +33,7 @@ interface BrawlerDetailsModalProps {
   brawler: Brawler;
   externalSkins?: PlayerOwnedSkin[];
   skinInventoryCoverage?: "equipped" | "owned";
+  skinSupplementalStatus?: PlayerSkinInventoryResponse["supplementalStatus"];
   skinInventoryStatus?: PlayerSkinInventoryStatus;
   skinInventoryError?: string;
   recentStat: BrawlerStat & { topMode: string };
@@ -44,6 +46,7 @@ export default function BrawlerDetailsModal({
   brawler,
   externalSkins = [],
   skinInventoryCoverage,
+  skinSupplementalStatus,
   skinInventoryStatus = "idle",
   skinInventoryError = "",
   recentStat,
@@ -177,6 +180,12 @@ export default function BrawlerDetailsModal({
               {skinInventoryStatus === "ready" && skinInventoryCoverage === "equipped" ? (
                 <p className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs font-black text-blue-700">
                   {copy.skinEquippedOnly}
+                </p>
+              ) : null}
+
+              {skinInventoryStatus === "ready" && skinSupplementalStatus === "stale" ? (
+                <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-black text-amber-700">
+                  {copy.skinStale}
                 </p>
               ) : null}
             </section>

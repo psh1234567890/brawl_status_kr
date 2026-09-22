@@ -1,5 +1,6 @@
 import type { PlayerOwnedSkin, PlayerSkinInventoryResponse } from "../types/brawl";
 import { normalizePlayerTag } from "../utils/playerTag";
+import { groupSkinsByBrawler, normalizeSkinLookupKey } from "../utils/playerSkinInventory";
 
 const BRAWLACE_BASE_URL = "https://brawlace.com";
 const BRAWLACE_READER_BASE_URL = "https://r.jina.ai/";
@@ -148,7 +149,7 @@ export function parseBrawlaceSkinTable(html: string): PlayerOwnedSkin[] {
     const skinName = cells[1];
     if (!brawlerName || !skinName) continue;
 
-    const key = `${normalizeLookupKey(brawlerName)}:${normalizeLookupKey(skinName)}`;
+    const key = `${normalizeSkinLookupKey(brawlerName)}:${normalizeSkinLookupKey(skinName)}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
@@ -164,18 +165,6 @@ export function parseBrawlaceSkinTable(html: string): PlayerOwnedSkin[] {
       left.brawlerName.localeCompare(right.brawlerName, "en") ||
       left.name.localeCompare(right.name, "en"),
   );
-}
-
-export function groupSkinsByBrawler(skins: PlayerOwnedSkin[]) {
-  const result: Record<string, PlayerOwnedSkin[]> = {};
-
-  for (const skin of skins) {
-    const key = normalizeLookupKey(skin.brawlerName);
-    result[key] ??= [];
-    result[key].push(skin);
-  }
-
-  return result;
 }
 
 export function parseBrawlaceSkinMarkdown(markdown: string): PlayerOwnedSkin[] {
@@ -203,7 +192,7 @@ export function parseBrawlaceSkinMarkdown(markdown: string): PlayerOwnedSkin[] {
       continue;
     }
 
-    const key = `${normalizeLookupKey(brawlerName)}:${normalizeLookupKey(skinName)}`;
+    const key = `${normalizeSkinLookupKey(brawlerName)}:${normalizeSkinLookupKey(skinName)}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
@@ -219,13 +208,6 @@ export function parseBrawlaceSkinMarkdown(markdown: string): PlayerOwnedSkin[] {
       left.brawlerName.localeCompare(right.brawlerName, "en") ||
       left.name.localeCompare(right.name, "en"),
   );
-}
-
-export function normalizeLookupKey(value: string) {
-  return decodeHtmlEntities(value)
-    .toUpperCase()
-    .replace(/&/g, "AND")
-    .replace(/[^A-Z0-9]+/g, "");
 }
 
 function normalizeCellText(html: string) {

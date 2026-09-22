@@ -10,6 +10,11 @@ test.beforeEach(async ({ context, page }) => {
 });
 
 test("player search renders a profile and stores the recent tag", async ({ page }) => {
+  let skinRequests = 0;
+  page.on("request", (request) => {
+    if (request.url().includes("/api/player/skins?tag=")) skinRequests += 1;
+  });
+
   await page.goto("/");
   await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
   await page.getByRole("button", { name: "검색" }).click();
@@ -18,6 +23,13 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await expect(page.getByText(`현재 태그 ${tag}`)).toBeVisible();
   await expect(page.getByRole("button", { name: "즐겨찾기 추가" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("recentTags"))).toContain(tag);
+  expect(skinRequests).toBe(0);
+
+  await page.getByRole("button", { name: "브롤러", exact: true }).click();
+  await expect(page.getByText("보유 스킨은 별도 조회")).toBeVisible();
+  await page.getByRole("button", { name: "보유 스킨 조회" }).click();
+  await expect.poll(() => skinRequests).toBe(1);
+  await expect(page.getByText("보유 스킨 조회 완료")).toBeVisible();
 });
 
 async function mockPlayerApis(page: Page) {

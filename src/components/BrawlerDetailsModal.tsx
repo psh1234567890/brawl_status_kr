@@ -158,7 +158,9 @@ export default function BrawlerDetailsModal({
                 <p className="mt-3 rounded-lg border border-dashed border-slate-300 bg-white p-3 text-xs font-bold text-slate-500">
                   {isSkinLoading
                     ? copy.skinLoading
-                    : hasSkinError
+                    : skinInventoryStatus === "idle"
+                      ? copy.skinNotLoaded
+                      : hasSkinError
                       ? copy.skinPartial
                       : copy.noOwnedSkins}
                 </p>

@@ -32,6 +32,34 @@ test("map catalog filters client-side and links to map recommendations", async (
   await expect(mapArticles).toHaveCount(0);
 });
 
+test("brawler catalog filters by name, rarity, and class", async ({ page }) => {
+  await page.goto("/brawlers");
+
+  await expect(page.getByRole("heading", { level: 1, name: "브롤러 도감" })).toBeVisible();
+  const search = page.getByRole("searchbox", { name: "브롤러 이름 검색" });
+  const rarity = page.getByLabel("브롤러 희귀도 필터");
+  const classFilter = page.getByLabel("브롤러 역할 필터");
+  await expect(search).toBeVisible();
+  await expect(rarity).toBeVisible();
+  await expect(classFilter).toBeVisible();
+
+  const articles = page.locator("article");
+  expect(await articles.count()).toBeGreaterThan(0);
+
+  await search.fill("__NO_BRAWLER_MATCH__");
+  await expect(page.getByText("조건에 맞는 브롤러가 없습니다.")).toBeVisible();
+  await expect(articles).toHaveCount(0);
+
+  await search.fill("");
+  const rarityValue = await rarity.locator("option").nth(1).getAttribute("value");
+  const classValue = await classFilter.locator("option").nth(1).getAttribute("value");
+  expect(rarityValue).toBeTruthy();
+  expect(classValue).toBeTruthy();
+  await rarity.selectOption(rarityValue!);
+  await classFilter.selectOption(classValue!);
+  await expect(page.locator("article").or(page.getByText("조건에 맞는 브롤러가 없습니다."))).toBeVisible();
+});
+
 test("language switcher preserves the current localized route", async ({ page }) => {
   await page.goto("/skins?q=colt&sort=NAME");
   await page.getByRole("combobox", { name: "언어" }).selectOption("en");

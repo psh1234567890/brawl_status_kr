@@ -44,15 +44,15 @@ const koCatalog = {
   },
   brawlers: {
     metadata: {
-      title: "브롤러 도감",
-      description: "Brawlify 브롤러 데이터를 기반으로 브롤러 등급, 클래스, 가젯, 스타파워 정보를 확인합니다.",
+      title: "브롤스타즈 브롤러 도감 | 전체 브롤러 목록·희귀도·역할",
+      description: "브롤스타즈에 출시된 전체 브롤러 목록을 이름, 희귀도, 역할별로 검색하고 각 브롤러의 상세 정보, 가젯, 스타파워를 확인합니다.",
       detailNameFallback: "브롤러",
       detailTitleSuffix: " 브롤러 상세",
     },
     list: {
       title: "브롤러 도감",
       eyebrow: "브롤러 명단",
-      description: "브롤러의 등급, 클래스, 설명, 가젯과 스타파워를 확인합니다. 플레이어 검색 화면에서는 실제 보유 상태와 승률도 함께 볼 수 있습니다.",
+      description: "브롤스타즈에 출시된 전체 브롤러 목록을 이름, 희귀도와 역할별로 찾아보고 상세 정보, 가젯과 스타파워를 확인합니다. 플레이어 검색 화면에서는 실제 보유 상태와 승률도 함께 볼 수 있습니다.",
       action: "내 브롤러 보기",
       totalBrawlers: "전체 브롤러",
       releasedBrawlers: "출시 브롤러",

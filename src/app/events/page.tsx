@@ -49,7 +49,7 @@ function EventSection({ title, events, locale }: { title: string; events: Brawli
   const copy = getCatalogPageMessages(locale).events;
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="text-2xl font-black text-indigo-950">{title}</h2>
+      <h2 className="text-2xl font-black text-blue-950">{title}</h2>
       {events.length ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {events.map((event, index) => {
@@ -59,7 +59,7 @@ function EventSection({ title, events, locale }: { title: string; events: Brawli
             const displayMode = translateModeName(modeName, locale) || copy.unknown;
             const displayMap = translateMapName(mapName, locale) || copy.unknownMap;
             return (
-              <article key={`${title}-${map?.id ?? index}-${event.startTime ?? ""}`} className="overflow-hidden rounded-lg border border-white bg-white shadow-sm">
+              <article key={`${title}-${map?.id ?? index}-${event.startTime ?? ""}`} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
                 {map?.imageUrl ? (
                   <BrawlImage
                     src={map.imageUrl}
@@ -70,16 +70,16 @@ function EventSection({ title, events, locale }: { title: string; events: Brawli
                     fallbackText={displayMap.slice(0, 1)}
                   />
                 ) : (
-                  <div className="flex h-40 items-center justify-center bg-indigo-50 text-3xl font-black text-indigo-200">
+                  <div className="flex h-40 items-center justify-center bg-blue-50 text-3xl font-black text-blue-200">
                     {displayMap.slice(0, 1)}
                   </div>
                 )}
                 <div className="flex flex-col gap-3 p-4">
                   <div>
-                    <p className="text-xs font-black text-indigo-500">{displayMode}</p>
-                    <h3 className="mt-1 text-xl font-black text-gray-900">{displayMap}</h3>
+                    <p className="text-xs font-black text-blue-500">{displayMode}</p>
+                    <h3 className="mt-1 text-xl font-black text-slate-900">{displayMap}</h3>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-gray-500">
+                  <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-500">
                     <span>{copy.start}: {formatDate(event.startTime, locale)}</span>
                     <span>{copy.end}: {formatDate(event.endTime, locale)}</span>
                   </div>
@@ -113,7 +113,7 @@ function formatDate(value: string | undefined, locale: Locale) {
 
 function LinkButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="rounded-full bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-indigo-700">
+    <Link href={href} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-blue-700">
       {children}
     </Link>
   );

@@ -40,66 +40,82 @@ export default function PortalLayout({
   const copy = getMessages(locale).common;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8 sm:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-6">
-          <nav className="flex flex-wrap gap-2" aria-label={copy.mainNavigation}>
+    <main className="min-h-screen bg-[#f6f7fb] px-4 py-4 text-slate-950 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
+        <header className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3 py-1 lg:py-2">
+            <Link href={localizedHref(locale, "/")} className="min-w-0">
+              <span className="block text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
+                Brawl Status KR
+              </span>
+              <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
+                {copy.home}
+              </span>
+            </Link>
+            <LanguageSwitcher locale={locale} />
+          </div>
+
+          <nav className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label={copy.mainNavigation}>
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={localizedHref(locale, item.href)}
-                className="rounded-full border border-indigo-100 bg-white px-4 py-2 text-sm font-black text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
+                className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 sm:px-4 sm:text-sm"
               >
                 {copy[item.key]}
               </Link>
             ))}
           </nav>
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
               {eyebrow ? (
-                <p className="mb-2 text-sm font-black uppercase text-indigo-500">
+                <p className="mb-2 text-xs font-black uppercase tracking-[0.08em] text-blue-600">
                   {eyebrow}
                 </p>
               ) : null}
-              <h1 className="text-3xl font-black text-indigo-950 sm:text-5xl">{title}</h1>
+              <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
               {description ? (
-                <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-gray-600 sm:text-base">
+                <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-slate-500 sm:text-base">
                   {description}
                 </p>
               ) : null}
-            </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
-              {actions}
-              <LanguageSwitcher locale={locale} />
+              </div>
+              {actions ? (
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  {actions}
+                </div>
+              ) : null}
             </div>
           </div>
         </header>
         <AdSlot />
         {children}
-        <footer className="flex flex-col justify-between gap-3 border-t border-indigo-100 py-6 text-xs font-bold text-gray-500 sm:flex-row sm:items-center">
+        <footer className="flex flex-col justify-between gap-3 border-t border-slate-200 py-6 text-xs font-bold text-slate-500 sm:flex-row sm:items-center">
           <p>
             {copy.fanDisclaimer}{" "}
             <a
               href="https://supercell.com/en/fan-content-policy/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-indigo-700 hover:underline"
+              className="hover:text-slate-950 hover:underline"
             >
               Fan Content Policy
             </a>
           </p>
           <nav className="flex flex-wrap gap-3" aria-label={copy.projectInfo}>
-            <Link href={localizedHref(locale, "/methodology")} className="hover:text-indigo-700 hover:underline">
+            <Link href={localizedHref(locale, "/methodology")} className="hover:text-slate-950 hover:underline">
               {copy.methodology}
             </Link>
-            <Link href={localizedHref(locale, "/privacy")} className="hover:text-indigo-700 hover:underline">
+            <Link href={localizedHref(locale, "/privacy")} className="hover:text-slate-950 hover:underline">
               {copy.privacy}
             </Link>
             <a
               href="https://github.com/psh1234567890/brawl_status_kr"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-indigo-700 hover:underline"
+              className="hover:text-slate-950 hover:underline"
             >
               {copy.openSource}
             </a>
@@ -112,16 +128,16 @@ export default function PortalLayout({
 
 export function StatPill({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-lg border border-white bg-white px-4 py-3 shadow-sm">
-      <p className="text-xs font-black text-gray-400">{label}</p>
-      <p className="mt-1 text-xl font-black text-indigo-700">{value}</p>
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+      <p className="text-xs font-black uppercase tracking-[0.06em] text-slate-400">{label}</p>
+      <p className="mt-1 text-xl font-black text-blue-700">{value}</p>
     </div>
   );
 }
 
 export function EmptyState({ text }: { text: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-indigo-200 bg-white/70 p-8 text-center text-sm font-bold text-gray-500">
+    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-bold text-slate-500">
       {text}
     </div>
   );

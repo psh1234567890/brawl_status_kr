@@ -85,11 +85,11 @@ export async function GameModeDetailPageContent({ id, locale }: { id: string; lo
             alt={displayName}
             width={280}
             height={280}
-            className="h-64 w-full rounded-lg border border-white bg-white object-contain p-6 shadow-sm"
+            className="h-64 w-full rounded-lg border border-slate-200 bg-white object-contain p-6 shadow-sm"
             fallbackText={displayName.slice(0, 1)}
           />
         ) : (
-          <div className="flex h-64 items-center justify-center rounded-lg border border-white bg-white text-4xl font-black text-indigo-200 shadow-sm">
+          <div className="flex h-64 items-center justify-center rounded-lg border border-slate-200 bg-white text-4xl font-black text-blue-200 shadow-sm">
             {displayName.slice(0, 1)}
           </div>
         )}
@@ -101,13 +101,13 @@ export async function GameModeDetailPageContent({ id, locale }: { id: string; lo
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-2xl font-black text-indigo-950">{copy.detail.mapsInMode}</h2>
+        <h2 className="text-2xl font-black text-blue-950">{copy.detail.mapsInMode}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {relatedMaps.map((map) => (
             <Link
               key={map.id}
               href={localizedHref(locale, `/maps/${map.id}`)}
-              className="rounded-lg border border-white bg-white p-4 font-black text-gray-800 shadow-sm transition-transform hover:-translate-y-0.5"
+              className="rounded-lg border border-slate-200 bg-white p-4 font-black text-slate-800 shadow-sm transition-transform hover:-translate-y-0.5"
             >
               {translateMapName(map.name, locale)}
             </Link>
@@ -120,7 +120,7 @@ export async function GameModeDetailPageContent({ id, locale }: { id: string; lo
 
 function LinkButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700">
+    <Link href={href} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700">
       {children}
     </Link>
   );

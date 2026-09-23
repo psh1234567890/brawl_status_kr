@@ -105,8 +105,8 @@ test("skin filters hydrate from and write back to the shareable URL", async ({ p
 test("meta filters hydrate from and update the shareable URL", async ({ page }) => {
   await page.route("**/api/meta", async (route) => {
     await route.fulfill({
-      json: {
-        "Hard Rock Mine": [
+      json: [
+        { mode: "gemGrab", map: "Hard Rock Mine", brawlers: [
           {
             id: 16000000,
             name: "SHELLY",
@@ -118,8 +118,8 @@ test("meta filters hydrate from and update the shareable URL", async ({ page }) 
             confidence: "HIGH",
             confidenceScore: 80,
           },
-        ],
-        "Double Swoosh": [
+        ] },
+        { mode: "gemGrab", map: "Double Swoosh", brawlers: [
           {
             id: 16000001,
             name: "COLT",
@@ -131,8 +131,8 @@ test("meta filters hydrate from and update the shareable URL", async ({ page }) 
             confidence: "HIGH",
             confidenceScore: 90,
           },
-        ],
-      },
+        ] },
+      ],
     });
   });
 
@@ -145,14 +145,54 @@ test("meta filters hydrate from and update the shareable URL", async ({ page }) 
   await expect(page).toHaveURL(/map=Double\+Swoosh/);
 });
 
+test("meta keeps solo showdown selected and separates modes sharing a map", async ({ page }) => {
+  const stat = (name: string) => ({
+    name,
+    plays: 25,
+    wins: 15,
+    draws: 0,
+    winRate: 60,
+    score: 50,
+    confidence: "HIGH",
+    confidenceScore: 80,
+  });
+  await page.route("**/api/meta", async (route) => {
+    await route.fulfill({
+      json: [
+        { mode: "gemGrab", map: "Hard Rock Mine", brawlers: [stat("COLT")] },
+        { mode: "soloShowdown", map: "Rockwall Brawl", brawlers: [stat("SHELLY")] },
+        { mode: "soloShowdown", map: "Hard Rock Mine", brawlers: [stat("NITA")] },
+      ],
+    });
+  });
+
+  await page.goto("/meta");
+  await page.getByRole("button", { name: "솔로 쇼다운" }).click();
+  await expect(page.getByRole("button", { name: "솔로 쇼다운" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/gameMode=soloShowdown/);
+  await expect(page.getByRole("heading", { name: /바위 장벽 전투.*추천/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "암석 광산" })).toBeVisible();
+  await page.getByRole("button", { name: "암석 광산" }).click();
+  await expect(page.getByRole("heading", { name: /암석 광산.*추천/ })).toBeVisible();
+  await expect(page.getByText("니타", { exact: true })).toBeVisible();
+  await expect(page.getByText("콜트", { exact: true })).not.toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "솔로 쇼다운" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("니타", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "바운티" }).click();
+  await expect(page.getByRole("button", { name: "바운티" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("status").filter({ hasText: "아직 저장된 맵 데이터가 없습니다." })).toBeVisible();
+});
+
 test("meta recommends from the most recently searched player's owned brawlers", async ({ page }) => {
   await page.addInitScript(() => {
     window.localStorage.setItem("recentTags", JSON.stringify(["2PYLQ"]));
   });
   await page.route("**/api/meta", async (route) => {
     await route.fulfill({
-      json: {
-        "Hard Rock Mine": [
+      json: [
+        { mode: "gemGrab", map: "Hard Rock Mine", brawlers: [
           {
             id: 16000000,
             name: "SHELLY",
@@ -175,8 +215,8 @@ test("meta recommends from the most recently searched player's owned brawlers", 
             confidence: "HIGH",
             confidenceScore: 100,
           },
-        ],
-      },
+        ] },
+      ],
     });
   });
   await page.route("**/api/player?tag=2PYLQ", async (route) => {

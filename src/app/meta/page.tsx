@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import OwnedBrawlerRecommendations from "../../components/OwnedBrawlerRecommendations";
-import { mapToModeDict } from "../../constants/brawl";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
 import { META_WINDOW_DAYS } from "../../constants/meta";
 import { localizedHref, type Locale } from "../../i18n/config";
@@ -46,11 +45,11 @@ type BrawlerMapStat = {
   confidenceScore: number;
 };
 
-type MapStatsResponse = Record<string, BrawlerMapStat[]>;
+type MapStatsResponse = { mode: string; map: string; brawlers: BrawlerMapStat[] }[];
 
 export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   const copy = getMessages(locale);
-  const [data, setData] = useState<MapStatsResponse>({});
+  const [data, setData] = useState<MapStatsResponse>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const search = useBrowserSearch();
@@ -75,14 +74,12 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
     async function loadMetaStats() {
       try {
         const response = await fetch("/api/meta", { signal: controller.signal });
-        const json = (await response.json().catch(() => ({}))) as MapStatsResponse & {
-          error?: string;
-        };
+        const json = (await response.json().catch(() => ({}))) as MapStatsResponse | { error?: string };
         if (!response.ok) {
-          throw new Error(locale === "ko" ? json.error ?? copy.meta.error : copy.meta.error);
+          throw new Error(locale === "ko" && !Array.isArray(json) ? json.error ?? copy.meta.error : copy.meta.error);
         }
 
-        setData(json);
+        setData(json as MapStatsResponse);
       } catch (loadError) {
         if (loadError instanceof DOMException && loadError.name === "AbortError") return;
         setError(
@@ -116,27 +113,30 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
     PLAYS: copy.meta.playsSort,
   };
 
-  const maps = Object.keys(data);
   const requestedMap = params.get("map");
   const requestedModeParam = params.get("mode");
+  const requestedGameMode = params.get("gameMode");
   const requestedMode = MODE_LIST.includes(requestedModeParam ?? "")
     ? requestedModeParam ?? undefined
     : undefined;
-  const selectedMap =
-    (requestedMap && maps.includes(requestedMap) ? requestedMap : undefined) ??
-    (requestedMode ? maps.find((mapName) => getMapMode(mapName) === requestedMode) : undefined) ??
-    maps.find((mapName) => getMapMode(mapName) === "젬 그랩") ??
-    maps[0] ??
-    "";
-  const selectedMode = selectedMap ? getMapMode(selectedMap) : requestedMode ?? "젬 그랩";
+  const requestedEntry = requestedMap
+    ? data.find((entry) =>
+        entry.map === requestedMap &&
+        (!requestedMode || getMetaMode(entry.mode) === requestedMode) &&
+        (!requestedGameMode || entry.mode === requestedGameMode),
+      )
+    : undefined;
+  const selectedMode = requestedMode ?? (requestedEntry ? getMetaMode(requestedEntry.mode) : "젬 그랩");
 
   const filteredMaps = useMemo(
-    () => Object.keys(data).filter((mapName) => getMapMode(mapName) === selectedMode),
+    () => data.filter((entry) => getMetaMode(entry.mode) === selectedMode),
     [data, selectedMode],
   );
+  const selectedEntry = requestedEntry ?? filteredMaps[0];
+  const selectedMap = selectedEntry?.map ?? "";
   const currentData = useMemo(
-    () => (selectedMap ? data[selectedMap] ?? [] : []),
-    [data, selectedMap],
+    () => selectedEntry?.brawlers ?? [],
+    [selectedEntry],
   );
   const filteredCurrentData = useMemo(
     () =>
@@ -155,18 +155,19 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   }, [filteredCurrentData]);
 
   function selectMode(modeName: string) {
-    const nextMap = Object.keys(data).find((mapName) => getMapMode(mapName) === modeName) ?? "";
-    syncMetaUrl({ mode: modeName, map: nextMap, showAll: false });
+    const nextEntry = data.find((entry) => getMetaMode(entry.mode) === modeName);
+    syncMetaUrl({ mode: modeName, map: nextEntry?.map ?? "", gameMode: nextEntry?.mode ?? "", showAll: false });
   }
 
-  function selectMap(mapName: string) {
-    syncMetaUrl({ mode: getMapMode(mapName), map: mapName, showAll: false });
+  function selectMap(entry: MapStatsResponse[number]) {
+    syncMetaUrl({ mode: getMetaMode(entry.mode), map: entry.map, gameMode: entry.mode, showAll: false });
   }
 
   function syncMetaUrl(
     overrides: Partial<{
       mode: string;
       map: string;
+      gameMode: string;
       minPlays: number;
       confidenceFilter: ConfidenceFilter;
       sortMode: MetaSortMode;
@@ -175,6 +176,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   ) {
     const nextMode = overrides.mode ?? selectedMode;
     const nextMap = overrides.map ?? selectedMap;
+    const nextGameMode = overrides.gameMode ?? selectedEntry?.mode;
     const nextMinPlays = overrides.minPlays ?? minPlays;
     const nextConfidence = overrides.confidenceFilter ?? confidenceFilter;
     const nextSort = overrides.sortMode ?? sortMode;
@@ -182,6 +184,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
     replaceBrowserSearch({
       mode: nextMode || null,
       map: nextMap || null,
+      gameMode: nextGameMode || null,
       min: nextMinPlays === 5 ? null : String(nextMinPlays),
       confidence: nextConfidence === "ALL" ? null : nextConfidence,
       sort: nextSort === "SCORE" ? null : nextSort,
@@ -252,6 +255,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                 type="button"
                 key={modeName}
                 onClick={() => selectMode(modeName)}
+                aria-pressed={modeName === selectedMode}
                 className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-black transition-colors ${
                   modeName === selectedMode
                     ? "bg-slate-950 text-white"
@@ -265,18 +269,22 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
 
           <div className="mb-5 flex w-full flex-wrap gap-2">
             {filteredMaps.length ? (
-              filteredMaps.map((mapName) => (
+              filteredMaps.map((entry) => (
                 <button
                   type="button"
-                  key={mapName}
-                  onClick={() => selectMap(mapName)}
+                  key={`${entry.mode}:${entry.map}`}
+                  onClick={() => selectMap(entry)}
+                  aria-pressed={entry === selectedEntry}
                   className={`rounded-lg border px-4 py-2.5 text-sm font-black transition-colors ${
-                    mapName === selectedMap
+                    entry === selectedEntry
                       ? "border-blue-600 bg-blue-50 text-blue-700"
                       : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700"
                   }`}
                 >
-                  {translateMapName(mapName, locale)}
+                  {translateMapName(entry.map, locale)}
+                  {filteredMaps.some((other) => other !== entry && other.map === entry.map)
+                    ? ` · ${translateModeName(entry.mode, locale)}`
+                    : null}
                 </button>
               ))
             ) : (
@@ -437,8 +445,8 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   );
 }
 
-function getMapMode(mapName: string) {
-  return mapToModeDict[mapName] ?? "기타";
+function getMetaMode(gameMode: string) {
+  return metaModeByApiMode[gameMode] ?? "기타";
 }
 
 function SummaryStat({ label, value, subValue }: { label: string; value: string; subValue?: string }) {
@@ -530,6 +538,10 @@ const modeKeyByKoreanLabel: Record<string, string> = {
   "녹아웃": "knockout",
   "쇼다운": "soloShowdown",
 };
+
+const metaModeByApiMode: Record<string, string> = Object.fromEntries(
+  Object.entries(modeKeyByKoreanLabel).map(([label, mode]) => [mode, label]),
+);
 
 function translateMetaModeLabel(modeName: string, locale: Locale) {
   if (modeName === "기타") return formatOtherLabel(locale);

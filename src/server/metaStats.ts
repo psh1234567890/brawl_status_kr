@@ -28,6 +28,7 @@ type TeamMapRow = {
 };
 
 export type MapMetaRawRow = {
+  mode: string;
   map: string;
   brawlerId: number | null;
   brawlerName: string;
@@ -39,18 +40,19 @@ export type MapMetaRawRow = {
 export function buildMapMetaStatsQuery(minimumPlays = MINIMUM_META_PLAYS) {
   return sql`
     WITH combined_stats AS (
-      SELECT map, brawler_id, brawler_name, result
+      SELECT mode, map, brawler_id, brawler_name, result
       FROM battle_team_participants
       WHERE battle_timestamp >= now() - (${META_WINDOW_DAYS} * interval '1 day')
 
       UNION ALL
 
-      SELECT map, brawler_id, brawler_name, result
+      SELECT mode, map, brawler_id, brawler_name, result
       FROM battle_logs
       WHERE meta_perspective_only = true
         AND battle_timestamp >= now() - (${META_WINDOW_DAYS} * interval '1 day')
     )
     SELECT
+      mode,
       map,
       max(brawler_id) AS "brawlerId",
       brawler_name AS "brawlerName",
@@ -61,7 +63,7 @@ export function buildMapMetaStatsQuery(minimumPlays = MINIMUM_META_PLAYS) {
     WHERE result IS NOT NULL
       AND brawler_name IS NOT NULL
       AND brawler_name <> 'Unknown'
-    GROUP BY map, brawler_name
+    GROUP BY mode, map, brawler_name
     HAVING count(*) >= ${minimumPlays}
   `;
 }

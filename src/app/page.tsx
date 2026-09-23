@@ -176,7 +176,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
               <label className="min-w-0 flex-1">
                 <span className="text-xs font-black uppercase tracking-[0.08em] text-slate-500">
-                  Player Tag
+                  {copy.home.playerTag}
                 </span>
                 <input
                   type="text"
@@ -384,7 +384,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
 
         <footer className="mt-10 flex flex-col justify-between gap-4 border-t border-slate-200 py-6 text-sm font-bold text-slate-500 sm:flex-row sm:items-center">
           <div>
-            <p>2026 Brawl Stars Analytics. All rights reserved.</p>
+            <p>© 2026 Brawl Stars Analytics</p>
             <p className="mt-1 text-xs font-medium text-slate-400">
               {copy.home.bugContact}: seunghunbag76@gmail.com
             </p>

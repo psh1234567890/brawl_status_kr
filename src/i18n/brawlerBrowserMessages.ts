@@ -1,4 +1,5 @@
-import { numberLocales, type Locale } from "./config";
+import type { Locale } from "./config";
+import { formatBrawlerCount } from "./formatters";
 
 type BrawlerBrowserCopy = {
   searchPlaceholder: string;
@@ -108,15 +109,5 @@ export function getBrawlerBrowserMessages(locale: Locale) {
 }
 
 export function formatBrawlerResultCount(locale: Locale, count: number) {
-  const value = count.toLocaleString(numberLocales[locale]);
-  if (locale === "ko") return value + "명";
-  if (locale === "ja") return value + "体";
-  if (locale === "pt-br") return value + " brawlers";
-  if (locale === "es") return value + " brawlers";
-  if (locale === "tr") return value + " savaşçı";
-  if (locale === "de") return value + " Brawler";
-  if (locale === "fr") return value + " brawlers";
-  if (locale === "it") return value + " brawler";
-  if (locale === "ru") return value + " бойцов";
-  return value + " brawlers";
+  return formatBrawlerCount(locale, count);
 }

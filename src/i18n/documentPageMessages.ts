@@ -87,7 +87,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           "Brawl Status KR의 검색 표본, 전투 중복 방지, 팀전과 쇼다운 집계, 추천 점수의 한계를 설명합니다.",
       },
       title: "데이터 산정 방식",
-      eyebrow: "Methodology",
+      eyebrow: "데이터 산정 방식",
       description:
         "추천과 누적 통계가 어떤 전투를 바탕으로 계산되는지, 무엇을 의미하지 않는지 공개합니다.",
       sections: [

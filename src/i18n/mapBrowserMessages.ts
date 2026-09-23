@@ -1,4 +1,5 @@
-import { numberLocales, type Locale } from "./config";
+import type { Locale } from "./config";
+import { formatMapCount } from "./formatters";
 
 type MapBrowserCopy = {
   searchPlaceholder: string;
@@ -108,15 +109,5 @@ export function getMapBrowserMessages(locale: Locale) {
 }
 
 export function formatMapResultCount(locale: Locale, count: number) {
-  const value = count.toLocaleString(numberLocales[locale]);
-  if (locale === "ko") return value + "개 맵";
-  if (locale === "ja") return value + "件のマップ";
-  if (locale === "pt-br") return value + " mapas";
-  if (locale === "es") return value + " mapas";
-  if (locale === "tr") return value + " harita";
-  if (locale === "de") return value + " Karten";
-  if (locale === "fr") return value + " cartes";
-  if (locale === "it") return value + " mappe";
-  if (locale === "ru") return value + " карт";
-  return value + " maps";
+  return formatMapCount(locale, count);
 }

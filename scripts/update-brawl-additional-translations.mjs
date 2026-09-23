@@ -65,6 +65,7 @@ const [
   characters,
   locations,
   modeVariations,
+  gearBoosts,
   skins,
   skinConfs,
   ...localizedTexts
@@ -75,6 +76,7 @@ const [
     getGameFile("csv_logic/characters"),
     getGameFile("csv_logic/locations"),
     getGameFile("csv_logic/game_mode_variations"),
+    getGameFile("csv_logic/gear_boosts"),
     getGameFile("csv_logic/skins"),
     getGameFile("csv_logic/skin_confs"),
     ...localeSources.map(([, endpoint]) => getGameFile(`localization/${endpoint}`)),
@@ -86,6 +88,7 @@ const maps = {};
 const modes = {};
 const modeDescriptions = {};
 const abilitiesById = {};
+const gearsById = {};
 const skinsById = {};
 
 const activeCharactersByName = new Map(
@@ -134,6 +137,7 @@ for (const [index, [locale, , field]] of localeSources.entries()) {
   const localeModes = {};
   const localeModeDescriptions = {};
   const localeAbilitiesById = {};
+  const localeGearsById = {};
   const localeSkinsById = {};
 
   for (const mode of Object.values(modeVariations)) {
@@ -188,6 +192,11 @@ for (const [index, [locale, , field]] of localeSources.entries()) {
     if (localizedName) localeAbilitiesById[String(card.id)] = localizedName;
   }
 
+  for (const gear of Object.values(gearBoosts)) {
+    const localizedName = getTranslation(texts, gear.TID, field);
+    if (localizedName) localeGearsById[String(gear.id)] = localizedName;
+  }
+
   for (const skin of Object.values(skins)) {
     if (skin.Disabled) continue;
     const skinConf = skinConfByName.get(skin.Conf);
@@ -203,6 +212,7 @@ for (const [index, [locale, , field]] of localeSources.entries()) {
   modes[locale] = localeModes;
   modeDescriptions[locale] = localeModeDescriptions;
   abilitiesById[locale] = localeAbilitiesById;
+  gearsById[locale] = localeGearsById;
   skinsById[locale] = localeSkinsById;
 }
 
@@ -245,6 +255,12 @@ export const generatedAdditionalAbilityByIdDicts: Record<string, Record<string, 
   2,
 )};
 
+export const generatedAdditionalGearByIdDicts: Record<string, Record<string, string>> = ${JSON.stringify(
+  sortNestedRecord(gearsById),
+  null,
+  2,
+)};
+
 export const generatedAdditionalSkinByIdDicts: Record<string, Record<string, string>> = ${JSON.stringify(
   sortNestedRecord(skinsById),
   null,
@@ -257,6 +273,6 @@ await writeFile(outputPath, source, "utf8");
 
 for (const [locale] of localeSources) {
   console.log(
-    `${locale}: ${Object.keys(brawlers[locale]).length} brawler aliases, ${Object.keys(brawlerDescriptions[locale]).length} brawler descriptions, ${Object.keys(maps[locale]).length} maps, ${Object.keys(modes[locale]).length} mode aliases, ${Object.keys(modeDescriptions[locale]).length} mode descriptions, ${Object.keys(abilitiesById[locale]).length} abilities, ${Object.keys(skinsById[locale]).length} skins`,
+    `${locale}: ${Object.keys(brawlers[locale]).length} brawler aliases, ${Object.keys(brawlerDescriptions[locale]).length} brawler descriptions, ${Object.keys(maps[locale]).length} maps, ${Object.keys(modes[locale]).length} mode aliases, ${Object.keys(modeDescriptions[locale]).length} mode descriptions, ${Object.keys(abilitiesById[locale]).length} abilities, ${Object.keys(gearsById[locale]).length} gears, ${Object.keys(skinsById[locale]).length} skins`,
   );
 }

@@ -3,6 +3,7 @@ import {
   generatedAbilityDictById,
   generatedAbilityDictByName,
   generatedBrawlerDescriptionDict,
+  generatedGearNameById,
   generatedModeDescriptionDict,
   generatedModeDisplayDict,
   generatedSkinNameById,
@@ -17,6 +18,7 @@ import {
   generatedAdditionalAbilityByIdDicts,
   generatedAdditionalBrawlerDicts,
   generatedAdditionalBrawlerDescriptionDicts,
+  generatedAdditionalGearByIdDicts,
   generatedAdditionalMapDicts,
   generatedAdditionalModeDicts,
   generatedAdditionalModeDescriptionDicts,
@@ -238,6 +240,30 @@ function lookupByName(record: Record<string, string>, name: string | null | unde
   return record[clean] ?? record[clean.toUpperCase()];
 }
 
+const normalizedMapLookups = new WeakMap<Record<string, string>, Map<string, string | null>>();
+
+function normalizeMapKey(name: string) {
+  return name.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+function lookupMapName(record: Record<string, string>, name: string) {
+  const exact = lookupByName(record, name);
+  if (exact) return exact;
+
+  let lookup = normalizedMapLookups.get(record);
+  if (!lookup) {
+    lookup = new Map();
+    for (const [key, value] of Object.entries(record)) {
+      const normalized = normalizeMapKey(key);
+      if (!normalized) continue;
+      const previous = lookup.get(normalized);
+      lookup.set(normalized, previous === undefined || previous === value ? value : null);
+    }
+    normalizedMapLookups.set(record, lookup);
+  }
+  return lookup.get(normalizeMapKey(name)) ?? undefined;
+}
+
 export function translateBrawlerName(
   name: string | null | undefined,
   locale: Locale = "ko",
@@ -264,11 +290,11 @@ export function translateMapName(
   const clean = cleanName(name);
   if (locale === "en") return clean;
   if (locale === "ja") {
-    return lookupByName(generatedJapaneseMapDict, clean) ?? clean;
+    return lookupMapName(generatedJapaneseMapDict, clean) ?? clean;
   }
   const localizedMaps = generatedAdditionalMapDicts[locale];
-  if (localizedMaps) return lookupByName(localizedMaps, clean) ?? clean;
-  return lookupByName(mapDict, clean) ?? clean;
+  if (localizedMaps) return lookupMapName(localizedMaps, clean) ?? clean;
+  return lookupMapName(mapDict, clean) ?? clean;
 }
 
 export function translateModeName(
@@ -322,6 +348,13 @@ function formatLocalizedDisplayName(value: string, locale: Locale) {
     )
     .replace(/\b5v5\b/giu, "5v5")
     .replace(/\b3v3\b/giu, "3v3");
+}
+
+function formatLocalizedGearName(value: string, locale: Locale) {
+  if (locale === "de" || locale === "ja") return formatLocalizedDisplayName(value, locale);
+  if (!value || value !== value.toLocaleUpperCase(numberLocales[locale])) return value;
+  const lowered = value.toLocaleLowerCase(numberLocales[locale]);
+  return lowered.replace(/^\p{L}/u, (letter) => letter.toLocaleUpperCase(numberLocales[locale]));
 }
 
 export function translateBrawlerDescription(
@@ -394,8 +427,14 @@ export function translateGearName(
   locale: Locale = "ko",
 ) {
   const clean = cleanName(name);
-  if (locale !== "ko") return clean;
+  if (locale !== "ko") {
+    return formatLocalizedGearName(
+      generatedAdditionalGearByIdDicts[locale]?.[String(id)] ?? clean,
+      locale,
+    );
+  }
   return (
+    (id === undefined ? undefined : generatedGearNameById[String(id)]) ??
     (id === undefined ? undefined : gearNameById[String(id)]) ??
     lookupByName(gearNameFallbackDict, clean) ??
     clean

@@ -67,18 +67,20 @@ const [
   characters,
   locations,
   modeVariations,
+  gearBoosts,
   skins,
   skinConfs,
 ] =
   await Promise.all([
-    getGameFile("localization/texts.json"),
-    getGameFile("localization/kr.json"),
-    getGameFile("csv_logic/cards.json"),
-    getGameFile("csv_logic/characters.json"),
-    getGameFile("csv_logic/locations.json"),
-    getGameFile("csv_logic/game_mode_variations.json"),
-    getGameFile("csv_logic/skins.json"),
-    getGameFile("csv_logic/skin_confs.json"),
+    getGameFile("localization/texts"),
+    getGameFile("localization/kr"),
+    getGameFile("csv_logic/cards"),
+    getGameFile("csv_logic/characters"),
+    getGameFile("csv_logic/locations"),
+    getGameFile("csv_logic/game_mode_variations"),
+    getGameFile("csv_logic/gear_boosts"),
+    getGameFile("csv_logic/skins"),
+    getGameFile("csv_logic/skin_confs"),
   ]);
 
 const mapDict = {};
@@ -89,6 +91,7 @@ const modeDescriptionDict = {};
 const modeByVariation = {};
 const abilityDictById = {};
 const abilityDictByName = {};
+const gearNameById = {};
 const brawlerDict = {};
 const brawlerDescriptionDict = {};
 const brawlerImageIdByName = {};
@@ -159,6 +162,11 @@ for (const card of Object.values(cards)) {
 
   abilityDictById[String(card.id)] = koreanName;
   abilityDictByName[englishName] = koreanName;
+}
+
+for (const gear of Object.values(gearBoosts)) {
+  const koreanName = getTranslation(koreanTexts, gear.TID, "KR");
+  if (koreanName) gearNameById[String(gear.id)] = koreanName;
 }
 
 for (const character of Object.values(characters)) {
@@ -254,6 +262,8 @@ ${toTsRecord("generatedAbilityDictById", abilityDictById)}
 
 ${toTsRecord("generatedAbilityDictByName", abilityDictByName)}
 
+${toTsRecord("generatedGearNameById", gearNameById)}
+
 ${toTsRecord("generatedBrawlerDict", brawlerDict)}
 
 ${toTsRecord("generatedBrawlerDescriptionDict", brawlerDescriptionDict)}
@@ -292,5 +302,5 @@ await writeFile(outputPath, source, "utf8");
 await writeFile(skinCatalogOutputPath, skinCatalogSource, "utf8");
 
 console.log(
-  `Generated ${Object.keys(mapDict).length} maps, ${Object.keys(modeDict).length} modes, ${Object.keys(modeDisplayDict).length} mode aliases, ${Object.keys(modeDescriptionDict).length} mode descriptions, ${Object.keys(abilityDictById).length} abilities, ${Object.keys(brawlerDict).length} brawler translations, ${Object.keys(brawlerDescriptionDict).length} brawler descriptions, ${Object.keys(brawlerImageIdByName).length} brawler image IDs, and ${skinCatalog.length} skins.`,
+  `Generated ${Object.keys(mapDict).length} maps, ${Object.keys(modeDict).length} modes, ${Object.keys(modeDisplayDict).length} mode aliases, ${Object.keys(modeDescriptionDict).length} mode descriptions, ${Object.keys(abilityDictById).length} abilities, ${Object.keys(gearNameById).length} gears, ${Object.keys(brawlerDict).length} brawler translations, ${Object.keys(brawlerDescriptionDict).length} brawler descriptions, ${Object.keys(brawlerImageIdByName).length} brawler image IDs, and ${skinCatalog.length} skins.`,
 );

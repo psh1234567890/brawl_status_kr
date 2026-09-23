@@ -24,18 +24,33 @@ async function getPlayerSkins(request: Request) {
   try {
     if (searchParams.get("supplemental") === "1") {
       const supplemental = await fetchSupplementalSkinInventory(tag);
-      if (!supplemental) return new Response(null, { status: 204 });
-      return NextResponse.json(supplemental);
+      if (!supplemental) {
+        return new Response(null, {
+          status: 204,
+          headers: { "X-Skin-Inventory-Status": "disabled" },
+        });
+      }
+      return skinInventoryResponse(supplemental);
     }
-    return NextResponse.json(await fetchPlayerSkinInventory(tag));
+    return skinInventoryResponse(await fetchPlayerSkinInventory(tag));
   } catch (error) {
-    console.error("Failed to fetch player skin inventory:", error);
     const status = error instanceof UpstreamApiError ? error.status : 502;
     return NextResponse.json(
       { error: "스킨 정보를 불러오지 못했습니다." },
-      { status },
+      {
+        status,
+        headers: { "X-Skin-Inventory-Status": "unavailable" },
+      },
     );
   }
+}
+
+function skinInventoryResponse(
+  inventory: Awaited<ReturnType<typeof fetchPlayerSkinInventory>>,
+) {
+  return NextResponse.json(inventory, {
+    headers: { "X-Skin-Inventory-Status": inventory.supplementalStatus },
+  });
 }
 
 export const GET = withApiMonitoring("api.player.skins", getPlayerSkins, { slowMs: 1_500 });

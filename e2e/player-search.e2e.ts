@@ -73,6 +73,56 @@ test("owned-skin lookup falls back to the recent browser cache after a refresh f
   await expect(page.getByText("최근 보유 스킨 캐시 사용")).toBeVisible();
 });
 
+test("history tab renders tracked activity and explains the 60-day window", async ({ page }) => {
+  await page.unroute(/\/api\/player\/history\?tag=/);
+  await page.route(/\/api\/player\/history\?tag=/, async (route) => {
+    await route.fulfill({
+      json: {
+        totalTrackedGames: 37,
+        trackedDays: 2,
+        totalTrophyDelta: 24,
+        daily: [
+          {
+            day: "2026-09-21",
+            plays: 17,
+            wins: 10,
+            defeats: 6,
+            draws: 1,
+            trophyDelta: 8,
+          },
+          {
+            day: "2026-09-22",
+            plays: 20,
+            wins: 13,
+            defeats: 7,
+            draws: 0,
+            trophyDelta: 16,
+          },
+        ],
+        topModes: [
+          { name: "gemGrab", plays: 22, wins: 14, winRate: 63.6, trophyDelta: 18 },
+        ],
+        topMaps: [
+          { name: "Hard Rock Mine", plays: 15, wins: 9, winRate: 60, trophyDelta: 10 },
+        ],
+      },
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+  await page.getByRole("button", { name: "검색" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+
+  await page.getByRole("button", { name: "누적", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "누적 활동 분석" })).toBeVisible();
+  await expect(page.getByText("최근 최대 60개 활동일 중 마지막 21개를 표시합니다.")).toBeVisible();
+  await expect(page.getByText("09-22")).toBeVisible();
+  await expect(page.getByText("09-21")).toBeVisible();
+  await expect(page.getByText("젬 그랩")).toBeVisible();
+  await expect(page.getByText("암석 광산")).toBeVisible();
+});
+
 async function mockPlayerApis(page: Page) {
   await page.route(/\/api\/player\/skins\?tag=/, async (route) => {
     await route.fulfill({ status: 204 });

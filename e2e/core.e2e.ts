@@ -27,6 +27,22 @@ test("direct localized loads set the document language", async ({ page }) => {
   await expect.poll(() => page.evaluate(() => document.documentElement.lang)).toBe("ja-JP");
 });
 
+test("localized routes emit localized Open Graph and Twitter metadata", async ({ page }) => {
+  const response = await page.goto("/en/meta");
+  expect(response?.status()).toBe(200);
+
+  await expect(page.locator('meta[property="og:locale"]')).toHaveAttribute("content", "en_US");
+  await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+    "content",
+    /Search Brawl Stars players/,
+  );
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary");
+  await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute(
+    "content",
+    /Search Brawl Stars players/,
+  );
+});
+
 test("skin filters hydrate from and write back to the shareable URL", async ({ page }) => {
   await page.goto("/skins?q=Shelly&sort=NAME&defaults=show");
 
@@ -81,6 +97,59 @@ test("meta filters hydrate from and update the shareable URL", async ({ page }) 
   await expect(page).toHaveURL(/map=Double\+Swoosh/);
 });
 
+test("meta loading and failure states expose assistive roles", async ({ page }) => {
+  await page.route("**/api/meta", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await route.fulfill({ status: 500, json: { error: "테스트 메타 오류" } });
+  });
+
+  await page.goto("/meta");
+  await expect(page.getByRole("status")).toContainText("메타 통계를 불러오는 중");
+  await expect(page.locator('[role="alert"]').filter({ hasText: "테스트 메타 오류" })).toBeVisible();
+});
+
+test("team meta loading and empty states expose status semantics", async ({ page }) => {
+  await page.route("**/api/meta/teams?**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await route.fulfill({ json: { items: [], maps: [] } });
+  });
+
+  await page.goto("/teams");
+  await expect(page.getByRole("status")).toContainText("팀 조합을 계산하는 중");
+  await expect(page.getByRole("status")).toContainText("아직 충분한 팀 조합 표본이 없습니다.");
+});
+
+test("team meta refetches when the selected map changes", async ({ page }) => {
+  const requestedUrls: string[] = [];
+  await page.route("**/api/meta/teams?**", async (route) => {
+    requestedUrls.push(route.request().url());
+    await route.fulfill({
+      json: {
+        items: [
+          {
+            map: "Hard Rock Mine",
+            team: "SHELLY + COLT + NITA",
+            plays: 20,
+            wins: 12,
+            winRate: 60,
+            score: 50,
+          },
+        ],
+        maps: ["Hard Rock Mine", "Double Swoosh"],
+      },
+    });
+  });
+
+  await page.goto("/teams");
+  const select = page.getByLabel("맵 선택");
+  await expect(select).toBeVisible();
+  await select.selectOption("Hard Rock Mine");
+
+  await expect.poll(() =>
+    requestedUrls.some((url) => url.includes("map=Hard+Rock+Mine")),
+  ).toBe(true);
+});
+
 test("counter selection hydrates from and updates the shareable URL", async ({ page }) => {
   await page.route("**/api/meta/counters?brawler=*", async (route) => {
     await route.fulfill({ json: { items: [] } });
@@ -94,6 +163,17 @@ test("counter selection hydrates from and updates the shareable URL", async ({ p
   expect(secondValue).toBeTruthy();
   await select.selectOption(secondValue!);
   await expect(page).toHaveURL(new RegExp(`brawler=${encodeURIComponent(secondValue!)}`, "i"));
+});
+
+test("counter API failures are announced as alerts", async ({ page }) => {
+  await page.route("**/api/meta/counters?brawler=*", async (route) => {
+    await route.fulfill({ status: 503, json: { error: "테스트 카운터 오류" } });
+  });
+
+  await page.goto("/counters?brawler=SHELLY");
+  await expect(
+    page.locator('[role="alert"]').filter({ hasText: "테스트 카운터 오류" }),
+  ).toBeVisible();
 });
 
 test("mobile quick navigation is visible on a phone-sized viewport", async ({ context, page }) => {

@@ -1,6 +1,7 @@
 import type { PlayerOwnedSkin, PlayerSkinInventoryResponse } from "../types/brawl";
 import { normalizePlayerTag } from "../utils/playerTag";
 import { groupSkinsByBrawler, normalizeSkinLookupKey } from "../utils/playerSkinInventory";
+import { logSkinSupplementalOutcome } from "./observability";
 
 const BRAWLACE_BASE_URL = "https://brawlace.com";
 const BRAWLACE_READER_BASE_URL = "https://r.jina.ai/";
@@ -38,17 +39,11 @@ async function fetchBrawlaceSkins(cleanTag: string) {
     throw new BrawlaceSkinLookupError("보유 스킨 표를 찾지 못했습니다.");
   } catch (error) {
     if (!isJinaReaderFallbackEnabled()) {
-      console.warn(
-        "Brawlace direct skin lookup failed; reader fallback is disabled:",
-        getLookupLog(error),
-      );
+      logSkinSupplementalOutcome("direct_failed_no_fallback", { error });
       throw toBrawlaceLookupError(error);
     }
 
-    console.warn(
-      "Brawlace direct skin lookup failed; trying opted-in reader fallback:",
-      getLookupLog(error),
-    );
+    logSkinSupplementalOutcome("direct_failed_reader_fallback", { error });
   }
 
   const markdown = await fetchBrawlaceReaderMarkdown(cleanTag);
@@ -239,16 +234,4 @@ function decodeHtmlEntities(value: string) {
     .replace(/&apos;/g, "'")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">");
-}
-
-function getLookupLog(error: unknown) {
-  if (error instanceof BrawlaceSkinLookupError) {
-    return { message: error.message, status: error.status };
-  }
-
-  if (error instanceof Error) {
-    return { message: error.message, name: error.name };
-  }
-
-  return { message: String(error) };
 }

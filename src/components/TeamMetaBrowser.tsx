@@ -93,7 +93,11 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
       </section>
 
       {loading ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-lg font-black text-blue-600 shadow-sm">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-xl border border-slate-200 bg-white p-8 text-center text-lg font-black text-blue-600 shadow-sm"
+        >
           {copy.teams.loading}
         </div>
       ) : error ? (
@@ -115,7 +119,10 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
           ))}
         </section>
       ) : (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-bold text-slate-500">
+        <div
+          role="status"
+          className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-bold text-slate-500"
+        >
           {copy.teams.empty}
         </div>
       )}

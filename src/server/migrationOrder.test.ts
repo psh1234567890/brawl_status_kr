@@ -78,4 +78,25 @@ describe("legacy migration ordering", () => {
     expect(teamIndexBackfill).toBeGreaterThan(-1);
     expect(participantBackfill).toBeGreaterThan(teamIndexBackfill);
   });
+
+  it("precomputes the perspective-only meta flag after legacy JSON backfill", () => {
+    const root = process.cwd();
+    const flagMigration = readFileSync(
+      resolve(root, "drizzle/0002_add_meta_perspective_flag.sql"),
+      "utf8",
+    );
+    const migrationScript = readFileSync(resolve(root, "scripts/migrate-db.mjs"), "utf8");
+
+    expect(flagMigration).toContain("ADD COLUMN IF NOT EXISTS meta_perspective_only boolean");
+    expect(flagMigration).toContain("battle_logs_meta_perspective_timestamp_idx");
+    expect(migrationScript).toContain("0002_add_meta_perspective_flag.sql");
+
+    const legacyJsonBackfill = migrationScript.indexOf("battle_detail_json = $6::jsonb");
+    const flagBackfill = migrationScript.indexOf("SET meta_perspective_only =");
+    const notNull = migrationScript.indexOf(
+      "ALTER COLUMN meta_perspective_only SET NOT NULL",
+    );
+    expect(flagBackfill).toBeGreaterThan(legacyJsonBackfill);
+    expect(notNull).toBeGreaterThan(flagBackfill);
+  });
 });

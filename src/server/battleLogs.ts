@@ -7,11 +7,10 @@ import {
   getPlayerBrawler,
   getPlayerTeamIndex,
   getPrimaryBrawler,
+  isMetaPerspectiveOnly,
   parseBattleTime,
 } from "../utils/brawlHelpers";
 import { normalizePlayerTag } from "../utils/playerTag";
-
-const TEAM_META_EXCLUDED_MODES = new Set(["duoShowdown", "trioShowdown"]);
 
 export async function saveBattleLogs(playerTag: string, items: BattleLogItem[]) {
   const validItems = items;
@@ -25,6 +24,7 @@ export async function saveBattleLogs(playerTag: string, items: BattleLogItem[]) 
       battleTimestamp: parseBattleTime(match.battleTime),
       battleFingerprint: createBattleFingerprint(match),
       playerTeamIndex: getPlayerTeamIndex(match, playerTag),
+      metaPerspectiveOnly: isMetaPerspectiveOnly(match),
       mode: match.event.mode ?? "friendly",
       map: match.event.map ?? "친선 경기",
       brawlerId: brawler?.id,
@@ -53,10 +53,8 @@ function buildTeamParticipantValues(playerTag: string, match: BattleLogItem) {
   const playerTeamIndex = getPlayerTeamIndex(match, playerTag);
   if (
     !teams ||
-    teams.length !== 2 ||
     playerTeamIndex === null ||
-    match.battle.type === "friendly" ||
-    TEAM_META_EXCLUDED_MODES.has(mode)
+    isMetaPerspectiveOnly(match)
   ) {
     return [];
   }

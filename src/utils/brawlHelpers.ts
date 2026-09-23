@@ -7,6 +7,7 @@ import type {
   PlayerData,
   RecentBattleSummary,
 } from "../types/brawl";
+import { META_TEAM_EXCLUDED_MODES } from "../constants/meta";
 import { normalizePlayerTag } from "./playerTag";
 
 const SHOWDOWN_WIN_RANK: Record<string, number> = {
@@ -100,6 +101,18 @@ export function getPlayerTeamIndex(match: BattleLogItem, playerTag: string) {
     team.some((candidate) => normalizePlayerTag(candidate.tag) === cleanTag),
   );
   return index >= 0 ? index + 1 : null;
+}
+
+export function isMetaPerspectiveOnly(match: BattleLogItem) {
+  if (checkIsFriendly(match)) return false;
+
+  const mode = match.event.mode ?? "";
+  const teams = match.battle.teams;
+  return (
+    META_TEAM_EXCLUDED_MODES.some((excludedMode) => excludedMode === mode) ||
+    !teams ||
+    teams.length !== 2
+  );
 }
 
 export function createBattleFingerprint(match: BattleLogItem) {

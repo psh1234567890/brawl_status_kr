@@ -7,6 +7,7 @@ import {
   getNormalizedBattleResult,
   getPlayerBrawler,
   getPlayerTeamIndex,
+  isMetaPerspectiveOnly,
   parseBattleTime,
 } from "./brawlHelpers";
 
@@ -75,6 +76,18 @@ describe("battle log helpers", () => {
 
   it("returns no team index for non-team battle payloads", () => {
     expect(getPlayerTeamIndex(battle(), "2Q89RU")).toBeNull();
+  });
+
+  it("classifies only non-standard non-friendly battles as perspective-only meta data", () => {
+    const teams = [
+      [{ tag: "#2Q89RU", brawler: { id: 1, name: "SHELLY" } }],
+      [{ tag: "#8PQL", brawler: { id: 2, name: "COLT" } }],
+    ];
+
+    expect(isMetaPerspectiveOnly(battle({ players: undefined, teams }))).toBe(false);
+    expect(isMetaPerspectiveOnly(battle({ players: undefined }, "soloShowdown"))).toBe(true);
+    expect(isMetaPerspectiveOnly(battle({ players: undefined, teams }, "duoShowdown"))).toBe(true);
+    expect(isMetaPerspectiveOnly(battle({ players: undefined, type: "friendly" }))).toBe(false);
   });
 
   it("summarizes recent matches and player brawler matches", () => {

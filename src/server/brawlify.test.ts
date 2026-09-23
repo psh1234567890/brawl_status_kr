@@ -4,6 +4,7 @@ import { getBrawlifyBrawlers } from "./brawlify";
 describe("Brawl catalog API", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.useRealTimers();
   });
 
   it("uses the static Brawl API endpoint", async () => {
@@ -43,6 +44,45 @@ describe("Brawl catalog API", () => {
       2,
       "https://brawlapi-v1.pages.dev/v1/brawlers",
       expect.any(Object),
+    );
+  });
+
+  it("starts the mirror when the primary endpoint is slow", async () => {
+    vi.useFakeTimers();
+    let resolvePrimary!: (response: Response) => void;
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolvePrimary = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ list: [{ id: 2, name: "Colt" }] }), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pending = getBrawlifyBrawlers();
+    await vi.advanceTimersByTimeAsync(1_500);
+
+    await expect(pending).resolves.toMatchObject({
+      list: [{ id: 2, name: "Colt" }],
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://brawlapi-v1.pages.dev/v1/brawlers",
+      expect.any(Object),
+    );
+
+    resolvePrimary(
+      new Response(JSON.stringify({ list: [{ id: 1, name: "Shelly" }] }), {
+        status: 200,
+      }),
     );
   });
 });

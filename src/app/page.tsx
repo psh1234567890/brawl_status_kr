@@ -141,23 +141,15 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
           </div>
         </header>
 
-        <section className="mt-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.08em] text-slate-400">
-              Open Source
-            </p>
-            <p className="mt-1 text-sm font-black text-slate-950 sm:text-base">
-              {githubStarCopy.title}
-            </p>
-            <p className="mt-1 text-xs font-bold leading-5 text-slate-500 sm:text-sm">
-              {githubStarCopy.body}
-            </p>
-          </div>
+        <div className="mt-2 flex flex-wrap items-center justify-end gap-2 px-1">
+          <p className="text-xs font-bold text-slate-500 sm:text-sm">
+            {githubStarCopy.title}
+          </p>
           <a
             href="https://github.com/psh1234567890/brawl_status_kr"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-[7px] rounded-lg border border-slate-300 bg-white px-[18px] text-[13px] font-[650] text-slate-950 transition-colors hover:border-slate-950 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
+            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-[7px] rounded-lg border border-slate-300 bg-white px-3.5 text-[13px] font-[650] text-slate-950 transition-colors hover:border-slate-950 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
           >
             <svg
               aria-hidden="true"
@@ -174,7 +166,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             </svg>
             <span>{githubStarCopy.button}</span>
           </a>
-        </section>
+        </div>
 
         <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label={copy.home.playerSearchAria}>
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -650,55 +642,45 @@ function getGithubStarCopy(locale: Locale) {
   const copy = {
     ko: {
       title: "사이트가 마음에 들었다면 Star 한 번만 부탁해요 🥺",
-      body: "Brawl Status KR는 공개 저장소로 개발하고 있어요. 작은 Star 하나가 개발 지속에 큰 힘이 됩니다.",
       button: "GitHub에서 Star",
     },
     en: {
       title: "If this site helped, a Star would mean a lot 🥺",
-      body: "Brawl Status KR is developed in public. One small GitHub Star helps keep the project moving.",
       button: "Star on GitHub",
     },
     ja: {
       title: "役に立ったら Star をひとつお願いします 🥺",
-      body: "Brawl Status KR は公開リポジトリで開発中です。GitHub の Star が開発の大きな励みになります。",
       button: "GitHubでStar",
     },
     "pt-br": {
       title: "Se o site ajudou, deixa uma Star pra gente 🥺",
-      body: "O Brawl Status KR é desenvolvido de forma aberta. Uma Star no GitHub ajuda muito o projeto.",
       button: "Dar Star no GitHub",
     },
     es: {
       title: "Si te sirvió, una Star nos ayudaría mucho 🥺",
-      body: "Brawl Status KR se desarrolla de forma abierta. Una Star en GitHub ayuda a seguir mejorándolo.",
       button: "Dar Star en GitHub",
     },
     tr: {
       title: "Site işine yaradıysa bir Star bırakır mısın? 🥺",
-      body: "Brawl Status KR açık kaynak olarak geliştiriliyor. GitHub'daki küçük bir Star projeye büyük destek olur.",
       button: "GitHub'da Star ver",
     },
     de: {
       title: "Wenn dir die Seite hilft, freuen wir uns über einen Star 🥺",
-      body: "Brawl Status KR wird offen entwickelt. Ein GitHub-Star hilft uns, das Projekt weiterzuführen.",
       button: "Star auf GitHub",
     },
     fr: {
       title: "Si le site t'aide, une Star nous ferait très plaisir 🥺",
-      body: "Brawl Status KR est développé publiquement. Une Star GitHub aide vraiment le projet à avancer.",
       button: "Mettre une Star",
     },
     it: {
       title: "Se il sito ti è utile, lasciaci una Star 🥺",
-      body: "Brawl Status KR viene sviluppato pubblicamente. Una Star su GitHub aiuta davvero il progetto.",
       button: "Metti una Star",
     },
     ru: {
       title: "Если сайт полезен, поставь нам Star 🥺",
-      body: "Brawl Status KR разрабатывается открыто. Даже одна Star на GitHub очень помогает проекту.",
       button: "Star на GitHub",
     },
-  } satisfies Record<Locale, { title: string; body: string; button: string }>;
+  } satisfies Record<Locale, { title: string; button: string }>;
 
   return copy[locale];
 }

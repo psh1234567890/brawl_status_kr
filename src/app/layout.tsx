@@ -1,12 +1,25 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { localeAlternates } from "../i18n/config";
+import {
+  localeAlternates,
+  localizedLocales,
+  numberLocales,
+} from "../i18n/config";
 import "./globals.css";
 
 const siteUrl = "https://www.brawl-o1.site";
 const siteName = "브롤스타즈 전적 검색";
 const siteDescription =
   "브롤스타즈 플레이어 전적 검색, 최근 전투 분석, 맵별 추천 브롤러, 스킨 카탈로그를 한국어로 확인하세요.";
+const documentLangByPathSegment = Object.fromEntries(
+  localizedLocales.map((locale) => [locale, numberLocales[locale]]),
+);
+const documentLangScript =
+  "(()=>{const m=" +
+  JSON.stringify(documentLangByPathSegment) +
+  ";const s=location.pathname.split('/')[1]?.toLowerCase();document.documentElement.lang=m[s]??" +
+  JSON.stringify(numberLocales.ko) +
+  ";})();";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -86,7 +99,10 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="ko">
+    <html lang={numberLocales.ko} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: documentLangScript }} />
+      </head>
       <body>
         <script
           type="application/ld+json"

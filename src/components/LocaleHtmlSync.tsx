@@ -7,7 +7,7 @@ export default function LocaleHtmlSync({ locale }: { locale: Locale }) {
   useEffect(() => {
     document.documentElement.lang = numberLocales[locale];
     return () => {
-      document.documentElement.lang = "ko";
+      document.documentElement.lang = numberLocales.ko;
     };
   }, [locale]);
 

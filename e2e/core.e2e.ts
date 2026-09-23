@@ -21,6 +21,12 @@ test("language switcher preserves the current localized route", async ({ page })
   await expect.poll(() => page.evaluate(() => document.documentElement.lang)).toBe("en-US");
 });
 
+test("direct localized loads set the document language", async ({ page }) => {
+  await page.goto("/ja/brawlers");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("ブロウラー");
+  await expect.poll(() => page.evaluate(() => document.documentElement.lang)).toBe("ja-JP");
+});
+
 test("skin filters hydrate from and write back to the shareable URL", async ({ page }) => {
   await page.goto("/skins?q=Shelly&sort=NAME&defaults=show");
 

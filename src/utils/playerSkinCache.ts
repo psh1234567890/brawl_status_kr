@@ -38,14 +38,35 @@ export function writePlayerSkinCache(
 ) {
   if (inventory.coverage !== "owned" || inventory.supplementalStatus !== "ready") return;
 
-  storage.setItem(
-    `${PLAYER_SKIN_CACHE_PREFIX}${tag}`,
-    JSON.stringify({ savedAt: now, inventory } satisfies StoredSkinInventory),
-  );
+  const key = PLAYER_SKIN_CACHE_PREFIX + tag;
+  const value = JSON.stringify({ savedAt: now, inventory } satisfies StoredSkinInventory);
+
+  // Make room before writing. If storage is already full, writing first means
+  // we never get a chance to evict stale or old cache entries.
+  prunePlayerSkinCache(storage, now, PLAYER_SKIN_CACHE_MAX_ENTRIES - 1);
+
+  try {
+    storage.setItem(key, value);
+  } catch (error) {
+    if (!isQuotaExceededError(error)) throw error;
+
+    evictOldestPlayerSkinCacheEntry(storage, key, now);
+    try {
+      storage.setItem(key, value);
+    } catch (retryError) {
+      if (!isQuotaExceededError(retryError)) throw retryError;
+      return;
+    }
+  }
+
   prunePlayerSkinCache(storage, now);
 }
 
-export function prunePlayerSkinCache(storage: StorageLike, now = Date.now()) {
+export function prunePlayerSkinCache(
+  storage: StorageLike,
+  now = Date.now(),
+  maxEntries = PLAYER_SKIN_CACHE_MAX_ENTRIES,
+) {
   const entries: Array<{ key: string; savedAt: number }> = [];
 
   for (let index = storage.length - 1; index >= 0; index -= 1) {
@@ -62,8 +83,41 @@ export function prunePlayerSkinCache(storage: StorageLike, now = Date.now()) {
 
   entries
     .sort((left, right) => right.savedAt - left.savedAt)
-    .slice(PLAYER_SKIN_CACHE_MAX_ENTRIES)
+    .slice(Math.max(0, maxEntries))
     .forEach(({ key }) => storage.removeItem(key));
+}
+
+function evictOldestPlayerSkinCacheEntry(
+  storage: StorageLike,
+  keyToKeep: string,
+  now: number,
+) {
+  const entries: Array<{ key: string; savedAt: number }> = [];
+
+  for (let index = storage.length - 1; index >= 0; index -= 1) {
+    const key = storage.key(index);
+    if (!key?.startsWith(PLAYER_SKIN_CACHE_PREFIX) || key === keyToKeep) continue;
+
+    const entry = parseStoredEntry(storage.getItem(key));
+    if (!entry || !isUsableEntry(entry, now)) {
+      storage.removeItem(key);
+      continue;
+    }
+    entries.push({ key, savedAt: entry.savedAt });
+  }
+
+  const oldest = entries.sort((left, right) => left.savedAt - right.savedAt)[0];
+  if (oldest) storage.removeItem(oldest.key);
+}
+
+function isQuotaExceededError(error: unknown) {
+  if (!(error instanceof DOMException)) return false;
+  return (
+    error.name === "QuotaExceededError" ||
+    error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+    error.code === 22 ||
+    error.code === 1014
+  );
 }
 
 function parseStoredEntry(raw: string | null): StoredSkinInventory | null {

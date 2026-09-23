@@ -85,6 +85,22 @@ export const formatWins = (locale: Locale, value: number) => formatUnit(locale, 
 export const formatDays = (locale: Locale, value: number) => formatUnit(locale, value, "day");
 export const formatSamples = (locale: Locale, value: number) => formatUnit(locale, value, "sample");
 
+export function formatMetaWindow(locale: Locale, days: number) {
+  const templates: Record<Locale, string> = {
+    ko: "최근 " + days + "일 전투 데이터 기준",
+    en: "Based on battle data from the last " + days + " days",
+    ja: "直近" + days + "日間のバトルデータを基準",
+    "pt-br": "Com base nos dados de batalha dos últimos " + days + " dias",
+    es: "Basado en los datos de batalla de los últimos " + days + " días",
+    tr: "Son " + days + " günlük savaş verilerine göre",
+    de: "Basierend auf Kampfdaten der letzten " + days + " Tage",
+    fr: "Basé sur les données de combat des " + days + " derniers jours",
+    it: "Basato sui dati delle battaglie degli ultimi " + days + " giorni",
+    ru: "На основе данных боёв за последние " + days + " дней",
+  };
+  return templates[locale];
+}
+
 export function formatWinLossDraw(locale: Locale, wins: number, losses: number, draws: number) {
   return [
     formatUnit(locale, wins, "win"),
@@ -174,16 +190,16 @@ export function formatBrawlerDetailsAria(locale: Locale, name: string) {
 
 export function formatMetaMinimumSample(locale: Locale, value: number) {
   const templates: Record<Locale, string> = {
-    ko: `DB 전체 표본 기준: 최소 ${value}판 이상`,
-    en: `Across all DB samples: at least ${value} battles`,
-    ja: `DB全体サンプル基準：${value}戦以上`,
-    "pt-br": `Em todas as amostras do DB: pelo menos ${value} batalhas`,
-    es: `En todas las muestras del DB: al menos ${value} batallas`,
-    tr: `Tüm DB örneklerinde: en az ${value} savaş`,
-    de: `Über alle DB-Stichproben: mindestens ${value} Kämpfe`,
-    fr: `Sur tous les échantillons du DB : au moins ${value} combats`,
-    it: `Su tutti i campioni del DB: almeno ${value} battaglie`,
-    ru: `По всем выборкам DB: минимум ${value} боёв`,
+    ko: `최근 기간 표본 기준: 최소 ${value}판 이상`,
+    en: `Within the recent data window: at least ${value} battles`,
+    ja: `直近期間のサンプル基準：${value}戦以上`,
+    "pt-br": `Na janela recente de dados: pelo menos ${value} batalhas`,
+    es: `En el período reciente de datos: al menos ${value} batallas`,
+    tr: `Son veri döneminde: en az ${value} savaş`,
+    de: `Im aktuellen Datenzeitraum: mindestens ${value} Kämpfe`,
+    fr: `Sur la période de données récente : au moins ${value} combats`,
+    it: `Nel periodo dati recente: almeno ${value} battaglie`,
+    ru: `За недавний период данных: минимум ${value} боёв`,
   };
   return templates[locale];
 }

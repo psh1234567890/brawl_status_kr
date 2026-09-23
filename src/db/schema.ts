@@ -7,6 +7,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const battleLogs = pgTable(
@@ -17,6 +18,7 @@ export const battleLogs = pgTable(
     battleTime: text("battle_time").notNull(),
     battleTimestamp: timestamp("battle_timestamp", { withTimezone: true }),
     battleFingerprint: text("battle_fingerprint"),
+    playerTeamIndex: integer("player_team_index"),
     mode: text("mode").notNull(),
     map: text("map").notNull(),
     brawlerId: integer("brawler_id"),
@@ -38,5 +40,38 @@ export const battleLogs = pgTable(
     index("battle_logs_battle_detail_json_gin_idx").using("gin", table.battleDetailJson),
     index("battle_logs_map_brawler_idx").on(table.map, table.brawlerName),
     index("battle_logs_battle_timestamp_idx").on(table.battleTimestamp),
+  ],
+);
+
+export const battleTeamParticipants = pgTable(
+  "battle_team_participants",
+  {
+    id: serial("id").primaryKey(),
+    battleFingerprint: text("battle_fingerprint").notNull(),
+    battleTimestamp: timestamp("battle_timestamp", { withTimezone: true }),
+    mode: text("mode").notNull(),
+    map: text("map").notNull(),
+    teamIndex: integer("team_index").notNull(),
+    playerTag: text("player_tag").notNull(),
+    brawlerId: integer("brawler_id"),
+    brawlerName: text("brawler_name").notNull(),
+    result: text("result").notNull(),
+  },
+  (table) => [
+    uniqueIndex("battle_team_participants_battle_team_player_unique").on(
+      table.battleFingerprint,
+      table.teamIndex,
+      table.playerTag,
+    ),
+    index("battle_team_participants_timestamp_idx").on(table.battleTimestamp),
+    index("battle_team_participants_map_timestamp_idx").on(
+      table.map,
+      table.battleTimestamp,
+    ),
+    index("battle_team_participants_brawler_timestamp_idx").on(
+      table.brawlerName,
+      table.battleTimestamp,
+    ),
+    index("battle_team_participants_fingerprint_idx").on(table.battleFingerprint),
   ],
 );

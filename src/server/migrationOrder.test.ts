@@ -53,4 +53,29 @@ describe("legacy migration ordering", () => {
     expect(rlsPosition).toBeGreaterThan(uniquePosition);
     expect(migrationScript).not.toContain("CREATE POLICY");
   });
+
+  it("creates and protects the normalized meta participant table", () => {
+    const root = process.cwd();
+    const participantMigration = readFileSync(
+      resolve(root, "drizzle/0001_add_meta_participants.sql"),
+      "utf8",
+    );
+    const migrationScript = readFileSync(resolve(root, "scripts/migrate-db.mjs"), "utf8");
+
+    expect(participantMigration).toContain("CREATE TABLE IF NOT EXISTS battle_team_participants");
+    expect(participantMigration).toContain(
+      "battle_team_participants_battle_team_player_unique",
+    );
+    expect(participantMigration).toContain(
+      "ALTER TABLE battle_team_participants ENABLE ROW LEVEL SECURITY",
+    );
+    expect(migrationScript).toContain("0001_add_meta_participants.sql");
+
+    const teamIndexBackfill = migrationScript.indexOf("SET player_team_index =");
+    const participantBackfill = migrationScript.indexOf(
+      "INSERT INTO battle_team_participants",
+    );
+    expect(teamIndexBackfill).toBeGreaterThan(-1);
+    expect(participantBackfill).toBeGreaterThan(teamIndexBackfill);
+  });
 });

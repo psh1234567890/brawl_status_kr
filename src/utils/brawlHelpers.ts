@@ -91,6 +91,17 @@ export function getPlayerBrawler(match: BattleLogItem, playerTag: string) {
   return player ? getPrimaryBrawler(player) : undefined;
 }
 
+export function getPlayerTeamIndex(match: BattleLogItem, playerTag: string) {
+  const teams = match.battle.teams;
+  if (!teams?.length) return null;
+
+  const cleanTag = normalizePlayerTag(playerTag);
+  const index = teams.findIndex((team) =>
+    team.some((candidate) => normalizePlayerTag(candidate.tag) === cleanTag),
+  );
+  return index >= 0 ? index + 1 : null;
+}
+
 export function createBattleFingerprint(match: BattleLogItem) {
   const participantTags = getBattlePlayers(match)
     .map((player) => normalizePlayerTag(player.tag))

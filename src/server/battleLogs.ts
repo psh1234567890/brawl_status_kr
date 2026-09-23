@@ -1,12 +1,17 @@
 import { db } from "../db";
-import { battleLogs } from "../db/schema";
+import { battleLogs, battleTeamParticipants } from "../db/schema";
 import type { BattleLogItem } from "../types/brawl";
 import {
   createBattleFingerprint,
   getNormalizedBattleResult,
   getPlayerBrawler,
+  getPlayerTeamIndex,
+  getPrimaryBrawler,
   parseBattleTime,
 } from "../utils/brawlHelpers";
+import { normalizePlayerTag } from "../utils/playerTag";
+
+const TEAM_META_EXCLUDED_MODES = new Set(["duoShowdown", "trioShowdown"]);
 
 export async function saveBattleLogs(playerTag: string, items: BattleLogItem[]) {
   const validItems = items;
@@ -19,6 +24,7 @@ export async function saveBattleLogs(playerTag: string, items: BattleLogItem[]) 
       battleTime: match.battleTime,
       battleTimestamp: parseBattleTime(match.battleTime),
       battleFingerprint: createBattleFingerprint(match),
+      playerTeamIndex: getPlayerTeamIndex(match, playerTag),
       mode: match.event.mode ?? "friendly",
       map: match.event.map ?? "친선 경기",
       brawlerId: brawler?.id,
@@ -32,4 +38,58 @@ export async function saveBattleLogs(playerTag: string, items: BattleLogItem[]) 
   });
 
   await db.insert(battleLogs).values(values).onConflictDoNothing();
+
+  const participantValues = validItems.flatMap((match) =>
+    buildTeamParticipantValues(playerTag, match),
+  );
+  if (participantValues.length > 0) {
+    await db.insert(battleTeamParticipants).values(participantValues).onConflictDoNothing();
+  }
+}
+
+function buildTeamParticipantValues(playerTag: string, match: BattleLogItem) {
+  const teams = match.battle.teams;
+  const mode = match.event.mode ?? "friendly";
+  const playerTeamIndex = getPlayerTeamIndex(match, playerTag);
+  if (
+    !teams ||
+    teams.length !== 2 ||
+    playerTeamIndex === null ||
+    match.battle.type === "friendly" ||
+    TEAM_META_EXCLUDED_MODES.has(mode)
+  ) {
+    return [];
+  }
+
+  const battleFingerprint = createBattleFingerprint(match);
+  const battleTimestamp = parseBattleTime(match.battleTime);
+  const map = match.event.map ?? "친선 경기";
+  const searchedResult = getNormalizedBattleResult(match);
+
+  return teams.flatMap((team, index) => {
+    const teamIndex = index + 1;
+    const result =
+      searchedResult === "draw"
+        ? "draw"
+        : teamIndex === playerTeamIndex
+          ? searchedResult
+          : searchedResult === "victory"
+            ? "defeat"
+            : "victory";
+
+    return team.map((player) => {
+      const brawler = getPrimaryBrawler(player);
+      return {
+        battleFingerprint,
+        battleTimestamp,
+        mode,
+        map,
+        teamIndex,
+        playerTag: normalizePlayerTag(player.tag),
+        brawlerId: brawler?.id ?? null,
+        brawlerName: brawler?.name ?? "Unknown",
+        result,
+      };
+    });
+  });
 }

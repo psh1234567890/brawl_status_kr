@@ -47,15 +47,50 @@ describe("battle log persistence", () => {
 
     await saveBattleLogs("2PYLQ", [item]);
 
-    expect(mocks.values).toHaveBeenCalledTimes(1);
-    expect(mocks.onConflictDoNothing).toHaveBeenCalledTimes(1);
+    expect(mocks.values).toHaveBeenCalledTimes(2);
+    expect(mocks.onConflictDoNothing).toHaveBeenCalledTimes(2);
     const inserted = mocks.values.mock.calls[0]?.[0]?.[0] as
-      | { playerTag?: string; battleFingerprint?: string }
+      | { playerTag?: string; battleFingerprint?: string; playerTeamIndex?: number | null }
       | undefined;
     if (!inserted) throw new Error("expected one inserted battle row");
     expect(inserted.playerTag).toBe("2PYLQ");
     expect(inserted.battleFingerprint).toBe(
       "20260725T010203.000Z|brawlBall|Sneaky Fields|2PYLQ,8PQL,9GRJ",
     );
+    expect(inserted.playerTeamIndex).toBe(1);
+
+    const participants = mocks.values.mock.calls[1]?.[0] as
+      | Array<{
+          playerTag?: string;
+          teamIndex?: number;
+          brawlerName?: string;
+          result?: string;
+          battleFingerprint?: string;
+        }>
+      | undefined;
+    expect(participants).toHaveLength(3);
+    expect(participants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          playerTag: "2PYLQ",
+          teamIndex: 1,
+          brawlerName: "SHELLY",
+          result: "victory",
+        }),
+        expect.objectContaining({
+          playerTag: "8PQL",
+          teamIndex: 1,
+          brawlerName: "COLT",
+          result: "victory",
+        }),
+        expect.objectContaining({
+          playerTag: "9GRJ",
+          teamIndex: 2,
+          brawlerName: "BULL",
+          result: "defeat",
+        }),
+      ]),
+    );
+    expect(participants?.every((row) => row.battleFingerprint === inserted.battleFingerprint)).toBe(true);
   });
 });

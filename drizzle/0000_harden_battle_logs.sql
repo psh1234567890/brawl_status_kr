@@ -1,5 +1,6 @@
 ALTER TABLE battle_logs ADD COLUMN IF NOT EXISTS battle_timestamp timestamptz;
 ALTER TABLE battle_logs ADD COLUMN IF NOT EXISTS battle_fingerprint text;
+ALTER TABLE battle_logs ADD COLUMN IF NOT EXISTS player_team_index integer;
 ALTER TABLE battle_logs ADD COLUMN IF NOT EXISTS brawler_id integer;
 ALTER TABLE battle_logs ADD COLUMN IF NOT EXISTS battle_detail_json jsonb;
 

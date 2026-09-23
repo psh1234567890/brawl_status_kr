@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { META_WINDOW_DAYS } from "../constants/meta";
 import type { Locale } from "../i18n/config";
-import { formatCounterWinRate } from "../i18n/formatters";
+import { formatCounterWinRate, formatMetaWindow } from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
 import type { BrawlifyBrawler } from "../types/brawlify";
 import { translateBrawlerName } from "../utils/brawlTranslations";
@@ -81,6 +82,9 @@ export default function CounterBrowser({
 
   return (
     <div className="flex flex-col gap-5">
+      <p className="text-xs font-bold text-blue-600">
+        {formatMetaWindow(locale, META_WINDOW_DAYS)}
+      </p>
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <label htmlFor="counter-brawler" className="mb-2 block text-xs font-black uppercase tracking-[0.06em] text-blue-600">
           {copy.counters.select}

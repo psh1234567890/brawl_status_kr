@@ -33,7 +33,7 @@ const koCatalog = {
       detailView: "상세 보기",
     },
     detail: {
-      description: "Brawlify 맵 데이터를 기반으로 표시하는 맵 상세 정보입니다. 저장된 전투 표본이 쌓이면 맵 추천 페이지에서 우리 DB 기반 추천 브롤러를 함께 확인할 수 있습니다.",
+      description: "Brawlify 맵 데이터를 기반으로 표시하는 맵 상세 정보입니다. 저장된 전투 표본이 쌓이면 맵별 브롤러 추천 페이지에서 우리 DB 기반 추천 브롤러를 함께 확인할 수 있습니다.",
       action: "DB 추천 보기",
       mapId: "맵 ID",
       gameMode: "게임모드",
@@ -114,7 +114,7 @@ const koCatalog = {
     },
     title: "현재 맵 로테이션",
     eyebrow: "현재 로테이션",
-    description: "Brawlify 이벤트 데이터를 기반으로 현재 열려 있는 맵과 예정 맵을 보여줍니다. 저장된 전투 표본이 있는 맵은 맵 추천 페이지에서 우리 DB 기반 승률도 함께 확인할 수 있습니다.",
+    description: "Brawlify 이벤트 데이터를 기반으로 현재 열려 있는 맵과 예정 맵을 보여줍니다. 저장된 전투 표본이 있는 맵은 맵별 브롤러 추천 페이지에서 우리 DB 기반 승률도 함께 확인할 수 있습니다.",
     action: "DB 추천 보기",
     currentEvents: "현재 이벤트",
     upcomingEvents: "예정 이벤트",

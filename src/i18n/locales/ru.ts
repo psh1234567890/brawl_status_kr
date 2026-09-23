@@ -62,6 +62,7 @@ export const ruMessages = {
     modes: "Режимы",
     brawlers: "Бойцы",
     skins: "Скины",
+    minigames: "Мини-игры",
     clubs: "Клубы",
     rankings: "Рейтинги",
     teams: "Составы команд",

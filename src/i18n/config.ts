@@ -76,6 +76,8 @@ export const localizedCorePaths = new Set([
   "/status",
   "/maps",
   "/brawlers",
+  "/minigames",
+  "/minigames/brawler-quiz",
   "/gamemodes",
   "/events",
   "/skins",

@@ -62,6 +62,7 @@ export const ptBrMessages = {
     modes: "Modos",
     brawlers: "Brawlers",
     skins: "Skins",
+    minigames: "Minijogos",
     clubs: "Clubes",
     rankings: "Rankings",
     teams: "Composições de equipe",

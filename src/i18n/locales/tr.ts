@@ -62,6 +62,7 @@ export const trMessages = {
     modes: "Modlar",
     brawlers: "Savaşçılar",
     skins: "Kostümler",
+    minigames: "Mini Oyunlar",
     clubs: "Kulüpler",
     rankings: "Sıralamalar",
     teams: "Takım Dizilimleri",

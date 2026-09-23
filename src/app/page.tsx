@@ -18,6 +18,7 @@ import {
   formatWins,
 } from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
+import { getMinigameMessages } from "../i18n/minigameMessages";
 import type {
   BattleLogItem,
   Brawler,
@@ -42,6 +43,7 @@ const RESULT_TAB_IDS: ResultPanel[] = ["overview", "matches", "brawlers", "histo
 
 export default function Home({ locale = "ko" }: { locale?: Locale }) {
   const copy = getMessages(locale);
+  const minigameCopy = getMinigameMessages(locale);
   const githubStarCopy = getGithubStarCopy(locale);
   const search = usePlayerSearch(locale);
   const [activePanel, setActivePanel] = useState<ResultPanel>("overview");
@@ -93,6 +95,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
   const primaryLinks = [
     { href: "/meta", label: copy.common.meta, description: copy.home.mapMetaDescription },
     { href: "/skins", label: copy.home.skinCatalog, description: copy.home.skinCatalogDescription },
+    { href: "/minigames", label: copy.common.minigames, description: minigameCopy.homeDescription },
   ];
   const utilityLinks = [
     ["/events", copy.common.events],

@@ -68,15 +68,20 @@ function getBattleTimestamp(value) {
 }
 
 async function migrate() {
-  const migrationPath = fileURLToPath(
-    new URL("../drizzle/0000_harden_battle_logs.sql", import.meta.url),
+  const migrationPaths = [
+    fileURLToPath(new URL("../drizzle/0000_harden_battle_logs.sql", import.meta.url)),
+    fileURLToPath(new URL("../drizzle/0001_add_meta_participants.sql", import.meta.url)),
+  ];
+  const migrations = await Promise.all(
+    migrationPaths.map((migrationPath) => readFile(migrationPath, "utf8")),
   );
-  const migration = await readFile(migrationPath, "utf8");
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
-    await client.query(migration);
+    for (const migration of migrations) {
+      await client.query(migration);
+    }
 
     const deduplicated = await client.query(`
       DELETE FROM battle_logs
@@ -162,6 +167,120 @@ async function migrate() {
       }
     }
 
+    const teamIndexBackfill = await client.query(`
+      UPDATE battle_logs AS bl
+      SET player_team_index = (
+        SELECT team_entry.team_index::integer
+        FROM jsonb_array_elements(bl.battle_detail_json->'battle'->'teams')
+          WITH ORDINALITY AS team_entry(team_json, team_index)
+        WHERE EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(team_entry.team_json) AS player_entry(player_json)
+          WHERE regexp_replace(
+            upper(trim(player_entry.player_json->>'tag')),
+            '^#',
+            ''
+          ) = bl.player_tag
+        )
+        LIMIT 1
+      )
+      WHERE bl.player_team_index IS NULL
+        AND jsonb_typeof(bl.battle_detail_json->'battle'->'teams') = 'array'
+        AND jsonb_array_length(bl.battle_detail_json->'battle'->'teams') = 2
+    `);
+
+    const participantBackfill = await client.query(`
+      WITH team_logs AS (
+        SELECT DISTINCT ON (battle_fingerprint)
+          battle_fingerprint,
+          battle_timestamp,
+          mode,
+          map,
+          result,
+          player_team_index,
+          battle_detail_json
+        FROM battle_logs
+        WHERE battle_fingerprint IS NOT NULL
+          AND player_team_index IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1
+            FROM battle_team_participants existing
+            WHERE existing.battle_fingerprint = battle_logs.battle_fingerprint
+          )
+          AND jsonb_typeof(battle_detail_json->'battle'->'teams') = 'array'
+          AND jsonb_array_length(battle_detail_json->'battle'->'teams') = 2
+          AND coalesce(battle_detail_json->'battle'->>'type', '') <> 'friendly'
+          AND mode NOT IN ('duoShowdown', 'trioShowdown')
+        ORDER BY battle_fingerprint, id DESC
+      ),
+      expanded AS (
+        SELECT
+          team_logs.battle_fingerprint,
+          team_logs.battle_timestamp,
+          team_logs.mode,
+          team_logs.map,
+          team_entry.team_index::integer AS team_index,
+          regexp_replace(
+            upper(trim(player_entry.player_json->>'tag')),
+            '^#',
+            ''
+          ) AS player_tag,
+          nullif(
+            coalesce(
+              player_entry.player_json->'brawler',
+              player_entry.player_json->'brawlers'->0
+            )->>'id',
+            ''
+          )::integer AS brawler_id,
+          coalesce(
+            coalesce(
+              player_entry.player_json->'brawler',
+              player_entry.player_json->'brawlers'->0
+            )->>'name',
+            'Unknown'
+          ) AS brawler_name,
+          CASE
+            WHEN team_logs.result = 'draw' THEN 'draw'
+            WHEN team_entry.team_index = team_logs.player_team_index THEN team_logs.result
+            WHEN team_logs.result = 'victory' THEN 'defeat'
+            WHEN team_logs.result = 'defeat' THEN 'victory'
+            ELSE NULL
+          END AS result
+        FROM team_logs
+        CROSS JOIN LATERAL jsonb_array_elements(
+          team_logs.battle_detail_json->'battle'->'teams'
+        ) WITH ORDINALITY AS team_entry(team_json, team_index)
+        CROSS JOIN LATERAL jsonb_array_elements(
+          team_entry.team_json
+        ) AS player_entry(player_json)
+      )
+      INSERT INTO battle_team_participants (
+        battle_fingerprint,
+        battle_timestamp,
+        mode,
+        map,
+        team_index,
+        player_tag,
+        brawler_id,
+        brawler_name,
+        result
+      )
+      SELECT
+        battle_fingerprint,
+        battle_timestamp,
+        mode,
+        map,
+        team_index,
+        player_tag,
+        brawler_id,
+        brawler_name,
+        result
+      FROM expanded
+      WHERE player_tag <> ''
+        AND result IS NOT NULL
+      ON CONFLICT (battle_fingerprint, team_index, player_tag) DO NOTHING
+    `);
+
     // Create uniqueness constraints only after legacy tags have been normalized,
     // duplicates removed, and fingerprints backfilled. Creating these indexes
     // before cleanup makes an otherwise recoverable legacy database fail the
@@ -209,8 +328,9 @@ async function migrate() {
     `);
 
     await client.query("COMMIT");
+    console.log("Backfilled meta participant rows:", participantBackfill.rowCount ?? 0);
     console.log(
-      `Database migration complete. Removed ${deduplicated.rowCount ?? 0} duplicate logs and updated ${updated} battle logs.`,
+      `Database migration complete. Removed ${deduplicated.rowCount ?? 0} duplicate logs, updated ${updated} battle logs, and backfilled ${teamIndexBackfill.rowCount ?? 0} team indexes.`,
     );
   } catch (error) {
     await client.query("ROLLBACK");

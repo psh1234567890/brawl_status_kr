@@ -11,7 +11,7 @@ const getCachedTeamItems = unstable_cache(
         slowMs: 5_000,
       })
     ).rows,
-  ["team-meta-v2"],
+  ["team-meta-v4-normalized"],
   { revalidate: 60 },
 );
 
@@ -22,7 +22,7 @@ const getCachedTeamMaps = unstable_cache(
         slowMs: 2_500,
       })
     ).rows.map((row) => row.map),
-  ["team-map-list-v1"],
+  ["team-map-list-v3-normalized"],
   { revalidate: 300 },
 );
 

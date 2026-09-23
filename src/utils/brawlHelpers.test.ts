@@ -6,6 +6,7 @@ import {
   createBattleFingerprint,
   getNormalizedBattleResult,
   getPlayerBrawler,
+  getPlayerTeamIndex,
   parseBattleTime,
 } from "./brawlHelpers";
 
@@ -44,6 +45,7 @@ describe("battle log helpers", () => {
     for (const result of ["victory", "defeat", "draw"] as const) {
       const item = battle({ players: undefined, teams: teamIndex === 0 ? [searched, opponent] : [opponent, searched], result });
       expect(getPlayerBrawler(item, "2Q89RU")?.name).toBe("SHELLY");
+      expect(getPlayerTeamIndex(item, "2Q89RU")).toBe(teamIndex + 1);
       expect(getNormalizedBattleResult(item)).toBe(result);
     }
   });
@@ -69,6 +71,10 @@ describe("battle log helpers", () => {
       players: [{ tag: "#2Q89RU" }, { tag: "#ABC" }],
     });
     expect(createBattleFingerprint(first)).toBe(createBattleFingerprint(second));
+  });
+
+  it("returns no team index for non-team battle payloads", () => {
+    expect(getPlayerTeamIndex(battle(), "2Q89RU")).toBeNull();
   });
 
   it("summarizes recent matches and player brawler matches", () => {

@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { META_WINDOW_DAYS } from "../constants/meta";
 import { numberLocales, type Locale } from "../i18n/config";
+import { formatMetaWindow } from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
 import { translateBrawlerName, translateMapName } from "../utils/brawlTranslations";
 
@@ -70,6 +72,9 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
 
   return (
     <div className="flex flex-col gap-5">
+      <p className="text-xs font-bold text-blue-600">
+        {formatMetaWindow(locale, META_WINDOW_DAYS)}
+      </p>
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         <label htmlFor="team-meta-map" className="mb-2 block text-xs font-black uppercase tracking-[0.06em] text-blue-600">
           {copy.teams.mapSelect}

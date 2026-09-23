@@ -6,6 +6,7 @@ import BrawlImage from "../../components/BrawlImage";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import { mapToModeDict } from "../../constants/brawl";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
+import { META_WINDOW_DAYS } from "../../constants/meta";
 import { localizedHref, type Locale } from "../../i18n/config";
 import {
   formatConfidenceOnly,
@@ -15,6 +16,7 @@ import {
   formatMetaMinimumSample,
   formatMetaShowAll,
   formatMetaTopWinRate,
+  formatMetaWindow,
   formatMetaWinRateSample,
   formatOtherLabel,
   formatSamples,
@@ -219,6 +221,9 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
             </h1>
             <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-slate-500 sm:text-base">
               {copy.meta.subtitle}
+            </p>
+            <p className="mt-2 text-xs font-bold text-blue-600">
+              {formatMetaWindow(locale, META_WINDOW_DAYS)}
             </p>
           </div>
         </header>

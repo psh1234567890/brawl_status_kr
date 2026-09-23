@@ -11,7 +11,7 @@ const getCachedCounterStats = unstable_cache(
         slowMs: 5_000,
       })
     ).rows,
-  ["counter-meta-v2"],
+  ["counter-meta-v4-normalized"],
   { revalidate: 60 },
 );
 

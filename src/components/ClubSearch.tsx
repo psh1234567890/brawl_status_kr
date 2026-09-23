@@ -47,7 +47,7 @@ export default function ClubSearch({ locale = "ko" }: { locale?: Locale }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
             value={tag}
@@ -56,13 +56,13 @@ export default function ClubSearch({ locale = "ko" }: { locale?: Locale }) {
               if (event.key === "Enter") void handleSearch();
             }}
             placeholder={copy.placeholder}
-            className="min-w-0 flex-1 rounded-md border border-gray-200 px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
+            className="min-w-0 flex-1 rounded-md border border-slate-200 px-4 py-3 text-sm font-bold outline-none focus:border-blue-400"
           />
           <button
             type="button"
             onClick={() => void handleSearch()}
             disabled={loading}
-            className="rounded-md bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:bg-gray-400"
+            className="rounded-md bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700 disabled:bg-slate-400"
           >
             {loading ? copy.searching : copy.search}
           </button>
@@ -72,7 +72,7 @@ export default function ClubSearch({ locale = "ko" }: { locale?: Locale }) {
 
       {data ? (
         <>
-          <section className="rounded-lg border border-white bg-white p-6 shadow-sm">
+          <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
               {data.club.badgeId ? (
                 <BrawlImage
@@ -80,14 +80,14 @@ export default function ClubSearch({ locale = "ko" }: { locale?: Locale }) {
                   alt={`${data.club.name}${copy.badgeAltSuffix}`}
                   width={72}
                   height={72}
-                  className="h-[72px] w-[72px] rounded-lg bg-indigo-50 p-2"
+                  className="h-[72px] w-[72px] rounded-lg bg-blue-50 p-2"
                   fallbackText={data.club.name.slice(0, 1)}
                 />
               ) : null}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-black text-indigo-500">{data.club.tag}</p>
-                <h2 className="break-words text-3xl font-black text-gray-900">{data.club.name}</h2>
-                <p className="mt-2 text-sm font-medium leading-6 text-gray-500">
+                <p className="text-sm font-black text-blue-500">{data.club.tag}</p>
+                <h2 className="break-words text-3xl font-black text-slate-900">{data.club.name}</h2>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
                   {data.club.description ?? copy.noDescription}
                 </p>
               </div>
@@ -100,11 +100,11 @@ export default function ClubSearch({ locale = "ko" }: { locale?: Locale }) {
             </div>
           </section>
 
-          <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
-            <h3 className="mb-4 text-xl font-black text-indigo-950">{copy.memberList}</h3>
+          <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-4 text-xl font-black text-blue-950">{copy.memberList}</h3>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {data.members.map((member) => (
-                <article key={member.tag} className="flex items-center gap-3 rounded-lg bg-indigo-50 p-3">
+                <article key={member.tag} className="flex items-center gap-3 rounded-lg bg-blue-50 p-3">
                   {member.icon?.id ? (
                     <BrawlImage
                       src={getPlayerIconUrl(member.icon.id)}
@@ -115,13 +115,13 @@ export default function ClubSearch({ locale = "ko" }: { locale?: Locale }) {
                       fallbackText={member.name.slice(0, 1)}
                     />
                   ) : (
-                    <span className="flex h-11 w-11 items-center justify-center rounded-md bg-white font-black text-indigo-300">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-md bg-white font-black text-blue-300">
                       {member.name.slice(0, 1)}
                     </span>
                   )}
                   <div className="min-w-0">
-                    <p className="truncate font-black text-gray-900">{member.name}</p>
-                    <p className="text-xs font-bold text-gray-500">
+                    <p className="truncate font-black text-slate-900">{member.name}</p>
+                    <p className="text-xs font-bold text-slate-500">
                       {formatClubRole(member.role, locale)} · {member.trophies.toLocaleString(numberLocales[locale])} {copy.trophiesUnit}
                     </p>
                   </div>
@@ -154,9 +154,9 @@ function formatClubRole(role: string, locale: Locale) {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-indigo-50 p-3">
-      <p className="text-xs font-black text-indigo-400">{label}</p>
-      <p className="mt-1 text-xl font-black text-indigo-900">{value}</p>
+    <div className="rounded-lg bg-blue-50 p-3">
+      <p className="text-xs font-black text-blue-400">{label}</p>
+      <p className="mt-1 text-xl font-black text-blue-900">{value}</p>
     </div>
   );
 }

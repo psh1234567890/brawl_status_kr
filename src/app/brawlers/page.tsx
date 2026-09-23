@@ -51,30 +51,30 @@ export async function BrawlersPageContent({ locale }: { locale: Locale }) {
           const description = translateBrawlerDescription(brawler.name, brawler.description, locale);
 
           return (
-          <article key={brawler.id} className="rounded-lg border border-white bg-white p-4 shadow-sm">
+          <article key={brawler.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center gap-4">
               <BrawlImage
                 src={brawler.imageUrl2 ?? brawler.imageUrl ?? `https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
                 alt={displayName}
                 width={72}
                 height={72}
-                className="h-16 w-16 shrink-0 rounded-md bg-indigo-50 object-contain"
+                className="h-16 w-16 shrink-0 rounded-md bg-blue-50 object-contain"
                 fallbackText={displayName.slice(0, 1)}
               />
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-black text-gray-900">
+                <h2 className="truncate text-lg font-black text-slate-900">
                   {displayName}
                 </h2>
-                <p className="text-xs font-bold text-indigo-600">{translateRarityName(brawler.rarity?.name, locale) || copy.list.unknown}</p>
-                <p className="text-xs font-bold text-gray-400">{translateBrawlerClassName(brawler.class?.name, locale) || "-"}</p>
+                <p className="text-xs font-bold text-blue-600">{translateRarityName(brawler.rarity?.name, locale) || copy.list.unknown}</p>
+                <p className="text-xs font-bold text-slate-400">{translateBrawlerClassName(brawler.class?.name, locale) || "-"}</p>
               </div>
             </div>
-            <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-gray-500">
+            <p className="mt-3 line-clamp-3 text-sm font-medium leading-6 text-slate-500">
               {description || copy.list.noDescription}
             </p>
             <Link
               href={localizedHref(locale, `/brawlers/${brawler.id}`)}
-              className="mt-4 inline-block rounded-full bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
+              className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-blue-700"
             >
               {copy.list.detailView}
             </Link>
@@ -88,7 +88,7 @@ export async function BrawlersPageContent({ locale }: { locale: Locale }) {
 
 function LinkButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700">
+    <Link href={href} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700">
       {children}
     </Link>
   );

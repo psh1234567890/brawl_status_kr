@@ -49,29 +49,29 @@ export async function GameModesPageContent({ locale }: { locale: Locale }) {
           );
 
           return (
-          <article key={mode.id} className="flex gap-4 rounded-lg border border-white bg-white p-4 shadow-sm">
+          <article key={mode.id} className="flex gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
             {mode.imageUrl ? (
               <BrawlImage
                 src={mode.imageUrl}
                 alt={displayName}
                 width={72}
                 height={72}
-                className="h-16 w-16 shrink-0 rounded-md bg-indigo-50 object-cover"
+                className="h-16 w-16 shrink-0 rounded-md bg-blue-50 object-cover"
                 fallbackText={displayName.slice(0, 1)}
               />
             ) : (
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-indigo-50 font-black text-indigo-300">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-blue-50 font-black text-blue-300">
                 {displayName.slice(0, 1)}
               </div>
             )}
             <div className="min-w-0">
-              <h2 className="text-lg font-black text-gray-900">{displayName}</h2>
-              <p className="mt-1 line-clamp-3 text-sm font-medium leading-6 text-gray-500">
+              <h2 className="text-lg font-black text-slate-900">{displayName}</h2>
+              <p className="mt-1 line-clamp-3 text-sm font-medium leading-6 text-slate-500">
                 {description || copy.list.noDescription}
               </p>
               <Link
                 href={localizedHref(locale, `/gamemodes/${mode.id}`)}
-                className="mt-3 inline-block rounded-full bg-indigo-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
+                className="mt-3 inline-block rounded-lg bg-blue-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-blue-700"
               >
                 {copy.list.detailView}
               </Link>
@@ -86,7 +86,7 @@ export async function GameModesPageContent({ locale }: { locale: Locale }) {
 
 function LinkButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700">
+    <Link href={href} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700">
       {children}
     </Link>
   );

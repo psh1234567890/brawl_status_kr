@@ -28,7 +28,7 @@ export default function BrawlImage({
     return (
       <span
         aria-label={alt}
-        className={`flex items-center justify-center bg-indigo-50 font-black text-indigo-300 ${className}`}
+        className={`flex items-center justify-center bg-blue-50 font-black text-blue-300 ${className}`}
         title={title}
       >
         {fallbackText ?? alt.slice(0, 1)}

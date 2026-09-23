@@ -71,7 +71,7 @@ export async function BrawlerDetailPageContent({ id, locale }: { id: string; loc
           alt={displayName}
           width={320}
           height={320}
-          className="h-80 w-full rounded-lg border border-white bg-white object-contain p-6 shadow-sm"
+          className="h-80 w-full rounded-lg border border-slate-200 bg-white object-contain p-6 shadow-sm"
           fallbackText={displayName.slice(0, 1)}
         />
         <div className="grid content-start gap-3 sm:grid-cols-2">
@@ -104,15 +104,15 @@ function AbilityPanel({
   emptyText: string;
 }) {
   return (
-    <section className="rounded-lg border border-white bg-white p-5 shadow-sm">
-      <h2 className="mb-4 text-xl font-black text-indigo-950">{title}</h2>
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="mb-4 text-xl font-black text-blue-950">{title}</h2>
       {items.length ? (
         <div className="flex flex-col gap-3">
           {items.map((item) => {
             const displayName = translateAbilityName(item.id, item.name, locale);
 
             return (
-            <div key={item.id} className="flex items-center gap-3 rounded-lg bg-indigo-50 p-3">
+            <div key={item.id} className="flex items-center gap-3 rounded-lg bg-blue-50 p-3">
               <BrawlImage
                 src={`https://cdn.brawlify.com/${imageType}/regular/${item.id}.png`}
                 alt={displayName}
@@ -121,13 +121,13 @@ function AbilityPanel({
                 className="h-10 w-10 rounded-md"
                 fallbackText={title.slice(0, 1)}
               />
-              <span className="font-black text-gray-800">{displayName}</span>
+              <span className="font-black text-slate-800">{displayName}</span>
             </div>
             );
           })}
         </div>
       ) : (
-        <p className="text-sm font-bold text-gray-400">{emptyText}</p>
+        <p className="text-sm font-bold text-slate-400">{emptyText}</p>
       )}
     </section>
   );
@@ -135,7 +135,7 @@ function AbilityPanel({
 
 function LinkButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700">
+    <Link href={href} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700">
       {children}
     </Link>
   );

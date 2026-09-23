@@ -157,19 +157,22 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             href="https://github.com/psh1234567890/brawl_status_kr"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-slate-200"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-[7px] rounded-lg border border-slate-300 bg-white px-[18px] text-[13px] font-[650] text-slate-950 transition-colors hover:border-slate-950 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
           >
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="h-4 w-4 fill-current"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path d="m12 2.5 2.86 5.8 6.4.93-4.63 4.51 1.09 6.37L12 17.1l-5.72 3.01 1.09-6.37-4.63-4.51 6.4-.93L12 2.5Z" />
+              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+              <path d="M9 18c-4.51 2-5-2-7-2" />
             </svg>
             <span>{githubStarCopy.button}</span>
-            <span aria-hidden="true" className="text-slate-400 transition-transform group-hover:translate-x-0.5">
-              ↗
-            </span>
           </a>
         </section>
 

@@ -14,10 +14,13 @@ export function selectIndexableGameModes(items: BrawlifyGameMode[]) {
   return uniqueById(items.filter((item) => !item.disabled));
 }
 
-export function selectIndexableMaps(items: BrawlifyMap[]) {
+export function selectBrowsableMaps(items: BrawlifyMap[]) {
   return uniqueById(items.filter((item) => !item.disabled))
-    .sort(compareIdDescending)
-    .slice(0, INDEXABLE_MAP_LIMIT);
+    .sort(compareMapRecency);
+}
+
+export function selectIndexableMaps(items: BrawlifyMap[]) {
+  return selectBrowsableMaps(items).slice(0, INDEXABLE_MAP_LIMIT);
 }
 
 export function isIndexableMap(map: BrawlifyMap, allMaps: BrawlifyMap[]) {
@@ -47,4 +50,10 @@ function compareIdDescending(
   }
 
   return String(right.id).localeCompare(String(left.id));
+}
+
+function compareMapRecency(left: BrawlifyMap, right: BrawlifyMap) {
+  const lastActiveDifference = (right.lastActive ?? 0) - (left.lastActive ?? 0);
+  if (lastActiveDifference !== 0) return lastActiveDifference;
+  return compareIdDescending(left, right);
 }

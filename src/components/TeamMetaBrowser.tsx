@@ -70,15 +70,15 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
-        <label htmlFor="team-meta-map" className="mb-2 block text-xs font-black text-indigo-500">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <label htmlFor="team-meta-map" className="mb-2 block text-xs font-black uppercase tracking-[0.06em] text-blue-600">
           {copy.teams.mapSelect}
         </label>
         <select
           id="team-meta-map"
           value={mapName}
           onChange={(event) => selectMap(event.target.value)}
-          className="w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400 sm:max-w-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none transition-colors focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:max-w-sm"
         >
           <option value="">{copy.teams.allMaps}</option>
           {sortedMaps.map((map) => (
@@ -88,7 +88,7 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
       </section>
 
       {loading ? (
-        <div className="rounded-lg bg-white p-8 text-center text-lg font-black text-indigo-600 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-lg font-black text-blue-600 shadow-sm">
           {copy.teams.loading}
         </div>
       ) : error ? (
@@ -98,9 +98,9 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
       ) : items.length ? (
         <section className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
-            <article key={`${item.map}-${item.team}`} className="rounded-lg border border-white bg-white p-5 shadow-sm">
-              <p className="text-xs font-black text-indigo-500">{translateMapName(item.map, locale)}</p>
-              <h2 className="mt-1 text-xl font-black text-gray-900">{translateTeamName(item.team, locale)}</h2>
+            <article key={`${item.map}-${item.team}`} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-xs font-black text-blue-600">{translateMapName(item.map, locale)}</p>
+              <h2 className="mt-1 text-xl font-black text-slate-950">{translateTeamName(item.team, locale)}</h2>
               <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                 <Metric label={copy.common.recommendationScore} value={String(item.score)} />
                 <Metric label={copy.common.winRate} value={`${item.winRate}%`} />
@@ -110,7 +110,7 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
           ))}
         </section>
       ) : (
-        <div className="rounded-lg border border-dashed border-indigo-200 bg-white/70 p-8 text-center text-sm font-bold text-gray-500">
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-bold text-slate-500">
           {copy.teams.empty}
         </div>
       )}
@@ -124,9 +124,9 @@ function translateTeamName(team: string, locale: Locale) {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-indigo-50 p-3">
-      <p className="text-xs font-black text-indigo-400">{label}</p>
-      <p className="mt-1 font-black text-indigo-900">{value}</p>
+    <div className="rounded-lg bg-blue-50 p-3">
+      <p className="text-xs font-black text-blue-500">{label}</p>
+      <p className="mt-1 font-black text-blue-950">{value}</p>
     </div>
   );
 }

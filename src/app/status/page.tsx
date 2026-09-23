@@ -110,13 +110,13 @@ function RankingPanel({
   battlesLabel: string;
 }) {
   return (
-    <section className="rounded-lg border border-white bg-white p-5 shadow-sm">
-      <h2 className="mb-4 text-xl font-black text-indigo-950">{title}</h2>
+    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="mb-4 text-xl font-black text-blue-950">{title}</h2>
       <div className="flex flex-col gap-2">
         {rows.map((row, index) => (
-          <div key={row.name} className="flex items-center justify-between rounded-lg bg-indigo-50 p-3">
-            <span className="font-black text-gray-800">#{index + 1} {translate(row.name)}</span>
-            <span className="text-sm font-black text-indigo-700">
+          <div key={row.name} className="flex items-center justify-between rounded-lg bg-blue-50 p-3">
+            <span className="font-black text-slate-800">#{index + 1} {translate(row.name)}</span>
+            <span className="text-sm font-black text-blue-700">
               {Number(row.plays).toLocaleString(numberLocales[locale])} {battlesLabel}
             </span>
           </div>

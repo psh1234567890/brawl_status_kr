@@ -81,15 +81,15 @@ export default function CounterBrowser({
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-lg border border-white bg-white p-4 shadow-sm">
-        <label htmlFor="counter-brawler" className="mb-2 block text-xs font-black text-indigo-500">
+      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <label htmlFor="counter-brawler" className="mb-2 block text-xs font-black uppercase tracking-[0.06em] text-blue-600">
           {copy.counters.select}
         </label>
         <select
           id="counter-brawler"
           value={selected}
           onChange={(event) => selectBrawler(event.target.value)}
-          className="w-full rounded-md border border-gray-200 bg-white px-3 py-3 text-sm font-bold outline-none focus:border-indigo-400 sm:max-w-sm"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none transition-colors focus:border-blue-500 focus:ring-4 focus:ring-blue-100 sm:max-w-sm"
         >
           {released.map((brawler) => (
             <option key={brawler.id} value={brawler.name}>
@@ -104,7 +104,7 @@ export default function CounterBrowser({
           {copy.counters.catalogUnavailable}
         </div>
       ) : loading ? (
-        <div className="rounded-lg bg-white p-8 text-center text-lg font-black text-indigo-600 shadow-sm">
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-lg font-black text-blue-600 shadow-sm">
           {copy.counters.loading}
         </div>
       ) : error ? (
@@ -114,12 +114,12 @@ export default function CounterBrowser({
       ) : items.length ? (
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item, index) => (
-            <article key={item.brawler} className="rounded-lg border border-white bg-white p-5 shadow-sm">
-              <p className="text-xs font-black text-indigo-300">#{index + 1}</p>
-              <h2 className="mt-1 text-xl font-black text-gray-900">
+            <article key={item.brawler} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-xs font-black text-blue-300">#{index + 1}</p>
+              <h2 className="mt-1 text-xl font-black text-slate-950">
                 {translateBrawlerName(item.brawler, locale)}
               </h2>
-              <p className="mt-3 text-sm font-bold text-gray-500">
+              <p className="mt-3 text-sm font-bold text-slate-500">
                 {formatCounterWinRate(locale, Number(item.winRate))}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-center">
@@ -130,7 +130,7 @@ export default function CounterBrowser({
           ))}
         </section>
       ) : (
-        <div className="rounded-lg border border-dashed border-indigo-200 bg-white/70 p-8 text-center text-sm font-bold text-gray-500">
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-bold text-slate-500">
           {copy.counters.empty}
         </div>
       )}
@@ -140,9 +140,9 @@ export default function CounterBrowser({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-indigo-50 p-3">
-      <p className="text-xs font-black text-indigo-400">{label}</p>
-      <p className="mt-1 font-black text-indigo-900">{value}</p>
+    <div className="rounded-lg bg-blue-50 p-3">
+      <p className="text-xs font-black text-blue-500">{label}</p>
+      <p className="mt-1 font-black text-blue-950">{value}</p>
     </div>
   );
 }

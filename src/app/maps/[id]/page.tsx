@@ -68,7 +68,7 @@ export async function MapDetailPageContent({ id, locale }: { id: string; locale:
       actions={<LinkButton href={localizedHref(locale, "/meta")}>{copy.detail.action}</LinkButton>}
     >
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <div className="overflow-hidden rounded-lg border border-white bg-white shadow-sm">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           {map.imageUrl ? (
             <BrawlImage
               src={map.imageUrl}
@@ -79,7 +79,7 @@ export async function MapDetailPageContent({ id, locale }: { id: string; locale:
               fallbackText={displayName.slice(0, 1)}
             />
           ) : (
-            <div className="flex h-72 items-center justify-center bg-indigo-50 text-5xl font-black text-indigo-200">
+            <div className="flex h-72 items-center justify-center bg-blue-50 text-5xl font-black text-blue-200">
               {displayName.slice(0, 1)}
             </div>
           )}
@@ -93,13 +93,13 @@ export async function MapDetailPageContent({ id, locale }: { id: string; locale:
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-2xl font-black text-indigo-950">{copy.detail.sameModeMaps}</h2>
+        <h2 className="text-2xl font-black text-blue-950">{copy.detail.sameModeMaps}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sameModeMaps.map((item) => (
             <Link
               key={item.id}
               href={localizedHref(locale, `/maps/${item.id}`)}
-              className="rounded-lg border border-white bg-white p-4 font-black text-gray-800 shadow-sm transition-transform hover:-translate-y-0.5"
+              className="rounded-lg border border-slate-200 bg-white p-4 font-black text-slate-800 shadow-sm transition-transform hover:-translate-y-0.5"
             >
               {translateMapName(item.name, locale)}
             </Link>
@@ -121,7 +121,7 @@ function formatUnixDate(value: number | undefined, locale: Locale) {
 
 function LinkButton({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="rounded-full bg-indigo-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700">
+    <Link href={href} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700">
       {children}
     </Link>
   );

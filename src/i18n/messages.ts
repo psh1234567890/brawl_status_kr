@@ -18,7 +18,7 @@ export const messages = {
       search: "검색",
       searching: "검색 중",
       searchEvery25Title: "25경기마다 검색하는 것을 권장합니다",
-      searchEvery25Body: "공식 전투 기록은 최근 최대 25경기만 제공됩니다. 자주 검색할수록 누적 DB 통계와 맵 추천이 더 정확해집니다.",
+      searchEvery25Body: "공식 전투 기록은 최근 최대 25경기만 제공됩니다. 자주 검색할수록 누적 DB 통계와 맵별 브롤러 추천이 더 정확해집니다.",
       addFavorite: "즐겨찾기 추가",
       removeFavorite: "즐겨찾기 해제",
       currentTag: "현재 태그",
@@ -67,7 +67,7 @@ export const messages = {
     common: {
       home: "전적 검색",
       events: "로테이션",
-      meta: "맵 추천",
+      meta: "맵별 브롤러 추천",
       maps: "맵 도감",
       modes: "모드",
       brawlers: "브롤러",

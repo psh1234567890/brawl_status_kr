@@ -62,6 +62,7 @@ export const frMessages = {
     modes: "Modes",
     brawlers: "Brawlers",
     skins: "Skins",
+    minigames: "Mini-jeux",
     clubs: "Clubs",
     rankings: "Classements",
     teams: "Compositions d’équipe",

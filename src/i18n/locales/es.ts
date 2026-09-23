@@ -62,6 +62,7 @@ export const esMessages = {
     modes: "Modos",
     brawlers: "Brawlers",
     skins: "Skins",
+    minigames: "Minijuegos",
     clubs: "Clubes",
     rankings: "Clasificaciones",
     teams: "Composiciones de equipo",

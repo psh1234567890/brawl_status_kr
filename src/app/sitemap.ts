@@ -31,6 +31,8 @@ const localizedStaticConfig: Array<
   ["/maps", "weekly", 0.7],
   ["/gamemodes", "weekly", 0.6],
   ["/brawlers", "weekly", 0.7],
+  ["/minigames", "weekly", 0.6],
+  ["/minigames/brawler-quiz", "weekly", 0.6],
   ["/clubs", "weekly", 0.5],
   ["/rankings", "daily", 0.6],
   ["/teams", "daily", 0.6],

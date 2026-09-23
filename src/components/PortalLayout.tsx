@@ -21,6 +21,7 @@ const navItems = [
   { href: "/maps", key: "maps" },
   { href: "/gamemodes", key: "modes" },
   { href: "/brawlers", key: "brawlers" },
+  { href: "/minigames", key: "minigames" },
   { href: "/skins", key: "skins" },
   { href: "/clubs", key: "clubs" },
   { href: "/rankings", key: "rankings" },

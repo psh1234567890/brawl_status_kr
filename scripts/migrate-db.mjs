@@ -71,6 +71,7 @@ async function migrate() {
   const migrationPaths = [
     fileURLToPath(new URL("../drizzle/0000_harden_battle_logs.sql", import.meta.url)),
     fileURLToPath(new URL("../drizzle/0001_add_meta_participants.sql", import.meta.url)),
+    fileURLToPath(new URL("../drizzle/0002_add_meta_perspective_flag.sql", import.meta.url)),
   ];
   const migrations = await Promise.all(
     migrationPaths.map((migrationPath) => readFile(migrationPath, "utf8")),
@@ -166,6 +167,27 @@ async function migrate() {
         }
       }
     }
+
+    const perspectiveBackfill = await client.query(`
+      UPDATE battle_logs
+      SET meta_perspective_only = (
+        coalesce(battle_detail_json->'battle'->>'type', '') <> 'friendly'
+        AND (
+          battle_detail_json->'battle'->'teams' IS NULL
+          OR mode IN ('duoShowdown', 'trioShowdown')
+          OR jsonb_typeof(battle_detail_json->'battle'->'teams') <> 'array'
+          OR jsonb_array_length(battle_detail_json->'battle'->'teams') <> 2
+        )
+      )
+    `);
+    await client.query(`
+      ALTER TABLE battle_logs
+        ALTER COLUMN meta_perspective_only SET DEFAULT false
+    `);
+    await client.query(`
+      ALTER TABLE battle_logs
+        ALTER COLUMN meta_perspective_only SET NOT NULL
+    `);
 
     const teamIndexBackfill = await client.query(`
       UPDATE battle_logs AS bl
@@ -329,6 +351,7 @@ async function migrate() {
 
     await client.query("COMMIT");
     console.log("Backfilled meta participant rows:", participantBackfill.rowCount ?? 0);
+    console.log("Backfilled perspective flags:", perspectiveBackfill.rowCount ?? 0);
     console.log(
       `Database migration complete. Removed ${deduplicated.rowCount ?? 0} duplicate logs, updated ${updated} battle logs, and backfilled ${teamIndexBackfill.rowCount ?? 0} team indexes.`,
     );

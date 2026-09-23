@@ -47,14 +47,8 @@ export function buildMapMetaStatsQuery(minimumPlays = MINIMUM_META_PLAYS) {
 
       SELECT map, brawler_id, brawler_name, result
       FROM battle_logs
-      WHERE coalesce(battle_detail_json->'battle'->>'type', '') <> 'friendly'
+      WHERE meta_perspective_only = true
         AND battle_timestamp >= now() - (${META_WINDOW_DAYS} * interval '1 day')
-        AND (
-          battle_detail_json->'battle'->'teams' IS NULL
-          OR mode IN ('duoShowdown', 'trioShowdown')
-          OR jsonb_typeof(battle_detail_json->'battle'->'teams') <> 'array'
-          OR jsonb_array_length(battle_detail_json->'battle'->'teams') <> 2
-        )
     )
     SELECT
       map,

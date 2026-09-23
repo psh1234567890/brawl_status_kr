@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -19,6 +20,7 @@ export const battleLogs = pgTable(
     battleTimestamp: timestamp("battle_timestamp", { withTimezone: true }),
     battleFingerprint: text("battle_fingerprint"),
     playerTeamIndex: integer("player_team_index"),
+    metaPerspectiveOnly: boolean("meta_perspective_only").notNull().default(false),
     mode: text("mode").notNull(),
     map: text("map").notNull(),
     brawlerId: integer("brawler_id"),
@@ -40,6 +42,10 @@ export const battleLogs = pgTable(
     index("battle_logs_battle_detail_json_gin_idx").using("gin", table.battleDetailJson),
     index("battle_logs_map_brawler_idx").on(table.map, table.brawlerName),
     index("battle_logs_battle_timestamp_idx").on(table.battleTimestamp),
+    index("battle_logs_meta_perspective_timestamp_idx").on(
+      table.metaPerspectiveOnly,
+      table.battleTimestamp,
+    ),
   ],
 );
 

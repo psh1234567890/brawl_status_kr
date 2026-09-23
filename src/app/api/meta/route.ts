@@ -61,7 +61,7 @@ const getCachedMetaStats = unstable_cache(
     }
     return result;
   },
-  ["meta-stats-v7-normalized"],
+  ["meta-stats-v8-perspective-flag"],
   { revalidate: 300, tags: ["meta-stats"] },
 );
 

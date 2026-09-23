@@ -21,8 +21,9 @@ describe("meta SQL contracts", () => {
     expect(sql).toContain("FROM battle_team_participants");
     expect(sql).toContain("UNION ALL");
     expect(sql).toContain("FROM battle_logs");
-    expect(sql).toContain("mode IN ('duoShowdown', 'trioShowdown')");
+    expect(sql).toContain("meta_perspective_only = true");
     expect(sql).toContain("battle_timestamp >= now() -");
+    expect(sql).not.toContain("battle_detail_json");
     expect(sql).not.toContain("jsonb_array_elements");
     expect(params).toContain(5);
     expect(params).toContain(META_WINDOW_DAYS);

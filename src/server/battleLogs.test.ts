@@ -50,7 +50,12 @@ describe("battle log persistence", () => {
     expect(mocks.values).toHaveBeenCalledTimes(2);
     expect(mocks.onConflictDoNothing).toHaveBeenCalledTimes(2);
     const inserted = mocks.values.mock.calls[0]?.[0]?.[0] as
-      | { playerTag?: string; battleFingerprint?: string; playerTeamIndex?: number | null }
+      | {
+          playerTag?: string;
+          battleFingerprint?: string;
+          playerTeamIndex?: number | null;
+          metaPerspectiveOnly?: boolean;
+        }
       | undefined;
     if (!inserted) throw new Error("expected one inserted battle row");
     expect(inserted.playerTag).toBe("2PYLQ");
@@ -58,6 +63,7 @@ describe("battle log persistence", () => {
       "20260725T010203.000Z|brawlBall|Sneaky Fields|2PYLQ,8PQL,9GRJ",
     );
     expect(inserted.playerTeamIndex).toBe(1);
+    expect(inserted.metaPerspectiveOnly).toBe(false);
 
     const participants = mocks.values.mock.calls[1]?.[0] as
       | Array<{
@@ -92,5 +98,28 @@ describe("battle log persistence", () => {
       ]),
     );
     expect(participants?.every((row) => row.battleFingerprint === inserted.battleFingerprint)).toBe(true);
+  });
+
+  it("stores perspective-only matches without creating team participant rows", async () => {
+    const item = {
+      battleTime: "20260725T010203.000Z",
+      event: { mode: "soloShowdown", map: "Rockwall Brawl" },
+      battle: {
+        type: "ranked",
+        rank: 2,
+        players: [
+          { tag: "#2PYLQ", brawler: { id: 1, name: "SHELLY", power: 11, trophies: 500 } },
+        ],
+      },
+    } as BattleLogItem;
+
+    await saveBattleLogs("2PYLQ", [item]);
+
+    expect(mocks.values).toHaveBeenCalledTimes(1);
+    const inserted = mocks.values.mock.calls[0]?.[0]?.[0] as
+      | { metaPerspectiveOnly?: boolean; playerTeamIndex?: number | null }
+      | undefined;
+    expect(inserted?.metaPerspectiveOnly).toBe(true);
+    expect(inserted?.playerTeamIndex).toBeNull();
   });
 });

@@ -145,6 +145,74 @@ test("meta filters hydrate from and update the shareable URL", async ({ page }) 
   await expect(page).toHaveURL(/map=Double\+Swoosh/);
 });
 
+test("meta recommends from the most recently searched player's owned brawlers", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("recentTags", JSON.stringify(["2PYLQ"]));
+  });
+  await page.route("**/api/meta", async (route) => {
+    await route.fulfill({
+      json: {
+        "Hard Rock Mine": [
+          {
+            id: 16000000,
+            name: "SHELLY",
+            plays: 100,
+            wins: 70,
+            draws: 0,
+            winRate: 70,
+            score: 66,
+            confidence: "HIGH",
+            confidenceScore: 100,
+          },
+          {
+            id: 16000001,
+            name: "COLT",
+            plays: 80,
+            wins: 48,
+            draws: 0,
+            winRate: 60,
+            score: 56,
+            confidence: "HIGH",
+            confidenceScore: 100,
+          },
+        ],
+      },
+    });
+  });
+  await page.route("**/api/player?tag=2PYLQ", async (route) => {
+    await route.fulfill({
+      json: {
+        tag: "#2PYLQ",
+        name: "Owned Picks Player",
+        trophies: 30000,
+        highestTrophies: 31000,
+        expLevel: 200,
+        "3vs3Victories": 1000,
+        soloVictories: 100,
+        duoVictories: 100,
+        brawlers: [
+          {
+            id: 16000001,
+            name: "COLT",
+            power: 11,
+            trophies: 850,
+            highestTrophies: 900,
+          },
+        ],
+      },
+    });
+  });
+
+  await page.goto("/meta?map=Hard%20Rock%20Mine");
+  const personalized = page
+    .getByRole("heading", { level: 3, name: "내 보유 브롤러 추천" })
+    .locator("xpath=ancestor::section[1]");
+  await expect(personalized).toContainText("Owned Picks Player");
+  await expect(personalized).toContainText("콜트");
+  await expect(personalized).not.toContainText("쉘리");
+  await expect(personalized).toContainText("850");
+});
+
 test("meta loading and failure states expose assistive roles", async ({ page }) => {
   await page.route("**/api/meta", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 250));

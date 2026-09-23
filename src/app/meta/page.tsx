@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import OwnedBrawlerRecommendations from "../../components/OwnedBrawlerRecommendations";
 import { mapToModeDict } from "../../constants/brawl";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
 import { META_WINDOW_DAYS } from "../../constants/meta";
@@ -353,6 +354,11 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                   subValue={formatMetaTopWinRate(locale, mapSummary.topWinRate)}
                 />
               </div>
+
+              <OwnedBrawlerRecommendations
+                locale={locale}
+                stats={filteredCurrentData}
+              />
 
               {filteredCurrentData.length ? (
                 <div className="flex flex-col gap-4">

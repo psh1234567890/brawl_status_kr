@@ -12,6 +12,26 @@ test("skin catalog filters client-side", async ({ page }) => {
   await expect(articles).toHaveCount(0);
 });
 
+test("map catalog filters client-side and links to map recommendations", async ({ page }) => {
+  await page.goto("/maps");
+
+  await expect(page.getByRole("heading", { level: 1, name: "맵 도감" })).toBeVisible();
+  const search = page.getByRole("searchbox", { name: "맵 이름 검색" });
+  await expect(search).toBeVisible();
+  await expect(page.getByLabel("게임모드 필터")).toBeVisible();
+
+  const mapArticles = page.locator("article");
+  expect(await mapArticles.count()).toBeGreaterThan(0);
+  await expect(mapArticles.first().getByRole("link", { name: "추천 브롤러" })).toHaveAttribute(
+    "href",
+    /\/meta\?map=/,
+  );
+
+  await search.fill("__NO_MAP_MATCH__");
+  await expect(page.getByText("조건에 맞는 맵이 없습니다.")).toBeVisible();
+  await expect(mapArticles).toHaveCount(0);
+});
+
 test("language switcher preserves the current localized route", async ({ page }) => {
   await page.goto("/skins?q=colt&sort=NAME");
   await page.getByRole("combobox", { name: "언어" }).selectOption("en");

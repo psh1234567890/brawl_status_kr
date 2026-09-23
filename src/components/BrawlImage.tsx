@@ -11,6 +11,8 @@ interface BrawlImageProps {
   className?: string;
   fallbackText?: string;
   title?: string;
+  loading?: "eager" | "lazy";
+  sizes?: string;
 }
 
 export default function BrawlImage({
@@ -21,6 +23,8 @@ export default function BrawlImage({
   className = "",
   fallbackText,
   title,
+  loading,
+  sizes,
 }: BrawlImageProps) {
   const [failedSrc, setFailedSrc] = useState("");
 
@@ -45,6 +49,8 @@ export default function BrawlImage({
       unoptimized={!isOptimizableBrawlImage(src)}
       className={className}
       title={title}
+      loading={loading}
+      sizes={sizes}
       onError={() => setFailedSrc(src)}
     />
   );

@@ -1,49 +1,56 @@
 import { numberLocales, type Locale } from "./config";
 
-type UnitKind = "battle" | "win" | "loss" | "draw" | "day" | "sample";
+type UnitKind = "battle" | "win" | "loss" | "draw" | "day" | "sample" | "brawler" | "map";
 
 const unitForms: Record<Locale, Record<UnitKind, Record<string, string>>> = {
   ko: {
     battle: { other: "전" }, win: { other: "승" }, loss: { other: "패" }, draw: { other: "무" },
-    day: { other: "일" }, sample: { other: "건" },
+    day: { other: "일" }, sample: { other: "건" }, brawler: { other: "명" }, map: { other: "개 맵" },
   },
   en: {
     battle: { one: "battle", other: "battles" }, win: { one: "win", other: "wins" },
     loss: { one: "loss", other: "losses" }, draw: { one: "draw", other: "draws" },
     day: { one: "day", other: "days" }, sample: { one: "sample", other: "samples" },
+    brawler: { one: "brawler", other: "brawlers" }, map: { one: "map", other: "maps" },
   },
   ja: {
     battle: { other: "戦" }, win: { other: "勝" }, loss: { other: "敗" }, draw: { other: "分" },
-    day: { other: "日" }, sample: { other: "件" },
+    day: { other: "日" }, sample: { other: "件" }, brawler: { other: "体" }, map: { other: "件のマップ" },
   },
   "pt-br": {
     battle: { one: "batalha", other: "batalhas" }, win: { one: "vitória", other: "vitórias" },
     loss: { one: "derrota", other: "derrotas" }, draw: { one: "empate", other: "empates" },
     day: { one: "dia", other: "dias" }, sample: { one: "amostra", other: "amostras" },
+    brawler: { one: "brawler", other: "brawlers" }, map: { one: "mapa", other: "mapas" },
   },
   es: {
     battle: { one: "batalla", other: "batallas" }, win: { one: "victoria", other: "victorias" },
     loss: { one: "derrota", other: "derrotas" }, draw: { one: "empate", other: "empates" },
     day: { one: "día", other: "días" }, sample: { one: "muestra", other: "muestras" },
+    brawler: { one: "brawler", other: "brawlers" }, map: { one: "mapa", other: "mapas" },
   },
   tr: {
     battle: { other: "savaş" }, win: { other: "galibiyet" }, loss: { other: "mağlubiyet" },
     draw: { other: "beraberlik" }, day: { other: "gün" }, sample: { other: "örnek" },
+    brawler: { other: "savaşçı" }, map: { other: "harita" },
   },
   de: {
     battle: { one: "Kampf", other: "Kämpfe" }, win: { one: "Sieg", other: "Siege" },
     loss: { one: "Niederlage", other: "Niederlagen" }, draw: { one: "Unentschieden", other: "Unentschieden" },
     day: { one: "Tag", other: "Tage" }, sample: { one: "Stichprobe", other: "Stichproben" },
+    brawler: { one: "Brawler", other: "Brawler" }, map: { one: "Karte", other: "Karten" },
   },
   fr: {
     battle: { one: "combat", other: "combats" }, win: { one: "victoire", other: "victoires" },
     loss: { one: "défaite", other: "défaites" }, draw: { one: "nul", other: "nuls" },
     day: { one: "jour", other: "jours" }, sample: { one: "échantillon", other: "échantillons" },
+    brawler: { one: "brawler", other: "brawlers" }, map: { one: "carte", other: "cartes" },
   },
   it: {
     battle: { one: "battaglia", other: "battaglie" }, win: { one: "vittoria", other: "vittorie" },
     loss: { one: "sconfitta", other: "sconfitte" }, draw: { one: "pareggio", other: "pareggi" },
     day: { one: "giorno", other: "giorni" }, sample: { one: "campione", other: "campioni" },
+    brawler: { one: "brawler", other: "brawler" }, map: { one: "mappa", other: "mappe" },
   },
   ru: {
     battle: { one: "бой", few: "боя", many: "боёв", other: "боя" },
@@ -52,6 +59,8 @@ const unitForms: Record<Locale, Record<UnitKind, Record<string, string>>> = {
     draw: { one: "ничья", few: "ничьи", many: "ничьих", other: "ничьи" },
     day: { one: "день", few: "дня", many: "дней", other: "дня" },
     sample: { one: "выборка", few: "выборки", many: "выборок", other: "выборки" },
+    brawler: { one: "боец", few: "бойца", many: "бойцов", other: "бойца" },
+    map: { one: "карта", few: "карты", many: "карт", other: "карты" },
   },
 };
 
@@ -62,6 +71,7 @@ function formatNumber(locale: Locale, value: number) {
 function pluralUnit(locale: Locale, value: number, kind: UnitKind) {
   const forms = unitForms[locale][kind];
   if (locale === "ko" || locale === "ja" || locale === "tr") return forms.other;
+  if (locale === "fr" && value === 0) return forms.other;
   const category = new Intl.PluralRules(numberLocales[locale]).select(value);
   return forms[category] ?? forms.other;
 }
@@ -84,6 +94,8 @@ export const formatBattles = (locale: Locale, value: number) => formatUnit(local
 export const formatWins = (locale: Locale, value: number) => formatUnit(locale, value, "win");
 export const formatDays = (locale: Locale, value: number) => formatUnit(locale, value, "day");
 export const formatSamples = (locale: Locale, value: number) => formatUnit(locale, value, "sample");
+export const formatBrawlerCount = (locale: Locale, value: number) => formatUnit(locale, value, "brawler");
+export const formatMapCount = (locale: Locale, value: number) => formatUnit(locale, value, "map");
 
 export function formatMetaWindow(locale: Locale, days: number) {
   const templates: Record<Locale, string> = {
@@ -215,14 +227,7 @@ export function formatMetaMinimumOption(locale: Locale, value: number) {
 }
 
 export function formatMetaCandidateCount(locale: Locale, value: number) {
-  const formatted = formatNumber(locale, value);
-  if (locale === "ko") return `${formatted}명`;
-  if (locale === "ja") return `${formatted}体`;
-  const labels: Record<Exclude<Locale, "ko" | "ja">, string> = {
-    en: "brawlers", "pt-br": "brawlers", es: "brawlers", tr: "savaşçı", de: "Brawler",
-    fr: "brawlers", it: "brawler", ru: "бойцов",
-  };
-  return `${formatted} ${labels[locale as Exclude<Locale, "ko" | "ja">]}`;
+  return formatBrawlerCount(locale, value);
 }
 
 export function formatMetaAllCandidates(locale: Locale, value: number) {
@@ -230,7 +235,7 @@ export function formatMetaAllCandidates(locale: Locale, value: number) {
   const templates: Record<Locale, string> = {
     ko: `전체 ${count}`, en: `${count} total`, ja: `全体 ${count}`,
     "pt-br": `${count} no total`, es: `${count} en total`, tr: `toplam ${count}`,
-    de: `${count} insgesamt`, fr: `${count} au total`, it: `${count} totali`, ru: `всего ${count}`,
+    de: `${count} insgesamt`, fr: `${count} au total`, it: `${count} ${value === 1 ? "totale" : "totali"}`, ru: `всего ${count}`,
   };
   return templates[locale];
 }

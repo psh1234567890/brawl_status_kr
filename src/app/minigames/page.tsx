@@ -26,7 +26,7 @@ export async function MiniGamesContent({ locale }: { locale: Locale }) {
   const total = selectIndexableBrawlers(brawlers).length;
 
   return (
-    <PortalLayout locale={locale} eyebrow="MINI GAMES" title={copy.hubTitle} description={copy.hubDescription}>
+    <PortalLayout locale={locale} eyebrow={copy.nav} title={copy.hubTitle} description={copy.hubDescription}>
       <section className="grid gap-3 sm:grid-cols-2" aria-label={copy.hubTitle}>
         {miniGames.filter((game) => game.enabled).map((game) => (
           <article key={game.id} className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

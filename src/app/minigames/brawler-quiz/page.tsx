@@ -34,7 +34,7 @@ export async function BrawlerQuizContent({ locale }: { locale: Locale }) {
   return (
     <PortalLayout
       locale={locale}
-      eyebrow="MINI GAMES"
+      eyebrow={copy.nav}
       title={copy.quizTitle}
       description={copy.quizDescription}
       actions={

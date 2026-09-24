@@ -44,6 +44,7 @@ jobs:
         run: npm run build
         env:
           CI: "1"
+          MINIGAMES_E2E_FIXTURES: "1"
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
@@ -52,3 +53,4 @@ jobs:
         run: npm run test:e2e
         env:
           CI: "1"
+          MINIGAMES_E2E_FIXTURES: "1"

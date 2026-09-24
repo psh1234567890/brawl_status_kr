@@ -36,4 +36,15 @@ describe("i18n route helpers", () => {
       ru: "/ru/counters",
     });
   });
+
+  it("localizes every mini game route", () => {
+    for (const path of [
+      "/minigames", "/minigames/brawler-quiz", "/minigames/silhouette-quiz",
+      "/minigames/higher-lower", "/minigames/map-quiz", "/minigames/ability-quiz",
+      "/minigames/release-order",
+    ]) {
+      expect(localizedHref("en", path)).toBe("/en" + path);
+      expect(localizedHref("ko", path)).toBe(path);
+    }
+  });
 });

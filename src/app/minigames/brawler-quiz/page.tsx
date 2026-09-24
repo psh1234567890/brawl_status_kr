@@ -2,20 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlerNameQuiz from "../../../components/minigames/BrawlerNameQuiz";
 import PortalLayout from "../../../components/PortalLayout";
-import { localeAlternates, localizedHref, type Locale } from "../../../i18n/config";
+import { localizedHref, type Locale } from "../../../i18n/config";
 import { getMinigameMessages } from "../../../i18n/minigameMessages";
-import { getBrawlifyBrawlers } from "../../../server/brawlify";
-import { translateBrawlerName } from "../../../utils/brawlTranslations";
-import { selectIndexableBrawlers } from "../../../utils/seoIndexing";
+import { loadNameQuizBrawlers } from "../../../server/minigames";
+import { getMiniGameMetadata } from "../../../utils/minigames/metadata";
 
 export const revalidate = 3600;
 
-const koCopy = getMinigameMessages("ko");
-export const metadata: Metadata = {
-  title: `${koCopy.quizTitle} | 브롤스타즈 미니게임`,
-  description: koCopy.quizMetaDescription,
-  alternates: { canonical: "/minigames/brawler-quiz", languages: localeAlternates("/minigames/brawler-quiz") },
-};
+export const metadata: Metadata = getMiniGameMetadata("ko", "brawler-quiz");
 
 export default function BrawlerQuizPage() {
   return <BrawlerQuizContent locale="ko" />;
@@ -23,13 +17,7 @@ export default function BrawlerQuizPage() {
 
 export async function BrawlerQuizContent({ locale }: { locale: Locale }) {
   const copy = getMinigameMessages(locale);
-  const brawlers = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list;
-  const quizBrawlers = selectIndexableBrawlers(brawlers).map((brawler) => ({
-    id: brawler.id,
-    rawName: brawler.name,
-    displayName: translateBrawlerName(brawler.name, locale),
-    imageUrl: brawler.imageUrl2 ?? brawler.imageUrl ?? "",
-  }));
+  const quizBrawlers = await loadNameQuizBrawlers(locale);
 
   return (
     <PortalLayout

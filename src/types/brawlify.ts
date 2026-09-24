@@ -8,6 +8,17 @@ export interface BrawlifyRarity {
   color?: string;
 }
 
+export interface BrawlifyAbility {
+  id: number;
+  name: string;
+  path?: string;
+  version?: number;
+  description?: string;
+  descriptionHtml?: string;
+  imageUrl?: string;
+  released?: boolean;
+}
+
 export interface BrawlifyClass {
   id?: number;
   name?: string;
@@ -28,8 +39,8 @@ export interface BrawlifyBrawler {
   rarity?: BrawlifyRarity;
   unlock?: string;
   description?: string;
-  starPowers?: { id: number; name: string; path?: string; imageUrl?: string }[];
-  gadgets?: { id: number; name: string; path?: string; imageUrl?: string }[];
+  starPowers?: BrawlifyAbility[];
+  gadgets?: BrawlifyAbility[];
 }
 
 export interface BrawlifyGameMode {

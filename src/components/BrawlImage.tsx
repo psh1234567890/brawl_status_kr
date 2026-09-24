@@ -13,6 +13,8 @@ interface BrawlImageProps {
   title?: string;
   loading?: "eager" | "lazy";
   sizes?: string;
+  onLoad?: () => void;
+  onError?: () => void;
 }
 
 export default function BrawlImage({
@@ -25,6 +27,8 @@ export default function BrawlImage({
   title,
   loading,
   sizes,
+  onLoad,
+  onError,
 }: BrawlImageProps) {
   const [failedSrc, setFailedSrc] = useState("");
 
@@ -51,7 +55,11 @@ export default function BrawlImage({
       title={title}
       loading={loading}
       sizes={sizes}
-      onError={() => setFailedSrc(src)}
+      onLoad={onLoad}
+      onError={() => {
+        setFailedSrc(src);
+        onError?.();
+      }}
     />
   );
 }

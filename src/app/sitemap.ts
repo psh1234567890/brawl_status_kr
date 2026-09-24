@@ -16,6 +16,7 @@ import {
   selectIndexableGameModes,
   selectIndexableMaps,
 } from "../utils/seoIndexing";
+import { miniGames } from "../utils/minigames/registry";
 
 const siteUrl = "https://www.brawl-o1.site";
 
@@ -32,7 +33,6 @@ const localizedStaticConfig: Array<
   ["/gamemodes", "weekly", 0.6],
   ["/brawlers", "weekly", 0.7],
   ["/minigames", "weekly", 0.6],
-  ["/minigames/brawler-quiz", "weekly", 0.6],
   ["/clubs", "weekly", 0.5],
   ["/rankings", "daily", 0.6],
   ["/teams", "daily", 0.6],
@@ -55,6 +55,13 @@ const localizedCopies: SitemapEntry[] = localizedLocales.flatMap((locale) =>
   ),
 );
 
+const enabledMiniGameRoutes: SitemapEntry[] = miniGames
+  .filter((game) => game.enabled)
+  .flatMap((game) => [
+    localizedRoute(game.href, "weekly", 0.6),
+    ...localizedLocales.map((locale) => localizedCopy(locale, game.href, "weekly", 0.55)),
+  ]);
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [brawlersResult, mapsResult, modesResult] = await Promise.allSettled([
     getBrawlifyBrawlers(),
@@ -65,6 +72,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticRoutes,
     ...localizedCopies,
+    ...enabledMiniGameRoutes,
     ...localizedEntriesFromResult(
       brawlersResult,
       selectIndexableBrawlers,

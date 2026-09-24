@@ -8,6 +8,21 @@ describe("mini game metadata", () => {
     expect(metadata.alternates.canonical).toBe("/en/minigames/map-quiz");
     expect(metadata.alternates.languages).toMatchObject({ "ko-KR": "/minigames/map-quiz", en: "/en/minigames/map-quiz" });
     expect(metadata.description).toContain("10");
+    expect(metadata.openGraph).toMatchObject({
+      title: "Map Name Quiz | Brawl Stars Mini Games | Brawl Status KR",
+      url: "/en/minigames/map-quiz",
+    });
+    expect(metadata.twitter).toMatchObject({
+      title: "Map Name Quiz | Brawl Stars Mini Games | Brawl Status KR",
+    });
+  });
+
+  it("uses the localized Mini Games hub title instead of an English suffix", () => {
+    const metadata = getMiniGameMetadata("ja", "map-quiz");
+    expect(metadata.title).toBe("マップ名クイズ | ブロスタ ミニゲーム");
+    expect(metadata.openGraph).toMatchObject({
+      title: "マップ名クイズ | ブロスタ ミニゲーム | Brawl Status KR",
+    });
   });
 
   it("marks unavailable routes noindex and omits hreflang", () => {
@@ -15,5 +30,12 @@ describe("mini game metadata", () => {
     expect(metadata.title).toBe("하이어 오어 로어");
     expect(metadata.robots).toMatchObject({ index: false, follow: true, googleBot: { index: false, follow: true } });
     expect(metadata.alternates.languages).toEqual({});
+    expect(metadata.openGraph).toMatchObject({
+      title: "하이어 오어 로어 | Brawl Status KR",
+      url: "/minigames/higher-lower",
+    });
+    expect(metadata.twitter).toMatchObject({
+      title: "하이어 오어 로어 | Brawl Status KR",
+    });
   });
 });

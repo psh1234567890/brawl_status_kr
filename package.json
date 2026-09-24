@@ -16,7 +16,8 @@
     "db:restore:test": "node scripts/restore-db-test.mjs",
     "translations:update": "node scripts/update-brawl-translations.mjs",
     "translations:ja:update": "node scripts/update-brawl-japanese-translations.mjs",
-    "translations:additional:update": "node scripts/update-brawl-additional-translations.mjs"
+    "translations:additional:update": "node scripts/update-brawl-additional-translations.mjs",
+    "minigames:assets:update": "node scripts/update-minigame-assets.mjs"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

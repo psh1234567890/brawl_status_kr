@@ -1,4 +1,10 @@
 import type { Locale } from "./config";
+import { getAbilityQuizMessages, type AbilityQuizMessages } from "./minigames/abilityQuizMessages";
+import { getBlockedGameMessages, type BlockedGameMessages } from "./minigames/blockedGameMessages";
+import { getMapQuizMessages, type MapQuizMessages } from "./minigames/mapQuizMessages";
+import { getRoundMessages, type RoundMessages } from "./minigames/roundMessages";
+import { getSilhouetteMessages, type SilhouetteMessages } from "./minigames/silhouetteMessages";
+import type { MiniGameId } from "../utils/minigames/registry";
 
 const minigameMessages = {
   ko: {
@@ -196,8 +202,36 @@ const minigameMessages = {
   },
 } as const;
 
-export type MinigameMessages = (typeof minigameMessages)["ko"];
+export type MiniGameCopy = { title: string; description: string; metaDescription: string };
+export type MinigameMessages = (typeof minigameMessages)["ko"] & {
+  round: RoundMessages;
+  silhouette: SilhouetteMessages;
+  mapQuiz: MapQuizMessages;
+  abilityQuiz: AbilityQuizMessages;
+  blocked: BlockedGameMessages;
+  games: Record<MiniGameId, MiniGameCopy>;
+};
 
 export function getMinigameMessages(locale: Locale): MinigameMessages {
-  return minigameMessages[locale] as unknown as MinigameMessages;
+  const base = minigameMessages[locale];
+  const silhouette = getSilhouetteMessages(locale);
+  const mapQuiz = getMapQuizMessages(locale);
+  const abilityQuiz = getAbilityQuizMessages(locale);
+  const blocked = getBlockedGameMessages(locale);
+  return {
+    ...base,
+    round: getRoundMessages(locale),
+    silhouette,
+    mapQuiz,
+    abilityQuiz,
+    blocked,
+    games: {
+      "brawler-quiz": { title: base.quizTitle, description: base.quizDescription, metaDescription: base.quizMetaDescription },
+      "silhouette-quiz": { title: silhouette.title, description: silhouette.description, metaDescription: silhouette.metaDescription },
+      "higher-lower": { title: blocked.higherTitle, description: blocked.higherDescription, metaDescription: blocked.higherDescription },
+      "map-quiz": { title: mapQuiz.title, description: mapQuiz.description, metaDescription: mapQuiz.metaDescription },
+      "ability-quiz": { title: abilityQuiz.title, description: abilityQuiz.description, metaDescription: abilityQuiz.metaDescription },
+      "release-order": { title: blocked.releaseTitle, description: blocked.releaseDescription, metaDescription: blocked.releaseDescription },
+    },
+  } as MinigameMessages;
 }

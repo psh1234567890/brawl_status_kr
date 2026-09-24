@@ -22,7 +22,7 @@ type BrawlerMapStat = {
   confidenceScore: number;
 };
 
-type MapStatsResponse = Record<string, BrawlerMapStat[]>;
+type MapStatsResponse = { mode: string; map: string; brawlers: BrawlerMapStat[] }[];
 
 const getCachedMetaStats = unstable_cache(
   async () => {
@@ -32,7 +32,7 @@ const getCachedMetaStats = unstable_cache(
       { slowMs: 5_000 },
     );
 
-    const result: MapStatsResponse = {};
+    const entries = new Map<string, MapStatsResponse[number]>();
     for (const row of queryResult.rows) {
       if (row.brawlerName === "Unknown") continue;
 
@@ -42,8 +42,11 @@ const getCachedMetaStats = unstable_cache(
       const winRate = plays > 0 ? Math.floor((wins / plays) * 100) : 0;
       const score = Math.floor((winRate * plays) / (plays + MINIMUM_PLAYS));
 
-      result[row.map] ??= [];
-      result[row.map].push({
+      const key = JSON.stringify([row.mode, row.map]);
+      if (!entries.has(key)) {
+        entries.set(key, { mode: row.mode, map: row.map, brawlers: [] });
+      }
+      entries.get(key)!.brawlers.push({
         id: row.brawlerId ?? undefined,
         name: row.brawlerName,
         plays,
@@ -56,12 +59,13 @@ const getCachedMetaStats = unstable_cache(
       });
     }
 
-    for (const mapName of Object.keys(result)) {
-      result[mapName].sort((left, right) => right.score - left.score);
+    const result = [...entries.values()];
+    for (const entry of result) {
+      entry.brawlers.sort((left, right) => right.score - left.score);
     }
     return result;
   },
-  ["meta-stats-v8-perspective-flag"],
+  ["meta-stats-v9-mode-and-map"],
   { revalidate: 300, tags: ["meta-stats"] },
 );
 

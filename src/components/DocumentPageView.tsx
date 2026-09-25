@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { localizedHref, type Locale } from "../i18n/config";
 import {
+  accountPolicyMessages,
   getDocumentPageMessages,
   type DocumentPageMessages,
 } from "../i18n/documentPageMessages";
@@ -23,6 +24,7 @@ export function DocumentArticlePage({
   pageKey: Exclude<DocumentKey, "methodology">;
 }) {
   const copy = getDocumentPageMessages(locale)[pageKey];
+  const accountPolicy = accountPolicyMessages[locale];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-10 text-gray-800">
@@ -64,6 +66,27 @@ export function DocumentArticlePage({
             </section>
           );
         })}
+        {pageKey === "privacy" ? (
+          <section className="mt-8 border-t border-gray-100 pt-6">
+            <h2 className="text-xl font-black text-indigo-900">{accountPolicy.privacyTitle}</h2>
+            <p className="mt-3 font-semibold leading-7 text-gray-700">{accountPolicy.privacyText}</p>
+          </section>
+        ) : null}
+        {pageKey === "terms" ? (
+          <section className="mt-8 border-t border-gray-100 pt-6">
+            <h2 className="text-xl font-black text-indigo-900">{accountPolicy.termsTitle}</h2>
+            <p className="mt-3 font-semibold leading-7 text-gray-700">{accountPolicy.termsText}</p>
+          </section>
+        ) : null}
+        {pageKey === "contact" ? (
+          <section className="mt-8 border-t border-gray-100 pt-6">
+            <h2 className="text-xl font-black text-indigo-900">{accountPolicy.contactTitle}</h2>
+            <p className="mt-3 font-semibold leading-7 text-gray-700">{accountPolicy.contactText}</p>
+            <Link href={localizedHref(locale, "/account")} className="mt-3 inline-flex min-h-11 items-center font-black text-indigo-700 underline">
+              {accountPolicy.accountLink}
+            </Link>
+          </section>
+        ) : null}
       </article>
     </main>
   );

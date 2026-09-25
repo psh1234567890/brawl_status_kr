@@ -2,11 +2,19 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import pg from "pg";
+import {
+  applyDeletionManifest,
+  verifyDeletionManifest,
+} from "./account-deletion-manifest.mjs";
 
 const { Client } = pg;
 const backupArgIndex = process.argv.indexOf("--backup");
 const backupPath = backupArgIndex >= 0 ? process.argv[backupArgIndex + 1] : undefined;
 if (!backupPath) throw new Error("Usage: node scripts/restore-db-test.mjs --backup <absolute .dump path>");
+const deletionManifestArgIndex = process.argv.indexOf("--deletion-manifest");
+const explicitDeletionManifestPath = deletionManifestArgIndex >= 0
+  ? process.argv[deletionManifestArgIndex + 1]
+  : undefined;
 
 const archivePath = path.resolve(backupPath);
 if (!path.isAbsolute(archivePath) || !archivePath.endsWith(".dump")) {
@@ -15,6 +23,19 @@ if (!path.isAbsolute(archivePath) || !archivePath.endsWith(".dump")) {
 
 const manifest = JSON.parse(await readFile(`${archivePath}.json`, "utf8"));
 if (manifest.archive !== path.basename(archivePath)) throw new Error("Backup manifest does not match the archive name.");
+const deletionManifestPath = explicitDeletionManifestPath
+  ? path.resolve(explicitDeletionManifestPath)
+  : manifest.deletionManifest?.file
+    ? path.join(path.dirname(archivePath), manifest.deletionManifest.file)
+    : null;
+let deletionManifest = null;
+if (deletionManifestPath) {
+  deletionManifest = JSON.parse(await readFile(deletionManifestPath, "utf8"));
+  verifyDeletionManifest(deletionManifest, process.env.ACCOUNT_DELETION_MANIFEST_SECRET);
+}
+if (manifest.account?.users > 0 && !deletionManifest) {
+  throw new Error("Account-bearing backup restore requires a verified deletion manifest.");
+}
 
 const image = `postgres:${manifest.serverMajor}-alpine`;
 const containerName = `brawl-restore-test-${Date.now()}`;
@@ -63,6 +84,39 @@ try {
   );
 
   const hostPort = dockerHostPort(containerName);
+  let deletionResult = null;
+  if (deletionManifest) {
+    const deletionClient = new Client({
+      connectionString: `postgresql://postgres@127.0.0.1:${hostPort}/brawl_restore_test`,
+    });
+    await deletionClient.connect();
+    try {
+      const safetyMigrationSql = await readFile(
+        new URL("../drizzle/0005_account_deletion_safety_ledger.sql", import.meta.url),
+        "utf8",
+      );
+      await deletionClient.query(safetyMigrationSql);
+      deletionResult = await applyDeletionManifest(
+        deletionClient,
+        deletionManifest,
+        process.env.ACCOUNT_DELETION_MANIFEST_SECRET,
+      );
+      const activeIds = deletionManifest.entries
+        .filter((entry) => Date.parse(entry.expiresAt) > Date.now())
+        .map((entry) => entry.userId);
+      if (activeIds.length) {
+        const resurrected = await deletionClient.query(
+          "SELECT count(*)::int AS total FROM public.auth_users WHERE id = ANY($1::uuid[])",
+          [activeIds],
+        );
+        if (Number(resurrected.rows[0]?.total ?? 0) !== 0) {
+          throw new Error("Restore verification failed: a deleted account was resurrected.");
+        }
+      }
+    } finally {
+      await deletionClient.end();
+    }
+  }
   const restored = await inspectRestore(hostPort);
   assertEqual("battle_logs row count", restored.battleLogs.total, manifest.battleLogs.total);
   assertEqual("missing fingerprint count", restored.battleLogs.missing_fingerprint, manifest.battleLogs.missing_fingerprint);
@@ -79,6 +133,10 @@ try {
   console.log(`Indexes verified: ${manifest.requiredIndexes.length}`);
   console.log(`RLS enabled: ${Boolean(restored.rls?.relrowsecurity)}`);
   console.log(`FORCE RLS: ${Boolean(restored.rls?.relforcerowsecurity)}`);
+  if (deletionResult) {
+    console.log(`Deletion manifest active entries: ${deletionResult.activeEntries}`);
+    console.log(`Restored account rows removed: ${deletionResult.deletedUsers}`);
+  }
 } finally {
   if (started) spawnSync("docker", ["rm", "-f", containerName], { encoding: "utf8", windowsHide: true });
 }

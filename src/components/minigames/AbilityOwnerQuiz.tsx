@@ -32,7 +32,7 @@ export default function AbilityOwnerQuiz({ locale, abilities, owners }: {
   const answeredRef = useRef(false);
   const nextRef = useRef<HTMLButtonElement>(null);
   const promptRef = useRef<HTMLHeadingElement>(null);
-  const { best, record } = useRoundBest("ability-quiz", mode);
+  const { best, beginRound, record } = useRoundBest("ability-quiz", mode);
   const score = useMemo(() => recap.filter((item) => item.wasCorrect).length, [recap]);
   const question = deck[index];
   const modeAbilities = abilities.filter((ability) => mode === "mixed" || ability.kind === mode);
@@ -52,6 +52,7 @@ export default function AbilityOwnerQuiz({ locale, abilities, owners }: {
       return;
     }
     setPoolError(false);
+    beginRound();
     setDeck(nextDeck);
     setIndex(0);
     setRecap([]);

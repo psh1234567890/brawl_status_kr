@@ -44,3 +44,39 @@
 - 사용자 동의와 최소 수집을 전제로 한 방문·재방문 측정
 
 0.2.0 이후 항목은 계획이며 현재 구현된 기능으로 표현하지 않는다.
+
+## 계정·Mini Game 확장 단계
+
+### Phase 1 — 선택형 계정과 개인 최고 기록
+
+Google-only OAuth, 내부 UUID, 중립 닉네임, 선택 대표 태그, private/client-reported
+Mini Game PB sync, 명시적 localStorage import, account-scoped IndexedDB outbox,
+로그아웃/탈퇴, 10개 언어 UI를 제공한다. guest 기능은 완전히 유지한다. 계정 삭제는
+public tombstone + non-public safety ledger + HMAC deletion manifest로 백업 복원에서도
+재적용할 수 있게 하며, eligibility/백업 정책은 운영값이 없으면 fail-closed다.
+
+제외: 공개 랭킹, Daily Challenge, 공개 프로필, achievements, 전체 run history,
+cloud favorites/recents, 추가 OAuth provider, 점수의 경쟁 검증.
+
+### Phase 2 — 랭킹 검증 기반
+
+immutable ruleset/question set, server-issued play session, sequence별 답 제출,
+서버 timestamp/scoring, replay protection, anomaly review와 shadow leaderboard를
+준비한다.
+
+제외: 공개 leaderboard, Daily Challenge 출시, 보상, imported/client PB 승격.
+
+### Phase 3 — Daily Challenge와 순위 공개
+
+전 사용자에게 같은 날짜별 question ID/order/options를 주고, 계정당 counted
+attempt를 적용한다. 별도 opt-in 공개 identity와 overall/weekly validated board,
+moderation을 추가한다. 경계 시간대와 순위 공개 정책은 출시 전 소유자가 결정한다.
+
+제외: cross-game 종합 점수, 금전 경쟁, offline ranked submission.
+
+### Phase 4 — 개인화 확장
+
+서버 검증 활동과 casual 활동을 구분하는 achievements/stats, 개인 dashboard,
+cloud favorites/recents, 선택형 public profile을 추가한다.
+
+제외: 메시지·팔로워, Brawl 계정 소유권 인증, 임의 파일 업로드.

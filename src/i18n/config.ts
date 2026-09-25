@@ -69,6 +69,7 @@ export const hreflangByLocale: Record<Locale, string> = {
 
 export const localizedCorePaths = new Set([
   "/",
+  "/account",
   "/meta",
   "/teams",
   "/counters",

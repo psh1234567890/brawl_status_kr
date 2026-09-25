@@ -245,7 +245,7 @@ test("meta recommends from the most recently searched player's owned brawlers", 
 
   await page.goto("/meta?map=Hard%20Rock%20Mine");
   const personalized = page
-    .getByRole("heading", { level: 3, name: "내 보유 브롤러 추천" })
+    .getByRole("heading", { level: 3, name: "플레이어 보유 브롤러 추천" })
     .locator("xpath=ancestor::section[1]");
   await expect(personalized).toContainText("Owned Picks Player");
   await expect(personalized).toContainText("콜트");
@@ -335,7 +335,7 @@ test("counter API failures are announced as alerts", async ({ page }) => {
 test("mobile quick navigation is visible on a phone-sized viewport", async ({ context, page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await context.addCookies([
-    { name: "brawl-locale", value: "ko", url: "http://127.0.0.1:3020" },
+    { name: "brawl-locale", value: "ko", url: "http://localhost:3020" },
   ]);
 
   await page.goto("/");

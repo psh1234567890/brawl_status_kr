@@ -17,6 +17,20 @@ jobs:
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: brawl_status_accounts_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d brawl_status_accounts_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Check out repository
@@ -49,8 +63,72 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: End-to-end tests
-        run: npm run test:e2e
+      - name: Apply account-only migration to disposable PostgreSQL
+        run: npm run db:migrate:accounts
+        env:
+          ACCOUNT_MIGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
+
+      - name: Verify account migration is checksum-idempotent
+        run: npm run db:migrate:accounts
+        env:
+          ACCOUNT_MIGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
+
+      - name: Verify deletion-manifest restore safety
+        run: npx vitest run scripts/account-deletion-manifest.integration.test.mjs
+        env:
+          ACCOUNT_MANIFEST_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
+
+      - name: Core end-to-end tests
+        run: npx playwright test e2e/core.e2e.ts e2e/minigames.e2e.ts e2e/player-search.e2e.ts
         env:
           CI: "1"
           MINIGAMES_E2E_FIXTURES: "1"
+
+      - name: Account and auth end-to-end tests
+        run: npx playwright test e2e/account.e2e.ts e2e/auth.e2e.ts
+        env:
+          CI: "1"
+          MINIGAMES_E2E_FIXTURES: "1"
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
+          BETTER_AUTH_URL: http://localhost:3020
+          BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-for-any-deployment
+          GOOGLE_CLIENT_ID: ci-only-client-id
+          GOOGLE_CLIENT_SECRET: ci-only-client-secret
+          ACCOUNT_RATE_LIMIT_SECRET: ci-only-account-rate-limit-secret-not-for-deployment
+          CRON_SECRET: ci-only-cron-secret-not-for-deployment
+          ACCOUNTS_MODE: on
+          ACCOUNT_SYNC_ENABLED: "1"
+          ACCOUNT_TERMS_VERSION: ci-terms-v1
+          ACCOUNT_PRIVACY_NOTICE_VERSION: ci-privacy-v1
+          ACCOUNT_ELIGIBILITY_POLICY_VERSION: ci-eligibility-v1
+          ACCOUNT_ELIGIBILITY_POLICY_TEXTS_JSON: '{"ko":"CI fixture policy","en":"CI fixture policy","ja":"CI fixture policy","pt-br":"CI fixture policy","es":"CI fixture policy","tr":"CI fixture policy","de":"CI fixture policy","fr":"CI fixture policy","it":"CI fixture policy","ru":"CI fixture policy"}'
+          ACCOUNT_ELIGIBILITY_RULES_JSON: '{"minimumAge":18,"regions":"all","guardianConsent":"not-supported","attestation":"self"}'
+          ACCOUNT_BACKUP_RETENTION_POLICY_VERSION: ci-backup-v1
+          ACCOUNT_BACKUP_RETENTION_DAYS: "30"
+          ACCOUNT_DELETION_MANIFEST_RETENTION_DAYS: "35"
+          ACCOUNT_DELETION_MANIFEST_SECRET: ci-only-deletion-manifest-secret-not-for-deployment
+
+      - name: Rollback-mode deletion E2E
+        run: npx playwright test e2e/account-rollback.e2e.ts
+        env:
+          CI: "1"
+          MINIGAMES_E2E_FIXTURES: "1"
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
+          BETTER_AUTH_URL: http://localhost:3020
+          BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-for-any-deployment
+          GOOGLE_CLIENT_ID: ci-only-client-id
+          GOOGLE_CLIENT_SECRET: ci-only-client-secret
+          ACCOUNT_RATE_LIMIT_SECRET: ci-only-account-rate-limit-secret-not-for-deployment
+          CRON_SECRET: ci-only-cron-secret-not-for-deployment
+          ACCOUNTS_MODE: off
+          ACCOUNT_DELETION_ONLY: "1"
+          ACCOUNT_SYNC_ENABLED: "1"
+          ACCOUNT_TERMS_VERSION: ci-terms-v1
+          ACCOUNT_PRIVACY_NOTICE_VERSION: ci-privacy-v1
+          ACCOUNT_ELIGIBILITY_POLICY_VERSION: ci-eligibility-v1
+          ACCOUNT_ELIGIBILITY_POLICY_TEXTS_JSON: '{"ko":"CI fixture policy","en":"CI fixture policy","ja":"CI fixture policy","pt-br":"CI fixture policy","es":"CI fixture policy","tr":"CI fixture policy","de":"CI fixture policy","fr":"CI fixture policy","it":"CI fixture policy","ru":"CI fixture policy"}'
+          ACCOUNT_ELIGIBILITY_RULES_JSON: '{"minimumAge":18,"regions":"all","guardianConsent":"not-supported","attestation":"self"}'
+          ACCOUNT_BACKUP_RETENTION_POLICY_VERSION: ci-backup-v1
+          ACCOUNT_BACKUP_RETENTION_DAYS: "30"
+          ACCOUNT_DELETION_MANIFEST_RETENTION_DAYS: "35"
+          ACCOUNT_DELETION_MANIFEST_SECRET: ci-only-deletion-manifest-secret-not-for-deployment

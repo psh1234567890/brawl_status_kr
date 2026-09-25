@@ -39,6 +39,43 @@ npm.cmd run db:restore:test -- --backup "C:\...\brawl-YYYYMMDDTHHMMSSZ.dump"
 
 이 범위는 앱의 public 스키마와 데이터다. Supabase 전체 프로젝트 백업이 아니며 Auth, Storage 파일, 외부 스키마 의존성, 프로젝트 설정, 역할은 별도다. 목록 검사와 해시만으로 복구 가능성이 증명되지는 않는다. 성공 파일은 암호화된 별도 저장소에도 보관하고 정기적으로 복구 연습한다.
 
+## 계정 데이터 주의사항
+
+계정 테이블은 `public` 스키마에 있으므로 기존 public schema dump에는 이메일,
+Google subject, 세션, 사용자 프로필, personal best가 포함될 수 있다. 계정을
+활성화하기 전 저장소 밖 암호화·접근 제한·보존·복구 권한을 정해야 한다.
+
+계정 삭제는 public tombstone과 함께 public dump에 포함되지 않는
+`account_safety.deletion_ledger`에도 기록된다. backup helper는 활성 safety ledger를
+HMAC 서명된 `<archive>.deletions.json`으로 내보내고
+`account-deletions-latest.json`도 원자적으로 갱신한다. standalone export는 다음과 같다.
+
+```powershell
+npm.cmd run db:deletions:export
+```
+
+`ACCOUNT_BACKUP_RETENTION_DAYS`, `ACCOUNT_DELETION_MANIFEST_RETENTION_DAYS`,
+`ACCOUNT_DELETION_MANIFEST_SECRET`, `ACCOUNT_DELETION_EXPORT_DATABASE_URL`이
+필요하며 export helper는 `DATABASE_URL`/`DIRECT_URL`로 fallback하지 않는다.
+deletion manifest 보존 일수는 backup
+보존 일수보다 길어야 한다. timestamped backup/manifest 정리는 먼저 dry-run으로
+확인한다.
+
+```powershell
+npm.cmd run db:backup:prune
+npm.cmd run db:backup:prune -- --apply
+```
+
+계정 기능을 켜기 전에는 계정 전용 runner로 `0003_account_mvp`와
+`0004_account_pb_ruleset_v1`을 격리 PostgreSQL에 적용하고, 신규 테이블/제약/RLS와
+사용자 cascade 및 restore 흐름을 확인한다. `0004`는 version 1이 아닌 PB 행을
+자동으로 바꾸거나 삭제하지 않고 적용을 중단하므로, 해당 행이 발견되면 먼저
+격리 환경에서 원인을 검토한다. `0005`는 public dump 밖의
+`account_safety.deletion_ledger`를 만든다. public-schema restore 뒤 ledger object가
+없는 경우 계정 migration runner가 checksum을 검증한 뒤 idempotent하게 다시 만든다.
+기존 `scripts/migrate-db.mjs`는 battle cleanup/backfill을 포함하므로 계정 migration
+테스트나 적용에 사용하지 않는다.
+
 ## 복구 연습
 
 1. 운영과 분리된 비어 있는 PostgreSQL 테스트 DB를 준비한다. 필요한 확장과 역할, 스키마 의존성을 확인한다.
@@ -51,7 +88,17 @@ if ($LASTEXITCODE -ne 0) { throw '복구 연습 실패' }
 ```
 
 4. 복구 DB의 row 수, fingerprint/timestamp/JSON 누락, unique/index, RLS ON 및 FORCE RLS OFF를 확인한다. `--no-privileges`를 사용하므로 운영 권한 복제 완료로 간주하지 않는다. 앱 역할과 anon 접근 제한을 별도로 검증한다.
-5. 테스트 앱을 복구 DB에 연결해 통계 API와 기록 조회를 검증한다. 운영 복구는 별도 승인과 복구 시점/손실 범위 확인 후 진행한다.
+5. 계정 데이터가 들어 있는 복구라면 `npm run db:migrate:accounts`로 non-public safety
+   ledger를 보장한 뒤, **복구하려는 archive보다 최신인** 신뢰 가능한 deletion
+   manifest를 지정해 재적용한다. archive와 같이 만들어진 manifest만 쓰면 그 backup
+   이후 발생한 삭제는 반영할 수 없으므로 운영 복구에는 가장 최신의 외부 보관본을 쓴다.
+
+```powershell
+$env:ACCOUNT_RESTORE_DATABASE_URL='postgresql://.../restore_target'
+npm.cmd run db:deletions:reapply -- --manifest "C:\PrivateBackups\account-deletions-latest.json"
+```
+
+6. 테스트 앱을 복구 DB에 연결해 통계 API와 기록 조회를 검증한다. 운영 복구는 별도 승인과 복구 시점/손실 범위 확인 후 진행한다.
 
 ## 향후 helper 설계
 

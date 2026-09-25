@@ -11,8 +11,12 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "db:backup": "node scripts/backup-db.mjs",
+    "db:backup:prune": "node scripts/prune-account-backups.mjs",
+    "db:deletions:export": "node scripts/export-account-deletions.mjs",
+    "db:deletions:reapply": "node scripts/reapply-account-deletions.mjs",
     "db:check": "node scripts/check-db.mjs",
     "db:migrate": "node scripts/migrate-db.mjs",
+    "db:migrate:accounts": "node scripts/migrate-accounts.mjs",
     "db:restore:test": "node scripts/restore-db-test.mjs",
     "translations:update": "node scripts/update-brawl-translations.mjs",
     "translations:ja:update": "node scripts/update-brawl-japanese-translations.mjs",
@@ -20,11 +24,14 @@
     "minigames:assets:update": "node scripts/update-minigame-assets.mjs"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.6",
+    "better-auth": "1.7.6",
     "drizzle-orm": "^0.45.2",
     "next": "16.3.5",
     "pg": "^8.21.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "0.0.1"
   },
   "overrides": {
     "esbuild": "0.28.1",

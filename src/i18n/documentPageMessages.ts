@@ -192,7 +192,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "현재 서비스는 로그인 기능을 제공하지 않습니다. 향후 Google AdSense 등 광고 서비스가 적용될 경우, 광고 제공자는 쿠키 또는 유사 기술을 사용해 광고 노출과 성과 측정을 수행할 수 있습니다. 이용자는 브라우저 설정에서 쿠키를 제한하거나 삭제할 수 있습니다.",
+              text: "계정 기능이 활성화되면 Google 로그인을 완료한 경우 인증에 필요한 세션 쿠키를 사용할 수 있습니다. 광고 서비스가 제공될 경우 광고 제공자는 별도의 쿠키 또는 유사 기술을 사용할 수 있으며, 이용자는 브라우저 설정에서 선택적 쿠키를 제한하거나 삭제할 수 있습니다.",
             },
           ],
         },
@@ -484,7 +484,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "The service currently does not provide login functionality. If advertising services such as Google AdSense are added in the future, ad providers may use cookies or similar technologies to serve ads and measure performance. Users can restrict or delete cookies in their browser settings.",
+              text: "If account features are enabled, a session cookie required for authentication may be used after Google sign-in. If advertising services are provided, ad providers may use separate cookies or similar technologies; users can restrict or delete optional cookies in browser settings.",
             },
           ],
         },
@@ -776,7 +776,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "現在、このサービスにはログイン機能がありません。将来Google AdSenseなどの広告サービスを導入した場合、広告提供者はCookieまたは類似技術を使用して広告表示や成果測定を行うことがあります。利用者はブラウザ設定でCookieを制限または削除できます。",
+              text: "アカウント機能が有効な場合、Googleログイン後の認証に必要なセッションCookieを使用することがあります。広告サービスを提供する場合、広告提供者が別のCookieや類似技術を使用することがあります。利用者はブラウザ設定で任意のCookieを制限または削除できます。",
             },
           ],
         },
@@ -1068,7 +1068,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Atualmente o serviço não oferece login. Se serviços de publicidade como o Google AdSense forem adotados no futuro, os provedores de anúncios poderão usar cookies ou tecnologias semelhantes para exibir anúncios e medir desempenho. O usuário pode limitar ou excluir cookies nas configurações do navegador.",
+              text: "Se os recursos de conta forem ativados, um cookie de sessão necessário para autenticação poderá ser usado após o login com Google. Se houver publicidade, os provedores de anúncios poderão usar cookies separados ou tecnologias semelhantes; o usuário pode limitar ou excluir cookies opcionais nas configurações do navegador.",
             },
           ],
         },
@@ -1360,7 +1360,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Actualmente el servicio no ofrece inicio de sesión. Si en el futuro se incorporan servicios publicitarios como Google AdSense, los proveedores de anuncios podrán usar cookies o tecnologías similares para mostrar anuncios y medir su rendimiento. El usuario puede limitar o eliminar las cookies desde la configuración del navegador.",
+              text: "Si se activan las funciones de cuenta, se podrá usar una cookie de sesión necesaria para la autenticación después de iniciar sesión con Google. Si se ofrecen anuncios, sus proveedores podrán usar cookies independientes o tecnologías similares; el usuario puede limitar o eliminar las cookies opcionales desde el navegador.",
             },
           ],
         },
@@ -1652,7 +1652,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Hizmet şu anda giriş özelliği sunmaz. Gelecekte Google AdSense gibi reklam hizmetleri eklenirse reklam sağlayıcıları reklam gösterimi ve performans ölçümü için çerezler veya benzer teknolojiler kullanabilir. Kullanıcılar tarayıcı ayarlarından çerezleri kısıtlayabilir veya silebilir.",
+              text: "Hesap özellikleri etkinleştirilirse Google ile giriş sonrasında kimlik doğrulama için gerekli bir oturum çerezi kullanılabilir. Reklam sunulursa reklam sağlayıcıları ayrı çerezler veya benzer teknolojiler kullanabilir; kullanıcılar isteğe bağlı çerezleri tarayıcı ayarlarından kısıtlayabilir ya da silebilir.",
             },
           ],
         },
@@ -1944,7 +1944,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Der Dienst bietet derzeit keine Anmeldung. Falls künftig Werbedienste wie Google AdSense eingesetzt werden, können Werbeanbieter Cookies oder ähnliche Technologien verwenden, um Werbung auszuliefern und deren Leistung zu messen. Nutzer können Cookies in den Browser-Einstellungen einschränken oder löschen.",
+              text: "Wenn Kontofunktionen aktiviert sind, kann nach der Google-Anmeldung ein für die Authentifizierung erforderliches Sitzungscookie verwendet werden. Bei Werbung können Anbieter separate Cookies oder ähnliche Technologien einsetzen; optionale Cookies lassen sich in den Browsereinstellungen einschränken oder löschen.",
             },
           ],
         },
@@ -2236,7 +2236,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Le service ne propose actuellement aucune connexion par compte. Si des services publicitaires tels que Google AdSense sont ajoutés à l'avenir, les fournisseurs de publicité pourront utiliser des cookies ou des technologies similaires pour diffuser des annonces et mesurer leurs performances. Les utilisateurs peuvent limiter ou supprimer les cookies dans les paramètres du navigateur.",
+              text: "Si les fonctions de compte sont activées, un cookie de session nécessaire à l’authentification peut être utilisé après la connexion Google. En cas de publicité, les fournisseurs peuvent utiliser des cookies distincts ou des technologies similaires ; les cookies facultatifs peuvent être limités ou supprimés dans le navigateur.",
             },
           ],
         },
@@ -2528,7 +2528,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Il servizio attualmente non offre funzioni di accesso. Se in futuro verranno introdotti servizi pubblicitari come Google AdSense, i fornitori di annunci potranno usare cookie o tecnologie simili per mostrare annunci e misurarne le prestazioni. Gli utenti possono limitare o eliminare i cookie dalle impostazioni del browser.",
+              text: "Se le funzioni account vengono attivate, dopo l’accesso Google può essere usato un cookie di sessione necessario per l’autenticazione. Se sono presenti annunci, i fornitori possono usare cookie separati o tecnologie simili; i cookie facoltativi possono essere limitati o eliminati dalle impostazioni del browser.",
             },
           ],
         },
@@ -2820,7 +2820,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Сейчас сервис не предоставляет функцию входа. Если в будущем будут подключены рекламные сервисы, например Google AdSense, поставщики рекламы смогут использовать cookie или похожие технологии для показа рекламы и измерения эффективности. Пользователь может ограничить или удалить cookie в настройках браузера.",
+              text: "Если функции аккаунта будут включены, после входа через Google может использоваться cookie сеанса, необходимый для аутентификации. При показе рекламы ее провайдеры могут использовать отдельные cookie или аналогичные технологии; необязательные cookie можно ограничить или удалить в настройках браузера.",
             },
           ],
         },
@@ -2952,6 +2952,109 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
         },
       ],
     },
+  },
+};
+
+export type AccountPolicyCopy = {
+  privacyTitle: string;
+  privacyText: string;
+  termsTitle: string;
+  termsText: string;
+  contactTitle: string;
+  contactText: string;
+  accountLink: string;
+};
+
+export const accountPolicyMessages: Record<Locale, AccountPolicyCopy> = {
+  ko: {
+    privacyTitle: "선택적 계정과 미니게임 동기화",
+    privacyText: "계정 기능은 현재 기본 비활성화되어 있습니다. 활성화될 경우 Google 로그인으로 받은 비공개 이메일 주소와 Google 식별자, 내부 사용자 ID, 닉네임, 선택한 대표 플레이어 태그, 세션 쿠키, 미니게임 개인 최고 기록을 처리합니다. 이메일과 Google 식별자는 공개되지 않으며, 대표 태그는 게임 계정 소유권 확인이나 전투 기록 수정 권한을 뜻하지 않습니다. 브라우저에 저장된 기존 기록은 이용자가 가져오기를 직접 선택한 경우에만 병합되며, 전송 대기 기록은 계정별로 브라우저 저장소에 보관될 수 있습니다. Google은 로그인 제공자로, 호스팅 및 데이터베이스 제공자는 서비스 운영 처리자로 정보를 처리할 수 있습니다. 계정 프로필과 클라우드 기록은 계정 삭제 요청 시 활성 서비스 DB에서 삭제합니다. 백업 보존 일수와 삭제 manifest 보존 일수는 운영 설정으로 명시하며, 서명된 삭제 manifest는 복구 시 재적용합니다. 실제 보존 값이 확정·설정되기 전까지 계정 기능을 켜지 않습니다. 계정 기능이 제공될 때도 공개 프로필과 랭킹은 포함하지 않습니다. Google 로그인은 연령 확인이나 보호자 동의가 아닙니다. 연령·지역 자격 기준은 운영자가 명시적으로 정해야 하며, 생년월일·국가 자체는 저장하지 않고 이용자의 자격 확인만 기록합니다. 보호자 동의 절차는 현재 지원하지 않습니다. 요청 제한과 악용 방지를 위해 계정 ID와 신뢰된 요청 IP에서 만든 단기 HMAC 해시도 저장합니다. 제한 창이 끝난 해시 행은 더 이상 요청 제한 판정에 사용되지 않습니다. 만료 행은 예약된 정리 작업에서 물리 삭제되므로 다음 정리 실행 전까지 데이터베이스에 남아 있을 수 있습니다.",
+    termsTitle: "계정 이용",
+    termsText: "계정은 선택 사항이며 로그인하지 않아도 기존 플레이어 검색, 미니게임, 즐겨찾기 기능을 이용할 수 있습니다. 계정이 활성화되면 Google 로그인, 닉네임, 선택한 대표 플레이어 태그, 개인 최고 기록 동기화를 제공합니다. 대표 태그는 편의용 기본값으로 소유권 인증이 아닙니다. 동기화된 미니게임 기록은 브라우저가 보고한 개인 기록이며 검증된 경쟁 점수나 랭킹이 아닙니다. 기록 가져오기는 이용자가 확인한 경우에만 진행됩니다. 계정 삭제는 계정 정보와 클라우드 개인 기록을 삭제하지만 태그만으로 연결된 공개 전투 기록은 삭제하지 않습니다. 계정 정책과 자격 요건이 설정되기 전에는 계정 기능을 활성화하지 않습니다.",
+    contactTitle: "계정 요청",
+    contactText: "계정 기능이 제공되면 계정 페이지에서 로그아웃하거나 삭제할 수 있습니다. 계정에 접근할 수 없어 삭제를 요청하거나 개인정보 관련 문의가 있으면 아래 문의처로 연락해 주세요. 계정 삭제는 공개 전투 기록을 삭제하지 않습니다.",
+    accountLink: "계정 페이지 열기",
+  },
+  en: {
+    privacyTitle: "Optional accounts and Mini Game sync",
+    privacyText: "Account features are disabled by default. If enabled, we process the private email address and Google subject returned for sign-in, an internal user ID, nickname, optional default player tag, session cookie, and Mini Game personal bests. Email and Google identity are not public. A default tag does not prove game-account ownership or authorize changes to battle records. Existing browser records are merged only after you choose import; queued records may be held in account-scoped browser storage. Google provides sign-in, and hosting and database providers may process data to operate the service. Account profile and cloud records are deleted from the active service database when an account deletion request is completed. Backup and deletion-manifest retention windows must be configured, and signed deletion manifests are reapplied during restore. Accounts remain disabled until the actual retention values are approved and disclosed. Public profiles and rankings are not part of this account feature. Google sign-in does not verify age or provide parental consent. Age and regional eligibility rules must be explicitly configured; we store only the user's eligibility attestation, not their date of birth or country. A parental-consent workflow is not currently supported. For request limits and abuse prevention, we also store short-lived HMAC hashes derived from account IDs and trusted request IP addresses. Rate-limit rows contain hashes rather than original values. Once a limit window ends, its row no longer affects request decisions; scheduled maintenance physically deletes expired rows, which may remain in the database until that job runs.",
+    termsTitle: "Using an account",
+    termsText: "An account is optional. Player search, Mini Games, and favorites remain available to guests. If accounts are enabled, they provide Google sign-in, a nickname, an optional default player tag, and personal-best sync. A default tag is a convenience and does not verify ownership. Synced Mini Game records are client-reported personal bests, not validated competition scores or leaderboard entries. Existing records are imported only after your confirmation. Deleting an account removes account data and cloud personal bests, but does not remove public battle records associated with a tag. Account features will not be enabled until account and eligibility policies are configured.",
+    contactTitle: "Account requests",
+    contactText: "When accounts are available, you can sign out or request deletion on the account page. If you cannot access your account or have a privacy request, contact us using the method below. Account deletion does not remove public battle records.",
+    accountLink: "Open account page",
+  },
+  ja: {
+    privacyTitle: "任意アカウントとミニゲーム同期",
+    privacyText: "アカウント機能は現在、既定で無効です。有効化された場合、Googleログインから受け取る非公開メールアドレスとGoogle識別子、内部ユーザーID、ニックネーム、任意の既定プレイヤータグ、セッションCookie、ミニゲームの自己ベストを処理します。メールアドレスとGoogle識別子は公開されません。既定タグはゲームアカウントの所有権を証明せず、戦績の変更権限も与えません。既存のブラウザー記録は利用者がインポートを選んだ場合にのみ統合し、送信待ち記録はアカウント別にブラウザーへ保存される場合があります。Googleはログイン提供者として、ホスティングとデータベース提供者はサービス運用のためにデータを処理する場合があります。削除が完了すると、アカウントプロフィールとクラウド記録は稼働中のサービスDBから削除します。バックアップと削除manifestの保持期間は運用設定で明示し、署名済み削除manifestは復元時に再適用します。実際の保持値が承認・公開されるまでアカウント機能は無効です。公開プロフィールとランキングは含まれません。Googleログインは年齢確認や保護者同意ではありません。年齢・地域の利用条件は明示的に設定する必要があり、生年月日や国そのものは保存せず、利用資格の自己確認だけを記録します。保護者同意の手続きは現在サポートしていません。 リクエスト制限と不正利用防止のため、アカウントIDと信頼できるリクエスト元IPから生成した短期間のHMACハッシュも保存します。制限用の行には元の値ではなくハッシュを保存します。制限期間が終わると判定には使われなくなりますが、期限切れの行は定期メンテナンスで物理削除されるため、その処理が実行されるまでデータベースに残る場合があります。",
+    termsTitle: "アカウントの利用",
+    termsText: "アカウントは任意です。ログインしなくてもプレイヤー検索、ミニゲーム、お気に入りを利用できます。有効化後はGoogleログイン、ニックネーム、任意の既定タグ、自己ベスト同期を提供します。既定タグは利便性のためのもので、所有権を証明しません。同期される記録はクライアントが報告する自己ベストであり、検証済みの競技スコアやランキングではありません。既存記録は利用者が確認した場合のみ取り込みます。削除するとアカウント情報とクラウド記録を削除しますが、タグに関連する公開戦績は削除しません。アカウントと利用条件の方針が設定されるまで機能を有効化しません。",
+    contactTitle: "アカウントに関する依頼",
+    contactText: "アカウント機能の提供後は、アカウントページからログアウトまたは削除を依頼できます。アクセスできない場合やプライバシーに関する依頼は、下記の連絡先をご利用ください。アカウント削除で公開戦績は削除されません。",
+    accountLink: "アカウントページを開く",
+  },
+  "pt-br": {
+    privacyTitle: "Contas opcionais e sincronização dos minijogos",
+    privacyText: "Os recursos de conta ficam desativados por padrão. Se forem ativados, processaremos o e-mail privado e o identificador Google recebidos no login, um ID interno, apelido, tag padrão opcional, cookie de sessão e recordes pessoais dos minijogos. E-mail e identidade Google não são públicos. A tag padrão não comprova propriedade da conta do jogo nem autoriza alterações em batalhas. Registros existentes no navegador só são combinados se você escolher importá-los; itens na fila podem ficar armazenados no navegador por conta. Google, hospedagem e banco de dados podem processar dados para prestar o serviço. Após a conclusão da exclusão, o perfil e os registros na nuvem serão removidos do banco ativo. Os períodos de retenção de backups e manifestos de exclusão devem ser configurados, e manifestos assinados são reaplicados na restauração. As contas permanecem desativadas até que os valores reais sejam aprovados e divulgados. Não haverá perfil público nem ranking nesse recurso. O login do Google não verifica idade nem representa consentimento de responsável. As regras de idade e região devem ser configuradas explicitamente; registramos apenas a declaração de elegibilidade do usuário, não sua data de nascimento ou país. Um fluxo de consentimento de responsável não é suportado atualmente. Para limitar solicitações e prevenir abusos, também armazenamos hashes HMAC temporários derivados do ID da conta e do endereço IP confiável da solicitação. As linhas de limite guardam hashes, não os valores originais. Quando a janela de limite termina, a linha deixa de afetar as decisões; a manutenção agendada remove fisicamente as linhas expiradas, que podem permanecer no banco até a execução dessa tarefa.",
+    termsTitle: "Uso da conta",
+    termsText: "A conta é opcional. Pesquisa de jogadores, minijogos e favoritos continuam disponíveis para visitantes. Se ativada, a conta oferece login Google, apelido, tag padrão opcional e sincronização de recordes pessoais. A tag padrão é apenas uma conveniência e não verifica propriedade. Os recordes sincronizados são informados pelo cliente; não são pontuações competitivas verificadas nem entradas de ranking. Registros existentes só são importados com sua confirmação. A exclusão remove dados da conta e recordes na nuvem, mas não apaga batalhas públicas associadas a uma tag. Os recursos de conta não serão ativados antes da configuração das políticas de conta e elegibilidade.",
+    contactTitle: "Solicitações sobre a conta",
+    contactText: "Quando as contas estiverem disponíveis, você poderá sair ou solicitar a exclusão na página da conta. Se não conseguir acessá-la ou tiver uma solicitação de privacidade, use o contato abaixo. Excluir a conta não remove registros públicos de batalha.",
+    accountLink: "Abrir página da conta",
+  },
+  es: {
+    privacyTitle: "Cuentas opcionales y sincronización de minijuegos",
+    privacyText: "Las funciones de cuenta están desactivadas de forma predeterminada. Si se activan, procesaremos el correo privado y el identificador de Google recibidos al iniciar sesión, un ID interno, apodo, etiqueta predeterminada opcional, cookie de sesión y récords personales de los minijuegos. El correo y la identidad de Google no son públicos. La etiqueta predeterminada no demuestra la propiedad de la cuenta del juego ni autoriza a modificar batallas. Los registros existentes del navegador solo se combinan si eliges importarlos; los elementos pendientes pueden guardarse en el navegador por cuenta. Google y los proveedores de alojamiento y base de datos pueden tratar datos para prestar el servicio. Al completarse una solicitud de eliminación, el perfil y los registros en la nube se eliminan de la base de datos activa. Los periodos de retención de copias de seguridad y manifiestos de eliminación deben configurarse, y los manifiestos firmados se reaplican durante la restauración. Las cuentas seguirán desactivadas hasta aprobar y publicar los valores reales. Esta función no incluye perfiles públicos ni clasificaciones. El acceso con Google no verifica la edad ni sustituye el consentimiento parental. Las reglas de edad y región deben configurarse de forma explícita; solo registramos la declaración de elegibilidad del usuario, no su fecha de nacimiento ni su país. Actualmente no se admite un flujo de consentimiento parental. Para limitar solicitudes y prevenir abusos, también almacenamos hashes HMAC temporales derivados del ID de cuenta y de la dirección IP confiable de la solicitud. Esas filas guardan hashes, no los valores originales. Al terminar la ventana del límite, la fila deja de afectar las decisiones; el mantenimiento programado elimina físicamente las filas vencidas, que pueden permanecer en la base de datos hasta que se ejecute esa tarea.",
+    termsTitle: "Uso de la cuenta",
+    termsText: "La cuenta es opcional. La búsqueda de jugadores, los minijuegos y los favoritos siguen disponibles como invitado. Si se activa, ofrece acceso con Google, un apodo, una etiqueta predeterminada opcional y sincronización de récords personales. La etiqueta solo sirve como comodidad y no verifica la propiedad. Los récords sincronizados son informados por el cliente, no puntuaciones competitivas verificadas ni entradas de clasificación. Los registros existentes solo se importan con tu confirmación. Eliminar la cuenta borra los datos de cuenta y los récords en la nube, pero no las batallas públicas asociadas a una etiqueta. Las funciones de cuenta no se activarán hasta configurar las políticas de cuenta y elegibilidad.",
+    contactTitle: "Solicitudes de cuenta",
+    contactText: "Cuando las cuentas estén disponibles, podrás cerrar sesión o solicitar la eliminación desde la página de cuenta. Si no puedes acceder o tienes una consulta de privacidad, utiliza el contacto indicado abajo. Eliminar la cuenta no elimina registros públicos de batalla.",
+    accountLink: "Abrir página de cuenta",
+  },
+  tr: {
+    privacyTitle: "İsteğe bağlı hesaplar ve Mini Oyun eşitlemesi",
+    privacyText: "Hesap özellikleri varsayılan olarak kapalıdır. Açılırsa giriş sırasında alınan özel e-posta ve Google kimliği, dahili kullanıcı kimliği, takma ad, isteğe bağlı varsayılan oyuncu etiketi, oturum çerezi ve Mini Oyun kişisel rekorları işlenir. E-posta ve Google kimliği herkese açık değildir. Varsayılan etiket oyun hesabı sahipliğini doğrulamaz ve savaş kayıtlarını değiştirme yetkisi vermez. Tarayıcıdaki eski kayıtlar yalnızca içe aktarmayı seçersen birleştirilir; bekleyen kayıtlar hesap bazında tarayıcıda saklanabilir. Google, barındırma ve veritabanı sağlayıcıları hizmet için verileri işleyebilir. Silme tamamlandığında hesap profili ve bulut kayıtları etkin veritabanından silinir. Yedek ve silme manifesti saklama süreleri yapılandırılmalıdır; imzalı silme manifestleri geri yükleme sırasında yeniden uygulanır. Gerçek süreler onaylanıp açıklanana kadar hesaplar kapalı kalır. Bu özellik herkese açık profil veya sıralama içermez. Google ile giriş yaş doğrulaması ya da ebeveyn izni değildir. Yaş ve bölge uygunluk kuralları açıkça yapılandırılmalıdır; doğum tarihi veya ülke yerine yalnızca kullanıcının uygunluk beyanını kaydederiz. Ebeveyn izni akışı şu anda desteklenmez. İstekleri sınırlamak ve kötüye kullanımı önlemek için hesap kimliğinden ve güvenilir istek IP adresinden türetilen kısa ömürlü HMAC özetlerini de saklarız. Sınır kayıtlarında ham değerler değil yalnızca özetler bulunur. Sınır penceresi bitince bu satırlar istek kararlarını etkilemez; süresi dolan satırlar planlı bakım sırasında fiziksel olarak silinir ve bakım çalışana kadar veritabanında kalabilir.",
+    termsTitle: "Hesap kullanımı",
+    termsText: "Hesap isteğe bağlıdır. Oyuncu arama, Mini Oyunlar ve favoriler oturum açmadan kullanılabilir. Etkinleştirilirse Google girişi, takma ad, isteğe bağlı varsayılan etiket ve kişisel rekor eşitlemesi sunar. Varsayılan etiket yalnızca kolaylık içindir, sahipliği doğrulamaz. Eşitlenen kayıtlar istemcinin bildirdiği kişisel rekorlardır; doğrulanmış rekabet puanı veya sıralama girdisi değildir. Eski kayıtlar yalnızca onayından sonra içe aktarılır. Hesabı silmek hesap verilerini ve bulut rekorlarını siler; etiketle ilişkilendirilmiş herkese açık savaş kayıtlarını silmez. Hesap ve uygunluk politikaları ayarlanmadan özellik açılmaz.",
+    contactTitle: "Hesap talepleri",
+    contactText: "Hesaplar sunulduğunda hesap sayfasından çıkış yapabilir veya silme isteği gönderebilirsin. Erişim sağlayamıyorsan ya da gizlilik talebin varsa aşağıdaki iletişim yöntemini kullan. Hesap silme herkese açık savaş kayıtlarını silmez.",
+    accountLink: "Hesap sayfasını aç",
+  },
+  de: {
+    privacyTitle: "Optionale Konten und Mini-Game-Synchronisierung",
+    privacyText: "Kontofunktionen sind standardmäßig deaktiviert. Bei einer Aktivierung verarbeiten wir die private E-Mail-Adresse und Google-Kennung aus der Anmeldung, eine interne Benutzer-ID, Spitzname, optionalen Standard-Spielertag, Sitzungscookie und persönliche Mini-Game-Bestwerte. E-Mail und Google-Identität sind nicht öffentlich. Ein Standard-Tag bestätigt kein Eigentum am Spielkonto und erlaubt keine Änderung von Kampfaufzeichnungen. Vorhandene Browserdaten werden nur zusammengeführt, wenn du den Import auswählst; ausstehende Einträge können kontogetrennt im Browser gespeichert werden. Google sowie Hosting- und Datenbankanbieter können Daten für den Dienst verarbeiten. Nach Abschluss einer Löschung entfernen wir Profil und Cloud-Aufzeichnungen aus der aktiven Datenbank. Aufbewahrungsfristen für Backups und Löschmanifeste müssen konfiguriert werden; signierte Löschmanifeste werden bei einer Wiederherstellung erneut angewendet. Konten bleiben deaktiviert, bis die tatsächlichen Fristen beschlossen und veröffentlicht sind. Öffentliche Profile oder Ranglisten sind nicht enthalten. Die Google-Anmeldung prüft weder das Alter noch die Zustimmung einer erziehungsberechtigten Person. Alters- und Regionsregeln müssen ausdrücklich konfiguriert werden; gespeichert wird nur die Eignungsbestätigung des Nutzers, nicht Geburtsdatum oder Land. Ein Verfahren für elterliche Zustimmung wird derzeit nicht unterstützt. Zur Begrenzung von Anfragen und zur Missbrauchsabwehr speichern wir außerdem kurzlebige HMAC-Hashes, die aus Konto-IDs und vertrauenswürdigen Anfrage-IP-Adressen abgeleitet werden. Die Limit-Einträge enthalten Hashes statt Originalwerte. Nach Ende des kurzen Limitfensters beeinflusst ein Eintrag keine Anfragen mehr; abgelaufene Zeilen werden durch die geplante Wartung physisch gelöscht und können bis zu deren Ausführung in der Datenbank verbleiben.",
+    termsTitle: "Kontonutzung",
+    termsText: "Ein Konto ist optional. Spielersuche, Mini Games und Favoriten bleiben für Gäste verfügbar. Bei Aktivierung bietet das Konto Google-Anmeldung, einen Spitznamen, einen optionalen Standard-Tag und die Synchronisierung persönlicher Bestwerte. Der Standard-Tag dient der Vereinfachung und bestätigt kein Eigentum. Synchronisierte Ergebnisse sind vom Client gemeldete Bestwerte, keine validierten Wettbewerbswerte oder Ranglisteneinträge. Bestehende Aufzeichnungen werden nur nach deiner Bestätigung importiert. Durch die Kontolöschung werden Kontodaten und Cloud-Bestwerte entfernt, nicht jedoch öffentliche Kampfaufzeichnungen zu einem Tag. Kontofunktionen werden erst nach Festlegung der Konto- und Teilnahmebedingungen aktiviert.",
+    contactTitle: "Kontoanfragen",
+    contactText: "Sobald Konten verfügbar sind, kannst du dich auf der Kontoseite abmelden oder die Löschung beantragen. Wenn du keinen Zugriff hast oder eine Datenschutzanfrage stellen möchtest, nutze bitte den unten genannten Kontakt. Die Kontolöschung entfernt keine öffentlichen Kampfaufzeichnungen.",
+    accountLink: "Kontoseite öffnen",
+  },
+  fr: {
+    privacyTitle: "Comptes facultatifs et synchronisation des mini-jeux",
+    privacyText: "Les fonctions de compte sont désactivées par défaut. Si elles sont activées, nous traitons l’adresse e-mail privée et l’identifiant Google reçus lors de la connexion, un identifiant interne, un pseudo, un tag joueur par défaut facultatif, un cookie de session et les records personnels des mini-jeux. L’e-mail et l’identité Google ne sont pas publics. Le tag par défaut ne prouve pas la propriété du compte de jeu et n’autorise pas la modification des combats. Les résultats présents dans le navigateur ne sont fusionnés que si vous choisissez l’import ; les éléments en attente peuvent être conservés dans le navigateur par compte. Google et les fournisseurs d’hébergement et de base de données peuvent traiter des données pour le service. Une fois la suppression effectuée, le profil et les résultats cloud sont supprimés de la base active. Les durées de conservation des sauvegardes et des manifestes de suppression doivent être configurées ; les manifestes signés sont réappliqués lors d’une restauration. Les comptes restent désactivés tant que les valeurs réelles ne sont pas approuvées et publiées. Cette fonction ne comprend ni profil public ni classement. La connexion Google ne vérifie pas l’âge et ne vaut pas consentement parental. Les règles d’âge et de région doivent être configurées explicitement ; nous enregistrons uniquement l’attestation d’éligibilité, pas la date de naissance ni le pays. Aucun flux de consentement parental n’est actuellement pris en charge. Pour limiter les requêtes et prévenir les abus, nous conservons aussi des hachages HMAC temporaires dérivés des identifiants de compte et des adresses IP de requête fiables. Les lignes de limitation contiennent des hachages, pas les valeurs d’origine. À la fin de la courte fenêtre de limitation, elles ne participent plus aux décisions ; la maintenance planifiée supprime physiquement les lignes expirées, qui peuvent rester dans la base jusqu’à son exécution.",
+    termsTitle: "Utilisation du compte",
+    termsText: "Le compte est facultatif. La recherche de joueurs, les mini-jeux et les favoris restent accessibles en mode invité. S’il est activé, le compte fournit une connexion Google, un pseudo, un tag par défaut facultatif et la synchronisation des records personnels. Le tag par défaut est pratique et ne vérifie pas la propriété. Les résultats synchronisés sont déclarés par le client ; ils ne constituent ni des scores compétitifs validés ni des entrées de classement. Les résultats existants ne sont importés qu’après votre confirmation. La suppression efface les données du compte et les records cloud, mais pas les combats publics associés à un tag. Les fonctions de compte ne seront pas activées avant la définition des règles du compte et d’éligibilité.",
+    contactTitle: "Demandes concernant le compte",
+    contactText: "Lorsque les comptes seront disponibles, vous pourrez vous déconnecter ou demander leur suppression depuis la page du compte. Si vous n’y avez plus accès ou souhaitez exercer une demande relative à la confidentialité, utilisez le contact ci-dessous. La suppression du compte n’efface pas les combats publics.",
+    accountLink: "Ouvrir la page du compte",
+  },
+  it: {
+    privacyTitle: "Account facoltativi e sincronizzazione dei minigiochi",
+    privacyText: "Le funzioni account sono disattivate per impostazione predefinita. Se abilitate, trattiamo l’e-mail privata e l’identificativo Google ricevuti al login, un ID interno, nickname, tag giocatore predefinito facoltativo, cookie di sessione e record personali dei minigiochi. E-mail e identità Google non sono pubbliche. Il tag predefinito non prova la proprietà dell’account di gioco e non autorizza modifiche alle battaglie. I record già presenti nel browser vengono uniti solo se scegli l’importazione; le operazioni in attesa possono essere conservate nel browser per account. Google e i fornitori di hosting e database possono trattare dati per il servizio. Al completamento della cancellazione, profilo e record cloud vengono rimossi dal database attivo. I periodi di conservazione di backup e manifest di cancellazione devono essere configurati; i manifest firmati vengono riapplicati durante il ripristino. Gli account restano disattivati finché i valori effettivi non saranno approvati e pubblicati. La funzione non include profili pubblici o classifiche. Il login Google non verifica l’età né costituisce consenso dei genitori. Le regole per età e area geografica devono essere configurate esplicitamente; registriamo solo l’attestazione di idoneità dell’utente, non la data di nascita o il paese. Un flusso di consenso dei genitori non è attualmente supportato. Per limitare le richieste e prevenire gli abusi, conserviamo anche hash HMAC temporanei derivati dagli ID account e dagli indirizzi IP affidabili delle richieste. Le righe dei limiti contengono hash, non i valori originali. Alla fine della breve finestra di limite, non influiscono più sulle decisioni; la manutenzione pianificata elimina fisicamente le righe scadute, che possono restare nel database fino all’esecuzione dell’attività.",
+    termsTitle: "Uso dell’account",
+    termsText: "L’account è facoltativo. Ricerca giocatori, minigiochi e preferiti restano disponibili senza accesso. Se attivato, offre login Google, nickname, tag predefinito facoltativo e sincronizzazione dei record personali. Il tag è una comodità e non verifica la proprietà. I record sincronizzati sono dichiarati dal client, non risultati competitivi verificati né voci di classifica. I record esistenti vengono importati solo dopo la tua conferma. L’eliminazione rimuove i dati dell’account e i record cloud, ma non le battaglie pubbliche associate a un tag. Le funzioni account non saranno attivate finché le policy di account e idoneità non saranno configurate.",
+    contactTitle: "Richieste relative all’account",
+    contactText: "Quando gli account saranno disponibili, potrai uscire o richiedere l’eliminazione dalla pagina account. Se non puoi accedere o hai una richiesta sulla privacy, usa il contatto indicato qui sotto. L’eliminazione dell’account non rimuove le battaglie pubbliche.",
+    accountLink: "Apri pagina account",
+  },
+  ru: {
+    privacyTitle: "Необязательные аккаунты и синхронизация мини-игр",
+    privacyText: "Функции аккаунта по умолчанию отключены. При включении обрабатываются непубличный адрес электронной почты и идентификатор Google, полученные при входе, внутренний ID пользователя, псевдоним, необязательный тег игрока по умолчанию, cookie сеанса и личные рекорды мини-игр. Электронная почта и идентификатор Google не публикуются. Тег по умолчанию не подтверждает владение игровым аккаунтом и не дает права менять записи боев. Записи браузера объединяются только по вашему выбору; ожидающие отправки данные могут храниться в браузере отдельно для аккаунта. Google, а также провайдеры хостинга и базы данных могут обрабатывать данные для работы сервиса. После завершения удаления профиль и облачные записи удаляются из активной базы. Сроки хранения резервных копий и манифестов удалений должны быть настроены; подписанные манифесты повторно применяются при восстановлении. Аккаунты останутся отключенными, пока фактические сроки не будут утверждены и опубликованы. Публичные профили и рейтинги не входят в эту функцию. Вход через Google не подтверждает возраст и не заменяет согласие родителей. Возрастные и региональные правила должны быть настроены явно; мы сохраняем только подтверждение соответствия требованиям, а не дату рождения или страну. Процедура родительского согласия сейчас не поддерживается. Для ограничения запросов и предотвращения злоупотреблений мы также храним краткосрочные HMAC-хеши, сформированные из ID аккаунта и доверенных IP-адресов запросов. В записях ограничений хранятся хеши, а не исходные значения. После окончания короткого окна ограничения записи больше не влияют на решения; плановое обслуживание физически удаляет просроченные строки, которые могут оставаться в базе до запуска этой задачи.",
+    termsTitle: "Использование аккаунта",
+    termsText: "Аккаунт необязателен. Поиск игроков, мини-игры и избранное доступны гостям. После включения аккаунт позволит входить через Google, задавать псевдоним и необязательный тег по умолчанию, синхронизировать личные рекорды. Тег нужен для удобства и не подтверждает владение. Синхронизированные результаты сообщаются клиентом и не являются проверенными соревновательными результатами или записями рейтинга. Существующие записи импортируются только после вашего подтверждения. Удаление аккаунта удаляет его данные и облачные рекорды, но не публичные записи боев, связанные с тегом. Функции аккаунта не будут включены до настройки правил аккаунта и допуска.",
+    contactTitle: "Запросы по аккаунту",
+    contactText: "Когда аккаунты станут доступны, выйти или запросить удаление можно будет на странице аккаунта. Если доступа нет или у вас есть запрос по конфиденциальности, используйте указанный ниже способ связи. Удаление аккаунта не удаляет публичные записи боев.",
+    accountLink: "Открыть страницу аккаунта",
   },
 };
 

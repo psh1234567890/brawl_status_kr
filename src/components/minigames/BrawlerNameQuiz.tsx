@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import BrawlImage from "../BrawlImage";
 import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
+import { usePersonalBest } from "../../hooks/useAccount";
 import {
   bestStorageKey,
   buildBrawlerAnswerLookup,
@@ -55,6 +56,7 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
   const inputRef = useRef<HTMLInputElement>(null);
   const startedAtRef = useRef(0);
   const deadlineRef = useRef<number | null>(null);
+  const { beginRound, recordPersonalBest } = usePersonalBest();
 
   const lookup = useMemo(() => buildBrawlerAnswerLookup(brawlers, locale), [brawlers, locale]);
   const foundSet = useMemo(() => new Set(foundIds), [foundIds]);
@@ -98,6 +100,15 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
       mode,
       recordedAt: new Date().toISOString(),
     };
+    // The guest localStorage PB is global to this browser, while a cloud PB is
+    // account-scoped. Send every finished run and let the server compare it.
+    void recordPersonalBest(
+      "brawler-quiz",
+      mode,
+      candidate.found,
+      candidate.total,
+      candidate.recordedAt,
+    );
     if (!isBetterBest(candidate, bests[mode])) return;
     const updated = { ...bests, [mode]: candidate };
     try {
@@ -109,10 +120,11 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
       setBests(updated);
     }, 0);
     return () => window.clearTimeout(timeout);
-  }, [phase, foundIds.length, brawlers.length, percent, mode, bests]);
+  }, [phase, foundIds.length, brawlers.length, percent, mode, bests, recordPersonalBest]);
 
   function startGame() {
     if (brawlers.length === 0) return;
+    beginRound();
     const now = Date.now();
     startedAtRef.current = now;
     deadlineRef.current = quizModeSeconds[mode] === null ? null : now + quizModeSeconds[mode]! * 1000;

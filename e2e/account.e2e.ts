@@ -1,4 +1,4 @@
-import { createHmac, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { expect, seedVerifiedDeletionSession, test } from "./fixtures/auth";
 
@@ -18,9 +18,33 @@ test("account page remains optional and private account APIs return a safe DTO",
   expect(body.state).toBe("account");
   expect(body.account.id).toBe(syntheticAccount.userId);
   expect(body.account.nickname).toMatch(/^CI-/);
+  expect(body.deletionIntentActive).toBe(false);
   expect(JSON.stringify(body)).not.toContain(syntheticAccount.email);
   expect(JSON.stringify(body)).not.toContain(syntheticAccount.sessionToken);
   expect(response.headers()["cache-control"]).toContain("private, no-store");
+});
+
+test("private account deletion activity expires with the server intent", async ({ context, syntheticAccount }, testInfo) => {
+  const origin = String(testInfo.project.use.baseURL);
+  const started = await context.request.post("/api/account/deletion/reauth", {
+    headers: { Origin: origin },
+    data: { expectedUserId: syntheticAccount.userId, callbackURL: "/account" },
+  });
+  expect(started.status()).toBe(200);
+  const pending = await context.request.get("/api/account");
+  expect(await pending.json()).toMatchObject({ deletionIntentActive: true, deletionReauthReady: false });
+  const ticket = (await context.cookies()).find((cookie) => cookie.name === "brawl-account-deletion");
+  expect(ticket).toBeDefined();
+  const identifier = "account-deletion:" + createHash("sha256").update(ticket!.value).digest("hex");
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+  try {
+    await pool.query("UPDATE public.auth_verifications SET expires_at = now() - interval '1 second' WHERE identifier = $1", [identifier]);
+    const expired = await context.request.get("/api/account");
+    expect(await expired.json()).toMatchObject({ deletionIntentActive: false, deletionReauthReady: false });
+  } finally {
+    await pool.query("DELETE FROM public.auth_verifications WHERE identifier = $1", [identifier]);
+    await pool.end();
+  }
 });
 
 test("account navigation is keyboard accessible and the account page fits a narrow viewport", async ({ page, syntheticAccount }) => {

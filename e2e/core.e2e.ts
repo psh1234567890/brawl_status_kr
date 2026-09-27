@@ -1,5 +1,63 @@
 import { expect, test } from "@playwright/test";
 
+test("deletion in another tab cannot leave a stale deletion warning on a new account", async ({ context, page }) => {
+  const oldId = "00000000-0000-4000-8000-000000000001";
+  const newId = "00000000-0000-4000-8000-000000000002";
+  await context.addInitScript((id) => {
+    sessionStorage.setItem("brawl-status:account:pending-deletion-user", id);
+  }, oldId);
+  const account = (id: string, active: boolean) => ({
+    state: "account", syncEnabled: false, deletionIntentActive: active, deletionReauthReady: active,
+    account: {
+      id, nickname: id === oldId ? "Old UI account" : "New UI account", defaultPlayerTag: null,
+      profileRevision: 1, onboardingComplete: true, onboardingCompletedAt: "2026-01-01T00:00:00Z",
+      policyReady: true, eligibilityPolicyTexts: null, eligibilityRules: null, policyVersions: null,
+    },
+  });
+  let current: object = account(oldId, true);
+  await context.route("**/api/account", (route) => {
+    if (route.request().method() === "DELETE") {
+      expect(route.request().postDataJSON()).toEqual({ expectedUserId: oldId, confirmation: true });
+      current = { state: "guest", syncEnabled: false };
+      return route.fulfill({ json: { deleted: true } });
+    }
+    expect(route.request().method()).toBe("GET");
+    return route.fulfill({ json: current });
+  });
+  // UI-only fixture. Both tabs start with the same pending deletion marker,
+  // but sessionStorage removal in the deleting tab does not clear the other tab.
+  const otherTab = await context.newPage();
+  await page.goto("/account");
+  await otherTab.goto("/account");
+  await expect(otherTab.getByRole("textbox", { name: "닉네임", exact: true })).toHaveValue("Old UI account");
+  await page.getByRole("checkbox", { name: "내 계정과 계정 데이터를 삭제하는 데 동의합니다.", exact: true }).check();
+  await page.getByRole("button", { name: "계정 영구 삭제", exact: true }).click();
+  await expect(page.getByText("계정과 계정 데이터가 삭제되었습니다.", { exact: true })).toBeVisible();
+  await expect(otherTab.getByRole("heading", { name: "선택 사항인 계정", exact: true })).toBeVisible();
+  expect(await otherTab.evaluate(() => sessionStorage.getItem("brawl-status:account:pending-deletion-user"))).toBe(oldId);
+  current = account(newId, false);
+  await otherTab.evaluate(() => window.dispatchEvent(new Event("brawlStatusAccountSessionChanged")));
+  await expect(otherTab.getByRole("textbox", { name: "닉네임", exact: true })).toHaveValue("New UI account");
+  await expect(otherTab.getByRole("alert").filter({ hasText: "삭제를 요청한 계정과 다른 Google 계정입니다." })).toHaveCount(0);
+  await otherTab.getByRole("checkbox", { name: "내 계정과 계정 데이터를 삭제하는 데 동의합니다.", exact: true }).check();
+  await expect(otherTab.getByRole("button", { name: "삭제 전에 Google로 다시 로그인해 주세요.", exact: true })).toBeEnabled();
+});
+
+test("an active deletion intent still blocks a different account in the UI", async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem("brawl-status:account:pending-deletion-user", "00000000-0000-4000-8000-000000000001"));
+  await page.route("**/api/account", (route) => {
+    expect(route.request().method()).toBe("GET");
+    return route.fulfill({ json: {
+      state: "account", syncEnabled: false, deletionIntentActive: true, deletionReauthReady: false,
+      account: { id: "00000000-0000-4000-8000-000000000002", nickname: "Other UI account", profileRevision: 1, defaultPlayerTag: null, onboardingComplete: true },
+    } });
+  });
+  await page.goto("/account");
+  await expect(page.getByRole("alert").filter({ hasText: "삭제를 요청한 계정과 다른 Google 계정입니다." })).toBeVisible();
+  await page.getByRole("checkbox", { name: "내 계정과 계정 데이터를 삭제하는 데 동의합니다.", exact: true }).check();
+  await expect(page.getByRole("button", { name: "삭제 전에 Google로 다시 로그인해 주세요.", exact: true }).first()).toBeDisabled();
+});
+
 test("explicit normal sign-in clears a previous deletion UI target without deleting data", async ({ page }) => {
   await page.addInitScript(() => {
     sessionStorage.setItem("brawl-status:account:pending-deletion-user", "00000000-0000-4000-8000-000000000001");

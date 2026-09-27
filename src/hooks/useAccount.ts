@@ -34,6 +34,7 @@ export type AccountSnapshot = {
   account: AccountDto | null;
   signInPolicy: { version: string; texts: Record<"ko" | "en" | "ja" | "pt-br" | "es" | "tr" | "de" | "fr" | "it" | "ru", string> } | null;
   deletionUserId: string | null;
+  deletionIntentActive: boolean;
   deletionReauthReady: boolean;
   syncEnabled: boolean;
   syncState:
@@ -55,6 +56,7 @@ const INITIAL: AccountSnapshot = {
   account: null,
   signInPolicy: null,
   deletionUserId: null,
+  deletionIntentActive: false,
   deletionReauthReady: false,
   syncEnabled: false,
   syncState: "checking",
@@ -189,7 +191,7 @@ export async function refreshAccountStatus(options: { force?: boolean } = {}) {
         headers: { Accept: "application/json" },
       });
       const payload = await response.json().catch(() => null) as
-        | { state?: string; syncEnabled?: boolean; account?: AccountDto; signInPolicy?: AccountSnapshot["signInPolicy"]; deletionUserId?: string | null; deletionReauthReady?: boolean; error?: string }
+        | { state?: string; syncEnabled?: boolean; account?: AccountDto; signInPolicy?: AccountSnapshot["signInPolicy"]; deletionUserId?: string | null; deletionIntentActive?: boolean; deletionReauthReady?: boolean; error?: string }
         | null;
       if (!response.ok || !payload) throw new Error(payload?.error ?? "ACCOUNT_UNAVAILABLE");
       if (!requestSequence.isCurrent(sequence)) return;
@@ -218,6 +220,7 @@ export async function refreshAccountStatus(options: { force?: boolean } = {}) {
           account: payload.account,
           signInPolicy: null,
           deletionUserId: null,
+          deletionIntentActive: payload.deletionIntentActive === true,
           deletionReauthReady: payload.deletionReauthReady === true,
           syncEnabled: payload.syncEnabled === true,
           syncState: accountCanSync ? "checking" : "localOnly",

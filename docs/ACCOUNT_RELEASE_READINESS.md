@@ -18,8 +18,13 @@
 ## 코드와 실제 운영의 구분
 
 완료된 staging Google 검증은 `ACCOUNT_STAGING_SMOKE.md`에 기록돼 있다.
-2026-09-28 추가한 사전 자격 확인과 암호화 snapshot은 별도 변경이며,
-그 문서의 과거 Google smoke 결과를 이 변경의 실제 Google 검증으로 재사용하지 않는다.
+2026-09-28 사전 자격 확인 변경도 `a4b6849` Preview에서 실제 Google로 재검증했다.
+온보딩·프로필·PB·동일 UUID 재로그인·일반/rollback 삭제는 통과했다. 재가입 직후
+이전 삭제 대상 경고가 남던 현상은 탭별 sessionStorage와 이미 소비된 서버 삭제 intent의
+불일치로 재현했고 수정했다. 수정 전 실패·수정 후 성공한 두 탭 회귀 테스트와
+활성 삭제 intent의 다른 계정 차단 테스트를 추가했다. 이 후속 수정의 검증은 로컬/CI이며
+`a4b6849`의 실제 Google smoke와 구분한다.
+암호화 snapshot의 CI 격리 DB 검증과 실제 외부 보관 활성화는 별도로 구분한다.
 
 `account-snapshots.yml`은 기본 비활성이다. 현재 Production 자격 증명·DB·환경변수를
 변경하지 않았고 PR #56은 Draft 상태다. 예약 workflow는 main에 있어야 실행되므로,

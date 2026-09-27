@@ -69,3 +69,72 @@ backup 7일/manifest 14일을 선택했다. `ACCOUNT_LAUNCH_POLICY.json` 참조.
 staging 시험 설정을 Production으로 복사하지 않는다. 계정 공개 전에는
 `ACCOUNTS_MODE=off`, `ACCOUNT_SYNC_ENABLED=0`을 유지한다. 실제 운영 계정이
 존재하는 긴급 rollback에서만 `ACCOUNT_DELETION_ONLY=1`로 삭제 경로를 보존한다.
+
+## 2026-09-28 — 새 사전 자격 확인의 실제 Google 재검증
+
+대상 소스는 `a4b6849fa8e6935e2aa8a06c00b8cdfb62957d15`다. 운영자가
+staging만 잠시 활성화하도록 승인한 뒤 Preview의 해당 작업 브랜치에서만 검증했다.
+일반 계정 smoke는 `dpl_HCkgqFbw97oNdPR9Wyjo36dMrfQS`, 삭제 전용 smoke는
+`dpl_9SNDWAXbLKVug2oPmn2u1D3XT9zU`에서 실행했다.
+
+| 항목 | 실제 결과 |
+| --- | --- |
+| 로그인 전 자격 안내 | PASS: 만 16세/all/not-supported 안내, 확인 전 Google 버튼 비활성 |
+| 새 Google OAuth state / callback | PASS: 사전 자격 확인 후 실제 Google callback으로 새 계정·identity·DB session 생성 |
+| 최소 수집 | PASS: 중립 닉네임, 사진·provider token·password·session IP/UA NULL |
+| 새 정책 온보딩 | PASS: 운영자가 현재 안내 제출을 승인했고 정확한 staging terms/privacy/eligibility 버전 기록 |
+| 프로필 | PASS: 닉네임 저장, ` #2py ` → `2PY`, revision 증가 |
+| 기존 브라우저 기록 | PASS: 명시적 가져오기 전 PB 0, 선택 후 3분/연습 1/108 두 슬롯만 `legacy_import`로 저장 |
+| 실제 플레이 sync | PASS: 5분 Brawler 수동 종료 1/108, `client_play`, ruleset 1, 서버 receipt 생성 |
+| 로그아웃·재로그인 | PASS: session 0 → 새 session 1; 원래 내부 UUID·프로필·PB 3개 유지 |
+| 일반 삭제 | PASS: fresh Google callback 뒤 user/identity/session/PB/receipt 모두 0, tombstone와 14일 safety ledger 생성 |
+| 삭제 후 재가입 | PASS: 원래 UUID와 다른 UUID, 온보딩 미완료, PB 0. 아래 UI 관찰 사항은 별도 |
+| rollback 기존 사용자 삭제 | PASS: accounts off / sync 0 / deletion-only 1에서 로그아웃한 기존 Google 계정을 재인증하여 삭제; cascade와 14일 ledger 확인 |
+| rollback 신규 생성 차단 | PASS: 삭제된 identity로 다시 callback하면 `signup_disabled`; 새 사용자·세션 생성 없음 |
+
+삭제 재인증 URL에서 `max_age=0`, `prompt=select_account`, PKCE `S256`을 직접 확인했다.
+Google 비밀번호/2FA 입력 강제를 검증했다는 뜻은 아니다. Google에 새 동의 화면은
+나타나지 않았으며, 해당 계정의 기존 로그인 상태에서 계정 선택으로 callback을 확인했다.
+
+재가입 직후 이전 삭제 대상과 다른 계정이라는 UI 경고가 한 번 관찰됐다. 같은 Google
+identity에 새 내부 UUID가 발급되는 것은 정상이며 DB 계정 격리는 유지됐다. 로그아웃 후
+삭제 전용 경로는 정상 동작했다. 이 관찰 사항은 아래 후속 로컬 회귀 수정에서 별도로
+다뤘으며, 당시 실제 Google smoke에서 경고가 없었다고 소급해서 보고하지 않는다.
+
+최종 테스트 계정·identity·session·PB·receipt는 모두 0이다. 과거 두 항목을 포함한
+삭제 ledger/tombstone 네 항목은 보존하며, 이번 두 ledger는 14일이다. 과거 시험의
+2일 ledger 보존 시각은 임의로 변경하지 않았다. 학생 테이블의 내용·구조를 읽거나
+변경하지 않았고 app role의 students SELECT 권한은 계속 false다.
+
+이 검증은 실제 외부 암호화 보관 예약 작업이나 staging snapshot 복구 검증을 대체하지
+않는다. 공유 staging DB 전체 dump/restore는 실행하지 않았다. Production 변경,
+main push 및 PR #56 merge는 하지 않았다.
+
+최종 `dpl_2S8E5BYRJrZzMnBFPyeEr9njBLwf` Preview는 같은 `a4b6849` 소스로
+READY다. 해당 브랜치의 `ACCOUNTS_MODE=off`, `ACCOUNT_SYNC_ENABLED=0`,
+`ACCOUNT_DELETION_ONLY=0`으로 복구하고 고정 staging 주소의 비활성 화면을 확인했다.
+기존 Production 배포는 변경하지 않았다. 환경 플래그 변경만으로 과거 immutable
+배포가 꺼지는 것은 아니므로, 이번 smoke의 임시 on/삭제 전용 Preview 두 배포는
+검증 후 삭제하고 Vercel 배포 목록에서 제거된 것을 확인했다. 최종 off 배포는 유지한다.
+
+## 2026-09-28 — 삭제 후 다른 탭의 오래된 UI 경고 수정
+
+두 탭에 삭제 대상 A의 sessionStorage marker가 남은 상태에서 한 탭이 A를 삭제하면,
+다른 탭의 marker는 자동으로 지워지지 않는다. 이후 새 UUID B로 로그인하면 서버의
+삭제 intent가 이미 없는데도 브라우저 marker만으로 불일치 경고를 표시하던 현상을
+로컬 fixture에서 재현했다. 수정 전 회귀 테스트가 해당 경고 assertion에서 실패했다.
+
+서버 `/api/account`가 현재 요청의 유효한 삭제 intent 존재 여부를 boolean으로 반환하고,
+일반 계정 UI는 서버 intent가 없는 오래된 marker를 무시하도록 수정했다. 이 값은 UI
+힌트이며 삭제 권한이나 재인증 proof가 아니다. 실제 DELETE의 동일 UUID·Google identity·
+fresh session·서버 intent·Origin·rate limit 검사는 유지한다. 유효한 다른 계정의 삭제
+intent가 있는 경우 기존 불일치 차단도 유지한다. rollback DTO와 삭제 전용 동작은 유지한다.
+
+- 로컬: ESLint, TypeScript, Vitest 172 PASS / DB 통합 2 skip, audit 0 vulnerabilities,
+  accounts off production fixture build 및 Core Playwright 34 PASS.
+- 두 탭 회귀와 활성 intent 불일치 차단은 위 34개에 포함된다. 데스크톱/390px 모바일에서
+  오래된 경고가 없고 재인증 버튼이 활성화되며 가로 overflow가 없는 것도 확인했다.
+- DB intent의 만료 후 activity가 false로 바뀌는 Account E2E를 추가했다. 로컬 Docker
+  daemon이 실행되지 않아 실제 DB 경로는 GitHub CI의 disposable PostgreSQL에서 검증한다.
+- production auth bypass, 테스트용 로그인 endpoint, 실제 환경변수 변경은 추가하지 않았다.
+  이 후속 수정에 대해 실제 Google 재로그인을 새로 실행한 것은 아니다.

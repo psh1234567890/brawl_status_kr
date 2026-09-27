@@ -87,7 +87,9 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
   const syncEnabled = state.syncEnabled;
   const syncSettled = state.syncState === "synced" && state.pendingCount === 0;
   const effectiveDeletionTargetUserId =
-    state.status === "deletionOnly" && !state.deletionUserId ? null : deletionTargetUserId;
+    (state.status === "deletionOnly" && !state.deletionUserId) ||
+    (state.status === "account" && !state.deletionIntentActive)
+      ? null : deletionTargetUserId;
   const profileDraftIsCurrent = Boolean(
     profileDraft && profileDraft.userId === accountId && profileDraft.revision === accountRevision,
   );

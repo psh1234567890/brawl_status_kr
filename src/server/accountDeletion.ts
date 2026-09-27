@@ -212,19 +212,22 @@ export async function createDeletionReauthIntent(
 export async function readDeletionReauthForCurrentSession(request: Request) {
   const account = await getDeletionAccount(request);
   const stored = await readIntent(request);
-  if (!stored || stored.intent.userId !== account.userId) return { account, ready: false };
+  // A browser marker can outlive this server-owned, expiring intent (including
+  // when another tab completed deletion). Activity is a UI hint, never proof.
+  const intentActive = stored !== null;
+  if (!stored || stored.intent.userId !== account.userId) return { account, ready: false, intentActive };
   if (stored.intent.status !== "verified" ||
       stored.intent.verifiedSessionId !== account.sessionId ||
       stored.intent.googleSubject !== account.googleSubject) {
-    return { account, ready: false };
+    return { account, ready: false, intentActive };
   }
   const verifiedAt = Date.parse(stored.intent.verifiedAt!);
   if (Date.now() - verifiedAt > INTENT_TTL_SECONDS * 1_000 ||
       Date.now() < account.sessionCreatedAt.getTime() ||
       Date.now() - account.sessionCreatedAt.getTime() > INTENT_TTL_SECONDS * 1_000) {
-    return { account, ready: false };
+    return { account, ready: false, intentActive };
   }
-  return { account, ready: true };
+  return { account, ready: true, intentActive };
 }
 
 export async function requirePendingDeletionReauth(request: Request) {

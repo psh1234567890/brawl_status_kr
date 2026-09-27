@@ -115,6 +115,7 @@ export async function GET(request: Request) {
     return accountJson({
       state: "account",
       syncEnabled: isAccountSyncEnabled(),
+      deletionIntentActive: deletion.intentActive,
       deletionReauthReady: deletion.ready,
       account: await readSafeAccount(account.userId),
     });

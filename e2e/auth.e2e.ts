@@ -25,6 +25,8 @@ test("Google OAuth starts only with an internal account callback and uses the co
       errorCallbackURL: "/account",
       newUserCallbackURL: "/account",
       disableRedirect: true,
+      confirmEligibility: true,
+      eligibilityPolicyVersion: process.env.ACCOUNT_ELIGIBILITY_POLICY_VERSION,
     },
   });
   expect(started.status()).toBe(200);
@@ -44,11 +46,25 @@ test("an existing session must sign out before starting another Google session",
   const origin = String(testInfo.project.use.baseURL);
   const response = await context.request.post("/api/auth/sign-in/social", {
     headers: { Origin: origin },
-    data: { provider: "google", callbackURL: "/account", disableRedirect: true },
+    data: { provider: "google", callbackURL: "/account", disableRedirect: true, confirmEligibility: true, eligibilityPolicyVersion: process.env.ACCOUNT_ELIGIBILITY_POLICY_VERSION },
   });
   expect(response.status()).toBe(409);
   expect((await response.json()).error).toBe("ALREADY_SIGNED_IN");
   expect(syntheticAccount.userId).toHaveLength(36);
+});
+
+test("normal Google OAuth cannot start without current pre-login eligibility confirmation", async ({ context }, testInfo) => {
+  const origin = String(testInfo.project.use.baseURL);
+  for (const extra of [{}, { confirmEligibility: false, eligibilityPolicyVersion: process.env.ACCOUNT_ELIGIBILITY_POLICY_VERSION }, { confirmEligibility: true, eligibilityPolicyVersion: "stale-policy" }]) {
+    const response = await context.request.post("/api/auth/sign-in/social", {
+      headers: { Origin: origin, "x-brawl-eligibility-version": process.env.ACCOUNT_ELIGIBILITY_POLICY_VERSION ?? "" },
+      data: { provider: "google", callbackURL: "/account", disableRedirect: true, ...extra },
+    });
+    expect(response.status()).toBe(400);
+    expect((await response.json()).error).toBe("ELIGIBILITY_REQUIRED");
+  }
+  const guest = await context.request.get("/api/account");
+  expect((await guest.json()).signInPolicy.version).toBe(process.env.ACCOUNT_ELIGIBILITY_POLICY_VERSION);
 });
 
 test("deletion reauthentication asks Google for a fresh account authentication", async ({ context, syntheticAccount }, testInfo) => {

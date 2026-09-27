@@ -12,6 +12,8 @@
     "test:e2e:headed": "playwright test --headed",
     "db:backup": "node scripts/backup-db.mjs",
     "db:backup:prune": "node scripts/prune-account-backups.mjs",
+    "db:accounts:snapshot": "node scripts/snapshot-accounts.mjs",
+    "db:accounts:decrypt": "node scripts/decrypt-account-artifact.mjs",
     "db:deletions:export": "node scripts/export-account-deletions.mjs",
     "db:deletions:reapply": "node scripts/reapply-account-deletions.mjs",
     "db:check": "node scripts/check-db.mjs",

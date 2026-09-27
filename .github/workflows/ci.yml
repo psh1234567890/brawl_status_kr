@@ -78,6 +78,13 @@ jobs:
         env:
           ACCOUNT_MANIFEST_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
 
+      - name: Verify encrypted account-only backup and isolated restore
+        run: npx vitest run scripts/account-snapshot.integration.test.mjs
+        env:
+          ACCOUNT_SNAPSHOT_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
+          ACCOUNT_PG_DUMP_BINARY: /usr/lib/postgresql/16/bin/pg_dump
+          ACCOUNT_PG_RESTORE_BINARY: /usr/lib/postgresql/16/bin/pg_restore
+
       - name: Core end-to-end tests
         run: npx playwright test e2e/core.e2e.ts e2e/minigames.e2e.ts e2e/player-search.e2e.ts
         env:

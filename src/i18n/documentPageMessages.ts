@@ -1,4 +1,5 @@
-import type { Locale } from "./config";
+import { locales, type Locale } from "./config";
+import launchPolicy from "../../docs/ACCOUNT_LAUNCH_POLICY.json";
 
 type DocumentBlock =
   | Readonly<{ type: "paragraph"; text: string }>
@@ -2965,7 +2966,7 @@ export type AccountPolicyCopy = {
   accountLink: string;
 };
 
-export const accountPolicyMessages: Record<Locale, AccountPolicyCopy> = {
+const baseAccountPolicyMessages: Record<Locale, AccountPolicyCopy> = {
   ko: {
     privacyTitle: "선택적 계정과 미니게임 동기화",
     privacyText: "계정 기능은 현재 기본 비활성화되어 있습니다. 활성화될 경우 Google 로그인으로 받은 비공개 이메일 주소와 Google 식별자, 내부 사용자 ID, 닉네임, 선택한 대표 플레이어 태그, 세션 쿠키, 미니게임 개인 최고 기록을 처리합니다. 이메일과 Google 식별자는 공개되지 않으며, 대표 태그는 게임 계정 소유권 확인이나 전투 기록 수정 권한을 뜻하지 않습니다. 브라우저에 저장된 기존 기록은 이용자가 가져오기를 직접 선택한 경우에만 병합되며, 전송 대기 기록은 계정별로 브라우저 저장소에 보관될 수 있습니다. Google은 로그인 제공자로, 호스팅 및 데이터베이스 제공자는 서비스 운영 처리자로 정보를 처리할 수 있습니다. 계정 프로필과 클라우드 기록은 계정 삭제 요청 시 활성 서비스 DB에서 삭제합니다. 백업 보존 일수와 삭제 manifest 보존 일수는 운영 설정으로 명시하며, 서명된 삭제 manifest는 복구 시 재적용합니다. 실제 보존 값이 확정·설정되기 전까지 계정 기능을 켜지 않습니다. 계정 기능이 제공될 때도 공개 프로필과 랭킹은 포함하지 않습니다. Google 로그인은 연령 확인이나 보호자 동의가 아닙니다. 연령·지역 자격 기준은 운영자가 명시적으로 정해야 하며, 생년월일·국가 자체는 저장하지 않고 이용자의 자격 확인만 기록합니다. 보호자 동의 절차는 현재 지원하지 않습니다. 요청 제한과 악용 방지를 위해 계정 ID와 신뢰된 요청 IP에서 만든 단기 HMAC 해시도 저장합니다. 제한 창이 끝난 해시 행은 더 이상 요청 제한 판정에 사용되지 않습니다. 만료 행은 예약된 정리 작업에서 물리 삭제되므로 다음 정리 실행 전까지 데이터베이스에 남아 있을 수 있습니다.",
@@ -3057,6 +3058,25 @@ export const accountPolicyMessages: Record<Locale, AccountPolicyCopy> = {
     accountLink: "Открыть страницу аккаунта",
   },
 };
+
+const launchRetentionCopy: Record<Locale, string> = {
+  ko: "확정한 출시 보존 설정은 백업 7일, 삭제 manifest 14일입니다. 실제 암호화 보관·만료 정리를 구성하고 검증한 뒤에만 계정 기능을 활성화합니다.",
+  en: "The approved launch retention settings are 7 days for backups and 14 days for deletion manifests. Accounts will only be enabled after encrypted storage and expiry cleanup are configured and verified.",
+  ja: "承認済みの公開時保持設定はバックアップ7日、削除manifest14日です。暗号化保存と期限切れデータの整理を設定・検証してからアカウント機能を有効にします。",
+  "pt-br": "Os períodos aprovados para o lançamento são 7 dias para backups e 14 dias para manifestos de exclusão. As contas só serão ativadas após configurar e verificar o armazenamento criptografado e a remoção de dados expirados.",
+  es: "Los plazos aprobados para el lanzamiento son 7 días para copias de seguridad y 14 días para manifiestos de eliminación. Las cuentas solo se activarán tras configurar y verificar el almacenamiento cifrado y la limpieza de datos caducados.",
+  tr: "Onaylanan yayın saklama ayarları yedekler için 7 gün, silme manifestleri için 14 gündür. Hesaplar yalnızca şifreli depolama ve süresi dolan verilerin temizlenmesi yapılandırılıp doğrulandıktan sonra açılır.",
+  de: "Die genehmigten Aufbewahrungseinstellungen zum Start betragen 7 Tage für Backups und 14 Tage für Löschmanifeste. Konten werden erst aktiviert, wenn verschlüsselte Speicherung und die Bereinigung abgelaufener Daten eingerichtet und geprüft sind.",
+  fr: "Les durées approuvées pour le lancement sont de 7 jours pour les sauvegardes et de 14 jours pour les manifestes de suppression. Les comptes ne seront activés qu'après configuration et vérification du stockage chiffré et du nettoyage des données expirées.",
+  it: "Le impostazioni approvate per il lancio sono 7 giorni per i backup e 14 giorni per i manifest di cancellazione. Gli account saranno attivati solo dopo aver configurato e verificato l'archiviazione cifrata e la pulizia dei dati scaduti.",
+  ru: "Утверждённые сроки хранения при запуске: 7 дней для резервных копий и 14 дней для манифестов удаления. Аккаунты будут включены только после настройки и проверки зашифрованного хранения и очистки просроченных данных.",
+};
+
+export const accountPolicyMessages = Object.fromEntries(locales.map((locale) => [locale, {
+  ...baseAccountPolicyMessages[locale],
+  privacyText: baseAccountPolicyMessages[locale].privacyText + " " + launchPolicy.eligibilityTexts[locale] + " " + launchRetentionCopy[locale],
+  termsText: baseAccountPolicyMessages[locale].termsText + " " + launchPolicy.eligibilityTexts[locale],
+}])) as Record<Locale, AccountPolicyCopy>;
 
 export function getDocumentPageMessages(locale: Locale) {
   return documentPageMessages[locale];

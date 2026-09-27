@@ -104,6 +104,63 @@ npm.cmd run db:deletions:reapply -- --manifest "C:\PrivateBackups\account-deleti
 
 `scripts/backup-db.mjs`는 Docker/클라이언트 버전을 확인하고, 임시 libpq service/password 파일을 사용한다. 저장소 외부 경로만 허용하고 고유 `.partial` 파일에 기록한 뒤 archive 목록 검사와 SHA-256 계산이 성공해야 최종 이름으로 바꾼다. 자식 프로세스 실패 시 원문 stderr를 그대로 출력하지 않아 연결 정보가 로그에 섞이는 것을 피한다.
 
+## 계정 전용 암호화 외부 보관
+
+2026-09-28 운영자가 백업 7일·삭제 manifest 14일을 선택했다. 이는 보존 설정값이며
+자동 작업이 이미 실행 중이라는 뜻은 아니다. `ACCOUNT_RELEASE_READINESS.md`와
+`ACCOUNT_LAUNCH_POLICY.json`을 함께 확인한다.
+
+`npm run db:accounts:snapshot -- backup`은 명시적인
+`ACCOUNT_SNAPSHOT_DATABASE_URL`만 사용하며 `.env.local`, `DATABASE_URL`, `DIRECT_URL`을
+읽지 않는다. 9개 계정 테이블만 custom dump로 내보낸 뒤 AES-256-GCM으로 암호화한다.
+`students`, battle 테이블, non-public safety ledger의 원본 dump는 포함하지 않는다.
+최신 safety ledger는 HMAC 서명 manifest로 따로 내보내고 별도로 암호화한다.
+`npm run db:accounts:snapshot -- manifest`는 ledger만 내보낸다.
+별도 임시 폴더의 원문 dump/manifest는 실행 후 삭제되며, 업로드 대상은 `.enc`뿐이다.
+대상 프로젝트·5432 session pooler·TLS CA/hostname을 검사하고, 원격 production은
+추가 `ACCOUNT_SNAPSHOT_ALLOW_PRODUCTION=1` 없이는 거부한다. Docker 도구를 쓰는
+Linux runner에서는 원본 PostgreSQL major와 같은 공식 이미지를 사용한다.
+
+`.github/workflows/account-snapshots.yml`은 main에서만 실행하고 기본 비활성이다.
+repo 변수 `ACCOUNT_SNAPSHOT_AUTOMATION_ENABLED=1`과 환경별
+`account-operations-staging`/`account-operations-production`의
+`ACCOUNT_SNAPSHOT_ENABLED=1`이 모두 있어야 실행한다. environment별 target ref,
+별도 읽기 DB URL, CA, AES key, 앱과 일치하는 manifest HMAC secret을 설정한다.
+시간당 manifest, 하루 1회 backup을 GitHub artifact로 각각 14일/7일 보관하도록
+구성했다. 공개 repo이므로 raw dump/manifest나 키는 절대 artifact로 업로드하지 않는다.
+재-export로 삭제 UUID의 보존 시계가 다시 시작되지 않도록 artifact 이름에는 해당
+manifest에서 가장 먼저 만료되는 삭제 표식의 원래 만료 시각을 넣는다. 예약 작업은
+그 시각이 지난 계정 artifact만 환경별로 제거한다. backup도 생성 시점의 7일 기한을
+사용한다. 정리 지연/실패로 물리 보관이 더 길어질 수 있으므로 만료 보관본은 복구에
+사용하지 않고 정리 실패를 감시한다. 이 cleanup에만 GitHub Actions artifact 삭제
+권한을 사용하며, 다른 이름의 CI artifact는 삭제 대상이 아니다.
+암호화 키와 서명키는 artifact·DB backup과 별도의 접근 제한 복구 경로에 보관한다.
+GitHub 보존 설정은 다운로드한 별도 사본이나 Supabase 관리형 backup의 보존 설정을
+바꾸지 않으므로 그 보관본도 각각 목록화하고 정책에 맞춰 설정·정리한다.
+
+예약 실행은 지연/실패할 수 있다. 현재 hourly export는 삭제 transaction마다 즉시
+외부 사본을 만드는 시스템이 아니며, 장애 시 마지막 성공 export 이후의 삭제가 누락될
+수 있다. 복구 전에 남아 있는 최신 safety ledger에서 즉시 export하고, 원본 유실 시에는
+독립 최신 ledger/manifest로 삭제 누락이 없음을 확인해야 한다. 확인할 수 없으면
+복구 DB의 계정 기능을 열지 않는다. 이전 archive 옆의 manifest만으로 복구를 승인하지 않는다.
+
+외부 보관본을 내려받은 뒤 key와 명시적인 target/project ref를 안전하게 환경에 전달한다.
+원문 출력 경로는 저장소 밖의 접근 제한 폴더여야 한다.
+
+```powershell
+npm.cmd run db:accounts:decrypt -- "C:\PrivateBackups\accounts.dump.enc" "C:\PrivateRestore\accounts.dump" backup
+npm.cmd run db:accounts:decrypt -- "C:\PrivateBackups\latest.json.enc" "C:\PrivateRestore\latest.json" manifest
+```
+
+복구는 운영과 분리된 빈 DB에서 먼저 연습한다. `pg_restore --no-owner --no-privileges
+--exit-on-error --single-transaction`으로 archive를 적용하고, 계정 전용 migration runner로
+non-public ledger와 checksum을 확인한 다음 최신 manifest를 재적용한다.
+`db:deletions:reapply`와 `db:restore:test`는 복구된 모든 세션과 OAuth state/삭제 proof를
+manifest 재적용 transaction에서 폐기한다. 살아 있는 계정도 새로 로그인해야 한다.
+권한/RLS를 재검증하고 삭제 UUID가 제거됐음을 확인한 뒤에만 앱을 연결한다.
+원문 복구 파일은 연습 종료 후 제거하고, 7/14일 만료와 외부 보관본 정리를 실제로
+확인한다. 코드/CI 테스트를 외부 보관 작업의 활성화나 운영 복구 성공으로 표현하지 않는다.
+
 ## 공식 문서
 
 - https://supabase.com/docs/guides/platform/backups

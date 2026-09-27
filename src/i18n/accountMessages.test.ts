@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { accountDeletionMessages, accountMessages, getAccountErrorMessage } from "./accountMessages";
 import { locales } from "./config";
+import launchPolicy from "../../docs/ACCOUNT_LAUNCH_POLICY.json";
+import { accountPolicyMessages } from "./documentPageMessages";
+import { parseAccountEligibilityRules, parseAccountEligibilityTexts } from "../server/accountPolicy";
 
 function flattenStrings(value: unknown, prefix = ""): Record<string, string> {
   if (typeof value === "string") return { [prefix]: value };
@@ -19,6 +22,19 @@ function placeholders(value: string) {
 }
 
 describe("account messages", () => {
+  it("publishes the owner-approved 16+ policy and 7/14 retention explicitly in all ten locales", () => {
+    expect(parseAccountEligibilityRules(JSON.stringify(launchPolicy.eligibilityRules))).toEqual({ minimumAge: 16, regions: "all", guardianConsent: "not-supported", attestation: "self" });
+    expect(parseAccountEligibilityTexts(JSON.stringify(launchPolicy.eligibilityTexts))).not.toBeNull();
+    expect(launchPolicy.backupRetentionDays).toBe(7);
+    expect(launchPolicy.deletionManifestRetentionDays).toBe(14);
+    for (const locale of locales) {
+      expect(launchPolicy.eligibilityTexts[locale]).toContain("16");
+      expect(accountPolicyMessages[locale].termsText).toContain(launchPolicy.eligibilityTexts[locale]);
+      expect(accountPolicyMessages[locale].privacyText).toContain("7");
+      expect(accountPolicyMessages[locale].privacyText).toContain("14");
+    }
+    expect(new Set(Object.values(launchPolicy.eligibilityTexts)).size).toBe(10);
+  });
   it("provides non-empty translations for every locale and message key", () => {
     const keys = Object.keys(accountMessages.ko).sort();
     for (const locale of locales) {

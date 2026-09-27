@@ -52,6 +52,11 @@ Draft PR #56은 merge하지 않는다. Production DB, 환경변수, OAuth 및 �
 
 ## 출시 전 남은 조건
 
+2026-09-28 후속 결정: 운영자가 계정 만 16세 이상·모든 국가·보호자 동의 미지원과
+backup 7일/manifest 14일을 선택했다. `ACCOUNT_LAUNCH_POLICY.json` 참조.
+아래의 당시 미확정 목록 중 정책 수치는 확정됐지만, 실제 env 적용·외부 보관 활성화·
+새 로그인 전 자격 확인의 Google smoke는 별도 검증 대상이다.
+
 1. 실제 최소 연령/허용 지역/보호자 동의 지원 범위를 운영자가 확정하고 게시한다.
    staging의 18세/all/not-supported는 시험 설정이며 운영 승인이 아니다.
 2. 실제 backup/manifest 보존 일수, 외부 manifest 보관 위치, 서명키 관리 및

@@ -2,7 +2,7 @@
 
 import { publishAccountSessionChange } from "../hooks/useAccount";
 
-export async function startGoogleSignIn(callbackURL: string) {
+export async function startGoogleSignIn(callbackURL: string, eligibilityPolicyVersion?: string) {
   const response = await fetch("/api/auth/sign-in/social", {
     method: "POST",
     credentials: "same-origin",
@@ -13,6 +13,7 @@ export async function startGoogleSignIn(callbackURL: string) {
       errorCallbackURL: callbackURL,
       newUserCallbackURL: callbackURL,
       disableRedirect: true,
+      ...(eligibilityPolicyVersion ? { eligibilityPolicyVersion, confirmEligibility: true } : {}),
     }),
   });
   const payload = await response.json().catch(() => null) as { url?: unknown } | null;

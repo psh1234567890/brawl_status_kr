@@ -25,6 +25,7 @@ import {
   areAccountsEnabled,
   isAccountDeletionOnlyEnabled,
   isAccountSyncEnabled,
+  getSignInEligibilityPolicy,
 } from "../../../server/auth";
 
 export const runtime = "nodejs";
@@ -96,7 +97,7 @@ export async function GET(request: Request) {
         error instanceof AccountError &&
         (error.status === 401 || error.code === "PILOT_ACCESS_REQUIRED")
       ) {
-        return accountJson({ state: "guest", syncEnabled: false });
+        return accountJson({ state: "guest", syncEnabled: false, signInPolicy: getSignInEligibilityPolicy() });
       }
       throw error;
     }

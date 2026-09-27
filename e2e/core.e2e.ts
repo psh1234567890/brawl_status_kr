@@ -6,16 +6,18 @@ test("explicit normal sign-in clears a previous deletion UI target without delet
   });
   await page.route("**/api/account", (route) => {
     expect(route.request().method()).toBe("GET");
-    return route.fulfill({ json: { state: "guest", syncEnabled: false } });
+    return route.fulfill({ json: { state: "guest", syncEnabled: false, signInPolicy: { version: "ui-fixture-v1", texts: { ko: "UI 테스트: 계정은 만 16세 이상입니다." } } } });
   });
   await page.route("**/api/auth/sign-in/social", (route) => {
-    expect(route.request().postDataJSON()).toMatchObject({ provider: "google", callbackURL: "/account" });
+    expect(route.request().postDataJSON()).toMatchObject({ provider: "google", callbackURL: "/account", confirmEligibility: true, eligibilityPolicyVersion: "ui-fixture-v1" });
     // Keep this UI-only regression entirely local; do not open real Google.
     return route.fulfill({ status: 503, json: { error: "SIGN_IN_UNAVAILABLE" } });
   });
   await page.goto("/account");
   const deletionReauth = page.getByRole("button", { name: "삭제 전에 Google로 다시 로그인해 주세요.", exact: true });
   await expect(deletionReauth).toBeVisible();
+  await expect(page.getByRole("button", { name: "Google로 계속", exact: true })).toBeDisabled();
+  await page.getByRole("checkbox", { name: "서비스에 표시된 계정 이용 자격 요건을 확인했으며 이에 해당합니다.", exact: true }).check();
   await page.getByRole("button", { name: "Google로 계속", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "요청을 완료하지 못했습니다." })).toBeVisible();
   await expect(deletionReauth).toHaveCount(0);

@@ -1,0 +1,107 @@
+name: Encrypted account snapshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        options: [staging, production]
+        default: staging
+        required: true
+      kind:
+        type: choice
+        options: [manifest, backup]
+        default: manifest
+        required: true
+  schedule:
+    - cron: '17 * * * *'
+    - cron: '37 3 * * *'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  snapshot:
+    # Nothing runs until deliberately enabled on main. PRs and branch pushes
+    # cannot receive the operations environments or their database secrets.
+    if: github.ref == 'refs/heads/main' && vars.ACCOUNT_SNAPSHOT_AUTOMATION_ENABLED == '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(github.event_name == 'workflow_dispatch' && format('["{0}"]', inputs.target) || '["staging","production"]') }}
+    environment: account-operations-${{ matrix.target }}
+    concurrency:
+      group: account-snapshot-${{ matrix.target }}
+      cancel-in-progress: false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check environment activation
+        id: gate
+        env:
+          ENABLED: ${{ vars.ACCOUNT_SNAPSHOT_ENABLED }}
+          KIND: ${{ inputs.kind || (github.event.schedule == '37 3 * * *' && 'backup' || 'manifest') }}
+        run: |
+          if [ "$ENABLED" = '1' ]; then
+            echo 'enabled=1' >> "$GITHUB_OUTPUT"
+            echo "kind=$KIND" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v7.0.1
+        if: steps.gate.outputs.enabled == '1'
+      - uses: actions/setup-node@v7.0.0
+        if: steps.gate.outputs.enabled == '1'
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies and check Docker
+        if: steps.gate.outputs.enabled == '1'
+        run: |
+          npm ci
+          docker info > /dev/null
+      - name: Export and encrypt
+        id: snapshot
+        if: steps.gate.outputs.enabled == '1'
+        env:
+          SNAPSHOT_KIND: ${{ steps.gate.outputs.kind }}
+          ACCOUNT_SNAPSHOT_ENABLED: '1'
+          ACCOUNT_SNAPSHOT_TARGET: ${{ matrix.target }}
+          ACCOUNT_SNAPSHOT_PROJECT_REF: ${{ vars.ACCOUNT_SNAPSHOT_PROJECT_REF }}
+          ACCOUNT_SNAPSHOT_ALLOW_PRODUCTION: ${{ vars.ACCOUNT_SNAPSHOT_ALLOW_PRODUCTION }}
+          ACCOUNT_SNAPSHOT_DATABASE_URL: ${{ secrets.ACCOUNT_SNAPSHOT_DATABASE_URL }}
+          ACCOUNT_SNAPSHOT_SSL_CA: ${{ secrets.ACCOUNT_SNAPSHOT_SSL_CA }}
+          ACCOUNT_SNAPSHOT_OUTPUT_DIR: ${{ runner.temp }}/account-snapshots
+          ACCOUNT_PG_TOOLS_DOCKER: '1'
+          ACCOUNT_BACKUP_ENCRYPTION_KEY: ${{ secrets.ACCOUNT_BACKUP_ENCRYPTION_KEY }}
+          ACCOUNT_DELETION_MANIFEST_SECRET: ${{ secrets.ACCOUNT_DELETION_MANIFEST_SECRET }}
+          ACCOUNT_BACKUP_RETENTION_POLICY_VERSION: account-retention-2026-09-28-v1
+          ACCOUNT_BACKUP_RETENTION_DAYS: '7'
+          ACCOUNT_DELETION_MANIFEST_RETENTION_DAYS: '14'
+        run: npm run db:accounts:snapshot -- "$SNAPSHOT_KIND"
+      - name: Store encrypted deletion manifest
+        if: steps.gate.outputs.enabled == '1'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: account-manifest-${{ matrix.target }}-until${{ steps.snapshot.outputs.manifestExpiresAt }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/account-snapshots/*.json.enc
+          if-no-files-found: error
+          retention-days: 14
+      - name: Store encrypted account archive
+        if: steps.gate.outputs.enabled == '1' && steps.gate.outputs.kind == 'backup'
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: account-backup-${{ matrix.target }}-until${{ steps.snapshot.outputs.backupExpiresAt }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/account-snapshots/*.dump.enc
+          if-no-files-found: error
+          retention-days: 7
+      - name: Enforce original deletion and backup deadlines
+        if: always() && steps.gate.outputs.enabled == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCOUNT_SNAPSHOT_TARGET: ${{ matrix.target }}
+          ACCOUNT_ARTIFACT_PRUNE_APPLY: '1'
+        run: node scripts/prune-account-artifacts.mjs
+      - name: Remove runner-local encrypted copies
+        if: always() && steps.gate.outputs.enabled == '1'
+        run: |
+          node --input-type=module -e 'import {rm} from "node:fs/promises"; import path from "node:path"; const root=path.resolve(process.env.RUNNER_TEMP); const target=path.join(root,"account-snapshots"); if(path.dirname(target)!==root)throw new Error("Invalid cleanup path"); await rm(target,{recursive:true,force:true});'

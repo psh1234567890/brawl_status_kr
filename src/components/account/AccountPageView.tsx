@@ -70,6 +70,7 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [confirmEligibility, setConfirmEligibility] = useState(false);
+  const [signInEligibilityVersion, setSignInEligibilityVersion] = useState<string | null>(null);
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
   const [needsFreshGoogle, setNeedsFreshGoogle] = useState(false);
   const [deletionTargetUserId, setDeletionTargetUserId] = useState<string | null>(null);
@@ -185,6 +186,7 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
   }, [accountId, accountOnboarded, locale, state.status, syncEnabled, syncSettled]);
 
   async function handleGoogleSignIn() {
+    if (!state.signInPolicy || signInEligibilityVersion !== state.signInPolicy.version) return;
     setBusy(true);
     setError("");
     // Explicit normal sign-in starts a new UI flow. Preserve the target only
@@ -194,7 +196,7 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
     setNeedsFreshGoogle(false);
     setDeleteConfirmed(false);
     try {
-      await startGoogleSignIn(localizedHref(locale, "/account"));
+      await startGoogleSignIn(localizedHref(locale, "/account"), state.signInPolicy.version);
     } catch {
       setError(copy.errorGeneric);
       setBusy(false);
@@ -415,7 +417,14 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
         <p className="mt-2 max-w-2xl text-sm font-bold leading-6 text-slate-600">{copy.guestBody}</p>
         {error ? <p ref={errorRef} tabIndex={-1} role="alert" className="mt-4 text-sm font-bold text-rose-700">{error}</p> : null}
         {notice ? <p ref={noticeRef} tabIndex={-1} role="status" aria-live="polite" className="mt-4 text-sm font-bold text-emerald-700">{notice}</p> : null}
-        <button type="button" disabled={busy} onClick={() => void handleGoogleSignIn()} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-5 py-2 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-60">
+        {state.signInPolicy?.texts[locale] ? (
+          <div className="mt-4 space-y-3">
+            <p className="whitespace-pre-wrap rounded-lg bg-slate-50 p-3 text-sm leading-6 text-slate-700">{state.signInPolicy.texts[locale]}</p>
+            <label className="flex min-h-11 items-start gap-3 text-sm font-bold leading-6 text-slate-700"><input type="checkbox" checked={signInEligibilityVersion === state.signInPolicy.version} onChange={(event) => setSignInEligibilityVersion(event.target.checked ? state.signInPolicy!.version : null)} className="mt-1 h-4 w-4 shrink-0 accent-blue-600" />{copy.confirmEligibility}</label>
+            <p className="text-sm leading-6 text-slate-600"><Link href={localizedHref(locale, "/privacy")} className="underline">{common.common.privacy}</Link></p>
+          </div>
+        ) : <p className="mt-4 text-sm leading-6 text-slate-600">{copy.policyUnavailable}</p>}
+        <button type="button" disabled={busy || !state.signInPolicy || signInEligibilityVersion !== state.signInPolicy.version} onClick={() => void handleGoogleSignIn()} className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-5 py-2 text-sm font-black text-white hover:bg-blue-700 disabled:opacity-60">
           {busy ? copy.sync.checking : copy.googleSignIn}
         </button>
         {effectiveDeletionTargetUserId ? <button type="button" disabled={busy} onClick={() => void handleFreshGoogleSignIn()} className="ml-2 mt-5 inline-flex min-h-11 items-center justify-center rounded-lg border border-rose-300 px-4 py-2 text-sm font-black text-rose-800 disabled:opacity-60">{copy.deleteFreshSession}</button> : null}

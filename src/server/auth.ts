@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomInt } from "node:crypto";
 import { betterAuth } from "better-auth";
+import { APIError, addOAuthServerContext, createAuthMiddleware, getOAuthState } from "better-auth/api";
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import type { Locale } from "../i18n/config";
 import { db } from "../db";
@@ -62,6 +63,13 @@ export function getAccountEligibilityPolicyTexts(): Record<Locale, string> | nul
 
 export function getAccountEligibilityRules(): AccountEligibilityRules | null {
   return parseAccountEligibilityRules(process.env.ACCOUNT_ELIGIBILITY_RULES_JSON);
+}
+
+export function getSignInEligibilityPolicy() {
+  const version = getAccountPolicyVersions()?.eligibility;
+  const texts = getAccountEligibilityPolicyTexts();
+  const rules = getAccountEligibilityRules();
+  return version && texts && rules ? { version, texts, rules } : null;
 }
 
 export function getAccountBackupRetentionPolicy(): AccountBackupRetentionPolicy | null {
@@ -186,6 +194,15 @@ function createAuthInstance(deletionOnly = false) {
   const config = requireAuthConfiguration();
   const secureCookies = config.baseURL.protocol === "https:";
 
+  async function requireOAuthEligibility() {
+    if (deletionOnly) return;
+    const state = await getOAuthState();
+    const version = getSignInEligibilityPolicy()?.version;
+    if (!version || state?.serverContext?.brawlEligibilityVersion !== version) {
+      throw new APIError("FORBIDDEN", { code: "ELIGIBILITY_REQUIRED", message: "Account eligibility confirmation is required." });
+    }
+  }
+
   return betterAuth({
     appName: "Brawl Status KR",
     baseURL: config.baseURL.origin,
@@ -193,6 +210,20 @@ function createAuthInstance(deletionOnly = false) {
     // Keep OAuth codes, state, provider responses, and account data out of logs.
     logger: { disabled: true },
     trustedOrigins: config.origins,
+    hooks: {
+      before: createAuthMiddleware(async (context) => {
+        if (deletionOnly || context.path !== "/sign-in/social") return;
+        const version = getSignInEligibilityPolicy()?.version;
+        // Only the allowlisted route handler adds this header, after checking
+        // the explicit acknowledgement and current policy version. It strips
+        // any caller-supplied value first. Better Auth carries it in the
+        // server-owned OAuth state; client additionalData remains disallowed.
+        if (!version || context.headers?.get("x-brawl-eligibility-version") !== version) {
+          throw new APIError("FORBIDDEN", { code: "ELIGIBILITY_REQUIRED", message: "Account eligibility confirmation is required." });
+        }
+        await addOAuthServerContext({ brawlEligibilityVersion: version });
+      }),
+    },
     database: drizzleAdapter(db, {
       provider: "pg",
       transaction: true,
@@ -271,18 +302,15 @@ function createAuthInstance(deletionOnly = false) {
     databaseHooks: {
       user: {
         create: {
-          before: async (user) => ({
-            data: {
-              ...user,
-              name: generateDefaultNickname(),
-              image: null,
-              emailVerified: user.emailVerified === true,
-            },
-          }),
+          before: async (user) => {
+            await requireOAuthEligibility();
+            return { data: { ...user, name: generateDefaultNickname(), image: null, emailVerified: user.emailVerified === true } };
+          },
         },
         update: {
           before: async (user, context) => {
             if (!context?.path?.includes("/callback/google")) return false;
+            await requireOAuthEligibility();
             if (typeof user.email !== "string" || user.emailVerified !== true) return false;
             const current = await db.$client.query<{
               id: string;
@@ -316,22 +344,25 @@ function createAuthInstance(deletionOnly = false) {
       account: {
         create: {
           before: async (account) => {
+            await requireOAuthEligibility();
             if (account.providerId !== "google") return false;
             if (!isPilotGoogleSubjectAllowed(account.accountId)) return false;
             return { data: stripOAuthTokens(account) };
           },
         },
         update: {
-          before: async (account) => ({
-            data: stripOAuthTokens(account),
-          }),
+          before: async (account) => {
+            await requireOAuthEligibility();
+            return { data: stripOAuthTokens(account) };
+          },
         },
       },
       session: {
         create: {
-          before: async (session) => ({
-            data: { ...session, ipAddress: null, userAgent: null },
-          }),
+          before: async (session) => {
+            await requireOAuthEligibility();
+            return { data: { ...session, ipAddress: null, userAgent: null } };
+          },
         },
       },
     },

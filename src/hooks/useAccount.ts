@@ -32,6 +32,7 @@ export type AccountDto = {
 export type AccountSnapshot = {
   status: "loading" | "disabled" | "guest" | "account" | "deletionOnly" | "error";
   account: AccountDto | null;
+  signInPolicy: { version: string; texts: Record<"ko" | "en" | "ja" | "pt-br" | "es" | "tr" | "de" | "fr" | "it" | "ru", string> } | null;
   deletionUserId: string | null;
   deletionReauthReady: boolean;
   syncEnabled: boolean;
@@ -52,6 +53,7 @@ export type AccountSnapshot = {
 const INITIAL: AccountSnapshot = {
   status: "loading",
   account: null,
+  signInPolicy: null,
   deletionUserId: null,
   deletionReauthReady: false,
   syncEnabled: false,
@@ -187,7 +189,7 @@ export async function refreshAccountStatus(options: { force?: boolean } = {}) {
         headers: { Accept: "application/json" },
       });
       const payload = await response.json().catch(() => null) as
-        | { state?: string; syncEnabled?: boolean; account?: AccountDto; deletionUserId?: string | null; deletionReauthReady?: boolean; error?: string }
+        | { state?: string; syncEnabled?: boolean; account?: AccountDto; signInPolicy?: AccountSnapshot["signInPolicy"]; deletionUserId?: string | null; deletionReauthReady?: boolean; error?: string }
         | null;
       if (!response.ok || !payload) throw new Error(payload?.error ?? "ACCOUNT_UNAVAILABLE");
       if (!requestSequence.isCurrent(sequence)) return;
@@ -195,7 +197,7 @@ export async function refreshAccountStatus(options: { force?: boolean } = {}) {
       if (payload.state === "disabled") {
         update({ ...INITIAL, status: "disabled", syncState: "localOnly" });
       } else if (payload.state === "guest") {
-        update({ ...INITIAL, status: "guest", syncState: "localOnly" });
+        update({ ...INITIAL, status: "guest", signInPolicy: payload.signInPolicy ?? null, syncState: "localOnly" });
       } else if (
         payload.state === "deletion-only" &&
         (typeof payload.deletionUserId === "string" || payload.deletionUserId === null) &&
@@ -214,6 +216,7 @@ export async function refreshAccountStatus(options: { force?: boolean } = {}) {
         update({
           status: "account",
           account: payload.account,
+          signInPolicy: null,
           deletionUserId: null,
           deletionReauthReady: payload.deletionReauthReady === true,
           syncEnabled: payload.syncEnabled === true,

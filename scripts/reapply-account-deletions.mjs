@@ -33,12 +33,14 @@ verifyDeletionManifest(manifest, secret);
 const client = new Client({ connectionString });
 await client.connect();
 try {
-  const result = await applyDeletionManifest(client, manifest, secret);
+  const result = await applyDeletionManifest(client, manifest, secret, new Date(), { revokeRestoredAuthentication: true });
   console.log("Deletion manifest reapplied.");
   console.log("Manifest entries: " + result.manifestEntries);
   console.log("Active entries: " + result.activeEntries);
   console.log("Expired entries skipped: " + result.expiredEntries);
   console.log("Restored users removed: " + result.deletedUsers);
+  console.log("Restored sessions revoked: " + result.revokedSessions);
+  console.log("Restored OAuth states/proofs removed: " + result.removedVerifications);
 } finally {
   await client.end();
 }

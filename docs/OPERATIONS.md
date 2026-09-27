@@ -55,6 +55,18 @@ CI에서는 production secret 없이 build한 뒤 Chromium과 시스템 의존�
 
 ## 선택형 계정 운영
 
+2026-09-28 확정한 출시 정책은 계정 만 16세 이상·모든 국가·보호자 동의 미지원,
+백업 7일·삭제 manifest 14일이다. `ACCOUNT_LAUNCH_POLICY.json`에 버전과 10개 언어
+자격 안내를 기록했다. 실제 env/외부 보관 준비 없이 이 파일만으로 계정을 켜지 않는다.
+로그인 전 자격 확인은 서버가 현재 정책 버전을 검사하고 Better Auth의 server-owned
+OAuth state에 묶는다. callback의 신규 user/account/session 생성 시 다시 검사하며,
+클라이언트 `additionalData`나 임의 header로 대신할 수 없다. 삭제 전용 기존 계정 흐름은
+신규 자격 확인 없이 기존 same-account/fresh-auth proof를 유지한다.
+
+외부 backup/manifest workflow는 기본 비활성이며 실제 활성화·키 복구·최신 삭제 재적용
+연습은 출시 조건이다. 세부 순서는 `ACCOUNT_RELEASE_READINESS.md`와
+`DATABASE_BACKUP.md`의 계정 전용 암호화 보관 절차를 따른다.
+
 계정 기능은 기본적으로 `ACCOUNTS_MODE=off`, `ACCOUNT_SYNC_ENABLED=0`이다.
 일반 pull request preview에는 계정 DB·OAuth 자격 증명·trusted origin을
 연결하지 않는다. `*.vercel.app` wildcard trusted origin은 허용하지 않는다.

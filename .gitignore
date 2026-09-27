@@ -20,6 +20,8 @@
 /backups/
 *.dump
 *.backup
+*.dump.enc
+*.json.enc
 
 # next.js
 /.next/

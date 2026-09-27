@@ -24,6 +24,7 @@ import {
   areAccountsEnabled,
   getAuth,
   getDeletionAuth,
+  getSignInEligibilityPolicy,
   isAccountDeletionOnlyEnabled,
 } from "../../../../server/auth";
 import { isLocale } from "../../../../i18n/config";
@@ -52,6 +53,8 @@ async function safeSocialSignInRequest(request: Request, deletionReauth: boolean
     "errorCallbackURL",
     "newUserCallbackURL",
     "disableRedirect",
+    "eligibilityPolicyVersion",
+    "confirmEligibility",
   ]);
   if (body.provider !== "google") throw new AccountError(400, "GOOGLE_ONLY");
 
@@ -73,6 +76,14 @@ async function safeSocialSignInRequest(request: Request, deletionReauth: boolean
   }
 
   const headers = new Headers(request.headers);
+  headers.delete("x-brawl-eligibility-version");
+  if (!deletionReauth) {
+    const policy = getSignInEligibilityPolicy();
+    if (!policy || body.confirmEligibility !== true || body.eligibilityPolicyVersion !== policy.version) {
+      throw new AccountError(400, "ELIGIBILITY_REQUIRED");
+    }
+    headers.set("x-brawl-eligibility-version", policy.version);
+  }
   headers.delete("content-length");
   headers.delete("content-encoding");
   return new Request(request.url, {

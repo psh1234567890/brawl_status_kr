@@ -100,6 +100,8 @@ try {
         deletionClient,
         deletionManifest,
         process.env.ACCOUNT_DELETION_MANIFEST_SECRET,
+        new Date(),
+        { revokeRestoredAuthentication: true },
       );
       const activeIds = deletionManifest.entries
         .filter((entry) => Date.parse(entry.expiresAt) > Date.now())

@@ -124,7 +124,7 @@ export async function readActiveDeletionRows(client) {
   return result.rows;
 }
 
-export async function applyDeletionManifest(client, manifest, secret, now = new Date()) {
+export async function applyDeletionManifest(client, manifest, secret, now = new Date(), options = {}) {
   verifyDeletionManifest(manifest, secret);
   const activeEntries = manifest.entries.filter((entry) => Date.parse(entry.expiresAt) > now.getTime());
   const schema = await client.query(
@@ -136,6 +136,14 @@ export async function applyDeletionManifest(client, manifest, secret, now = new 
 
   await client.query("BEGIN");
   try {
+    let revokedSessions = 0;
+    let removedVerifications = 0;
+    if (options.revokeRestoredAuthentication === true) {
+      // An old archive can revive a signed-out session or a consumed OAuth
+      // state. Restored accounts must authenticate again before reopening.
+      revokedSessions = (await client.query("DELETE FROM public.auth_sessions")).rowCount ?? 0;
+      removedVerifications = (await client.query("DELETE FROM public.auth_verifications")).rowCount ?? 0;
+    }
     let deletedUsers = 0;
     for (const entry of activeEntries) {
       const deleted = await client.query(
@@ -158,6 +166,8 @@ export async function applyDeletionManifest(client, manifest, secret, now = new 
       activeEntries: activeEntries.length,
       expiredEntries: manifest.entries.length - activeEntries.length,
       deletedUsers,
+      revokedSessions,
+      removedVerifications,
     };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);

@@ -85,7 +85,7 @@ describe("account-only encrypted backup PostgreSQL integration", () => {
       const passFile = path.join(temporary, "restore-pgpass");
       const escape = (value) => value.replace(/\\/g, "\\\\").replace(/:/g, "\\:");
       await writeFile(passFile, [base.hostname, base.port || "5432", restoreName, decodeURIComponent(base.username), decodeURIComponent(base.password)].map(escape).join(":") + "\n", { mode: 0o600 });
-      run(process.env.ACCOUNT_PG_RESTORE_BINARY || "pg_restore", ["--no-owner", "--no-privileges", "--exit-on-error", "--single-transaction", "--no-password", dumpPath], {
+      run(process.env.ACCOUNT_PG_RESTORE_BINARY || "pg_restore", ["--dbname=" + restoreName, "--no-owner", "--no-privileges", "--exit-on-error", "--single-transaction", "--no-password", dumpPath], {
         ...process.env, PGHOST: base.hostname, PGPORT: base.port || "5432", PGDATABASE: restoreName,
         PGUSER: decodeURIComponent(base.username), PGPASSFILE: passFile, PGSSLMODE: "disable",
       });

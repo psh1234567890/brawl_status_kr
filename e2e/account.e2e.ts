@@ -6,7 +6,7 @@ test.skip(!process.env.DATABASE_URL, "Account integration E2E requires a disposa
 
 test("account page remains optional and private account APIs return a safe DTO", async ({ page, context, syntheticAccount }, testInfo) => {
   await page.goto("/en/account");
-  await expect(page.getByRole("heading", { name: /account/i })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Account", exact: true })).toBeVisible();
   await expect(page).toHaveTitle(/Account/i);
   const robots = await page.locator('meta[name="robots"]').getAttribute("content");
   expect(robots).toContain("noindex");

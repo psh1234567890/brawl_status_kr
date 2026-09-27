@@ -20,6 +20,24 @@
 
 ## Health endpoint
 
+### Staging PostgreSQL 연결과 TLS
+
+IPv4 serverless 환경에서는 Supabase Dashboard의 Connect에 표시된 shared
+transaction pooler를 `DATABASE_URL`에 사용한다(6543). 격리된 migration 도구의
+session pooler는 5432다. Custom role의 pooler username은 `role.project-ref`다.
+`DIRECT_URL`은 runtime 연결을 대신하지 않는다.
+
+provider CA가 Node 기본 trust store에 없는 경우, 해당 프로젝트 Database Settings의
+Download certificate에서 받은 PEM을 server 환경변수 `DATABASE_SSL_CA`에 넣는다.
+실제 줄바꿈 또는 literal `\n`을 허용한다. 앱은 URL의 TLS override를 제거하고
+CA chain과 hostname을 검증한다. TLS certificate 파일 URL 옵션과는 함께 사용할 수
+없다. `no-verify`, `rejectUnauthorized: false`, `NODE_TLS_REJECT_UNAUTHORIZED=0`으로
+우회하지 않는다. 이 변수는 앱 runtime 전용이며 backup/migration CLI의 CA 설정은
+각 도구에 맞게 별도로 해야 한다.
+
+Preview 연결 문자열과 CA는 테스트 브랜치에만 적용한다. Production 값은 바꾸지
+않는다. env 변경 후 새 Preview 배포에서 `/api/health` 및 DB 기반 `/status`를 확인한다.
+
 `GET /api/health`는 DB에 `SELECT 1`을 실행한다. 정상일 때 HTTP 200과 DB latency를, 실패할 때 HTTP 503과 `ok: false`만 반환한다. DB 호스트, 연결 문자열, 오류 message 같은 내부 정보는 응답하지 않는다. 응답은 `no-store`이며 별도 rate limit이 있다.
 
 외부 uptime 도구를 연결할 때는 `/api/health`의 HTTP status만 기준으로 감시하고, 과도하게 짧은 polling 주기는 사용하지 않는다.

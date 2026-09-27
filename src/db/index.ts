@@ -1,8 +1,9 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { getDatabaseConnectionOptions } from "./connectionOptions";
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  ...getDatabaseConnectionOptions(),
   connectionTimeoutMillis: 5_000,
   query_timeout: 15_000,
   statement_timeout: 10_000,

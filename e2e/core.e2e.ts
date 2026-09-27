@@ -1,5 +1,27 @@
 import { expect, test } from "@playwright/test";
 
+test("explicit normal sign-in clears a previous deletion UI target without deleting data", async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("brawl-status:account:pending-deletion-user", "00000000-0000-4000-8000-000000000001");
+  });
+  await page.route("**/api/account", (route) => {
+    expect(route.request().method()).toBe("GET");
+    return route.fulfill({ json: { state: "guest", syncEnabled: false } });
+  });
+  await page.route("**/api/auth/sign-in/social", (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({ provider: "google", callbackURL: "/account" });
+    // Keep this UI-only regression entirely local; do not open real Google.
+    return route.fulfill({ status: 503, json: { error: "SIGN_IN_UNAVAILABLE" } });
+  });
+  await page.goto("/account");
+  const deletionReauth = page.getByRole("button", { name: "삭제 전에 Google로 다시 로그인해 주세요.", exact: true });
+  await expect(deletionReauth).toBeVisible();
+  await page.getByRole("button", { name: "Google로 계속", exact: true }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "요청을 완료하지 못했습니다." })).toBeVisible();
+  await expect(deletionReauth).toHaveCount(0);
+  expect(await page.evaluate(() => sessionStorage.getItem("brawl-status:account:pending-deletion-user"))).toBeNull();
+});
+
 test("account PB list refreshes after a delayed import acknowledgement without reloading", async ({ page }) => {
   // Browser-only UI fixture: no auth bypass or database writes in the app.
   const userId = "00000000-0000-4000-8000-000000000001";

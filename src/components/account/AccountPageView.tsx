@@ -187,6 +187,12 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
   async function handleGoogleSignIn() {
     setBusy(true);
     setError("");
+    // Explicit normal sign-in starts a new UI flow. Preserve the target only
+    // when using handleFreshGoogleSignIn; the server still owns deletion proof.
+    clearDeletionTarget();
+    setDeletionTargetUserId(null);
+    setNeedsFreshGoogle(false);
+    setDeleteConfirmed(false);
     try {
       await startGoogleSignIn(localizedHref(locale, "/account"));
     } catch {

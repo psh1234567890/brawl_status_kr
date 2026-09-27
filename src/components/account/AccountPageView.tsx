@@ -84,6 +84,7 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
   const accountRevision = state.account?.profileRevision;
   const accountOnboarded = state.account?.onboardingComplete;
   const syncEnabled = state.syncEnabled;
+  const syncSettled = state.syncState === "synced" && state.pendingCount === 0;
   const effectiveDeletionTargetUserId =
     state.status === "deletionOnly" && !state.deletionUserId ? null : deletionTargetUserId;
   const profileDraftIsCurrent = Boolean(
@@ -149,7 +150,9 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
       setBestLoading(true);
       setBestsForUser(activeAccountId);
       setBests(cached.filter(isPersonalBestRecord));
-      if (!accountOnboarded || !syncEnabled) {
+      // Read the server again after an import/outbox acknowledgement. The
+      // account identity itself does not change when its PB cache changes.
+      if (!accountOnboarded || !syncEnabled || !syncSettled) {
         setBestLoading(false);
         return;
       }
@@ -177,7 +180,7 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
     return () => {
       cancelled = true;
     };
-  }, [accountId, accountOnboarded, locale, state.status, syncEnabled]);
+  }, [accountId, accountOnboarded, locale, state.status, syncEnabled, syncSettled]);
 
   async function handleGoogleSignIn() {
     setBusy(true);

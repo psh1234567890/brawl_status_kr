@@ -1,5 +1,62 @@
 import { expect, test } from "@playwright/test";
 
+test("account PB list refreshes after a delayed import acknowledgement without reloading", async ({ page }) => {
+  // Browser-only UI fixture: no auth bypass or database writes in the app.
+  const userId = "00000000-0000-4000-8000-000000000001";
+  let best = {
+    gameId: "brawler-quiz", mode: "practice", rulesetVersion: 1,
+    score: 1, total: 10, source: "client_play", revision: 1,
+    clientRecordedAt: null, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z",
+  };
+  let releaseMerge!: () => void;
+  const mergeGate = new Promise<void>((resolve) => { releaseMerge = resolve; });
+  let markMergeStarted!: () => void;
+  const mergeStarted = new Promise<void>((resolve) => { markMergeStarted = resolve; });
+  await page.route("**/api/account", (route) => route.fulfill({
+    json: {
+      state: "account", syncEnabled: true, deletionReauthReady: false,
+      account: {
+        id: userId, nickname: "UI Fixture", defaultPlayerTag: null, profileRevision: 1,
+        onboardingComplete: true, onboardingCompletedAt: "2026-01-01T00:00:00Z",
+        policyReady: true, eligibilityPolicyTexts: null, eligibilityRules: null, policyVersions: null,
+      },
+    },
+  }));
+  await page.route("**/api/account/minigame-bests", (route) => route.fulfill({
+    json: { personalBests: [best] },
+  }));
+  await page.route("**/api/account/minigame-bests/merge", async (route) => {
+    const body = route.request().postDataJSON();
+    expect(body.expectedUserId).toBe(userId);
+    expect(body.candidates).toContainEqual(expect.objectContaining({ score: 8, total: 10 }));
+    markMergeStarted();
+    await mergeGate;
+    best = { ...best, score: 8, revision: 2 };
+    await route.fulfill({ json: { personalBests: [best] } });
+  });
+  await page.addInitScript(() => {
+    localStorage.setItem("brawl-status:minigames:brawler-quiz:v1:best", JSON.stringify({
+      practice: { found: 8, total: 10, percentage: 80, mode: "practice", recordedAt: "2026-01-01T00:00:00Z" },
+    }));
+  });
+  try {
+    await page.goto("/en/account");
+    const bestSection = page.locator("section").filter({
+      has: page.getByRole("heading", { name: "Mini Game personal bests", exact: true }),
+    });
+    await expect(bestSection).toContainText("1 / 10");
+    await page.getByRole("button", { name: "Import this browser’s personal bests", exact: true }).click();
+    await mergeStarted;
+    await expect(bestSection).not.toContainText("8 / 10");
+    releaseMerge();
+    await expect(bestSection).toContainText("8 / 10");
+    await expect(bestSection.getByText("Synced", { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/en\/account$/);
+  } finally {
+    releaseMerge();
+  }
+});
+
 test("skin catalog filters client-side", async ({ page }) => {
   await page.goto("/skins");
 

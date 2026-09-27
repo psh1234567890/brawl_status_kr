@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("account PB list refreshes after a delayed import acknowledgement without reloading", async ({ page }) => {
   // Browser-only UI fixture: no auth bypass or database writes in the app.
   const userId = "00000000-0000-4000-8000-000000000001";
+  let bestReads = 0;
   let best = {
     gameId: "brawler-quiz", mode: "practice", rulesetVersion: 1,
     score: 1, total: 10, source: "client_play", revision: 1,
@@ -22,9 +23,10 @@ test("account PB list refreshes after a delayed import acknowledgement without r
       },
     },
   }));
-  await page.route("**/api/account/minigame-bests", (route) => route.fulfill({
-    json: { personalBests: [best] },
-  }));
+  await page.route("**/api/account/minigame-bests", (route) => {
+    bestReads += 1;
+    return route.fulfill({ json: { personalBests: [best] } });
+  });
   await page.route("**/api/account/minigame-bests/merge", async (route) => {
     const body = route.request().postDataJSON();
     expect(body.expectedUserId).toBe(userId);
@@ -51,6 +53,8 @@ test("account PB list refreshes after a delayed import acknowledgement without r
     releaseMerge();
     await expect(bestSection).toContainText("8 / 10");
     await expect(bestSection.getByText("Synced", { exact: true })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    expect(bestReads).toBe(2);
     await expect(page).toHaveURL(/\/en\/account$/);
   } finally {
     releaseMerge();

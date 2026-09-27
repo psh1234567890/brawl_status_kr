@@ -148,6 +148,7 @@ export async function readAccountPersonalBests(userId: string) {
 export async function writeAccountPersonalBests(
   userId: string,
   bests: readonly PersonalBestRecord[],
+  options: { notify?: boolean } = {},
 ) {
   const normalized = sortPersonalBestRecords(bests);
   writeLocalCache(userId, normalized);
@@ -160,7 +161,7 @@ export async function writeAccountPersonalBests(
   });
   await waitForTransaction(transaction);
   database.close();
-  dispatchChange();
+  if (options.notify !== false) dispatchChange();
 }
 
 function optimisticRecord(

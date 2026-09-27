@@ -168,7 +168,9 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
         if (cancelled || sequence !== requestSequence.current) return;
         setBests(records);
         setBestsForUser(activeAccountId);
-        await writeAccountPersonalBests(activeAccountId, records);
+        // A GET only fills the cache. Emitting the outbox-change event here
+        // would restart sync and trigger another GET indefinitely.
+        await writeAccountPersonalBests(activeAccountId, records, { notify: false });
       } catch (requestError) {
         if (!cancelled && sequence === requestSequence.current) {
           setError(getAccountErrorMessage(locale, requestError instanceof Error ? requestError.message : null));

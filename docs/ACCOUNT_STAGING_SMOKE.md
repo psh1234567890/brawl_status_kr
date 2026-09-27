@@ -138,3 +138,15 @@ intent가 있는 경우 기존 불일치 차단도 유지한다. rollback DTO와
   daemon이 실행되지 않아 실제 DB 경로는 GitHub CI의 disposable PostgreSQL에서 검증한다.
 - production auth bypass, 테스트용 로그인 endpoint, 실제 환경변수 변경은 추가하지 않았다.
   이 후속 수정에 대해 실제 Google 재로그인을 새로 실행한 것은 아니다.
+
+`c72e884`의 [CI run 36345028541](https://github.com/psh1234567890/brawl_status_kr/actions/runs/36345028541)은
+전체 SUCCESS다. Account/Auth 11 PASS(새 intent 만료 검사 포함), rollback 3 PASS,
+Core 34 PASS 및 PostgreSQL deletion-manifest/암호화 snapshot 복구 통합 각 1 PASS를
+확인했다. 계정 migration 재실행도 성공했다. 새 Preview
+`dpl_HVXnRzfZPsdB7JFxQGLyZzWp7scT`는 READY, 계정 disabled/sync false다.
+고정 staging 계정 화면에서도 비활성을 확인했다. Production의 `8fdd198` 배포와
+Draft PR #56 상태는 유지한다.
+
+과거 배포 목록 추가 점검에서 `7a39f60`/`816316e`의 시험 Preview 두 개가 여전히
+계정 guest 응답을 반환했다. 폐기 승인 대기 상태이며 현재 off 배포로 덮어쓴 것으로
+간주하지 않는다. 외부 예약 보관의 운영 환경/키도 아직 구성 완료로 확인되지 않았다.

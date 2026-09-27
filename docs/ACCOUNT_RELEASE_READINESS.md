@@ -30,6 +30,23 @@
 변경하지 않았고 PR #56은 Draft 상태다. 예약 workflow는 main에 있어야 실행되므로,
 작업 브랜치에 파일을 추가한 것을 예약 작업 활성화로 보고하지 않는다.
 
+후속 `c72e884`의 [CI run 36345028541](https://github.com/psh1234567890/brawl_status_kr/actions/runs/36345028541)은
+전체 성공했다. Vitest 172개, Core E2E 34개, Account/Auth E2E 11개, rollback E2E 3개가
+통과했고, 일반 test 단계에서 생략한 PostgreSQL 통합 2개도 별도 격리 DB 단계에서 통과했다.
+새 Preview `dpl_HVXnRzfZPsdB7JFxQGLyZzWp7scT`는 READY이며 `/api/account`가
+`disabled`, sync false로 응답한다. Production은 기존 `main`의 `8fdd198` 배포 그대로다.
+
+같은 날 GitHub API로 조회한 환경은 Preview/Production뿐이고 repository 변수와
+secret 목록은 비어 있었다. 계정 운영 전용 환경·읽기 역할·별도 보관/복구 키 설정은
+아직 확인되지 않았으므로 외부 예약 보관 활성화 완료로 보고하지 않는다.
+
+과거 시험 Preview `dpl_opq1cVvRiKXjR8L7vUVhPmXu5K67`(`7a39f60`)와
+`dpl_FNpQY4zQbuLaaqmeiGtSbEB4eA2e`(`816316e`)의 개별 URL은 `/api/account`가
+guest 상태로 응답해 아직 활성 계정 코드임을 확인했다. 현재 고정 staging을 꺼도
+immutable 과거 배포는 꺼지지 않는다. 이 두 시험 배포의 폐기는 승인 대기 상태다.
+다른 일부 과거 URL은 Vercel 인증 리다이렉트로 응답해 계정 활성 여부를 판정하지 않았다.
+시험 배포 정리와 외부 보관/복구 준비를 끝내기 전 공개 출시를 진행하지 않는다.
+
 ## 출시 전 실행 순서
 
 1. 새 코드의 CI와 격리 DB 암호화 backup → 복구 → 최신 deletion manifest 재적용 →

@@ -6,7 +6,7 @@ import path from "node:path";
 import pg from "pg";
 import { buildDeletionManifest, readActiveDeletionRows, verifyDeletionManifest } from "./account-deletion-manifest.mjs";
 import { encryptAccountArtifact } from "./account-artifact.mjs";
-import { ACCOUNT_SNAPSHOT_TABLES, readAccountSnapshotConfig } from "./account-snapshot-config.mjs";
+import { ACCOUNT_SNAPSHOT_TABLES, pgServiceValue, readAccountSnapshotConfig } from "./account-snapshot-config.mjs";
 import { artifactDeadline } from "./account-artifact-retention.mjs";
 
 // No dotenv and no app DB fallback: scheduled jobs must name their source.
@@ -50,10 +50,10 @@ async function main() {
       const caFile = path.join(temporary, "provider-ca.pem");
       if (config.ca) await writeFile(caFile, config.ca + "\n", { mode: 0o600 });
       await writeFile(passFile, [config.connection.hostname, config.port, config.database, config.username, config.password].map(pgPassValue).join(":") + "\n", { mode: 0o600 });
-      const service = ["[account_snapshot]", "host=" + serviceValue(config.connection.hostname), "port=" + config.port,
-        "dbname=" + serviceValue(config.database), "user=" + serviceValue(config.username),
+      const service = ["[account_snapshot]", "host=" + pgServiceValue(config.connection.hostname), "port=" + config.port,
+        "dbname=" + pgServiceValue(config.database), "user=" + pgServiceValue(config.username),
         "sslmode=" + (config.target === "test" ? "disable" : "verify-full"),
-        ...(config.ca ? ["sslrootcert=" + serviceValue(dockerTools ? "/run/account/provider-ca.pem" : caFile)] : []), "connect_timeout=15", ""];
+        ...(config.ca ? ["sslrootcert=" + pgServiceValue(dockerTools ? "/run/account/provider-ca.pem" : caFile)] : []), "connect_timeout=15", ""];
       await writeFile(serviceFile, service.join("\n"), { mode: 0o600 });
       const rawDump = path.join(temporary, "accounts.dump");
       const dumpArgs = ["--dbname=service=account_snapshot", "--format=custom", "--no-password", "--no-owner", "--no-privileges", "--strict-names",
@@ -103,7 +103,6 @@ function runSafe(command, args, extraEnv) {
   return result.stdout;
 }
 
-function serviceValue(value) { return "'" + value.replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'"; }
 function pgPassValue(value) { return value.replace(/\\/g, "\\\\").replace(/:/g, "\\:"); }
 function restrictWindowsPath(directory) {
   if (process.platform !== "win32") return;

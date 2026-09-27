@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { decryptAccountArtifact, encryptAccountArtifact } from "./account-artifact.mjs";
-import { ACCOUNT_SNAPSHOT_TABLES, readAccountSnapshotConfig } from "./account-snapshot-config.mjs";
+import { ACCOUNT_SNAPSHOT_TABLES, pgServiceValue, readAccountSnapshotConfig } from "./account-snapshot-config.mjs";
 import { artifactDeadline, isExpiredAccountArtifact } from "./account-artifact-retention.mjs";
 
 const key = "11".repeat(32);
@@ -69,6 +69,14 @@ function configEnv(overrides = {}) {
 }
 
 describe("account snapshot boundaries", () => {
+  it("writes literal libpq service values without conninfo quotes or escapes", () => {
+    for (const value of ["127.0.0.1", "fixture", "isolated_test", "C:\\private folder\\provider-ca.pem", "fixture'name"]) {
+      expect(pgServiceValue(value)).toBe(value);
+    }
+    for (const value of ["", "host\npassword=forged", "host\rnext", "host\u0000", "host ", "x".repeat(901)]) {
+      expect(() => pgServiceValue(value)).toThrow(/configuration/i);
+    }
+  });
   it("does not reset deletion retention when a manifest is exported again", () => {
     const expiresAt = "2026-10-01T00:00:00Z";
     expect(artifactDeadline({ exportedAt: "2026-09-30T12:00:00Z", deletionManifestRetentionDays: 14, entries: [{ expiresAt }] })).toBe(Date.parse(expiresAt) / 1000);

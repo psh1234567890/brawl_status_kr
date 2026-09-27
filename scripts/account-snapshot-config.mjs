@@ -1,5 +1,14 @@
 import path from "node:path";
 
+// libpq service files use literal INI values, not conninfo quoting/escaping.
+// Reject line injection and trailing whitespace that libpq would strip.
+export function pgServiceValue(value) {
+  if (typeof value !== "string" || !value || /[\r\n\u0000]/u.test(value) || /\s$/u.test(value) || Buffer.byteLength(value, "utf8") > 900) {
+    throw new Error("Invalid PostgreSQL service configuration value.");
+  }
+  return value;
+}
+
 export const ACCOUNT_SNAPSHOT_TABLES = Object.freeze([
   "auth_users", "auth_accounts", "auth_sessions", "auth_verifications",
   "minigame_personal_bests", "account_sync_receipts", "account_rate_limits",

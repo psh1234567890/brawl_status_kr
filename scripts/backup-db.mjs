@@ -6,6 +6,10 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import dotenv from "dotenv";
 import pg from "pg";
+import {
+  buildDeletionManifest,
+  readActiveDeletionRows,
+} from "./account-deletion-manifest.mjs";
 
 dotenv.config({ path: ".env.local", quiet: true });
 
@@ -48,6 +52,7 @@ const finalPath = path.join(backupDir, finalName);
 const partialPath = path.join(backupDir, partialName);
 const manifestPath = `${finalPath}.json`;
 const tempDir = await mkdtemp(path.join(os.tmpdir(), "brawl-db-backup-"));
+let deletionArtifactPath = null;
 
 try {
   restrictWindowsPath(tempDir, true);
@@ -143,6 +148,13 @@ try {
   const sha256 = await sha256File(partialPath);
   await rename(partialPath, finalPath);
 
+  const deletionBundle = await writeDeletionManifestForBackup(
+    finalPath,
+    backupDir,
+    sourceSnapshot,
+  );
+  deletionArtifactPath = deletionBundle?.filePath ?? null;
+
   const manifest = {
     createdAt: new Date().toISOString(),
     archive: finalName,
@@ -155,10 +167,15 @@ try {
     battleLogs: sourceSnapshot.battleLogs,
     requiredIndexes: sourceSnapshot.requiredIndexes,
     rls: sourceSnapshot.rls,
+    account: sourceSnapshot.account,
+    deletionManifest: deletionBundle?.metadata ?? null,
   };
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
   restrictWindowsPath(finalPath, false);
   restrictWindowsPath(manifestPath, false);
+  if (deletionBundle) {
+    await publishLatestDeletionManifest(backupDir, deletionBundle.body);
+  }
 
   console.log(`Backup created: ${finalPath}`);
   console.log(`Size: ${fileInfo.size} bytes`);
@@ -167,6 +184,11 @@ try {
   console.log(`PostgreSQL: ${sourceSnapshot.serverVersionNum} (client image ${image})`);
 } catch (error) {
   await rm(partialPath, { force: true }).catch(() => {});
+  await rm(finalPath, { force: true }).catch(() => {});
+  await rm(manifestPath, { force: true }).catch(() => {});
+  if (deletionArtifactPath) {
+    await rm(deletionArtifactPath, { force: true }).catch(() => {});
+  }
   throw error;
 } finally {
   await rm(tempDir, { recursive: true, force: true }).catch(() => {});
@@ -201,16 +223,96 @@ async function inspectSource(connectionString) {
       FROM pg_class
       WHERE oid = 'public.battle_logs'::regclass
     `);
+    const accountTablesResult = await client.query(
+      "SELECT to_regclass('public.auth_users') IS NOT NULL AS users, to_regclass('public.account_deletion_tombstones') IS NOT NULL AS tombstones",
+    );
+    let account = null;
+    let accountDeletionRows = [];
+    if (accountTablesResult.rows[0]?.users) {
+      const usersResult = await client.query("SELECT count(*)::int AS total FROM public.auth_users");
+      if (accountTablesResult.rows[0]?.tombstones) {
+        accountDeletionRows = await readActiveDeletionRows(client);
+      }
+      account = {
+        users: Number(usersResult.rows[0]?.total ?? 0),
+        activeDeletionTombstones: accountDeletionRows.length,
+      };
+    }
     return {
       serverVersionNum,
       serverMajor,
       battleLogs: battleRows[0],
       requiredIndexes: indexRows.map((row) => row.indexname),
       rls: rlsRows[0] ?? null,
+      account,
+      accountDeletionRows,
     };
   } finally {
     await client.end();
   }
+}
+
+async function writeDeletionManifestForBackup(finalPath, backupDir, sourceSnapshot) {
+  if (!sourceSnapshot.account) return null;
+  const hasAccountData =
+    sourceSnapshot.account.users > 0 || sourceSnapshot.account.activeDeletionTombstones > 0;
+  if (!hasAccountData) return null;
+
+  const policy = readBackupRetentionPolicy();
+  const secret = process.env.ACCOUNT_DELETION_MANIFEST_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("Account data is present but ACCOUNT_DELETION_MANIFEST_SECRET is not configured.");
+  }
+  const deletionManifest = buildDeletionManifest({
+    rows: sourceSnapshot.accountDeletionRows,
+    policy,
+    secret,
+  });
+  const body = JSON.stringify(deletionManifest, null, 2) + "\n";
+  const manifestFile = path.basename(finalPath) + ".deletions.json";
+  const manifestFilePath = path.join(backupDir, manifestFile);
+  await writeFile(manifestFilePath, body, { mode: 0o600 });
+  restrictWindowsPath(manifestFilePath, false);
+  return {
+    filePath: manifestFilePath,
+    body,
+    metadata: {
+      file: manifestFile,
+      sha256: createHash("sha256").update(body).digest("hex"),
+      entries: deletionManifest.entries.length,
+      exportedAt: deletionManifest.exportedAt,
+      policyVersion: deletionManifest.policyVersion,
+    },
+  };
+}
+
+async function publishLatestDeletionManifest(backupDir, body) {
+  const latestPath = path.join(backupDir, "account-deletions-latest.json");
+  const latestPartial = latestPath + ".partial";
+  await writeFile(latestPartial, body, { mode: 0o600 });
+  restrictWindowsPath(latestPartial, false);
+  await rename(latestPartial, latestPath);
+}
+
+function readBackupRetentionPolicy() {
+  const version = process.env.ACCOUNT_BACKUP_RETENTION_POLICY_VERSION?.trim();
+  const backupRetentionDays = Number(process.env.ACCOUNT_BACKUP_RETENTION_DAYS);
+  const deletionManifestRetentionDays = Number(
+    process.env.ACCOUNT_DELETION_MANIFEST_RETENTION_DAYS,
+  );
+  if (
+    !version ||
+    !/^[a-zA-Z0-9._-]{1,64}$/.test(version) ||
+    !Number.isSafeInteger(backupRetentionDays) ||
+    backupRetentionDays < 1 ||
+    !Number.isSafeInteger(deletionManifestRetentionDays) ||
+    deletionManifestRetentionDays <= backupRetentionDays
+  ) {
+    throw new Error(
+      "Account data is present but backup/deletion-manifest retention policy is not configured.",
+    );
+  }
+  return { version, backupRetentionDays, deletionManifestRetentionDays };
 }
 
 function ensureDocker(image) {

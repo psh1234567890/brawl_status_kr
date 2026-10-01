@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { localizedHref, type Locale } from "../i18n/config";
 import { getMessages } from "../i18n/messages";
+import AccountControl from "./account/AccountControl";
 import AdSenseUnit from "./AdSenseUnit";
 import LanguageSwitcher from "./LanguageSwitcher";
 
@@ -53,7 +54,10 @@ export default function PortalLayout({
                 {copy.home}
               </span>
             </Link>
-            <LanguageSwitcher locale={locale} />
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <AccountControl locale={locale} />
+              <LanguageSwitcher locale={locale} />
+            </div>
           </div>
 
           <nav className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label={copy.mainNavigation}>

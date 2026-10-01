@@ -37,7 +37,7 @@ export default function SilhouetteQuiz({ locale, entries }: { locale: Locale; en
   const answeredRef = useRef(false);
   const handledImageFailuresRef = useRef(new Set<number>());
   const failedImageStreakRef = useRef(0);
-  const { best, record } = useRoundBest("silhouette", "base");
+  const { best, beginRound, record } = useRoundBest("silhouette", "base");
   const score = useMemo(() => recap.filter((item) => item.wasCorrect).length, [recap]);
   const poolText = gameCopy.pool.replace("{count}", entries.length.toLocaleString(numberLocales[locale]));
   const question = deck[index];
@@ -79,6 +79,7 @@ export default function SilhouetteQuiz({ locale, entries }: { locale: Locale; en
 
   function startGame() {
     if (mode !== "base" || !canPlay) return;
+    beginRound();
     sessionRef.current += 1;
     setSessionToken(sessionRef.current);
     failedImageStreakRef.current = 0;

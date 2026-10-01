@@ -62,8 +62,8 @@ export function isQuizComplete(found: number, total: number) {
 
 export function isBetterBest(candidate: QuizBest, previous?: QuizBest) {
   if (!previous) return true;
-  const candidateRatio = candidate.found / candidate.total;
-  const previousRatio = previous.found / previous.total;
+  const candidateRatio = BigInt(candidate.found) * BigInt(previous.total);
+  const previousRatio = BigInt(previous.found) * BigInt(candidate.total);
   if (candidateRatio !== previousRatio) return candidateRatio > previousRatio;
   return candidate.found > previous.found;
 }
@@ -80,8 +80,8 @@ export function readQuizBests(value: string | null): Partial<Record<QuizMode, Qu
       const best = entry as Partial<QuizBest>;
       if (
         best.mode === mode &&
-        Number.isInteger(best.found) && best.found! >= 0 &&
-        Number.isInteger(best.total) && best.total! > 0 && best.found! <= best.total! &&
+        Number.isSafeInteger(best.found) && best.found! >= 0 &&
+        Number.isSafeInteger(best.total) && best.total! > 0 && best.total! <= 10_000 && best.found! <= best.total! &&
         typeof best.recordedAt === "string"
       ) {
         result[mode] = {

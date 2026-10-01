@@ -1,0 +1,25 @@
+{
+  "approvedAt": "2026-09-28",
+  "eligibilityVersion": "account-eligibility-2026-09-28-v1",
+  "eligibilityRules": {
+    "minimumAge": 16,
+    "regions": "all",
+    "guardianConsent": "not-supported",
+    "attestation": "self"
+  },
+  "eligibilityTexts": {
+    "ko": "계정 기능은 만 16세 이상인 이용자에게 모든 국가에서 제공됩니다. 보호자 동의 절차는 지원하지 않습니다. 기준에 해당하지 않아도 플레이어 검색과 Mini Game 등 게스트 기능을 사용할 수 있습니다. Google 로그인 전에 본인이 이 계정 이용 자격을 충족하는지 확인해 주세요. 생년월일과 거주 국가는 계정 DB에 저장하지 않습니다.",
+    "en": "Account features are available to users aged 16 or older in all countries. A guardian-consent process is not supported. Users who do not meet this requirement can still use guest features, including player search and Mini Games. Before Google sign-in, confirm that you meet these account requirements. Your date of birth and country of residence are not stored in the account database.",
+    "ja": "アカウント機能は、すべての国で16歳以上の方が利用できます。保護者の同意手続きには対応していません。条件を満たさない方も、プレイヤー検索やMini Gameなどのゲスト機能を利用できます。Googleでログインする前に、アカウントの利用条件を満たしていることを確認してください。生年月日や居住国はアカウントのデータベースに保存しません。",
+    "pt-br": "Os recursos de conta estão disponíveis para pessoas com 16 anos ou mais em todos os países. Não oferecemos um processo de consentimento de responsáveis. Quem não atender a esse requisito ainda pode usar os recursos de visitante, incluindo busca de jogadores e Mini Games. Antes de entrar com o Google, confirme que atende aos requisitos da conta. Sua data de nascimento e seu país de residência não são armazenados no banco de dados da conta.",
+    "es": "Las funciones de cuenta están disponibles para personas de 16 años o más en todos los países. No ofrecemos un procedimiento de consentimiento del tutor. Quienes no cumplan este requisito pueden seguir usando las funciones para invitados, incluidas la búsqueda de jugadores y los Mini Games. Antes de iniciar sesión con Google, confirma que cumples los requisitos de la cuenta. Tu fecha de nacimiento y país de residencia no se guardan en la base de datos de cuentas.",
+    "tr": "Hesap özellikleri tüm ülkelerde 16 yaş ve üzerindeki kullanıcılar için sunulur. Veli onayı süreci desteklenmez. Bu koşulu karşılamayanlar oyuncu arama ve Mini Game dahil misafir özelliklerini kullanmaya devam edebilir. Google ile giriş yapmadan önce hesap kullanım koşullarını karşıladığınızı onaylayın. Doğum tarihiniz ve ikamet ettiğiniz ülke hesap veritabanına kaydedilmez.",
+    "de": "Kontofunktionen stehen Personen ab 16 Jahren in allen Ländern zur Verfügung. Ein Verfahren zur Zustimmung von Erziehungsberechtigten wird nicht angeboten. Wer diese Voraussetzung nicht erfüllt, kann weiterhin Gastfunktionen wie Spielersuche und Mini Games nutzen. Bestätige vor der Google-Anmeldung, dass du die Kontovoraussetzungen erfüllst. Geburtsdatum und Wohnsitzland werden nicht in der Kontodatenbank gespeichert.",
+    "fr": "Les fonctions de compte sont disponibles dès 16 ans dans tous les pays. Nous ne proposons pas de procédure de consentement parental. Les personnes qui ne remplissent pas cette condition peuvent continuer à utiliser les fonctions invité, dont la recherche de joueurs et les Mini Games. Avant la connexion Google, confirmez que vous remplissez les conditions du compte. Votre date de naissance et votre pays de résidence ne sont pas enregistrés dans la base de données des comptes.",
+    "it": "Le funzioni account sono disponibili per utenti dai 16 anni in tutti i paesi. Non è prevista una procedura di consenso dei genitori o tutori. Chi non soddisfa questo requisito può continuare a usare le funzioni ospite, incluse la ricerca giocatori e i Mini Game. Prima di accedere con Google, conferma di soddisfare i requisiti dell'account. Data di nascita e paese di residenza non vengono salvati nel database degli account.",
+    "ru": "Функции аккаунта доступны пользователям от 16 лет во всех странах. Процедура согласия родителя или опекуна не поддерживается. Те, кто не соответствует этому требованию, могут продолжать пользоваться гостевыми функциями, включая поиск игроков и Mini Game. Перед входом через Google подтвердите, что соответствуете требованиям аккаунта. Дата рождения и страна проживания не сохраняются в базе данных аккаунтов."
+  },
+  "backupRetentionPolicyVersion": "account-retention-2026-09-28-v1",
+  "backupRetentionDays": 7,
+  "deletionManifestRetentionDays": 14
+}

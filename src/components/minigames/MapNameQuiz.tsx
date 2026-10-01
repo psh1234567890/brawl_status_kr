@@ -36,7 +36,7 @@ export default function MapNameQuiz({ locale, maps }: { locale: Locale; maps: Ma
   const answeredRef = useRef(false);
   const handledImageFailuresRef = useRef(new Set<number>());
   const failedImageStreakRef = useRef(0);
-  const { best, record } = useRoundBest("map-quiz", "standard");
+  const { best, beginRound, record } = useRoundBest("map-quiz", "standard");
   const score = useMemo(() => recap.filter((item) => item.wasCorrect).length, [recap]);
   const uniqueCount = useMemo(() => new Set(maps.map((map) => map.displayName.normalize("NFKC").trim().replace(/\s+/gu, " ").toLocaleLowerCase(numberLocales[locale]))).size, [locale, maps]);
   const question = deck[index];
@@ -80,6 +80,7 @@ export default function MapNameQuiz({ locale, maps }: { locale: Locale; maps: Ma
       setPoolError(true);
       return;
     }
+    beginRound();
     setPoolError(false);
     sessionRef.current += 1;
     setSessionToken(sessionRef.current);

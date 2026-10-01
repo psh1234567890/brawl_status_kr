@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { PlayerData } from "../types/brawl";
 import { localizedHref, numberLocales, type Locale } from "../i18n/config";
 import { getPersonalizedMetaMessages } from "../i18n/personalizedMetaMessages";
+import { useAccount } from "../hooks/useAccount";
+import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
 
@@ -45,16 +47,38 @@ function subscribeRecentTag(onStoreChange: () => void) {
 export default function OwnedBrawlerRecommendations({
   locale,
   stats,
+  selectedTag,
 }: {
   locale: Locale;
   stats: OwnedRecommendationStat[];
+  selectedTag?: string | null;
 }) {
   const copy = getPersonalizedMetaMessages(locale);
+  const account = useAccount();
   const recentTag = useSyncExternalStore(
     subscribeRecentTag,
     getRecentTagSnapshot,
     () => "",
   );
+  const explicitTag = normalizePlayerTag(selectedTag ?? "");
+  const defaultTag = account.status === "account"
+    ? normalizePlayerTag(account.account?.defaultPlayerTag ?? "")
+    : "";
+  const normalizedRecentTag = normalizePlayerTag(recentTag);
+  const activeTag = isValidPlayerTag(explicitTag)
+    ? explicitTag
+    : isValidPlayerTag(defaultTag)
+      ? defaultTag
+      : isValidPlayerTag(normalizedRecentTag)
+        ? normalizedRecentTag
+        : "";
+  const activeSource = isValidPlayerTag(explicitTag)
+    ? "selected"
+    : isValidPlayerTag(defaultTag)
+      ? "default"
+      : isValidPlayerTag(normalizedRecentTag)
+        ? "recent"
+        : null;
   const [lookup, setLookup] = useState<{
     tag: string;
     player: PlayerData | null;
@@ -62,29 +86,29 @@ export default function OwnedBrawlerRecommendations({
   }>({ tag: "", player: null, failed: false });
 
   useEffect(() => {
-    if (!recentTag) return;
+    if (!activeTag) return;
 
     const controller = new AbortController();
 
-    fetch("/api/player?tag=" + encodeURIComponent(recentTag), {
+    fetch("/api/player?tag=" + encodeURIComponent(activeTag), {
       signal: controller.signal,
     })
       .then(async (response) => {
         if (!response.ok) throw new Error("player lookup failed");
         return (await response.json()) as PlayerData;
       })
-      .then((data) => setLookup({ tag: recentTag, player: data, failed: false }))
+      .then((data) => setLookup({ tag: activeTag, player: data, failed: false }))
       .catch((error) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        setLookup({ tag: recentTag, player: null, failed: true });
+        setLookup({ tag: activeTag, player: null, failed: true });
       });
 
     return () => controller.abort();
-  }, [recentTag]);
+  }, [activeTag]);
 
-  const player = lookup.tag === recentTag ? lookup.player : null;
-  const failed = lookup.tag === recentTag && lookup.failed;
-  const loading = Boolean(recentTag) && lookup.tag !== recentTag;
+  const player = lookup.tag === activeTag ? lookup.player : null;
+  const failed = lookup.tag === activeTag && lookup.failed;
+  const loading = Boolean(activeTag) && lookup.tag !== activeTag;
 
   const ownedRecommendations = useMemo(() => {
     if (!player) return [];
@@ -110,10 +134,13 @@ export default function OwnedBrawlerRecommendations({
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-base font-black text-blue-950 sm:text-lg">{copy.title}</h3>
-          {player ? (
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-blue-700 shadow-sm">
-              {player.name} · #{recentTag}
-            </span>
+          {activeTag ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-blue-700 shadow-sm">
+                {player ? player.name + " · " : ""}#{activeTag}
+              </span>
+              {activeSource ? <span className="text-xs font-bold text-blue-800">{copy.sourceLabels[activeSource]}</span> : null}
+            </div>
           ) : null}
         </div>
         <p className="text-xs font-bold leading-5 text-blue-700/70 sm:text-sm">
@@ -121,9 +148,9 @@ export default function OwnedBrawlerRecommendations({
         </p>
       </div>
 
-      {!recentTag ? (
+      {!activeTag ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white p-4">
-          <p className="text-sm font-bold text-slate-600">{copy.noRecentPlayer}</p>
+          <p className="text-sm font-bold text-slate-600">{copy.noPlayer}</p>
           <Link
             href={localizedHref(locale, "/")}
             className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700"

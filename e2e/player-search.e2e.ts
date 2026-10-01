@@ -4,7 +4,7 @@ const tag = "9C82J8YPP";
 
 test.beforeEach(async ({ context, page }) => {
   await context.addCookies([
-    { name: "brawl-locale", value: "ko", url: "http://127.0.0.1:3020" },
+    { name: "brawl-locale", value: "ko", url: "http://localhost:3020" },
   ]);
   await mockPlayerApis(page);
 });

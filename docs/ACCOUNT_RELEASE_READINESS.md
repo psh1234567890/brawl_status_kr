@@ -1,4 +1,4 @@
-# 계정 출시 준비 — 2026-09-28
+# 계정 출시 준비 — 2026-09-29
 
 ## 운영자가 확정한 제품 정책
 
@@ -36,16 +36,71 @@
 새 Preview `dpl_HVXnRzfZPsdB7JFxQGLyZzWp7scT`는 READY이며 `/api/account`가
 `disabled`, sync false로 응답한다. Production은 기존 `main`의 `8fdd198` 배포 그대로다.
 
-같은 날 GitHub API로 조회한 환경은 Preview/Production뿐이고 repository 변수와
-secret 목록은 비어 있었다. 계정 운영 전용 환경·읽기 역할·별도 보관/복구 키 설정은
-아직 확인되지 않았으므로 외부 예약 보관 활성화 완료로 보고하지 않는다.
+2026-09-28 GitHub API 조회 당시 계정 운영 전용 환경은 없었다. 이후 staging
+운영 환경만 준비했으며, 아래 2026-09-29 기록을 현재 상태로 본다.
 
 과거 시험 Preview `dpl_opq1cVvRiKXjR8L7vUVhPmXu5K67`(`7a39f60`)와
 `dpl_FNpQY4zQbuLaaqmeiGtSbEB4eA2e`(`816316e`)의 개별 URL은 `/api/account`가
 guest 상태로 응답해 아직 활성 계정 코드임을 확인했다. 현재 고정 staging을 꺼도
-immutable 과거 배포는 꺼지지 않는다. 이 두 시험 배포의 폐기는 승인 대기 상태다.
+immutable 과거 배포는 꺼지지 않는다. 당시 이 두 시험 배포의 폐기는 승인 대기 상태였다.
 다른 일부 과거 URL은 Vercel 인증 리다이렉트로 응답해 계정 활성 여부를 판정하지 않았다.
-시험 배포 정리와 외부 보관/복구 준비를 끝내기 전 공개 출시를 진행하지 않는다.
+두 시험 배포는 2026-09-29 승인 후 삭제했다. 외부 보관/복구 준비를 끝내기 전
+공개 출시를 진행하지 않는다.
+
+## 2026-09-29 — staging 보관 환경 준비와 시험 배포 정리
+
+운영자가 위 두 시험 Preview의 영구 삭제를 승인했다. 두 배포 ID는 Vercel에서
+`exists: false`로 확인했다. 고정 staging 배포 `dpl_E1oVs9nNS2Nqr4Sm7gGFqTTHD3wL`은
+READY이고 계정 기능은 off다. Production은 기존 `main` 배포
+`dpl_34VGLENhjxZdNFUuH73ykHsFp57T` 그대로다.
+
+GitHub 환경 `account-operations-staging`을 만들고 `main` 브랜치만 허용했다.
+`ACCOUNT_SNAPSHOT_ENABLED=0`, staging 프로젝트 ref,
+`ACCOUNT_SNAPSHOT_ALLOW_PRODUCTION=0`을 설정했다. 이 환경에는 읽기 전용 DB URL,
+Supabase CA, 암호화 키, 삭제 manifest 서명키만 secret으로 저장했으며,
+repository 활성화 변수 `ACCOUNT_SNAPSHOT_AUTOMATION_ENABLED`도 설정하지 않았다.
+따라서 예약 백업·manifest export는 실행되지 않는다. staging DB의 전용
+`brawl_staging_backup` 역할은 계정 9개 테이블·삭제 ledger의 `SELECT`만 갖는다.
+강한 무작위 SCRAM 암호와 연결 수 제한 2를 설정했고, 공식 Supabase CA로 TLS를
+검증한 세션 풀러 연결에서 계정 수와 ledger 수만 읽어 확인했다. 역할의 기본
+트랜잭션은 읽기 전용이며, `students`·전투 테이블 `SELECT` 및 계정 쓰기 권한이
+없음을 확인했다. 평문 DB 암호는 로컬 임시 파일에서 제거했다.
+
+GitHub staging 환경의 삭제 manifest 서명키와 Vercel의
+`feat/account-mvp-safety` Preview 전용 값을 일치시켰다. 재배포
+`dpl_2Ldv6WouEhFDjCautAPJgvu6v1Nm`은 READY이고 staging 도메인에 연결됐으며,
+`/api/account`는 `disabled`, sync false로 응답했다. Production 배포는 기존
+`dpl_34VGLENhjxZdNFUuH73ykHsFp57T` 그대로다. 조회 중 Vercel CLI가 자동으로
+만든 프로젝트 전체 자동화 우회 키는 즉시 폐기했고, 우회 키 수가 0임을 확인했다.
+
+공식 PostgreSQL 17.11 도구로 로컬 격리 DB의 암호화 backup → 복구 → 최신
+deletion manifest 재적용 통합 테스트가 통과했다. 별도로 staging 읽기 전용 역할에서
+계정 전용 암호화 backup과 manifest를 실제 생성하고, 로컬 격리 DB로 복구했다.
+dump에 `students`·전투 테이블이 없음을 확인했다. 복구 DB에 manifest가 지목하는
+삭제 계정 1개를 **합성 행으로만** 되살린 뒤 재적용해 계정 1개와 세션 1개를
+제거했다. 복구 후 계정·세션·OAuth verification은 0개, safety ledger는 4개다.
+학생정보 원본 테이블은 조회·변경하지 않았다.
+
+암호화 artifact와 키의 로컬 복구 사본은 현재 Windows 사용자 DPAPI 및 제한된
+로컬 폴더에만 있다. GitHub secret은 쓰기 전용이므로 독립적인 키 복구 수단이
+아니며, 별도의 외부 artifact 보관과 PC 유실 시 복구 가능한 키 보관도 아직 없다.
+GitHub 예약 workflow는 main 전용이며 실행 플래그도 0으로 유지한다. 이 운영
+복구 경로와 실패 알림을 검증하기 전에는 계정 출시 또는 예약 실행을 켜지 않는다.
+
+## 2026-10-01 — 계정 비활성 배포 준비
+
+운영자가 계정 코드의 배포 진행을 승인했다. Production의 현재 기준은 이미지 변환을
+중지하고 Next.js 16.3.8을 적용한 `c4500fe`다. 이 변경을 계정 브랜치에 합쳐 최종
+CI를 다시 확인한 뒤 배포한다. 이전 날짜의 Production commit 기록은 당시 상태다.
+
+이번 배포에서는 계정 migration·운영 Google OAuth·운영 secret을 변경하지 않는다.
+Production 계정 관련 env가 없는 상태에서 기본 `ACCOUNTS_MODE=off`, sync false,
+deletion-only false를 유지하고 `/api/account`의 disabled/no-store 응답을 확인한다.
+계정 페이지가 배포되는 것과 실제 Google 로그인 공개는 구분한다.
+
+확인 당시 GitHub의 account 운영 환경은 staging만 존재하고 `ACCOUNT_SNAPSHOT_ENABLED=0`이다.
+repository 자동 실행 변수도 없다. workflow가 main에 들어가도 예약 보관을 활성화하지 않는다.
+독립적인 키 복구·외부 보관 실행·실패 알림 검증이 끝나기 전에는 pilot/on을 열지 않는다.
 
 ## 출시 전 실행 순서
 

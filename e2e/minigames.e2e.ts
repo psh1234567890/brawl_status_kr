@@ -28,6 +28,32 @@ async function mockBrawlifyImages(page: Page, failFirstImage = false) {
   });
 }
 
+test("quiz images load directly from the CDN without hosting transformations", async ({ page }) => {
+  const transformationRequests: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/_next/image") {
+      transformationRequests.push(request.url());
+    }
+  });
+  await mockBrawlifyImages(page);
+  for (const [path, imagePath] of [
+    ["silhouette-quiz", "/brawlers/model/"],
+    ["map-quiz", "/maps/"],
+  ]) {
+    await page.goto(`/minigames/${path}`);
+    await page.getByRole("button", { name: "게임 시작", exact: true }).click();
+    const image = page.locator(`img[src^="https://cdn.brawlify.com${imagePath}"]`).first();
+    await expect(image).toBeVisible();
+    await expect.poll(() => image.evaluate((element: HTMLImageElement) =>
+      element.complete && element.naturalWidth > 0,
+    )).toBe(true);
+  }
+  expect(transformationRequests).toEqual([]);
+  // Also reject manually requested transformations, not just the generated markup.
+  const response = await page.request.get("/_next/image?url=%2Ffavicon.ico&w=64&q=75");
+  expect(response.status()).toBe(404);
+});
+
 test("homepage shortcut opens a six-card hub with four playable games", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("complementary").getByRole("link", { name: /미니게임/ }).click();

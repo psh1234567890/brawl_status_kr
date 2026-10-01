@@ -86,6 +86,8 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    // Serve source images directly; do not consume hosting image transformation quotas.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

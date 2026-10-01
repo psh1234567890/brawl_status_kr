@@ -18,6 +18,20 @@
 
 각 응답에는 `Server-Timing: app;dur=...`와 `X-Request-Id`를 추가한다. 이를 이용해 브라우저/network 로그와 Vercel 서버 로그의 같은 요청을 연결할 수 있다.
 
+## 이미지 변환 한도와 호스팅 정지
+
+`next.config.ts`의 `images.unoptimized=true`와 `BrawlImage`의 `unoptimized`는
+원본 이미지를 브라우저가 CDN에서 직접 받게 한다. 호스팅 서버에서 크기·포맷을
+변환하지 않으며 `/_next/image` endpoint는 404를 반환해야 한다. 원본 파일이 더
+클 수 있으므로 lazy loading과 이미지 크기 지정은 유지한다. 게임 E2E는 직접 CDN
+URL의 이미지 로드와 변환 요청이 없음을 검사하고, 외부 CDN은 테스트에서 mock한다.
+
+설정 변경은 다음 배포부터 적용된다. 이미 발생한 team-level quota 정지는 코드
+변경만으로 해제되지 않는다. 배포가 READY여도 HTTP 402 `DEPLOYMENT_DISABLED`면
+팀의 usage/soft-block을 확인하고 Vercel 지원의 해제 절차를 따른다. Production과
+Preview 사용량은 같은 팀 한도에 포함되므로 staging 검증 전에도 잔여량을 확인한다.
+무료 임시 해제가 제공되더라도 새 이미지 변환을 계속 사용하는 해결책으로 삼지 않는다.
+
 ## Health endpoint
 
 `GET /api/health`는 DB에 `SELECT 1`을 실행한다. 정상일 때 HTTP 200과 DB latency를, 실패할 때 HTTP 503과 `ok: false`만 반환한다. DB 호스트, 연결 문자열, 오류 message 같은 내부 정보는 응답하지 않는다. 응답은 `no-store`이며 별도 rate limit이 있다.

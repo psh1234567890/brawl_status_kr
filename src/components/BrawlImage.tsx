@@ -50,7 +50,7 @@ export default function BrawlImage({
       alt={alt}
       width={width}
       height={height}
-      unoptimized={!isOptimizableBrawlImage(src)}
+      unoptimized
       className={className}
       title={title}
       loading={loading}
@@ -62,12 +62,4 @@ export default function BrawlImage({
       }}
     />
   );
-}
-
-function isOptimizableBrawlImage(src: string) {
-  try {
-    return new URL(src).hostname === "cdn.brawlify.com";
-  } catch {
-    return src.startsWith("/");
-  }
 }

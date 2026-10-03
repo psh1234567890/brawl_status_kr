@@ -6,6 +6,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import AccountControl from "../components/account/AccountControl";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
 import { usePlayerSearch } from "../hooks/usePlayerSearch";
@@ -118,7 +119,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
     <main className="min-h-screen bg-[#f6f7fb] pb-24 text-slate-950 sm:pb-12">
       <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
         <header className="sticky top-0 z-30 -mx-4 border-b border-slate-200/80 bg-[#f6f7fb]/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-5">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <Link href={localizedHref(locale, "/")} className="min-w-0" aria-label={copy.home.homeAria}>
               <h1 className="block text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
                 Brawl Status KR
@@ -127,7 +128,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                 {copy.home.brandSubtitle}
               </span>
             </Link>
-            <div className="flex items-center gap-2">
+            <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
               <nav className="hidden items-center gap-2 md:flex" aria-label={copy.common.mainNavigation}>
                 {primaryLinks.map((link) => (
                   <Link
@@ -139,6 +140,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                   </Link>
                 ))}
               </nav>
+              <AccountControl locale={locale} />
               <LanguageSwitcher locale={locale} />
             </div>
           </div>

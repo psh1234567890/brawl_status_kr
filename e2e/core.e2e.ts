@@ -1,4 +1,63 @@
 import { expect, test } from "@playwright/test";
+import { getAccountMessages } from "../src/i18n/accountMessages";
+import { locales, localizedHref } from "../src/i18n/config";
+
+test("home header exposes localized account entry without mobile overflow", async ({ context, page }) => {
+  await context.route("**/api/account", (route) => route.fulfill({
+    json: { state: "guest", syncEnabled: false },
+  }));
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await page.setViewportSize({ width: 320, height: 740 });
+
+  for (const locale of locales) {
+    await page.goto(localizedHref(locale, "/"));
+    const login = page.locator("header").getByRole("link", { name: getAccountMessages(locale).navLogin, exact: true });
+    await expect(login).toBeVisible();
+    await expect(login).toHaveAttribute("href", localizedHref(locale, "/account"));
+    expect((await login.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/en");
+  await page.locator("header").getByRole("link", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/account$/);
+  await expect(page.getByRole("button", { name: "Continue with Google", exact: true })).toBeVisible();
+});
+
+test("home account menu works with keyboard and accounts off remains hidden", async ({ page }) => {
+  // Browser-only UI fixtures; production authentication is unchanged.
+  let current: object = {
+    state: "account", syncEnabled: false,
+    account: {
+      id: "00000000-0000-4000-8000-000000000001", nickname: "A long account nickname for QA",
+      defaultPlayerTag: null, profileRevision: 1, onboardingComplete: true,
+      onboardingCompletedAt: "2026-01-01T00:00:00Z", policyReady: true,
+      eligibilityPolicyTexts: null, eligibilityRules: null, policyVersions: null,
+    },
+  };
+  await page.route("**/api/account", (route) => route.fulfill({ json: current }));
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto("/en");
+  const trigger = page.getByRole("button", { name: "Account menu: A long account nickname for QA", exact: true });
+  await expect(trigger).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  const manage = page.getByRole("menuitem", { name: "Manage account", exact: true });
+  await expect(manage).toBeFocused();
+  await expect(manage).toHaveAttribute("href", "/en/account");
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("menuitem", { name: "Sign out", exact: true })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+
+  current = { state: "disabled", syncEnabled: false };
+  await page.reload();
+  await expect(trigger).toHaveCount(0);
+  await expect(page.locator("header").getByRole("link", { name: "Sign in", exact: true })).toHaveCount(0);
+});
 
 test("deletion in another tab cannot leave a stale deletion warning on a new account", async ({ context, page }) => {
   const oldId = "00000000-0000-4000-8000-000000000001";

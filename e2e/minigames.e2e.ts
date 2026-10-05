@@ -1,4 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import { locales, localizedHref } from "../src/i18n/config";
+import { getMinigameMessages } from "../src/i18n/minigameMessages";
+import { brawlerQuizGuideMessages } from "../src/i18n/minigames/brawlerQuizGuideMessages";
 
 test.use({ locale: "ko-KR" });
 
@@ -56,12 +59,15 @@ test("quiz images load directly from the CDN without hosting transformations", a
 
 test("homepage shortcut opens a six-card hub with four playable games", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("link", { name: getMinigameMessages("ko").quizTitle })).toHaveAttribute("href", "/minigames/brawler-quiz");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.getByRole("complementary").getByRole("link", { name: /미니게임/ }).click();
   await expect(page).toHaveURL(/\/minigames$/);
   await expect(page.getByRole("heading", { level: 1, name: "브롤스타즈 미니게임" })).toBeVisible();
   const cards = page.getByRole("article");
   await expect(cards).toHaveCount(6);
-  await expect(cards.nth(0).getByRole("heading", { name: "브롤러 이름 맞히기" })).toBeVisible();
+  await expect(cards.nth(0).getByRole("heading", { name: "나는 브롤러 종류를 100가지 이상 알고있다" })).toBeVisible();
   await expect(cards.nth(1).getByRole("heading", { name: "브롤러 실루엣 퀴즈" })).toBeVisible();
   await expect(cards.nth(2).getByRole("heading", { name: "하이어 오어 로어" })).toBeVisible();
   await expect(cards.nth(3).getByRole("heading", { name: "맵 이름 맞히기" })).toBeVisible();
@@ -71,6 +77,45 @@ test("homepage shortcut opens a six-card hub with four playable games", async ({
   await expect(cards.nth(2).getByRole("link")).toHaveCount(0);
   await cards.nth(0).getByRole("link", { name: "게임 시작" }).click();
   await expect(page).toHaveURL(/\/minigames\/brawler-quiz$/);
+});
+
+test("name quiz is readable by crawlers without JavaScript in all ten languages", async ({ browser, baseURL, request }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, locale: "ko-KR", baseURL });
+  const page = await context.newPage();
+  try {
+    for (const locale of locales) {
+      const path = localizedHref(locale, "/minigames/brawler-quiz");
+      const copy = getMinigameMessages(locale);
+      const guide = brawlerQuizGuideMessages[locale];
+      const canonical = "https://www.brawl-o1.site" + path;
+      const response = await page.goto(path);
+      expect(response?.status()).toBe(200);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.quizTitle);
+      await expect(page).toHaveTitle(copy.quizTitle + " | " + guide.searchLabel + " | Brawl Status KR");
+      await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", copy.quizMetaDescription);
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", canonical);
+      await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(10);
+      await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", copy.quizTitle + " | " + guide.searchLabel + " | Brawl Status KR");
+      await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+      await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", "https://www.brawl-o1.site/images/minigames/brawler-quiz-100.png");
+      await expect(page.getByRole("heading", { level: 2, name: guide.title, exact: true })).toBeVisible();
+      await expect(page.getByText(guide.rules, { exact: true })).toBeVisible();
+      await expect(page.getByRole("link", { name: guide.catalogLink, exact: true })).toHaveAttribute("href", localizedHref(locale, "/brawlers"));
+      expect(await page.locator('script[type="application/ld+json"]').allTextContents()).toEqual(expect.arrayContaining([
+        expect.stringContaining('"@type":"BreadcrumbList"'),
+      ]));
+      expect(await page.locator('meta[name="robots"]').getAttribute("content")).not.toContain("noindex");
+    }
+    const sitemap = await request.get("/sitemap.xml");
+    expect(sitemap.ok()).toBe(true);
+    const xml = await sitemap.text();
+    for (const locale of locales) expect(xml).toContain("<loc>https://www.brawl-o1.site" + localizedHref(locale, "/minigames/brawler-quiz") + "</loc>");
+    const image = await request.get("/images/minigames/brawler-quiz-100.png");
+    expect(image.ok()).toBe(true);
+    expect(image.headers()["content-type"]).toContain("image/png");
+  } finally {
+    await context.close();
+  }
 });
 
 test("existing name quiz remains playable and keeps its personal best", async ({ page }) => {
@@ -103,6 +148,40 @@ test("existing name quiz remains playable and keeps its personal best", async ({
   await page.reload();
   await expect(page.getByText(/최고 기록: 1 \/ \d+ \(/)).toBeVisible();
 });
+
+for (const shareMethod of ["native", "clipboard"] as const) {
+  test(`renamed quiz shares its result with a canonical link using ${shareMethod}`, async ({ page }) => {
+    await page.addInitScript((method) => {
+      Object.defineProperty(navigator, "share", {
+        configurable: true,
+        value: method === "native" ? async (data: ShareData) => {
+          Object.assign(window, { sharedQuizResult: data });
+        } : undefined,
+      });
+      Object.defineProperty(navigator.clipboard, "writeText", {
+        configurable: true,
+        value: async (text: string) => { Object.assign(window, { sharedQuizResult: text }); },
+      });
+    }, shareMethod);
+    await page.goto("/minigames/brawler-quiz");
+    await page.getByRole("button", { name: "게임 시작", exact: true }).click();
+    await page.getByRole("textbox", { name: "브롤러 이름", exact: true }).fill("쉘리");
+    await page.getByRole("textbox", { name: "브롤러 이름", exact: true }).press("Enter");
+    await page.getByRole("button", { name: "포기하고 결과 보기", exact: true }).click();
+    await page.getByRole("button", { name: "결과 공유", exact: true }).click();
+    const result = await page.evaluate(() => Reflect.get(window, "sharedQuizResult"));
+    if (shareMethod === "native") {
+      expect(result).toMatchObject({
+        title: "나는 브롤러 종류를 100가지 이상 알고있다",
+        text: expect.stringMatching(/나는 브롤러 종류를 100가지 이상 알고있다: 1\//),
+        url: "https://www.brawl-o1.site/minigames/brawler-quiz",
+      });
+    } else {
+      expect(result).toContain("나는 브롤러 종류를 100가지 이상 알고있다: 1/");
+      expect(result).toContain("\nhttps://www.brawl-o1.site/minigames/brawler-quiz");
+    }
+  });
+}
 
 test("silhouette quiz accepts the exact brawler name and can finish early", async ({ page }) => {
   await stabilizeRandom(page);
@@ -174,7 +253,7 @@ test("ability quiz filters modes and awards one point for the owning brawler", a
 test("localized English quiz renders translated controls and accepts English answers", async ({ page }) => {
   await mockBrawlifyImages(page);
   await page.goto("/en/minigames/brawler-quiz");
-  await expect(page.getByRole("heading", { level: 1, name: "Brawler Name Quiz" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: getMinigameMessages("en").quizTitle })).toBeVisible();
   await page.getByRole("button", { name: "Start game" }).click();
   const answer = page.getByRole("textbox", { name: "Brawler name" });
   await answer.fill("SHELLY");

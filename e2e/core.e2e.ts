@@ -259,7 +259,7 @@ test("brawler catalog filters by name, rarity, and class", async ({ page }) => {
   expect(classValue).toBeTruthy();
   await rarity.selectOption(rarityValue!);
   await classFilter.selectOption(classValue!);
-  await expect(page.locator("article").or(page.getByText("조건에 맞는 브롤러가 없습니다."))).toBeVisible();
+  await expect.poll(async () => (await articles.count()) > 0 || await page.getByText("조건에 맞는 브롤러가 없습니다.").isVisible()).toBe(true);
 });
 
 test("language switcher preserves the current localized route", async ({ page }) => {

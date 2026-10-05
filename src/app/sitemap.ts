@@ -60,7 +60,10 @@ const enabledMiniGameRoutes: SitemapEntry[] = miniGames
   .flatMap((game) => [
     localizedRoute(game.href, "weekly", 0.6),
     ...localizedLocales.map((locale) => localizedCopy(locale, game.href, "weekly", 0.55)),
-  ]);
+  ].map((entry) => ({
+    ...entry,
+    ...(game.contentUpdatedAt ? { lastModified: game.contentUpdatedAt } : {}),
+  })));
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [brawlersResult, mapsResult, modesResult] = await Promise.allSettled([

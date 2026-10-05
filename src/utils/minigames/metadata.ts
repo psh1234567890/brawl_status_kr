@@ -1,5 +1,8 @@
 import { localeAlternates, localizedHref, type Locale } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
+import { brawlerQuizGuideMessages } from "../../i18n/minigames/brawlerQuizGuideMessages";
+import { getLocalizedSiteSeo } from "../../i18n/seo";
+import { brawlerQuizSocialImage } from "./brawlerQuizSeo";
 import { miniGames, type MiniGameId } from "./registry";
 
 export function getMiniGameMetadata(locale: Locale, id: MiniGameId) {
@@ -29,8 +32,12 @@ export function getMiniGameMetadata(locale: Locale, id: MiniGameId) {
       },
     };
   }
-  const pageTitle = copy.title + " | " + messages.hubTitle;
+  const isBrawlerQuiz = id === "brawler-quiz";
+  const pageTitle = copy.title + " | " + (isBrawlerQuiz ? brawlerQuizGuideMessages[locale].searchLabel : messages.hubTitle);
   const socialTitle = pageTitle + " | Brawl Status KR";
+  const socialImage = isBrawlerQuiz
+    ? [{ url: brawlerQuizSocialImage, width: 1200, height: 630, alt: copy.title }]
+    : undefined;
   return {
     title: pageTitle,
     description: copy.metaDescription,
@@ -39,12 +46,16 @@ export function getMiniGameMetadata(locale: Locale, id: MiniGameId) {
       title: socialTitle,
       description: copy.metaDescription,
       url: canonical,
+      siteName: "Brawl Status KR",
+      locale: locale === "ko" ? "ko_KR" : getLocalizedSiteSeo(locale).openGraphLocale,
       type: "website" as const,
+      ...(socialImage ? { images: socialImage } : {}),
     },
     twitter: {
-      card: "summary" as const,
+      card: isBrawlerQuiz ? "summary_large_image" as const : "summary" as const,
       title: socialTitle,
       description: copy.metaDescription,
+      ...(socialImage ? { images: socialImage } : {}),
     },
   };
 }

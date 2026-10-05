@@ -1,7 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { getMiniGameMetadata } from "./metadata";
+import { locales, localizedHref } from "../../i18n/config";
+import { getMinigameMessages } from "../../i18n/minigameMessages";
+import { brawlerQuizGuideMessages } from "../../i18n/minigames/brawlerQuizGuideMessages";
 
 describe("mini game metadata", () => {
+  it("uses the renamed quiz and localized search/social metadata in all ten languages", () => {
+    expect(getMinigameMessages("ko").quizTitle).toBe("나는 브롤러 종류를 100가지 이상 알고있다");
+    for (const locale of locales) {
+      const copy = getMinigameMessages(locale);
+      const metadata = getMiniGameMetadata(locale, "brawler-quiz");
+      expect(metadata.title).toBe(copy.quizTitle + " | " + brawlerQuizGuideMessages[locale].searchLabel);
+      expect(metadata.description).toBe(copy.quizMetaDescription);
+      expect(metadata.alternates.canonical).toBe(localizedHref(locale, "/minigames/brawler-quiz"));
+      expect(Object.keys(metadata.alternates.languages!)).toHaveLength(10);
+      expect(metadata.openGraph).toMatchObject({
+        title: metadata.title + " | Brawl Status KR",
+        description: copy.quizMetaDescription,
+        images: [{ url: "/images/minigames/brawler-quiz-100.png", width: 1200, height: 630, alt: copy.quizTitle }],
+      });
+      expect(metadata.twitter).toMatchObject({ card: "summary_large_image", title: metadata.openGraph.title });
+    }
+  });
+
   it("sets localized canonical and hreflang metadata for enabled pages", () => {
     const metadata = getMiniGameMetadata("en", "map-quiz");
     expect(metadata.title).toBe("Map Name Quiz | Brawl Stars Mini Games");

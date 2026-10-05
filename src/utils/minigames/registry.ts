@@ -20,11 +20,12 @@ export type MiniGameDefinition = {
     | "/minigames/ability-quiz"
     | "/minigames/release-order";
   enabled: boolean;
+  contentUpdatedAt?: string;
   blockedReason?: BlockedGameReason;
 };
 
 export const miniGames: readonly MiniGameDefinition[] = [
-  { id: "brawler-quiz", href: "/minigames/brawler-quiz", enabled: true },
+  { id: "brawler-quiz", href: "/minigames/brawler-quiz", enabled: true, contentUpdatedAt: "2026-10-05" },
   { id: "silhouette-quiz", href: "/minigames/silhouette-quiz", enabled: true },
   { id: "higher-lower", href: "/minigames/higher-lower", enabled: false, blockedReason: "data-pending" },
   { id: "map-quiz", href: "/minigames/map-quiz", enabled: true },

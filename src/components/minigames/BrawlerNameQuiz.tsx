@@ -168,11 +168,12 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
 
   async function shareResult() {
     const summary = `${copy.quizTitle}: ${foundIds.length}/${brawlers.length} (${percent}%) | Brawl Status KR`;
+    const url = "https://www.brawl-o1.site" + localizedHref(locale, "/minigames/brawler-quiz");
     try {
       if (navigator.share) {
-        await navigator.share({ text: summary });
+        await navigator.share({ title: copy.quizTitle, text: summary, url });
       } else {
-        await navigator.clipboard.writeText(summary);
+        await navigator.clipboard.writeText(summary + "\n" + url);
         setFeedback(copy.copied);
       }
     } catch (error) {

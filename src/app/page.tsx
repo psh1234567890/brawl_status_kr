@@ -259,6 +259,12 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                 </Link>
               ))}
             </div>
+            <Link
+              href={localizedHref(locale, "/minigames/brawler-quiz")}
+              className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-black text-blue-800 hover:bg-blue-100"
+            >
+              {minigameCopy.quizTitle}<span aria-hidden="true">→</span>
+            </Link>
             <nav className="mt-4 flex flex-wrap gap-2" aria-label={copy.home.extendedFeatures}>
               {utilityLinks.map(([href, label]) => (
                 <Link

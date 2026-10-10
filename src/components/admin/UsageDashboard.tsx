@@ -99,7 +99,7 @@ export default function UsageDashboard() {
         {status === "denied" ? (
           <section className="rounded-xl border bg-white p-6">
             <h2 className="text-lg font-black">운영자 인증 필요</h2>
-            <p className="mt-2 text-sm">Google 계정 로그인 후 운영자 허용 목록에 등록된 계정으로 접근해야 합니다. USAGE_ADMIN_USER_IDS가 설정되지 않은 경우에도 접근이 차단됩니다.</p>
+            <p className="mt-2 text-sm">Google 계정에 로그인한 뒤 비공개 운영자 허용 목록에 등록된 계정으로 접근해야 합니다. 계정이 등록되지 않았다면 데이터가 표시되지 않습니다.</p>
             <Link href="/account" className="mt-3 inline-block text-blue-700 underline">계정 화면으로 이동</Link>
           </section>
         ) : null}

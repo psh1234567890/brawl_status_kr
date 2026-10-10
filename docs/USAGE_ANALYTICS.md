@@ -16,14 +16,16 @@ Analytics errors are sanitized and never block primary game/search functionality
 
 ## Access control
 
-`/admin/usage` is not linked in public navigation, has `noindex`, and fetches from `/api/admin/usage`. The API **fails closed** with 404 until `USAGE_ADMIN_USER_IDS` is configured. When configured, the server verifies the Better Auth session via the existing account policy, then matches its user UUID against the exact comma-separated allowlist; it returns no metrics to any other visitor. The response is private, no-store and noindex. Never use a public API key or the player's game tag to grant admin access.
+`/admin/usage` is not linked from public navigation, has `noindex`, and reads from `/api/admin/usage`. The server verifies the Better Auth session and the existing account eligibility/pilot allowlist **first**, then checks the authenticated UUID in `analytics_private.usage_admin_allowlist`. This private table is created by `drizzle/0007_private_usage_admin_allowlist.sql`; no database privileges are granted to `anon` or `authenticated`. The existing `USAGE_ADMIN_USER_IDS` production environment variable remains an optional alternate admin allowlist for authorized environments, but **it is no longer required**. Missing DB and env entries both fail closed to 404. Reports have `private, no-store` and `noindex` headers.
 
-To activate:
-1. Deploy migration 0006 using a reviewed Supabase migration (no existing tables changed).
-2. Log in with your own Google account, visit `/api/account` in that same browser and read your **own** `account.id` when `state=account` (do not share it publicly).
-3. In the Vercel project's production environment variables, set `USAGE_ADMIN_USER_IDS` to your UUID (or a comma-separated list of explicitly authorized UUIDs). Redeploy once for the function environment to include it. Missing/empty means all access denied.
-4. Go to `https://www.brawl-o1.site/admin/usage` while signed in. Use the checkbox to opt this **browser** out of counting (client `brawl_analytics_opt_out=1` same-site cookie). This excludes future visit/search/game events in this browser; clear via the same checkbox to resume.
-5. Monitor `usage_counter_unavailable` logs and test with a separate browser that you explicitly opted in. Do not simulate fake "real visitors" in production.
+Owner setup with the DB method (no Vercel env permission required):
+1. Apply migrations 0006 (aggregate table) and 0007 (private administrator allowlist) using reviewed Supabase migrations.
+2. Log in to the website with the owner's Google account, open `/api/account` in the same browser and copy only the owner's `account.id`. Never commit the actual account UUID to source code, tests or docs.
+3. As an authorized database administrator, insert only that UUID into the protected table using a parameterized query or a reviewed SQL statement: `INSERT INTO analytics_private.usage_admin_allowlist (user_id) VALUES ('<approved-owner-uuid>'::uuid) ON CONFLICT (user_id) DO NOTHING;`. This is server-only configuration, not a public endpoint.
+4. Deploy the reviewed application change and open `https://www.brawl-o1.site/admin/usage` while logged in. The checkbox lets the browser opt out of future visit/search/minigame counts by setting `brawl_analytics_opt_out=1` (SameSite cookie); disable the checkbox to resume counting.
+5. Validate unauthorized requests return 404. Confirm authorized access in a real logged-in browser and watch the hourly aggregate and app logs. Never create fake production visitor counts in tests.
+
+To revoke access, delete the matching UUID row from `analytics_private.usage_admin_allowlist`, and if applicable remove it from `USAGE_ADMIN_USER_IDS`. Privileges require the database owner, and access changes in the DB apply to the next API request without another deploy.
 
 ## Rollback
 

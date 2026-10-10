@@ -18,6 +18,17 @@ Denied/full browser storage no longer breaks profile search. Recent tags and fav
 
 The page remains request-rendered via `connection()`, keeping database reads out of builds. The UI shows the actual snapshot time and explains that a failed refresh can retain older counts. A cold-cache DB failure renders a translated unavailable notice; it does not cache an error or present fabricated zero counts.
 
+## Status SQL optimization (2026-10-11)
+
+The `/status` aggregate originally ran four `COUNT(DISTINCT ...)` expressions in a single scan. A production PostgreSQL plan selected a wide index scan of `battle_logs`; the recorded `pg_stat_statements` mean was about 11 seconds over 11 executions. The SQL has been rewritten without changing table definitions or displayed metrics:
+
+- Materialized `map_totals` is reused to compute the exact total row count (sum of counts, including null map groups), distinct non-null map count and top ten maps.
+- Materialized `brawler_totals` supplies distinct brawler count and top ten, while continuing to exclude `Unknown` and SQL nulls.
+- Distinct non-null player tags and battle fingerprints use separate B-tree-backed paths instead of one multi-DISTINCT aggregate. Latest timestamp uses its existing index.
+- The complete calculation still executes as **one SQL statement** for a consistent snapshot. The `unstable_cache` key is versioned `v2` so older cached query results do not mask rollout.
+- A single pre-release production read-only `EXPLAIN (ANALYZE, BUFFERS)` of the revised statement measured about 237 ms after warming the database; the original recorded mean and this isolated measurement are **not** a controlled A/B benchmark. Monitor cold refreshes and ongoing p95 timings after production rollout. No additional index or migration was necessary for this revision.
+- PostgreSQL index-only scans still performed heap fetches on recently inserted rows. Investigate insert-only table vacuum visibility and autovacuum thresholds separately before modifying DB maintenance settings.
+
 ## Remaining operational checks
 
 - Compare Vercel function region with the actual database region and measure several cold/warm requests. A single health check is not an average or proof that region placement is the cause.

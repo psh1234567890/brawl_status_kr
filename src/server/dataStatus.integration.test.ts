@@ -41,6 +41,19 @@ describe.skipIf(!testUrl)("data-status PostgreSQL aggregates", () => {
     expect(row.popularBrawlers).toEqual([]);
   });
 
+  it("counts all rows, including null-map groups, without inflating distinct counts", async () => {
+    await client.query(`INSERT INTO pg_temp.battle_logs VALUES
+      ('dup', NULL, NULL, 'SHELLY', NULL),
+      ('dup', NULL, NULL, NULL, NULL),
+      (NULL, 'tag', 'Map B', 'Unknown', NULL)`);
+    const row = (await client.query(query.sql, query.params)).rows[0];
+    expect([row.totalBattles, row.uniqueBattles, row.players, row.maps, row.brawlers].map(Number))
+      .toEqual([3, 1, 1, 1, 1]);
+    expect(row.popularMaps).toEqual([{ name: null, plays: 2 }, { name: "Map B", plays: 1 }]);
+    expect(row.popularBrawlers).toEqual([{ name: "SHELLY", plays: 1 }]);
+    expect(row.latestBattle).toBeNull();
+  });
+
   it("preserves duplicate/null fingerprint counting and excludes Unknown brawlers", async () => {
     await client.query(`INSERT INTO pg_temp.battle_logs VALUES
       ('a', 'tag1', 'Map A', 'SHELLY', '2026-10-10T00:00:00Z'),

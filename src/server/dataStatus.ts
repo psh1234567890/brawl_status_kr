@@ -64,7 +64,8 @@ export function buildDataStatusQuery() {
           ORDER BY plays DESC, name ASC LIMIT 10
         ) popular_brawlers
       ), '[]'::jsonb) AS "popularBrawlers"
-  `;}
+  `;
+}
 
 let pendingRead: Promise<DataStatus> | null = null;
 async function readDataStatus(): Promise<DataStatus> {

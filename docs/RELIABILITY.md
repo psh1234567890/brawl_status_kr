@@ -29,6 +29,30 @@ The `/status` aggregate originally ran four `COUNT(DISTINCT ...)` expressions in
 - A single pre-release production read-only `EXPLAIN (ANALYZE, BUFFERS)` of the revised statement measured about 237 ms after warming the database; the original recorded mean and this isolated measurement are **not** a controlled A/B benchmark. Monitor cold refreshes and ongoing p95 timings after production rollout. No additional index or migration was necessary for this revision.
 - PostgreSQL index-only scans still performed heap fetches on recently inserted rows. Investigate insert-only table vacuum visibility and autovacuum thresholds separately before modifying DB maintenance settings.
 
+## Map meta query optimization (2026-10-11)
+
+`buildMapMetaStatsQuery` in `src/server/metaStats.ts` now aggregates each recent
+battle source by (mode, map, brawler) **before** combining them, then sums
+the source-level play, victory and draw counts. It keeps `max(brawler_id)`,
+all exclusions, `MINIMUM_META_PLAYS` filtering *after* the two sources are merged,
+and the original thirty-day data window. The 300-second cache has a new
+`meta-stats-v10-source-preaggregate` key.
+
+Read-only production PostgreSQL measurements during development:
+- Existing query processed approximately 109,960 raw recent rows in the
+  combined stage; one `EXPLAIN (ANALYZE, BUFFERS)` run took **4,074.5 ms**.
+- Pre-aggregated version processed 9,274 source-level groups; one
+  `EXPLAIN (ANALYZE, BUFFERS)` run took **124.7 ms**.
+- A *single-snapshot* `EXCEPT ALL` comparison across every result field gave
+  4,006 rows from each statement, zero missing and zero extra.
+
+These are isolated read-only samples, **not** a sustained p95/p99 benchmark.
+Watch the `db.meta.stats` operation log, page-loading behavior and refresh
+failures after rollout. No DB index, migration, table contents or account
+settings were changed. The disposable PostgreSQL integration test validates
+the current SQL against the legacy semantics including under-threshold source
+groups merging across both sources.
+
 ## Remaining operational checks
 
 - Compare Vercel function region with the actual database region and measure several cold/warm requests. A single health check is not an average or proof that region placement is the cause.

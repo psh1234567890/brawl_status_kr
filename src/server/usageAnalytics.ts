@@ -19,6 +19,8 @@ export function isUsageOptedOut(request: Request): boolean {
 // The DB contains only counters; never pass tags, IPs, cookies, user IDs or
 // arbitrary client strings to the INSERT. Analytics must not break game search.
 export async function recordUsageEvent(kind: UsageKind, request?: Request): Promise<void> {
+  // Preview deployments and browser E2E must not inflate production usage counts.
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production") return;
   if (request && isUsageOptedOut(request)) return;
   try {
     await db.$client.query(

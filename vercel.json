@@ -1,4 +1,7 @@
 {
+  "regions": [
+    "sin1"
+  ],
   "crons": [
     {
       "path": "/api/internal/account-maintenance",

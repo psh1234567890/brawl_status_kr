@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { getAccountMessages } from "../src/i18n/accountMessages";
 import { locales, localizedHref } from "../src/i18n/config";
+import { getMessages } from "../src/i18n/messages";
 
 test("home header exposes localized account entry without mobile overflow", async ({ context, page }) => {
   await context.route("**/api/account", (route) => route.fulfill({
@@ -58,6 +59,22 @@ test("home account menu works with keyboard and accounts off remains hidden", as
   await expect(trigger).toHaveCount(0);
   await expect(page.locator("header").getByRole("link", { name: "Sign in", exact: true })).toHaveCount(0);
 });
+for (const locale of ["ko", "en"] as const) {
+  test(`data status in ${locale} renders a timestamped snapshot or an honest unavailable notice`, async ({ page }) => {
+    const copy = getMessages(locale).status;
+    const response = await page.goto(locale === "ko" ? "/status" : "/en/status");
+    expect(response?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1, name: copy.title, exact: true })).toBeVisible();
+    const unavailable = page.getByText(copy.unavailable, { exact: true });
+    const snapshot = page.getByText(copy.cacheNotice, { exact: false });
+    await expect(unavailable.or(snapshot)).toHaveCount(1);
+    if (await unavailable.count()) {
+      await expect(page.getByText(copy.totalRows, { exact: true })).toHaveCount(0);
+    } else {
+      await expect(snapshot).toContainText(copy.snapshotAt);
+    }
+  });
+}
 
 test("deletion in another tab cannot leave a stale deletion warning on a new account", async ({ context, page }) => {
   const oldId = "00000000-0000-4000-8000-000000000001";
@@ -259,7 +276,17 @@ test("brawler catalog filters by name, rarity, and class", async ({ page }) => {
   expect(classValue).toBeTruthy();
   await rarity.selectOption(rarityValue!);
   await classFilter.selectOption(classValue!);
-  await expect.poll(async () => (await articles.count()) > 0 || await page.getByText("조건에 맞는 브롤러가 없습니다.").isVisible()).toBe(true);
+  const selectedRarity = await rarity.locator("option:checked").textContent();
+  const selectedClass = await classFilter.locator("option:checked").textContent();
+  await expect.poll(async () => {
+    const [rarityLabels, classLabels] = await Promise.all([
+      articles.locator("h2 + p").allTextContents(), articles.locator("h2 + p + p").allTextContents(),
+    ]);
+    if (rarityLabels.length === 0) return page.getByText("조건에 맞는 브롤러가 없습니다.").isVisible();
+    return rarityLabels.every((label) => label.trim() === selectedRarity?.trim()) &&
+      classLabels.length === rarityLabels.length &&
+      classLabels.every((label) => label.trim() === selectedClass?.trim());
+  }).toBe(true);
 });
 
 test("language switcher preserves the current localized route", async ({ page }) => {
@@ -426,6 +453,7 @@ test("meta recommends from the most recently searched player's owned brawlers", 
       json: {
         tag: "#2PYLQ",
         name: "Owned Picks Player",
+        dataFreshness: { status: "stale", fetchedAt: "2026-10-10T00:00:00Z" },
         trophies: 30000,
         highestTrophies: 31000,
         expLevel: 200,
@@ -450,6 +478,7 @@ test("meta recommends from the most recently searched player's owned brawlers", 
     .getByRole("heading", { level: 3, name: "플레이어 보유 브롤러 추천" })
     .locator("xpath=ancestor::section[1]");
   await expect(personalized).toContainText("Owned Picks Player");
+  await expect(personalized).toContainText("외부 서비스의 일시적인 장애로 최근 정상 조회 데이터를 표시합니다.");
   await expect(personalized).toContainText("콜트");
   await expect(personalized).not.toContainText("쉘리");
   await expect(personalized).toContainText("850");

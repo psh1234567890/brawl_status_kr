@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 import { withApiMonitoring } from "../../../server/observability";
-import { fetchBrawlApi, UpstreamApiError } from "../../../server/upstream";
+import { fetchBrawlApiSnapshot, UpstreamApiError } from "../../../server/upstream";
 import type { PlayerData } from "../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../utils/playerTag";
 
@@ -23,16 +23,19 @@ async function getPlayer(request: Request) {
 
   try {
     const cleanTag = normalizePlayerTag(playerTag);
-    const data = await fetchBrawlApi<PlayerData>(`/players/%23${cleanTag}`, 30_000);
-    return NextResponse.json(data);
+    const { data, freshness } = await fetchBrawlApiSnapshot<PlayerData>(
+      `/players/%23${cleanTag}`, 30_000, 5 * 60_000,
+    );
+    return NextResponse.json({ ...data, dataFreshness: freshness }, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (error) {
-    console.error("Failed to fetch player profile:", error);
     const status = error instanceof UpstreamApiError ? error.status : 502;
     const message =
       error instanceof UpstreamApiError
         ? error.message
         : "서버와 연결할 수 없습니다.";
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
   }
 }
 

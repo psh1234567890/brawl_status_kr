@@ -1,5 +1,7 @@
 export const deepCopy = {
   searchErrors: {
+    staleNotice: "Harici hizmetteki geçici bir kesinti nedeniyle son başarılı sorgunun verileri gösteriliyor. Güncel kayıtlardan farklı olabilir.",
+    saveNotice: "Son savaşlar yüklendi ancak birikmiş istatistiklere kaydedilemedi.",
     dataLoad: "İstenen veriler yüklenemedi.",
     enterTag: "Bir oyuncu etiketi gir.",
     skinLoad: "Sahip olunan kostüm listesi yüklenemedi.",

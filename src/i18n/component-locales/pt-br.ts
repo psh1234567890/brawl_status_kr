@@ -1,5 +1,7 @@
 export const deepCopy = {
   searchErrors: {
+    staleNotice: "Uma falha temporária no serviço externo fez com que os últimos dados obtidos com sucesso fossem exibidos. Eles podem diferir dos registros atuais.",
+    saveNotice: "As batalhas recentes foram carregadas, mas não puderam ser salvas nas estatísticas acumuladas.",
     dataLoad: "Não foi possível carregar os dados solicitados.",
     enterTag: "Digite uma tag de jogador.",
     skinLoad: "Não foi possível carregar a lista de skins obtidas.",

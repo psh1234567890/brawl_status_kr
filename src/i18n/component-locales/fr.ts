@@ -1,5 +1,7 @@
 export const frDeepCopy = {
   searchErrors: {
+    staleNotice: "Une panne temporaire du service externe entraîne l’affichage des dernières données obtenues avec succès. Elles peuvent différer des données actuelles.",
+    saveNotice: "Les combats récents ont été chargés, mais n’ont pas pu être enregistrés dans les statistiques cumulées.",
     dataLoad: "Impossible de charger les données demandées.",
     enterTag: "Saisissez un tag de joueur.",
     skinLoad: "Impossible de charger la liste des skins possédés.",

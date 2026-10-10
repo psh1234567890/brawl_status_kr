@@ -1,5 +1,7 @@
 export const itDeepCopy = {
   searchErrors: {
+    staleNotice: "A causa di un problema temporaneo del servizio esterno vengono mostrati gli ultimi dati caricati correttamente. Potrebbero differire dai dati attuali.",
+    saveNotice: "Le battaglie recenti sono state caricate, ma non è stato possibile salvarle nelle statistiche cumulative.",
     dataLoad: "Impossibile caricare i dati richiesti.",
     enterTag: "Inserisci un tag giocatore.",
     skinLoad: "Impossibile caricare l’elenco delle skin possedute.",

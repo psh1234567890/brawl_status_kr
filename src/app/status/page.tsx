@@ -1,30 +1,15 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { sql } from "drizzle-orm";
 import PortalLayout, { StatPill } from "../../components/PortalLayout";
-import { db } from "../../db";
 import { numberLocales, type Locale } from "../../i18n/config";
 import { getMessages } from "../../i18n/messages";
+import { getDataStatus, type PopularRow } from "../../server/dataStatus";
 import { translateBrawlerName, translateMapName } from "../../utils/brawlTranslations";
 
 export const metadata: Metadata = {
   title: "데이터 수집 현황",
   description: "Brawl Status KR에 저장된 전투 기록 표본과 수집 현황을 확인합니다.",
   alternates: { canonical: "/status" },
-};
-
-type StatusRow = {
-  totalBattles: number | string;
-  uniqueBattles: number | string;
-  players: number | string;
-  maps: number | string;
-  brawlers: number | string;
-  latestBattle: string | null;
-};
-
-type PopularRow = {
-  name: string;
-  plays: number | string;
 };
 
 export default function StatusPage() {
@@ -35,42 +20,17 @@ export async function StatusPageContent({ locale }: { locale: Locale }) {
   await connection();
   const copy = getMessages(locale).status;
 
-  const [summaryResult, popularMapsResult, popularBrawlersResult] = await Promise.all([
-    db.execute<StatusRow>(sql`
-      SELECT
-        count(*) AS "totalBattles",
-        count(DISTINCT battle_fingerprint) AS "uniqueBattles",
-        count(DISTINCT player_tag) AS players,
-        count(DISTINCT map) AS maps,
-        count(DISTINCT brawler_name) FILTER (WHERE brawler_name <> 'Unknown') AS brawlers,
-        max(battle_timestamp)::text AS "latestBattle"
-      FROM battle_logs
-    `),
-    db.execute<PopularRow>(sql`
-      SELECT map AS name, count(*) AS plays
-      FROM battle_logs
-      GROUP BY map
-      ORDER BY count(*) DESC
-      LIMIT 10
-    `),
-    db.execute<PopularRow>(sql`
-      SELECT brawler_name AS name, count(*) AS plays
-      FROM battle_logs
-      WHERE brawler_name <> 'Unknown'
-      GROUP BY brawler_name
-      ORDER BY count(*) DESC
-      LIMIT 10
-    `),
-  ]);
-
-  const summary = summaryResult.rows[0] ?? {
-    totalBattles: 0,
-    uniqueBattles: 0,
-    players: 0,
-    maps: 0,
-    brawlers: 0,
-    latestBattle: null,
-  };
+  const data = await getDataStatus();
+  if (!data) {
+    return (
+      <PortalLayout locale={locale} title={copy.title} eyebrow={copy.eyebrow} description={copy.description}>
+        <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+          {copy.unavailable}
+        </p>
+      </PortalLayout>
+    );
+  }
+  const { summary } = data;
 
   return (
     <PortalLayout
@@ -79,6 +39,7 @@ export async function StatusPageContent({ locale }: { locale: Locale }) {
       eyebrow={copy.eyebrow}
       description={copy.description}
     >
+      <p className="text-sm text-slate-600">{copy.cacheNotice} {copy.snapshotAt}: {formatDate(data.sampledAt, locale)}</p>
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <StatPill label={copy.totalRows} value={Number(summary.totalBattles).toLocaleString(numberLocales[locale])} />
         <StatPill label={copy.uniqueBattles} value={Number(summary.uniqueBattles).toLocaleString(numberLocales[locale])} />
@@ -89,8 +50,8 @@ export async function StatusPageContent({ locale }: { locale: Locale }) {
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
-        <RankingPanel title={copy.popularMaps} rows={popularMapsResult.rows} translate={(name) => translateMapName(name, locale)} locale={locale} battlesLabel={copy.battles} />
-        <RankingPanel title={copy.popularBrawlers} rows={popularBrawlersResult.rows} translate={(name) => translateBrawlerName(name, locale)} locale={locale} battlesLabel={copy.battles} />
+        <RankingPanel title={copy.popularMaps} rows={summary.popularMaps} translate={(name) => translateMapName(name, locale)} locale={locale} battlesLabel={copy.battles} />
+        <RankingPanel title={copy.popularBrawlers} rows={summary.popularBrawlers} translate={(name) => translateBrawlerName(name, locale)} locale={locale} battlesLabel={copy.battles} />
       </section>
     </PortalLayout>
   );

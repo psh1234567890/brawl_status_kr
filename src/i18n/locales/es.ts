@@ -122,6 +122,9 @@ export const esMessages = {
     members: "miembros",
   },
   status: {
+    cacheNotice: "Los recuentos se actualizan aproximadamente cada cinco minutos; si falla la actualización, pueden mostrarse datos anteriores.",
+    snapshotAt: "Hora del recuento",
+    unavailable: "El estado de los datos no está disponible temporalmente. Recarga la página en unos momentos.",
     title: "Estado de recopilación de datos",
     eyebrow: "Estado de los datos",
     description: "Muestras de batallas almacenadas cuando los usuarios buscan etiquetas de jugadores. Como esta muestra depende de las búsquedas, no representa a toda la base de jugadores; por eso se muestran juntos el volumen recopilado y las batallas únicas.",

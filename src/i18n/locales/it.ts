@@ -122,6 +122,9 @@ export const itMessages = {
     members: "membri",
   },
   status: {
+    cacheNotice: "I conteggi vengono aggiornati circa ogni cinque minuti; se l’aggiornamento fallisce, potrebbero essere mostrati dati precedenti.",
+    snapshotAt: "Ora del conteggio",
+    unavailable: "Lo stato dei dati non è temporaneamente disponibile. Ricarica la pagina tra poco.",
     title: "Stato raccolta dati",
     eyebrow: "Stato dati",
     description: "Campioni di battaglie salvati quando gli utenti cercano i tag giocatore. Questo campione basato sulle ricerche non rappresenta l’intera base di giocatori, quindi volume di raccolta e battaglie uniche vengono mostrati insieme.",

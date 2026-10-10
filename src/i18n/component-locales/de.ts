@@ -1,5 +1,7 @@
 export const deDeepCopy = {
   searchErrors: {
+    staleNotice: "Wegen einer vorübergehenden Störung des externen Dienstes werden zuletzt erfolgreich geladene Daten angezeigt. Sie können von den aktuellen Daten abweichen.",
+    saveNotice: "Die letzten Kämpfe wurden geladen, konnten aber nicht in den gesammelten Statistiken gespeichert werden.",
     dataLoad: "Die angeforderten Daten konnten nicht geladen werden.",
     enterTag: "Gib einen Spieler-Tag ein.",
     skinLoad: "Die Liste deiner Skins konnte nicht geladen werden.",

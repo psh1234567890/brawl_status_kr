@@ -122,6 +122,9 @@ export const frMessages = {
     members: "membres",
   },
   status: {
+    cacheNotice: "Les totaux sont actualisés environ toutes les cinq minutes ; en cas d’échec, des données antérieures peuvent être affichées.",
+    snapshotAt: "Heure du relevé",
+    unavailable: "L’état des données est temporairement indisponible. Actualisez la page dans quelques instants.",
     title: "État de la collecte des données",
     eyebrow: "État des données",
     description: "Échantillons de combats enregistrés lorsque les utilisateurs recherchent des tags de joueur. Cet échantillon basé sur les recherches ne représente pas l’ensemble des joueurs, c’est pourquoi le volume collecté et les combats uniques sont affichés ensemble.",

@@ -65,7 +65,7 @@ const getCachedMetaStats = unstable_cache(
     }
     return result;
   },
-  ["meta-stats-v9-mode-and-map"],
+  ["meta-stats-v10-source-preaggregate"],
   { revalidate: 300, tags: ["meta-stats"] },
 );
 

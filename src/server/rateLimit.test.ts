@@ -34,10 +34,42 @@ describe("consumeRateLimit", () => {
 });
 
 describe("getClientAddress", () => {
-  it("uses the first forwarded address", () => {
+  it("uses the platform-owned forwarded address on Vercel", () => {
     const request = new Request("https://example.com", {
-      headers: { "x-forwarded-for": "203.0.113.10, 10.0.0.1" },
+      headers: {
+        "x-vercel-forwarded-for": "203.0.113.10, 10.0.0.1",
+        "x-forwarded-for": "192.0.2.1",
+        "x-real-ip": "192.0.2.2",
+      },
     });
-    expect(getClientAddress(request)).toBe("203.0.113.10");
+    expect(getClientAddress(request, true)).toBe("203.0.113.10");
+  });
+
+  it("accepts a valid IPv6 platform address", () => {
+    const request = new Request("https://example.com", {
+      headers: { "x-vercel-forwarded-for": "2001:db8::1" },
+    });
+    expect(getClientAddress(request, true)).toBe("2001:db8::1");
+  });
+
+  it("does not trust caller-controlled forwarding headers on Vercel", () => {
+    const request = new Request("https://example.com", {
+      headers: { "x-forwarded-for": "192.0.2.7", "x-real-ip": "192.0.2.8" },
+    });
+    expect(getClientAddress(request, true)).toBe("vercel-ip-unavailable");
+  });
+
+  it("rejects an invalid platform-provided address", () => {
+    const request = new Request("https://example.com", {
+      headers: { "x-vercel-forwarded-for": "forged-ip" },
+    });
+    expect(getClientAddress(request, true)).toBe("vercel-ip-unavailable");
+  });
+
+  it("does not treat arbitrary local headers as a remote IP", () => {
+    const request = new Request("https://example.com", {
+      headers: { "x-vercel-forwarded-for": "203.0.113.10", "x-forwarded-for": "192.0.2.1" },
+    });
+    expect(getClientAddress(request, false)).toBe("local");
   });
 });

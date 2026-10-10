@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import BrawlImage from "../BrawlImage";
+import { sendUsageEvent } from "../UsageSessionTracker";
 import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
 import { usePersonalBest } from "../../hooks/useAccount";
@@ -46,6 +47,7 @@ function BrawlerChip({ brawler }: { brawler: QuizBrawler }) {
 export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; brawlers: QuizBrawler[] }) {
   const copy = getMinigameMessages(locale);
   const [phase, setPhase] = useState<GamePhase>("ready");
+  const reportedFinishRef = useRef(false);
   const [mode, setMode] = useState<QuizMode>("5m");
   const [input, setInput] = useState("");
   const [foundIds, setFoundIds] = useState<number[]>([]);
@@ -122,8 +124,15 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
     return () => window.clearTimeout(timeout);
   }, [phase, foundIds.length, brawlers.length, percent, mode, bests, recordPersonalBest]);
 
+  useEffect(() => {
+    if (phase !== "finished" || reportedFinishRef.current) return;
+    reportedFinishRef.current = true;
+    sendUsageEvent("minigame_brawler_quiz");
+  }, [phase]);
+
   function startGame() {
     if (brawlers.length === 0) return;
+    reportedFinishRef.current = false;
     beginRound();
     const now = Date.now();
     startedAtRef.current = now;

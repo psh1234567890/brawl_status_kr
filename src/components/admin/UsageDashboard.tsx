@@ -52,7 +52,21 @@ export default function UsageDashboard() {
   }
   useEffect(() => {
     const controller = new AbortController();
-    void refresh(controller.signal);
+    void fetch("/api/admin/usage", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        if (controller.signal.aborted) return;
+        if ([401, 403, 404].includes(response.status)) {
+          setStatus("denied");
+          return;
+        }
+        if (!response.ok) throw new Error("UNAVAILABLE");
+        const body = await response.json() as Summary;
+        if (!controller.signal.aborted) {
+          setData(body);
+          setStatus("ready");
+        }
+      })
+      .catch(() => { if (!controller.signal.aborted) setStatus("error"); });
     return () => controller.abort();
   }, []);
 

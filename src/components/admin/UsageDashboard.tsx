@@ -32,7 +32,9 @@ const n = (value: number) => value.toLocaleString("ko-KR");
 export default function UsageDashboard() {
   const [data, setData] = useState<Summary | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "denied" | "error">("loading");
-  const [optOut, setOptOut] = useState(false);
+  const [optOut, setOptOut] = useState(() =>
+    typeof document !== "undefined" && document.cookie.includes("brawl_analytics_opt_out=1")
+  );
 
   async function refresh(signal?: AbortSignal) {
     try {
@@ -50,7 +52,6 @@ export default function UsageDashboard() {
   }
   useEffect(() => {
     const controller = new AbortController();
-    setOptOut(document.cookie.includes("brawl_analytics_opt_out=1"));
     void refresh(controller.signal);
     return () => controller.abort();
   }, []);

@@ -36,10 +36,14 @@
     "server-only": "0.0.1"
   },
   "overrides": {
+    "@next/eslint-plugin-next": {
+      "fast-glob": "file:../../../tools/next-lint-glob"
+    },
     "esbuild": "0.28.1",
     "postcss": "8.5.28"
   },
   "devDependencies": {
+    "@brawl-status/next-lint-glob": "file:tools/next-lint-glob",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",

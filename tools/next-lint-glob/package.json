@@ -1,0 +1,13 @@
+{
+  "name": "@brawl-status/next-lint-glob",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "index.cjs",
+  "dependencies": {
+    "tinyglobby": "0.2.17"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

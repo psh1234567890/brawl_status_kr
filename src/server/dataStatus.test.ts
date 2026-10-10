@@ -26,7 +26,7 @@ describe("public collection snapshot", () => {
     expect(a?.summary).toEqual(summary);
     expect(b).toEqual(a);
     expect(mocks.execute).toHaveBeenCalledOnce();
-    expect(mocks.cache).toHaveBeenCalledWith(expect.any(Function), ["public-data-status-v1"], { revalidate: 300 });
+    expect(mocks.cache).toHaveBeenCalledWith(expect.any(Function), ["public-data-status-v2"], { revalidate: 300 });
   });
 
   it("does not fabricate zero counts or cache failure, and permits a later recovery", async () => {

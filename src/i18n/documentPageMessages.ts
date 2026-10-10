@@ -3078,6 +3078,27 @@ export const accountPolicyMessages = Object.fromEntries(locales.map((locale) => 
   termsText: baseAccountPolicyMessages[locale].termsText + " " + launchPolicy.eligibilityTexts[locale],
 }])) as Record<Locale, AccountPolicyCopy>;
 
+const usagePrivacyNotice: Record<Locale, DocumentSection> = {
+  "ko": { title: "익명 사이트 이용 통계", blocks: [{ type: "paragraph", text: "서비스 이용 현황을 확인하기 위해 브라우저 탭 방문 세션 수, 플레이어 검색 성공·실패 횟수, 미니게임 종료 횟수를 한국 시간 기준 시간대별 합계로 저장합니다. 이 통계에는 플레이어 태그, IP, 계정 ID, 기기 식별자나 검색어를 저장하지 않습니다. 방문 세션은 고유 사용자 수가 아닙니다. 집계는 최대 90일 보관하며 새 활동이 기록될 때 지난 집계를 정리합니다. 브라우저는 같은 탭에서 중복 방문 수를 줄이기 위해 sessionStorage를 사용하며, 운영자 화면에서는 이 브라우저의 분석 제외 쿠키를 설정할 수 있습니다." }] },
+  "en": { title: "Anonymous usage statistics", blocks: [{ type: "paragraph", text: "We store hourly aggregate counts of browser-tab visits, successful and failed player searches, and Mini Game endings, using Korea time for display. Analytics does not store player tags, IP addresses, account IDs, device identifiers or search terms. Visits are not unique people. Aggregates are kept for up to 90 days and older entries are pruned when new events arrive. Session storage prevents repeated visits per browser tab; an opt-out cookie can be set on the admin page." }] },
+  "ja": { title: "匿名利用統計", blocks: [{ type: "paragraph", text: "ブラウザータブの訪問、プレイヤー検索の成功・失敗、ミニゲーム終了の回数を時間帯ごとの集計値として保存します。プレイヤータグ、IP、アカウントID、端末識別子や検索語は保存しません。訪問回数は固有利用者数ではありません。集計は最大90日保存し、新しい活動の記録時に古いデータを整理します。同じタブの重複集計を減らすためsessionStorageを使い、管理画面で除外Cookieを設定できます。" }] },
+  "pt-br": { title: "Estatísticas anônimas de uso", blocks: [{ type: "paragraph", text: "Registramos apenas totais por hora de visitas por aba, buscas bem-sucedidas e malsucedidas e partidas encerradas. Não armazenamos tags de jogadores, IPs, IDs de conta, identificadores de dispositivo ou termos de busca nesses totais. Visitas não significam pessoas únicas. Retemos os totais por até 90 dias, excluindo dados antigos quando novos eventos chegam. Usamos sessionStorage por aba e um cookie opcional de exclusão." }] },
+  "es": { title: "Estadísticas de uso anónimas", blocks: [{ type: "paragraph", text: "Solo guardamos recuentos horarios de visitas por pestaña, búsquedas exitosas o fallidas y partidas finalizadas. No guardamos etiquetas de jugador, IP, identificadores de cuenta o dispositivo ni búsquedas en estas métricas. Las visitas no equivalen a personas únicas. Conservamos los agregados hasta 90 días y limpiamos los antiguos cuando llegan nuevos eventos. Usamos sessionStorage por pestaña y una cookie opcional de exclusión." }] },
+  "tr": { title: "Anonim kullanım istatistikleri", blocks: [{ type: "paragraph", text: "Sekme ziyaretleri, başarılı ve başarısız oyuncu aramaları ve biten mini oyunlar için yalnızca saatlik toplamlar tutulur. Bu sayımlarda oyuncu etiketleri, IP, hesap veya cihaz kimlikleri ve arama terimleri saklanmaz. Ziyaret sayısı benzersiz kişi sayısı değildir. Toplamlar en fazla 90 gün saklanır ve yeni olaylarla eski veriler temizlenir. Sekme için sessionStorage ve isteğe bağlı hariç tutma çerezi kullanılır." }] },
+  "de": { title: "Anonyme Nutzungsstatistik", blocks: [{ type: "paragraph", text: "Wir speichern nur stündlich aggregierte Zahlen für Tab-Besuche, erfolgreiche und fehlgeschlagene Spielersuchen sowie beendete Minispiele. Spieler-Tags, IPs, Konto- und Gerätekennungen sowie Suchbegriffe werden dabei nicht gespeichert. Besuche sind keine eindeutigen Personen. Aggregierte Daten bleiben bis zu 90 Tage erhalten; alte Einträge werden bei neuen Ereignissen entfernt. Wir nutzen sessionStorage pro Tab und ein optionales Ausschluss-Cookie." }] },
+  "fr": { title: "Statistiques d'utilisation anonymes", blocks: [{ type: "paragraph", text: "Nous conservons uniquement des totaux horaires des visites par onglet, des recherches de joueurs réussies ou échouées et des mini-jeux terminés. Aucun tag de joueur, IP, identifiant de compte ou d'appareil ni terme de recherche n'est enregistré dans ces statistiques. Les visites ne représentent pas des personnes uniques. Les totaux sont conservés jusqu'à 90 jours et les anciens sont supprimés lors de nouvelles activités. sessionStorage est utilisé par onglet et un cookie d'exclusion est facultatif." }] },
+  "it": { title: "Statistiche di utilizzo anonime", blocks: [{ type: "paragraph", text: "Conserviamo solo conteggi aggregati per ora di visite per scheda, ricerche riuscite o fallite e minigiochi terminati. Non salviamo tag dei giocatori, IP, ID di account o dispositivi né termini di ricerca in queste statistiche. Le visite non rappresentano persone uniche. I totali sono conservati fino a 90 giorni e ripuliti con i nuovi eventi. Usiamo sessionStorage per scheda e un cookie facoltativo di esclusione." }] },
+  "ru": { title: "Анонимная статистика использования", blocks: [{ type: "paragraph", text: "Мы сохраняем только почасовые суммарные счетчики посещений вкладок, успешных и неудачных поисков игроков и завершенных мини-игр. В статистике не хранятся теги игроков, IP, идентификаторы аккаунтов и устройств или поисковые запросы. Посещения не равны числу уникальных пользователей. Сводки хранятся до 90 дней, старые записи удаляются при новых событиях. Используется sessionStorage для вкладки и необязательный cookie для исключения." }] },
+};
+
 export function getDocumentPageMessages(locale: Locale) {
-  return documentPageMessages[locale];
+  const content = documentPageMessages[locale];
+  return {
+    ...content,
+    privacy: {
+      ...content.privacy,
+      sections: [...content.privacy.sections, usagePrivacyNotice[locale]],
+      effectiveDate: locale === "ko" ? "업데이트: 2026년 10월 11일" : "Updated: 2026-10-11",
+    },
+  };
 }

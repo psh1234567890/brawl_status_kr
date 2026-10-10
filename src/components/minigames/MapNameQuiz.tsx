@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BrawlImage from "../BrawlImage";
+import { sendUsageEvent } from "../UsageSessionTracker";
 import { numberLocales, type Locale } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
 import { buildMapQuestionDeck, MAP_QUESTION_COUNT, type MapQuizEntry, type MapQuizQuestion } from "../../utils/minigames/mapQuiz";
@@ -16,6 +17,7 @@ export default function MapNameQuiz({ locale, maps }: { locale: Locale; maps: Ma
   const copy = getMinigameMessages(locale);
   const gameCopy = copy.mapQuiz;
   const [phase, setPhase] = useState<Phase>("ready");
+  const reportedFinishRef = useRef(false);
   const [sessionToken, setSessionToken] = useState(0);
   const [deck, setDeck] = useState<MapQuizQuestion[]>([]);
   const [index, setIndex] = useState(0);
@@ -74,12 +76,19 @@ export default function MapNameQuiz({ locale, maps }: { locale: Locale; maps: Ma
     return () => window.clearTimeout(timeout);
   }, [answered, failImage, imageLoaded, index, phase, question, sessionToken]);
 
+  useEffect(() => {
+    if (phase !== "finished" || reportedFinishRef.current) return;
+    reportedFinishRef.current = true;
+    sendUsageEvent("minigame_map_quiz");
+  }, [phase]);
+
   function startGame() {
     const nextDeck = buildMapQuestionDeck(maps, locale);
     if (nextDeck.length < MAP_QUESTION_COUNT) {
       setPoolError(true);
       return;
     }
+    reportedFinishRef.current = false;
     beginRound();
     setPoolError(false);
     sessionRef.current += 1;

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import BrawlImage from "../BrawlImage";
+import { sendUsageEvent } from "../UsageSessionTracker";
 import { numberLocales, type Locale } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
 import { buildAbilityQuestionDeck, type AbilityOwnerChoice, type AbilityQuizEntry, type AbilityQuizMode, type AbilityQuizQuestion } from "../../utils/minigames/abilityQuiz";
@@ -20,6 +21,7 @@ export default function AbilityOwnerQuiz({ locale, abilities, owners }: {
   const copy = getMinigameMessages(locale);
   const gameCopy = copy.abilityQuiz;
   const [phase, setPhase] = useState<Phase>("ready");
+  const reportedFinishRef = useRef(false);
   const [mode, setMode] = useState<AbilityQuizMode>("mixed");
   const [deck, setDeck] = useState<AbilityQuizQuestion[]>([]);
   const [index, setIndex] = useState(0);
@@ -45,6 +47,12 @@ export default function AbilityOwnerQuiz({ locale, abilities, owners }: {
     if (phase === "finished") record(score, recap.length);
   }, [answered, phase, recap.length, record, score]);
 
+  useEffect(() => {
+    if (phase !== "finished" || reportedFinishRef.current) return;
+    reportedFinishRef.current = true;
+    sendUsageEvent("minigame_ability_quiz");
+  }, [phase]);
+
   function startGame() {
     const nextDeck = buildAbilityQuestionDeck(abilities, owners, mode, locale);
     if (nextDeck.length < 10) {
@@ -52,6 +60,7 @@ export default function AbilityOwnerQuiz({ locale, abilities, owners }: {
       return;
     }
     setPoolError(false);
+    reportedFinishRef.current = false;
     beginRound();
     setDeck(nextDeck);
     setIndex(0);

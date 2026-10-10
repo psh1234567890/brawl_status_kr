@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import BrawlImage from "../BrawlImage";
+import { sendUsageEvent } from "../UsageSessionTracker";
 import { numberLocales, type Locale } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
 import { buildSilhouetteDeck, matchesSilhouetteAnswer, SILHOUETTE_QUESTION_COUNT, type SilhouetteEntry } from "../../utils/minigames/silhouetteQuiz";
@@ -16,6 +17,7 @@ export default function SilhouetteQuiz({ locale, entries }: { locale: Locale; en
   const copy = getMinigameMessages(locale);
   const gameCopy = copy.silhouette;
   const [phase, setPhase] = useState<Phase>("ready");
+  const reportedFinishRef = useRef(false);
   const [sessionToken, setSessionToken] = useState(0);
   const [mode, setMode] = useState<Mode>("base");
   const [deck, setDeck] = useState<SilhouetteEntry[]>([]);
@@ -77,8 +79,15 @@ export default function SilhouetteQuiz({ locale, entries }: { locale: Locale; en
     return () => window.clearTimeout(timeout);
   }, [answered, failImage, imageLoaded, index, phase, question, sessionToken]);
 
+  useEffect(() => {
+    if (phase !== "finished" || reportedFinishRef.current) return;
+    reportedFinishRef.current = true;
+    sendUsageEvent("minigame_silhouette_quiz");
+  }, [phase]);
+
   function startGame() {
     if (mode !== "base" || !canPlay) return;
+    reportedFinishRef.current = false;
     beginRound();
     sessionRef.current += 1;
     setSessionToken(sessionRef.current);

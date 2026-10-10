@@ -39,32 +39,49 @@ export type MapMetaRawRow = {
 
 export function buildMapMetaStatsQuery(minimumPlays = MINIMUM_META_PLAYS) {
   return sql`
-    WITH combined_stats AS (
-      SELECT mode, map, brawler_id, brawler_name, result
+    -- Pre-aggregate each source before UNION ALL to avoid grouping ~100k raw rows
+    -- together. Sum source counts to preserve the original combined sample.
+    WITH source_totals AS (
+      SELECT
+        mode, map, brawler_name,
+        max(brawler_id) AS brawler_id,
+        count(*) AS plays,
+        count(*) FILTER (WHERE result = 'victory') AS wins,
+        count(*) FILTER (WHERE result = 'draw') AS draws
       FROM battle_team_participants
       WHERE battle_timestamp >= now() - (${META_WINDOW_DAYS} * interval '1 day')
+        AND result IS NOT NULL
+        AND brawler_name IS NOT NULL
+        AND brawler_name <> 'Unknown'
+      GROUP BY mode, map, brawler_name
 
       UNION ALL
 
-      SELECT mode, map, brawler_id, brawler_name, result
+      SELECT
+        mode, map, brawler_name,
+        max(brawler_id) AS brawler_id,
+        count(*) AS plays,
+        count(*) FILTER (WHERE result = 'victory') AS wins,
+        count(*) FILTER (WHERE result = 'draw') AS draws
       FROM battle_logs
       WHERE meta_perspective_only = true
         AND battle_timestamp >= now() - (${META_WINDOW_DAYS} * interval '1 day')
+        AND result IS NOT NULL
+        AND brawler_name IS NOT NULL
+        AND brawler_name <> 'Unknown'
+      GROUP BY mode, map, brawler_name
     )
     SELECT
       mode,
       map,
       max(brawler_id) AS "brawlerId",
       brawler_name AS "brawlerName",
-      count(*) AS plays,
-      sum(CASE WHEN result = 'victory' THEN 1 ELSE 0 END) AS wins,
-      sum(CASE WHEN result = 'draw' THEN 1 ELSE 0 END) AS draws
-    FROM combined_stats
-    WHERE result IS NOT NULL
-      AND brawler_name IS NOT NULL
-      AND brawler_name <> 'Unknown'
+      sum(plays) AS plays,
+      sum(wins) AS wins,
+      sum(draws) AS draws
+    FROM source_totals
     GROUP BY mode, map, brawler_name
-    HAVING count(*) >= ${minimumPlays}
+    HAVING sum(plays) >= ${minimumPlays}
   `;
 }
 

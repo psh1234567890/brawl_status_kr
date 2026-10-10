@@ -122,6 +122,9 @@ export const trMessages = {
     members: "üye",
   },
   status: {
+    cacheNotice: "Sayımlar yaklaşık beş dakikada bir güncellenir; güncelleme başarısız olursa önceki veriler gösterilebilir.",
+    snapshotAt: "Sayım zamanı",
+    unavailable: "Veri durumu geçici olarak kullanılamıyor. Kısa bir süre sonra sayfayı yenileyin.",
     title: "Veri Toplama Durumu",
     eyebrow: "Veri Durumu",
     description: "Kullanıcılar oyuncu etiketi aradığında depolanan savaş örnekleri. Aramaya dayalı bu örnek tüm oyuncu kitlesini temsil etmez; bu nedenle toplama hacmi ve benzersiz savaşlar birlikte gösterilir.",

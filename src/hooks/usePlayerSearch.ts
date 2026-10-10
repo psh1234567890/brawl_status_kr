@@ -29,7 +29,20 @@ const FAVORITE_TAGS_CHANGED_EVENT = "favoriteTagsChanged";
 
 function getStoredTagsSnapshot(key: string) {
   if (typeof window === "undefined") return EMPTY_STORED_TAGS;
-  return window.localStorage.getItem(key) ?? EMPTY_STORED_TAGS;
+  try {
+    return window.localStorage.getItem(key) ?? EMPTY_STORED_TAGS;
+  } catch {
+    return EMPTY_STORED_TAGS;
+  }
+}
+
+function persistStoredTags(key: string, tags: string[], eventName: string) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(tags));
+    window.dispatchEvent(new Event(eventName));
+  } catch {
+    // Storage denial must not turn a successful public lookup into an error.
+  }
 }
 
 function subscribeStoredTags(eventName: string, onStoreChange: () => void) {
@@ -178,14 +191,21 @@ export function usePlayerSearch(locale: Locale = "ko") {
           targetTag,
           ...recentSearches.filter((recentTag) => recentTag !== targetTag),
         ].slice(0, 5);
-        localStorage.setItem(RECENT_TAGS_KEY, JSON.stringify(updatedRecent));
-        window.dispatchEvent(new Event(RECENT_TAGS_CHANGED_EVENT));
+        persistStoredTags(RECENT_TAGS_KEY, updatedRecent, RECENT_TAGS_CHANGED_EVENT);
+
+        const notices: string[] = [];
+        if (profileResult.value.dataFreshness?.status === "stale" ||
+            (battleResult.status === "fulfilled" && battleResult.value.dataFreshness?.status === "stale")) {
+          notices.push(copy.staleNotice);
+        }
 
         if (battleResult.status === "fulfilled") {
           setBattleLog(battleResult.value);
+          if (battleResult.value.storageStatus === "unavailable") notices.push(copy.saveNotice);
         } else if (!isAbortError(battleResult.reason)) {
-          setNotice(copy.battleNotice);
+          notices.push(copy.battleNotice);
         }
+        setNotice(notices.join(" "));
 
         try {
           const [stats, history] = await Promise.allSettled([
@@ -206,12 +226,12 @@ export function usePlayerSearch(locale: Locale = "ko") {
             if (stats.status === "fulfilled") setDbStats(stats.value);
             if (history.status === "fulfilled") setPlayerHistory(history.value);
             if (stats.status === "rejected" || history.status === "rejected") {
-              setNotice(copy.statsNotice);
+              setNotice((current) => [current, copy.statsNotice].filter(Boolean).join(" "));
             }
           }
         } catch (statsError) {
           if (!isAbortError(statsError) && isCurrent()) {
-            setNotice(copy.statsNotice);
+            setNotice((current) => [current, copy.statsNotice].filter(Boolean).join(" "));
           }
         }
       } catch (requestError) {
@@ -297,8 +317,7 @@ export function usePlayerSearch(locale: Locale = "ko") {
         ? favoriteSearches.filter((favoriteTag) => favoriteTag !== targetTag)
         : [targetTag, ...favoriteSearches.filter((favoriteTag) => favoriteTag !== targetTag)].slice(0, 12);
 
-      localStorage.setItem(FAVORITE_TAGS_KEY, JSON.stringify(nextFavorites));
-      window.dispatchEvent(new Event(FAVORITE_TAGS_CHANGED_EVENT));
+      persistStoredTags(FAVORITE_TAGS_KEY, nextFavorites, FAVORITE_TAGS_CHANGED_EVENT);
     },
     [favoriteSearches, tag],
   );

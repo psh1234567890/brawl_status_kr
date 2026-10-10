@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { PlayerData } from "../types/brawl";
 import { localizedHref, numberLocales, type Locale } from "../i18n/config";
 import { getPersonalizedMetaMessages } from "../i18n/personalizedMetaMessages";
+import { getComponentMessages } from "../i18n/componentMessages";
 import { useAccount } from "../hooks/useAccount";
 import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
 import { translateBrawlerName } from "../utils/brawlTranslations";
@@ -147,6 +148,12 @@ export default function OwnedBrawlerRecommendations({
           {copy.description}
         </p>
       </div>
+
+      {player?.dataFreshness?.status === "stale" ? (
+        <p role="status" className="mt-3 text-sm font-bold text-amber-800">
+          {getComponentMessages(locale).searchErrors.staleNotice}
+        </p>
+      ) : null}
 
       {!activeTag ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white p-4">

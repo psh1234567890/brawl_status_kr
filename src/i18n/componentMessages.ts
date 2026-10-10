@@ -9,6 +9,8 @@ import type { Locale } from "./config";
 
 const koDeepCopy = {
   searchErrors: {
+    staleNotice: "외부 서비스의 일시적인 장애로 최근 정상 조회 데이터를 표시합니다. 최신 기록과 다를 수 있습니다.",
+    saveNotice: "최근 전투는 불러왔지만 누적 통계에 저장하지 못했습니다.",
     dataLoad: "데이터를 불러오지 못했습니다.",
     enterTag: "플레이어 태그를 입력해 주세요.",
     skinLoad: "보유 스킨 목록을 불러오지 못했습니다.",
@@ -148,6 +150,8 @@ const koDeepCopy = {
 
 const enDeepCopy = {
   searchErrors: {
+    staleNotice: "A temporary upstream outage means recent successful data is shown. It may differ from the latest records.",
+    saveNotice: "Recent battles loaded, but could not be saved to accumulated statistics.",
     dataLoad: "Could not load the requested data.",
     enterTag: "Enter a player tag.",
     skinLoad: "Could not load the owned-skin list.",
@@ -287,6 +291,8 @@ const enDeepCopy = {
 
 const jaDeepCopy = {
   searchErrors: {
+    staleNotice: "外部サービスの一時的な障害により、直近の正常取得データを表示しています。最新の記録とは異なる場合があります。",
+    saveNotice: "最近のバトルは取得できましたが、累積統計に保存できませんでした。",
     dataLoad: "データを読み込めませんでした。",
     enterTag: "プレイヤータグを入力してください。",
     skinLoad: "所持スキン一覧を読み込めませんでした。",

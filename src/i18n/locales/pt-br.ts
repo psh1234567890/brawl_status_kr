@@ -122,6 +122,9 @@ export const ptBrMessages = {
     members: "membros",
   },
   status: {
+    cacheNotice: "As contagens são atualizadas a cada cinco minutos aproximadamente; se a atualização falhar, dados anteriores podem ser exibidos.",
+    snapshotAt: "Horário da contagem",
+    unavailable: "O status dos dados está temporariamente indisponível. Atualize a página em breve.",
     title: "Status da coleta de dados",
     eyebrow: "Status dos dados",
     description: "Amostras de batalhas armazenadas quando os usuários pesquisam tags de jogadores. Como essa amostra é baseada em pesquisas, ela não representa toda a base de jogadores; por isso, o volume coletado e as batalhas únicas são exibidos juntos.",

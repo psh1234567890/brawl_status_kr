@@ -75,9 +75,17 @@ export interface BattleLogItem {
 
 export interface BattleLogResponse {
   items: BattleLogItem[];
+  dataFreshness?: PublicDataFreshness;
+  storageStatus?: "saved" | "unavailable" | "skipped-stale";
+}
+
+export interface PublicDataFreshness {
+  status: "live" | "cached" | "stale";
+  fetchedAt: string;
 }
 
 export interface PlayerData {
+  dataFreshness?: PublicDataFreshness;
   tag: string;
   name: string;
   nameColor?: string;

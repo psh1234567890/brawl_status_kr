@@ -132,6 +132,9 @@ export const messages = {
       members: "명",
     },
     status: {
+      cacheNotice: "집계는 약 5분마다 갱신되며, 갱신 장애 시 이전 집계가 표시될 수 있습니다.",
+      snapshotAt: "집계 시각",
+      unavailable: "수집 현황을 일시적으로 불러올 수 없습니다. 잠시 후 페이지를 새로고침해 주세요.",
       title: "데이터 수집 현황",
       eyebrow: "데이터 현황",
       description: "사이트 이용자가 플레이어 태그를 검색할 때 저장된 전투 표본 현황입니다. 검색 기반 표본이므로 전체 이용자를 대표하지 않으며, 수집량과 고유 전투 규모를 함께 표시합니다.",
@@ -295,6 +298,9 @@ export const messages = {
       members: "members",
     },
     status: {
+      cacheNotice: "Counts refresh about every five minutes; an earlier snapshot may be shown if refreshing fails.",
+      snapshotAt: "Snapshot time",
+      unavailable: "Data status is temporarily unavailable. Refresh the page shortly.",
       title: "Data Collection Status",
       eyebrow: "Data Status",
       description: "Battle samples stored when users search player tags. This search-driven sample does not represent the entire player base, so collection volume and unique battles are shown together.",
@@ -458,6 +464,9 @@ export const messages = {
       members: "人",
     },
     status: {
+      cacheNotice: "集計は約5分ごとに更新されます。更新に失敗した場合は以前の集計が表示されることがあります。",
+      snapshotAt: "集計時刻",
+      unavailable: "収集状況を一時的に取得できません。少し待ってページを再読み込みしてください。",
       title: "データ収集状況",
       eyebrow: "データ状況",
       description: "ユーザーがプレイヤータグを検索した際に保存されたバトルサンプルの状況です。検索ベースのサンプルのため全プレイヤーを代表するものではありません。",

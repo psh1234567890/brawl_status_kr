@@ -30,7 +30,7 @@ Regression coverage includes transient/hard errors, bounded/expired fallback, co
 
 `dataStatus.integration.test.ts` runs against the CI disposable PostgreSQL through `DATA_STATUS_TEST_DATABASE_URL`. It only accepts an explicit loopback `*_test` database and creates a transaction-local temporary table, then rolls back. It never reads `.env.local` or defaults to the application's DB URL. Locally this suite skips when no disposable server is available.
 
-Dependency audit remediation updates `sharp` to 0.35.5 and `source-map-js` to 1.2.2 within their existing compatible ranges. The development-only `braces` advisory still has no published fix; full audit remains a failing release check until an upstream correction is available. Do not use `npm audit fix --force` to downgrade Next's lint configuration.
+Dependency audit remediation updates `sharp` to 0.35.5 and `source-map-js` to 1.2.2 within their existing compatible ranges. The original release also had a development-only `braces` advisory with no published fix; see the subsequent CI remediation below. Do not use `npm audit fix --force` to downgrade Next's lint configuration.
 
 ## Local validation (2026-10-10)
 
@@ -51,3 +51,11 @@ The owner subsequently authorized deployment. The release branch starts from cur
 - Playwright: all 44 core, Mini Game and player-search tests passed, including all-ten-locale crawler metadata and the existing account UI regressions.
 - Production dependency audit: 0 vulnerabilities. Full audit still fails with the 5 existing development-only `braces` chain findings; the CI audit step has not been weakened or bypassed. This is not a fully green CI result.
 - Deployment uses Vercel's Git build, not the local fixture build. No DB migration, OAuth/environment change or account-sync activation is part of this release.
+
+## CI audit remediation (2026-10-10)
+
+The red commit check was caused by `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces`. [The braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) has no patched release; newer Next lint packages still use this dependency chain.
+
+A scoped npm override replaces only the Next lint plugin's `fast-glob` with the private `tools/next-lint-glob` adapter backed by pinned `tinyglobby@0.2.17`. The installed Next plugin uses only `globSync(pattern, { onlyDirectories: true })` in `get-root-dirs`. [tinyglobby](https://github.com/SuperchupuDev/tinyglobby) provides that API without `braces` or `micromatch`; the adapter preserves literal-directory matching and absolute-path behavior, whose defaults differ between the libraries. Runtime Next.js and ESLint/Next rule versions are unchanged, and the full audit command remains enforced.
+
+`scripts/next-lint-glob.test.mjs` exercises the actual installed Next root discovery with directory-only string/array/brace/Windows globs and literal roots, rejects an invalid HTML link to a discovered page, accepts `next/link`, and checks that other Next rules remain active. Unsupported future plugin calls throw instead of silently skipping checks. Keep these compatibility checks when updating Next; remove the adapter and override when the upstream plugin ships a safe dependency chain. This override is specific to the current plugin's usage, not a general replacement of every fast-glob API.

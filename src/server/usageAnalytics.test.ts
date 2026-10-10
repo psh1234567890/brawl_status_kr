@@ -32,21 +32,21 @@ describe("anonymous usage analytics", () => {
   });
   it("denies unlisted IDs even with an authenticated session", async () => {
     query.mockResolvedValue({ rows: [{ allowed: false }] });
-    expect(await hasUsageAdminAccess("c24a4a3c-5555-465b-a6a7-6119583d3cb0")).toBe(false);
+    expect(await hasUsageAdminAccess("11111111-1111-4111-8111-111111111111")).toBe(false);
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining("analytics_private.usage_admin_allowlist"),
-      ["c24a4a3c-5555-465b-a6a7-6119583d3cb0"],
+      ["11111111-1111-4111-8111-111111111111"],
     );
   });
   it("grants access only after an exact private DB UUID match", async () => {
     query.mockResolvedValue({ rows: [{ allowed: true }] });
-    expect(await hasUsageAdminAccess("c24a4a3c-5555-465b-a6a7-6119583d3cb0")).toBe(true);
+    expect(await hasUsageAdminAccess("11111111-1111-4111-8111-111111111111")).toBe(true);
     expect(await hasUsageAdminAccess("invalid-player-tag")).toBe(false);
     expect(query).toHaveBeenCalledTimes(1);
   });
   it("preserves explicit legacy environment access without querying DB", async () => {
-    process.env.USAGE_ADMIN_USER_IDS = "c24a4a3c-5555-465b-a6a7-6119583d3cb0";
-    expect(await hasUsageAdminAccess("c24a4a3c-5555-465b-a6a7-6119583d3cb0")).toBe(true);
+    process.env.USAGE_ADMIN_USER_IDS = "11111111-1111-4111-8111-111111111111";
+    expect(await hasUsageAdminAccess("11111111-1111-4111-8111-111111111111")).toBe(true);
     expect(query).not.toHaveBeenCalled();
   });
   it("honors a browser opt-out cookie without storing identities", () => {

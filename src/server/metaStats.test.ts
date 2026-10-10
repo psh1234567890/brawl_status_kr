@@ -22,7 +22,15 @@ describe("meta SQL contracts", () => {
     expect(sql).toContain("UNION ALL");
     expect(sql).toContain("FROM battle_logs");
     expect(sql).toContain("meta_perspective_only = true");
-    expect(sql).toContain("SELECT mode, map, brawler_id, brawler_name, result");
+    expect(sql).toContain("WITH source_totals AS");
+    expect(sql.match(/GROUP BY mode, map, brawler_name/g)).toHaveLength(3);
+    expect(sql).toContain("count(*) FILTER (WHERE result = 'victory')");
+    expect(sql).toContain("sum(plays) AS plays");
+    expect(sql).toContain("sum(wins) AS wins");
+    expect(sql).toContain("sum(draws) AS draws");
+    expect(sql).toContain("HAVING sum(plays) >=");
+    expect(sql).toContain("result IS NOT NULL");
+    expect(sql).toContain("brawler_name <> 'Unknown'");
     expect(sql).toContain("GROUP BY mode, map, brawler_name");
     expect(sql).toContain("battle_timestamp >= now() -");
     expect(sql).not.toContain("battle_detail_json");

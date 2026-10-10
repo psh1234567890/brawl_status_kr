@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { NextResponse } from "next/server";
 
 type RateLimitOptions = {
@@ -53,12 +54,16 @@ export function consumeRateLimit(
   };
 }
 
-export function getClientAddress(request: Request) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "local"
-  );
+// Never key abuse limits from caller-controlled X-Forwarded-For/X-Real-IP.
+// Vercel's platform header is the only trusted IP source in production.
+// If unavailable, use one shared bucket rather than letting clients select a key.
+export function getClientAddress(
+  request: Request,
+  onVercel = process.env.VERCEL === "1",
+) {
+  if (!onVercel) return "local";
+  const candidate = request.headers.get("x-vercel-forwarded-for")?.split(",", 1)[0]?.trim();
+  return candidate && isIP(candidate) ? candidate : "vercel-ip-unavailable";
 }
 
 export function rejectRateLimitedRequest(

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import UsageSessionTracker from "../components/UsageSessionTracker";
 import {
   localeAlternates,
   localizedLocales,
@@ -117,6 +118,7 @@ export default function RootLayout({
             strategy="beforeInteractive"
           />
         ) : null}
+        <UsageSessionTracker />
         {children}
       </body>
     </html>

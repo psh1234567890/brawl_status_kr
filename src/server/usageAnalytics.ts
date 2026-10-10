@@ -101,3 +101,21 @@ export function isUsageAdminUser(userId: string): boolean {
   const allowed = (process.env.USAGE_ADMIN_USER_IDS ?? "").split(",").map(x => x.trim()).filter(Boolean);
   return allowed.length > 0 && allowed.includes(userId);
 }
+
+/**
+ * Authorize a previously authenticated account using a private, server-side
+ * allowlist. This also supports the original optional environment allowlist.
+ * Do not use a player tag, client-provided UUID or a query parameter here.
+ */
+export async function hasUsageAdminAccess(authenticatedUserId: string): Promise<boolean> {
+  if (isUsageAdminUser(authenticatedUserId)) return true;
+  // UUID comes from getAuthenticatedAccount, but validate again before casting.
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(authenticatedUserId)) {
+    return false;
+  }
+  const result = await db.$client.query<{ allowed: boolean }>(
+    "SELECT EXISTS (SELECT 1 FROM analytics_private.usage_admin_allowlist WHERE user_id = $1::uuid) AS allowed",
+    [authenticatedUserId],
+  );
+  return result.rows[0]?.allowed === true;
+}

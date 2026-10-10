@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-vi.mock("../db", () => ({ db: { $client: { query: vi.fn() } } }));
-import { isUsageAdminUser, isUsageKind, isUsageOptedOut, summarizeUsage } from "./usageAnalytics";
+const query = vi.hoisted(() => vi.fn());
+vi.mock("../db", () => ({ db: { $client: { query } } }));
+import { hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, summarizeUsage } from "./usageAnalytics";
 
 describe("anonymous usage analytics", () => {
-  afterEach(() => { delete process.env.USAGE_ADMIN_USER_IDS; });
+  afterEach(() => { delete process.env.USAGE_ADMIN_USER_IDS; query.mockReset(); });
   it("rejects unrecognized client event kinds", () => {
     expect(isUsageKind("visit_session")).toBe(true);
     expect(isUsageKind("minigame_map_quiz")).toBe(true);
@@ -28,6 +29,25 @@ describe("anonymous usage analytics", () => {
     process.env.USAGE_ADMIN_USER_IDS = "first, owner";
     expect(isUsageAdminUser("owner")).toBe(true);
     expect(isUsageAdminUser("anyone")).toBe(false);
+  });
+  it("denies unlisted IDs even with an authenticated session", async () => {
+    query.mockResolvedValue({ rows: [{ allowed: false }] });
+    expect(await hasUsageAdminAccess("c24a4a3c-5555-465b-a6a7-6119583d3cb0")).toBe(false);
+    expect(query).toHaveBeenCalledWith(
+      expect.stringContaining("analytics_private.usage_admin_allowlist"),
+      ["c24a4a3c-5555-465b-a6a7-6119583d3cb0"],
+    );
+  });
+  it("grants access only after an exact private DB UUID match", async () => {
+    query.mockResolvedValue({ rows: [{ allowed: true }] });
+    expect(await hasUsageAdminAccess("c24a4a3c-5555-465b-a6a7-6119583d3cb0")).toBe(true);
+    expect(await hasUsageAdminAccess("invalid-player-tag")).toBe(false);
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+  it("preserves explicit legacy environment access without querying DB", async () => {
+    process.env.USAGE_ADMIN_USER_IDS = "c24a4a3c-5555-465b-a6a7-6119583d3cb0";
+    expect(await hasUsageAdminAccess("c24a4a3c-5555-465b-a6a7-6119583d3cb0")).toBe(true);
+    expect(query).not.toHaveBeenCalled();
   });
   it("honors a browser opt-out cookie without storing identities", () => {
     expect(isUsageOptedOut(new Request("https://example.com", { headers: { cookie: "other=1; brawl_analytics_opt_out=1" } }))).toBe(true);

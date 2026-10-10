@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 import { withApiMonitoring } from "../../../server/observability";
+import { recordUsageEvent } from "../../../server/usageAnalytics";
 import { fetchBrawlApiSnapshot, UpstreamApiError } from "../../../server/upstream";
 import type { PlayerData } from "../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../utils/playerTag";
@@ -26,6 +27,7 @@ async function getPlayer(request: Request) {
     const { data, freshness } = await fetchBrawlApiSnapshot<PlayerData>(
       `/players/%23${cleanTag}`, 30_000, 5 * 60_000,
     );
+    await recordUsageEvent("player_search_success", request);
     return NextResponse.json({ ...data, dataFreshness: freshness }, {
       headers: { "Cache-Control": "no-store" },
     });
@@ -35,6 +37,7 @@ async function getPlayer(request: Request) {
       error instanceof UpstreamApiError
         ? error.message
         : "서버와 연결할 수 없습니다.";
+    await recordUsageEvent("player_search_error", request);
     return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
   }
 }

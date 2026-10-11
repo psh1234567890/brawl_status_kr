@@ -3092,15 +3092,16 @@ const usagePrivacyNotice: Record<Locale, DocumentSection> = {
   "ru": { title: "Анонимная статистика использования", blocks: [{ type: "paragraph", text: "Мы сохраняем только почасовые суммарные счетчики посещений вкладок, успешных и неудачных поисков игроков и завершенных мини-игр. В статистике не хранятся теги игроков, IP, идентификаторы аккаунтов и устройств или поисковые запросы. Посещения не равны числу уникальных пользователей. Сводки хранятся до 90 дней, старые записи удаляются при новых событиях. Используется sessionStorage для вкладки и необязательный cookie для исключения." }] },
 };
 
-const optionalSearchDetailPrivacy = Object.fromEntries(
-  locales.map((locale) => [locale, {
+const optionalSearchDetailPrivacy = {} as Record<Locale, DocumentSection>;
+for (const locale of locales) {
+  optionalSearchDetailPrivacy[locale] = {
     title: searchDetailConsentMessages[locale].title,
     blocks: [{
-      type: "paragraph" as const,
+      type: "paragraph",
       text: searchDetailConsentMessages[locale].notice,
     }],
-  }]),
-) as Record<Locale, DocumentSection>;
+  };
+}
 
 export function getDocumentPageMessages(locale: Locale) {
   const content = documentPageMessages[locale];

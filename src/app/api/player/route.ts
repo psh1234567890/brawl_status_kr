@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 import { withApiMonitoring } from "../../../server/observability";
 import { recordUsageEvent } from "../../../server/usageAnalytics";
+import { recordConsentedSearchDetail } from "../../../server/usageSearchDetails";
 import { fetchBrawlApiSnapshot, UpstreamApiError } from "../../../server/upstream";
 import type { PlayerData } from "../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../utils/playerTag";
@@ -28,6 +29,7 @@ async function getPlayer(request: Request) {
       `/players/%23${cleanTag}`, 30_000, 5 * 60_000,
     );
     await recordUsageEvent("player_search_success", request);
+    await recordConsentedSearchDetail(request, cleanTag);
     return NextResponse.json({ ...data, dataFreshness: freshness }, {
       headers: { "Cache-Control": "no-store" },
     });

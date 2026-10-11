@@ -4,7 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Counts = { visits: number; searches: number; successfulSearches: number; gameEnds: number };
+type RecentConsentedSearch = {
+  searchedAt: string;
+  playerTag: string;
+  maskedIpRange: string | null;
+  accountNickname: string | null;
+  accountIdShort: string | null;
+};
 type Summary = {
+  recentSearches: RecentConsentedSearch[];
   today: Counts;
   last7Days: Counts;
   daily: Array<Counts & { day: string }>;
@@ -86,7 +94,7 @@ export default function UsageDashboard() {
         <header className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-blue-600">Brawl Status KR · PRIVATE</p>
           <h1 className="mt-1 text-3xl font-black">사이트 이용 통계</h1>
-          <p className="mt-2 text-sm text-slate-600">플레이어 태그·IP·계정 정보 없이 시간대별 횟수만 저장합니다. 방문 세션은 순 방문자 수가 아닙니다.</p>
+          <p className="mt-2 text-sm text-slate-600">기본 방문 통계는 개인 식별 정보 없는 시간대별 합계입니다. 검색 상세는 사전에 동의한 이용자의 기록만 최대 7일간 표시하며, 전체 IP·이메일은 저장하지 않습니다. 방문 세션은 순 방문자 수가 아닙니다.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Link href="/" className="rounded-lg border px-3 py-2 text-sm font-bold">사이트로 돌아가기</Link>
             <button type="button" className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-bold text-white" onClick={() => void refresh()}>새로고침</button>
@@ -155,6 +163,37 @@ export default function UsageDashboard() {
                 </div>
               </section>
             </div>
+            <section className="rounded-xl border bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-black">동의한 이용자의 최근 플레이어 검색</h2>
+              <p className="mt-1 text-sm text-slate-600">별도 동의한 성공 검색만 표시 · 최근 7일 · 최대 40건 · IP는 대역만 일부 표시 · 검색한 태그는 계정 소유 인증을 의미하지 않음</p>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full min-w-[550px] border-collapse text-left text-xs sm:text-sm">
+                  <thead>
+                    <tr className="border-b bg-slate-50 text-slate-700">
+                      <th className="px-3 py-2">검색 시각 (한국)</th>
+                      <th className="px-3 py-2">검색된 태그</th>
+                      <th className="px-3 py-2">IP 대역 (마스킹)</th>
+                      <th className="px-3 py-2">로그인 계정 (동의 시)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(data.recentSearches ?? []).map((item, index) => (
+                      <tr className="border-b" key={item.searchedAt + item.playerTag + index}>
+                        <td className="px-3 py-2 whitespace-nowrap">{new Date(item.searchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</td>
+                        <td className="px-3 py-2 font-bold">#{item.playerTag}</td>
+                        <td className="px-3 py-2">{item.maskedIpRange ?? "확인 불가"}</td>
+                        <td className="px-3 py-2">{item.accountNickname
+                          ? item.accountNickname + (item.accountIdShort ? " (" + item.accountIdShort + "…)" : "")
+                          : "비로그인 또는 확인 불가"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {(data.recentSearches ?? []).length === 0 ? (
+                  <p className="px-3 py-4 text-sm text-slate-500">아직 동의 후 기록된 검색이 없습니다. 기존 익명 통계는 유지됩니다.</p>
+                ) : null}
+              </div>
+            </section>
             <p className="text-xs leading-6 text-slate-500">표시 숫자는 오늘부터 새로 수집됩니다. 과거 Vercel 로그는 복원하지 않습니다. 자동화 요청, 광고 차단, 저장소 접근 제한, 통신 실패 등에 따라 실제 이용자와 차이가 날 수 있습니다. 운영자 통계는 공유하지 마세요.</p>
           </>
         ) : null}

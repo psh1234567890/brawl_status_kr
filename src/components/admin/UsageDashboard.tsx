@@ -4,15 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Counts = { visits: number; searches: number; successfulSearches: number; gameEnds: number };
-type RecentConsentedSearch = {
-  searchedAt: string;
+type SearchTagSummary = {
   playerTag: string;
-  maskedIpRange: string | null;
-  accountNickname: string | null;
-  accountIdShort: string | null;
+  searchCount: string;
+  lastSearchedAt: string;
 };
 type Summary = {
-  recentSearches: RecentConsentedSearch[];
+  recentSearchTags: SearchTagSummary[];
   today: Counts;
   last7Days: Counts;
   daily: Array<Counts & { day: string }>;
@@ -94,7 +92,7 @@ export default function UsageDashboard() {
         <header className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-blue-600">Brawl Status KR · PRIVATE</p>
           <h1 className="mt-1 text-3xl font-black">사이트 이용 통계</h1>
-          <p className="mt-2 text-sm text-slate-600">기본 방문 통계는 개인 식별 정보 없는 시간대별 합계입니다. 검색 상세는 사전에 동의한 이용자의 기록만 최대 7일간 표시하며, 전체 IP·이메일은 저장하지 않습니다. 방문 세션은 순 방문자 수가 아닙니다.</p>
+          <p className="mt-2 text-sm text-slate-600">방문은 익명 시간대별 합계로, 검색 태그는 7일간 시간대별 합계로 기록합니다. 검색자의 IP·사이트 계정 정보는 검색 통계에 저장하지 않습니다. 방문 세션은 순 방문자 수가 아닙니다.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Link href="/" className="rounded-lg border px-3 py-2 text-sm font-bold">사이트로 돌아가기</Link>
             <button type="button" className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-bold text-white" onClick={() => void refresh()}>새로고침</button>
@@ -164,33 +162,29 @@ export default function UsageDashboard() {
               </section>
             </div>
             <section className="rounded-xl border bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-black">동의한 이용자의 최근 플레이어 검색</h2>
-              <p className="mt-1 text-sm text-slate-600">별도 동의한 성공 검색만 표시 · 최근 7일 · 최대 40건 · IP는 대역만 일부 표시 · 검색한 태그는 계정 소유 인증을 의미하지 않음</p>
+              <h2 className="text-lg font-black">최근 검색된 플레이어 태그</h2>
+              <p className="mt-1 text-sm text-slate-600">최근 7일(시간 단위) · 최근 검색 순 최대 40개 태그 · 검색자 IP·사이트 계정 정보는 수집하지 않음 · 태그 검색은 소유권 인증이 아님</p>
               <div className="mt-4 overflow-x-auto">
-                <table className="w-full min-w-[550px] border-collapse text-left text-xs sm:text-sm">
+                <table className="w-full min-w-[450px] border-collapse text-left text-xs sm:text-sm">
                   <thead>
                     <tr className="border-b bg-slate-50 text-slate-700">
-                      <th className="px-3 py-2">검색 시각 (한국)</th>
-                      <th className="px-3 py-2">검색된 태그</th>
-                      <th className="px-3 py-2">IP 대역 (마스킹)</th>
-                      <th className="px-3 py-2">로그인 계정 (동의 시)</th>
+                      <th className="px-3 py-2">검색된 플레이어 태그</th>
+                      <th className="px-3 py-2">마지막 검색 (한국 시간)</th>
+                      <th className="px-3 py-2">최근 검색 횟수</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(data.recentSearches ?? []).map((item, index) => (
-                      <tr className="border-b" key={item.searchedAt + item.playerTag + index}>
-                        <td className="px-3 py-2 whitespace-nowrap">{new Date(item.searchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</td>
+                    {(data.recentSearchTags ?? []).map((item) => (
+                      <tr className="border-b" key={item.playerTag}>
                         <td className="px-3 py-2 font-bold">#{item.playerTag}</td>
-                        <td className="px-3 py-2">{item.maskedIpRange ?? "확인 불가"}</td>
-                        <td className="px-3 py-2">{item.accountNickname
-                          ? item.accountNickname + (item.accountIdShort ? " (" + item.accountIdShort + "…)" : "")
-                          : "비로그인 또는 확인 불가"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{new Date(item.lastSearchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</td>
+                        <td className="px-3 py-2">{n(Number(item.searchCount))}회</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-                {(data.recentSearches ?? []).length === 0 ? (
-                  <p className="px-3 py-4 text-sm text-slate-500">아직 동의 후 기록된 검색이 없습니다. 기존 익명 통계는 유지됩니다.</p>
+                {(data.recentSearchTags ?? []).length === 0 ? (
+                  <p className="px-3 py-4 text-sm text-slate-500">아직 새 방식으로 기록된 검색 태그가 없습니다. 배포 이후의 성공 검색부터 집계합니다.</p>
                 ) : null}
               </div>
             </section>

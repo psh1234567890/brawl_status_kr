@@ -1,3 +1,10 @@
+> **Legacy (discontinued with tag-only analytics rollout).** This document describes the
+> previous optional consent-based diagnostic feature. The current implementation
+> no longer collects or displays requester IP prefixes or signed-in account IDs
+> alongside searched tags. See [SEARCH_TAG_ANALYTICS.md](./SEARCH_TAG_ANALYTICS.md).
+> Historical detail rows, if any, remain in the isolated legacy table subject to
+> the original seven-day expiration job and are not backfilled.
+
 # Optional search diagnostics — privacy-first owner view
 
 By default, existing visits/search events remain **anonymous hourly totals** and do not reveal the searched player tag, IP address or account identity.

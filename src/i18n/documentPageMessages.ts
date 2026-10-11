@@ -1,5 +1,5 @@
 import { locales, type Locale } from "./config";
-import { searchDetailConsentMessages } from "./searchDetailConsentMessages";
+import { searchTagNoticeMessages } from "./searchTagNoticeMessages";
 import launchPolicy from "../../docs/ACCOUNT_LAUNCH_POLICY.json";
 
 type DocumentBlock =
@@ -3092,13 +3092,13 @@ const usagePrivacyNotice: Record<Locale, DocumentSection> = {
   "ru": { title: "Анонимная статистика использования", blocks: [{ type: "paragraph", text: "Мы сохраняем только почасовые суммарные счетчики посещений вкладок, успешных и неудачных поисков игроков и завершенных мини-игр. В статистике не хранятся теги игроков, IP, идентификаторы аккаунтов и устройств или поисковые запросы. Посещения не равны числу уникальных пользователей. Сводки хранятся до 90 дней, старые записи удаляются при новых событиях. Используется sessionStorage для вкладки и необязательный cookie для исключения." }] },
 };
 
-const optionalSearchDetailPrivacy = {} as Record<Locale, DocumentSection>;
+const searchTagPrivacyNotice = {} as Record<Locale, DocumentSection>;
 for (const locale of locales) {
-  optionalSearchDetailPrivacy[locale] = {
-    title: searchDetailConsentMessages[locale].title,
+  searchTagPrivacyNotice[locale] = {
+    title: searchTagNoticeMessages[locale].title,
     blocks: [{
       type: "paragraph",
-      text: searchDetailConsentMessages[locale].notice,
+      text: searchTagNoticeMessages[locale].notice,
     }],
   };
 }
@@ -3109,7 +3109,7 @@ export function getDocumentPageMessages(locale: Locale) {
     ...content,
     privacy: {
       ...content.privacy,
-      sections: [...content.privacy.sections, usagePrivacyNotice[locale], optionalSearchDetailPrivacy[locale]],
+      sections: [...content.privacy.sections, usagePrivacyNotice[locale], searchTagPrivacyNotice[locale]],
       effectiveDate: locale === "ko" ? "업데이트: 2026년 10월 11일" : "Updated: 2026-10-11",
     },
   };

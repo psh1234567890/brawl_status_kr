@@ -9,7 +9,7 @@ import LanguageSwitcher from "../components/LanguageSwitcher";
 import AccountControl from "../components/account/AccountControl";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
-import SearchDetailConsent from "../components/SearchDetailConsent";
+import SearchTagNotice from "../components/SearchTagNotice";
 import { usePlayerSearch } from "../hooks/usePlayerSearch";
 import { localizedHref, type Locale } from "../i18n/config";
 import {
@@ -203,7 +203,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
               </button>
             </div>
 
-            <SearchDetailConsent locale={locale} />
+            <SearchTagNotice locale={locale} />
 
             <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
               <p className="text-lg font-black text-blue-900 sm:text-2xl">

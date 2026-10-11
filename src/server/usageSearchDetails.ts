@@ -7,7 +7,6 @@ import { getClientAddress } from "./rateLimit";
 import { isUsageOptedOut } from "./usageAnalytics";
 import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
 
-const CONSENT_COOKIE = "brawl_search_detail_consent";
 const RETENTION_DAYS = 7;
 
 export function hasSearchDetailConsent(request: Request): boolean {

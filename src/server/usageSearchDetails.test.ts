@@ -41,6 +41,8 @@ describe("consented diagnostic details", () => {
   it("masks IPv4, IPv6 and invalid input", () => {
     expect(maskIpRange("203.0.113.45")).toBe("203.0.x.x");
     expect(maskIpRange("2001:db8:abcd:4444:5555:6666:7777:8888")).toBe("2001:db8:…");
+    expect(maskIpRange("::ffff:192.0.2.128")).toBe("IPv4-mapped (masked)");
+    expect(maskIpRange("::ffff:c000:0280")).toBe("ffff:c000:…");
     expect(maskIpRange("198.51.100.11, 10.0.0.1")).toBeNull();
     expect(maskIpRange("vercel-ip-unavailable")).toBeNull();
   });

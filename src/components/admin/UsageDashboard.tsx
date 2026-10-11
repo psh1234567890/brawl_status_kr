@@ -13,8 +13,12 @@ type Summary = {
   recentSearchTags: SearchTagSummary[];
   today: Counts;
   last7Days: Counts;
+  allTime: Counts;
+  trackingStartedAt: string | null;
   daily: Array<Counts & { day: string }>;
   byGame: Record<string, number>;
+  byGameToday: Record<string, number>;
+  byGameAllTime: Record<string, number>;
   recentHours: Array<{ hour: string; kind: string; count: string }>;
   sampledAt: string;
 };
@@ -34,10 +38,17 @@ const activities: Record<string, string> = {
   minigame_ability_quiz: "능력 맞추기 종료",
 };
 const n = (value: number) => value.toLocaleString("ko-KR");
+type Period = "today" | "week" | "all";
+const periods: Array<{ key: Period; label: string }> = [
+  { key: "today", label: "오늘" },
+  { key: "week", label: "최근 7일" },
+  { key: "all", label: "전체 누적" },
+];
 
 export default function UsageDashboard() {
   const [data, setData] = useState<Summary | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "denied" | "error">("loading");
+  const [period, setPeriod] = useState<Period>("today");
   const [optOut, setOptOut] = useState(() =>
     typeof document !== "undefined" && document.cookie.includes("brawl_analytics_opt_out=1")
   );
@@ -86,6 +97,13 @@ export default function UsageDashboard() {
   }
 
   const max = Math.max(1, ...((data?.daily ?? []).map(item => item.visits)));
+  const counts = data ? (
+    period === "today" ? data.today : period === "week" ? data.last7Days : data.allTime
+  ) : null;
+  const gameCounts = data ? (
+    period === "today" ? data.byGameToday : period === "week" ? data.byGame : data.byGameAllTime
+  ) : {};
+  const periodLabel = periods.find(item => item.key === period)?.label ?? "오늘";
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-5xl space-y-6">
@@ -113,12 +131,43 @@ export default function UsageDashboard() {
         {data && status === "ready" ? (
           <>
             <p className="text-xs text-slate-500">한국 시간 기준 · 갱신: {new Date(data.sampledAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</p>
+            <div className="rounded-xl border bg-white p-4 shadow-sm">
+              <h2 className="text-base font-black text-slate-900">집계 기간</h2>
+              <div role="group" aria-label="집계 기간 선택" className="mt-3 flex flex-wrap gap-2">
+                {periods.map(item => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-pressed={period === item.key}
+                    onClick={() => setPeriod(item.key)}
+                    className={`rounded-lg border px-4 py-2 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${
+                      period === item.key
+                        ? "border-blue-700 bg-blue-700 text-white"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-blue-50"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-3 text-xs leading-5 text-slate-600">
+                {period === "today"
+                  ? "오늘 00:00부터 현재까지 · 한국 시간 기준"
+                  : period === "week"
+                    ? "오늘을 포함한 최근 7개 날짜 · 한국 시간 기준"
+                    : `통계 수집 시작 이후 누적 · ${
+                        data.trackingStartedAt
+                          ? new Date(data.trackingStartedAt).toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" })
+                          : "아직 수집된 기록 없음"
+                      }부터 · 이전 Vercel 로그는 포함되지 않음`}
+              </p>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                ["오늘 방문 세션", data.today.visits],
-                ["오늘 플레이어 검색", data.today.searches],
-                ["오늘 검색 성공", data.today.successfulSearches],
-                ["오늘 미니게임 종료", data.today.gameEnds],
+                [`${periodLabel} 방문 세션`, counts?.visits ?? 0],
+                [`${periodLabel} 플레이어 검색`, counts?.searches ?? 0],
+                [`${periodLabel} 검색 성공`, counts?.successfulSearches ?? 0],
+                [`${periodLabel} 미니게임 종료`, counts?.gameEnds ?? 0],
               ].map(([label, value]) => (
                 <article key={String(label)} className="rounded-xl border bg-white p-5 shadow-sm">
                   <p className="text-sm font-bold text-slate-500">{label}</p>
@@ -141,10 +190,10 @@ export default function UsageDashboard() {
             </section>
             <div className="grid gap-4 md:grid-cols-2">
               <section className="rounded-xl border bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-black">최근 7일 미니게임별 종료</h2>
+                <h2 className="text-lg font-black">{periodLabel} 미니게임별 종료</h2>
                 {Object.keys(games).map(game => (
                   <div key={game} className="flex justify-between border-b py-3 text-sm">
-                    <span>{games[game]}</span><strong>{n(data.byGame[game] ?? 0)}회</strong>
+                    <span>{games[game]}</span><strong>{n(gameCounts[game] ?? 0)}회</strong>
                   </div>
                 ))}
               </section>
@@ -188,7 +237,7 @@ export default function UsageDashboard() {
                 ) : null}
               </div>
             </section>
-            <p className="text-xs leading-6 text-slate-500">표시 숫자는 오늘부터 새로 수집됩니다. 과거 Vercel 로그는 복원하지 않습니다. 자동화 요청, 광고 차단, 저장소 접근 제한, 통신 실패 등에 따라 실제 이용자와 차이가 날 수 있습니다. 운영자 통계는 공유하지 마세요.</p>
+            <p className="text-xs leading-6 text-slate-500">방문 횟수는 순 방문자 수가 아닌 브라우저 탭 세션 추정치입니다. 전체 누적은 추적 기능 도입 시점부터의 익명 합계이며, 시간별 상세 기록은 90일 후 정리됩니다. 과거 Vercel 로그는 복원하지 않습니다. 자동화 요청, 광고 차단, 저장소 접근 제한, 통신 실패 등에 따라 실제 이용자와 차이가 날 수 있습니다. 운영자 통계는 공유하지 마세요.</p>
           </>
         ) : null}
       </div>

@@ -55,6 +55,51 @@ export async function readUsageHours(): Promise<UsageHourRow[]> {
   return result.rows;
 }
 
+export type UsageLifetimeRow = {
+  kind: UsageKind;
+  count: string;
+  firstSeenAt: string;
+};
+
+export async function readUsageLifetime(): Promise<UsageLifetimeRow[]> {
+  const result = await db.$client.query<UsageLifetimeRow>(
+    `SELECT event_kind AS kind, event_count::text AS count,
+            first_seen_at::text AS "firstSeenAt"
+       FROM analytics_private.usage_lifetime
+       ORDER BY event_kind`,
+  );
+  return result.rows;
+}
+
+function emptyCounts() {
+  return { visits: 0, searches: 0, successfulSearches: 0, gameEnds: 0 };
+}
+
+export function summarizeLifetime(rows: UsageLifetimeRow[]) {
+  const allTime = emptyCounts();
+  const byGameAllTime: Record<string, number> = {};
+  let trackingStartedAt: string | null = null;
+  for (const row of rows) {
+    if (!isUsageKind(row.kind)) continue;
+    const count = Number(row.count);
+    if (!Number.isSafeInteger(count) || count < 0) continue;
+    if (!trackingStartedAt || new Date(row.firstSeenAt).getTime() < new Date(trackingStartedAt).getTime()) {
+      trackingStartedAt = row.firstSeenAt;
+    }
+    if (row.kind === "visit_session") allTime.visits += count;
+    else if (row.kind === "player_search_success") {
+      allTime.searches += count;
+      allTime.successfulSearches += count;
+    } else if (row.kind === "player_search_error") allTime.searches += count;
+    else if (row.kind.startsWith("minigame_")) {
+      allTime.gameEnds += count;
+      const game = row.kind.slice("minigame_".length);
+      byGameAllTime[game] = (byGameAllTime[game] ?? 0) + count;
+    }
+  }
+  return { allTime, byGameAllTime, trackingStartedAt };
+}
+
 export function summarizeUsage(
   rows: UsageHourRow[],
   now = new Date(),
@@ -68,6 +113,7 @@ export function summarizeUsage(
   const today = { visits: 0, searches: 0, successfulSearches: 0, gameEnds: 0 };
   const last7Days = { visits: 0, searches: 0, successfulSearches: 0, gameEnds: 0 };
   const byGame: Record<string, number> = {};
+  const byGameToday: Record<string, number> = {};
   const cutoff = days[0];
   for (const row of rows) {
     const count = Number(row.count);
@@ -87,10 +133,13 @@ export function summarizeUsage(
     }
     if (row.kind.startsWith("minigame_") && day >= cutoff && day <= todayKst) {
       byGame[row.kind.slice(9)] = (byGame[row.kind.slice(9)] ?? 0) + count;
+      if (day === todayKst) {
+        byGameToday[row.kind.slice(9)] = (byGameToday[row.kind.slice(9)] ?? 0) + count;
+      }
     }
   }
   return {
-    today, last7Days, daily, byGame,
+    today, last7Days, daily, byGame, byGameToday,
     recentHours: rows.filter(row => row.hour >= new Date(now.getTime() + 9 * 3600_000 - 24 * 3600_000)
       .toISOString().slice(0, 13).replace("T", " ")).slice(0, 35),
     sampledAt: now.toISOString(),

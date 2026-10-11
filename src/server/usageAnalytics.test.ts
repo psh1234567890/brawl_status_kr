@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const query = vi.hoisted(() => vi.fn());
 vi.mock("../db", () => ({ db: { $client: { query } } }));
-import { hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, summarizeUsage } from "./usageAnalytics";
+import { hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, summarizeLifetime, summarizeUsage } from "./usageAnalytics";
 
 describe("anonymous usage analytics", () => {
   afterEach(() => { delete process.env.USAGE_ADMIN_USER_IDS; query.mockReset(); });
@@ -22,7 +22,33 @@ describe("anonymous usage analytics", () => {
     expect(summary.today).toEqual({ visits: 2, searches: 4, successfulSearches: 3, gameEnds: 0 });
     expect(summary.last7Days.gameEnds).toBe(4);
     expect(summary.byGame.map_quiz).toBe(4);
+    expect(summary.byGameToday.map_quiz).toBeUndefined();
     expect(summary.daily).toHaveLength(7);
+  });
+  it("preserves cumulative counts independently of expired hourly records", () => {
+    const lifetime = summarizeLifetime([
+      { kind: "visit_session", count: "85", firstSeenAt: "2026-07-01T02:00:00Z" },
+      { kind: "player_search_success", count: "31", firstSeenAt: "2026-07-03T00:00:00Z" },
+      { kind: "player_search_error", count: "4", firstSeenAt: "2026-07-03T00:00:00Z" },
+      { kind: "minigame_map_quiz", count: "12", firstSeenAt: "2026-08-01T00:00:00Z" },
+      { kind: "minigame_brawler_quiz", count: "3", firstSeenAt: "2026-08-01T00:00:00Z" },
+    ]);
+    expect(lifetime.allTime).toEqual({
+      visits: 85, searches: 35, successfulSearches: 31, gameEnds: 15,
+    });
+    expect(lifetime.byGameAllTime).toEqual({ map_quiz: 12, brawler_quiz: 3 });
+    expect(lifetime.trackingStartedAt).toBe("2026-07-01T02:00:00Z");
+    expect(summarizeLifetime([])).toEqual({
+      allTime: { visits: 0, searches: 0, successfulSearches: 0, gameEnds: 0 },
+      byGameAllTime: {}, trackingStartedAt: null,
+    });
+  });
+  it("reads protected lifetime totals without individual visitor identifiers", async () => {
+    query.mockResolvedValue({ rows: [{ kind: "visit_session", count: "12", firstSeenAt: "2026-10-11T00:00:00Z" }] });
+    expect((await readUsageLifetime())[0].count).toBe("12");
+    const sql = String(query.mock.calls[0][0]);
+    expect(sql).toContain("analytics_private.usage_lifetime");
+    expect(sql).not.toMatch(/player_tag|user_id|visitor_ip/i);
   });
   it("fails closed unless explicit admin IDs match", () => {
     expect(isUsageAdminUser("owner")).toBe(false);

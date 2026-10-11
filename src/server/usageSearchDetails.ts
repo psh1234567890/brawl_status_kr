@@ -23,9 +23,10 @@ export function maskIpRange(address: string): string | null {
     return parts.length === 4 ? `${parts[0]}.${parts[1]}.x.x` : null;
   }
   if (type === 6) {
-    // Keep only the first one or two printed network groups. Never expose raw
-    // IPv6 values, IPv4-mapped tails, or any request forwarding headers.
-    const groups = address.toLowerCase().split(":").filter(Boolean);
+    // IPv4-mapped IPv6 includes a dotted-quad: never retain that tail.
+    if (address.includes(".")) return "IPv4-mapped (masked)";
+    const groups = address.toLowerCase().split(":")
+      .filter(group => /^[0-9a-f]{1,4}$/.test(group));
     return groups.length ? `${groups.slice(0, 2).join(":")}:…` : null;
   }
   return null;

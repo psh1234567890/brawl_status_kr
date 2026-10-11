@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { queryMapMetaStats } from "../../../server/metaStats";
 import { observeServerOperation, withApiMonitoring } from "../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
+import { rejectSharedPublicRateLimit } from "../../../server/sharedPublicRateLimit";
 
 const MINIMUM_PLAYS = 5;
 const MEDIUM_CONFIDENCE_PLAYS = 20;
@@ -65,7 +66,7 @@ const getCachedMetaStats = unstable_cache(
     }
     return result;
   },
-  ["meta-stats-v10-source-preaggregate"],
+  ["meta-stats-v11-materialized-snapshot"],
   { revalidate: 300, tags: ["meta-stats"] },
 );
 
@@ -85,6 +86,8 @@ async function getMeta(request: Request) {
     windowMs: 60_000,
   });
   if (rejected) return rejected;
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-meta", 90);
+  if (sharedLimited) return sharedLimited;
 
   try {
     return NextResponse.json(await getCachedMetaStats());

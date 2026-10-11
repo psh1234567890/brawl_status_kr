@@ -86,7 +86,15 @@ export function buildMapMetaStatsQuery(minimumPlays = MINIMUM_META_PLAYS) {
 }
 
 export async function queryMapMetaStats(minimumPlays = MINIMUM_META_PLAYS) {
-  return db.execute<MapMetaRawRow>(buildMapMetaStatsQuery(minimumPlays));
+  // Pre-aggregated 30-day snapshot refreshed by pg_cron. This avoids a full
+  // participant+perspective scan on every cold function invocation.
+  return db.execute<MapMetaRawRow>(sql`
+    SELECT mode, map, brawler_id AS "brawlerId", brawler_name AS "brawlerName",
+           plays, wins, draws
+    FROM analytics_private.meta_brawler_snapshot
+    WHERE plays >= ${minimumPlays}
+      AND refreshed_at >= now() - interval '45 minutes'
+  `);
 }
 
 export function buildCounterStatsQuery(brawler: string) {

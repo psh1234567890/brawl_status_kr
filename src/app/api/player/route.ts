@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
+import { rejectSharedPublicRateLimit } from "../../../server/sharedPublicRateLimit";
 import { withApiMonitoring } from "../../../server/observability";
 import { recordUsageEvent } from "../../../server/usageAnalytics";
 import { recordSearchTag } from "../../../server/searchTagAnalytics";
@@ -22,6 +23,8 @@ async function getPlayer(request: Request) {
       { status: 400 },
     );
   }
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-player-profile", 40);
+  if (sharedLimited) return sharedLimited;
 
   try {
     const cleanTag = normalizePlayerTag(playerTag);

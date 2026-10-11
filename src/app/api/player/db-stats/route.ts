@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "../../../../db";
 import { battleLogs } from "../../../../db/schema";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import { rejectSharedPublicRateLimit } from "../../../../server/sharedPublicRateLimit";
 import type { BrawlerStat } from "../../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../../utils/playerTag";
 
@@ -21,6 +22,8 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   }
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-player-db-stats", 60);
+  if (sharedLimited) return sharedLimited;
 
   try {
     const cleanTag = normalizePlayerTag(tag);

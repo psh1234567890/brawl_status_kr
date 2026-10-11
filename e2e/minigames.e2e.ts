@@ -79,6 +79,27 @@ test("homepage shortcut opens a six-card hub with four playable games", async ({
   await expect(page).toHaveURL(/\/minigames\/brawler-quiz$/);
 });
 
+test("mini game hub loads signed-in bests only after explicit user action", async ({ page }) => {
+  let requests = 0;
+  await page.route("**/api/account/minigame-bests", async route => {
+    requests += 1;
+    await route.fulfill({
+      contentType: "application/json",
+      status: 200,
+      body: JSON.stringify({ personalBests: [{
+        gameId: "brawler-quiz", mode: "3m", rulesetVersion: 1,
+        score: 75, total: 100, source: "client_play",
+        updatedAt: "2026-10-12T00:00:00Z",
+      }] }),
+    });
+  });
+  await page.goto("/minigames");
+  expect(requests).toBe(0);
+  await page.getByRole("button", { name: "기록 불러오기" }).click();
+  await expect(page.getByText("75 / 100")).toBeVisible();
+  expect(requests).toBe(1);
+});
+
 test("name quiz is readable by crawlers without JavaScript in all ten languages", async ({ browser, baseURL, request }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, locale: "ko-KR", baseURL });
   const page = await context.newPage();

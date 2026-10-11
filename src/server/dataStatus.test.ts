@@ -3,8 +3,16 @@ const mocks = vi.hoisted(() => ({ execute: vi.fn(), cache: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("../db", () => ({ db: { execute: mocks.execute } }));
 vi.mock("next/cache", () => ({ unstable_cache: mocks.cache }));
+import { PgDialect } from "drizzle-orm/pg-core";
 
 describe("public collection snapshot", () => {
+  it("queries only the private snapshot, rather than scanning battle logs", async () => {
+    const { buildCachedDataStatusQuery } = await import("./dataStatus");
+    const { sql } = new PgDialect().sqlToQuery(buildCachedDataStatusQuery());
+    expect(sql).toContain("analytics_private.collection_status_snapshot");
+    expect(sql).toContain("refreshed_at");
+    expect(sql).not.toContain("FROM battle_logs");
+  });
   beforeEach(() => {
     vi.resetModules();
     vi.resetAllMocks();
@@ -26,7 +34,7 @@ describe("public collection snapshot", () => {
     expect(a?.summary).toEqual(summary);
     expect(b).toEqual(a);
     expect(mocks.execute).toHaveBeenCalledOnce();
-    expect(mocks.cache).toHaveBeenCalledWith(expect.any(Function), ["public-data-status-v3"], { revalidate: 900 });
+    expect(mocks.cache).toHaveBeenCalledWith(expect.any(Function), ["public-data-status-v4-precomputed"], { revalidate: 900 });
   });
 
   it("does not fabricate zero counts or cache failure, and permits a later recovery", async () => {

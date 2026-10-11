@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "../../../../db";
 import { battleLogs } from "../../../../db/schema";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import { rejectSharedPublicRateLimit } from "../../../../server/sharedPublicRateLimit";
 import type {
   PlayerHistoryBucket,
   PlayerHistoryDay,
@@ -35,6 +36,8 @@ export async function GET(request: Request) {
   if (!tag || !isValidPlayerTag(tag)) {
     return NextResponse.json({ error: "올바른 플레이어 태그가 필요합니다." }, { status: 400 });
   }
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-player-history", 60);
+  if (sharedLimited) return sharedLimited;
 
   try {
     const dayExpr = sql<string>`to_char(${battleLogs.battleTimestamp} AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD')`;

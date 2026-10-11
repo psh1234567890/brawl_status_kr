@@ -4,7 +4,7 @@
 
 `src/server/upstream.ts` coalesces concurrent requests and keeps at most 2,000 successful responses per warm server instance. Profiles are fresh for 30 seconds and may fall back to their original response for up to five minutes from fetch time. Battle logs are fresh for 15 seconds and may fall back for up to two minutes. Fallback is explicitly enabled only for the player/profile and battle-log routes.
 
-Fallback applies to network errors, timeouts, HTTP 408/429 and 5xx (including proxy 520/525), and malformed successful JSON. HTTP 400/401/403/404 invalidate the old entry and remain errors. Missing credentials or invalid configuration never use cached data. Failure does not extend data age; a five-second cooldown reduces repeated failing refreshes. There are no automatic retries or alternate authenticated providers.
+Fallback applies to network errors, timeouts, HTTP 408/429 and 5xx (including proxy 520/525), and malformed successful JSON. HTTP 400/401/403/404 invalidate the old entry and remain errors. Missing credentials or invalid configuration never use cached data. Failure does not extend data age; a five-second cooldown reduces repeated failing refreshes. Only one transport-only retry is allowed on cold player lookups without stale data; there are no alternate authenticated providers.
 
 Successful responses expose `dataFreshness.status` (`live`, `cached`, `stale`) and the original `fetchedAt`. The search UI labels stale data in all ten languages. Browser/API responses are `no-store`, so client or CDN caches cannot silently relabel an old response as live. A cold instance has no fallback: this is not a durable, cross-instance cache or an upstream outage guarantee.
 
@@ -14,7 +14,7 @@ Denied/full browser storage no longer breaks profile search. Recent tags and fav
 
 ## Data collection status
 
-`src/server/dataStatus.ts` executes the existing count definitions and top-ten lists in one PostgreSQL statement, using one connection and a consistent snapshot. Tie ordering is deterministic. Next's Data Cache shares the locale-independent public snapshot with a 900-second revalidation interval to reduce aggregate pressure; an in-flight read is also deduplicated within the instance. A warm instance may display its last successful snapshot for up to one hour when revalidation fails, with a 30-second retry cooldown. This uses `unstable_cache` because the repo has not enabled Cache Components. It does not cache account or session data.
+`src/server/dataStatus.ts` reads precomputed collection totals from a private materialized snapshot, with independent 15-minute database refreshes and a 45-minute maximum snapshot age. Tie ordering is deterministic. Next's Data Cache shares the locale-independent public snapshot with a 900-second revalidation interval to reduce aggregate pressure; an in-flight read is also deduplicated within the instance. A warm instance may display its last successful snapshot for up to one hour when revalidation fails, with a 30-second retry cooldown. This uses `unstable_cache` because the repo has not enabled Cache Components. It does not cache account or session data.
 
 The page remains request-rendered via `connection()`, keeping database reads out of builds. The UI shows the actual snapshot time and explains that a failed refresh can retain older counts. A cold-cache DB failure renders a translated unavailable notice; it does not cache an error or present fabricated zero counts.
 

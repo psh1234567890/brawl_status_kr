@@ -17,6 +17,19 @@ type StatusRow = {
 };
 export type DataStatus = { summary: StatusRow; sampledAt: string };
 
+// Read the private, periodically refreshed materialized aggregate, rather
+// than scanning all battle rows whenever a cold server instance starts.
+export function buildCachedDataStatusQuery() {
+  return sql`
+    SELECT "totalBattles", "uniqueBattles", players, maps, brawlers,
+           "latestBattle", "popularMaps", "popularBrawlers",
+           refreshed_at::text AS "refreshedAt"
+    FROM analytics_private.collection_status_snapshot
+    WHERE snapshot_id = 1
+      AND refreshed_at >= now() - interval '45 minutes'
+  `;
+}
+
 // One statement uses one connection and a consistent snapshot for all aggregates.
 // Existing narrow B-tree indexes service counts; the map/brawler groups also supply totals.
 // Only public battle counts are cached; account/session data never enters this cache.
@@ -75,10 +88,11 @@ const FAILED_REFRESH_COOLDOWN_MS = 30_000;
 async function readDataStatus(): Promise<DataStatus> {
   if (pendingRead) return pendingRead;
   pendingRead = observeServerOperation("db.status.summary", async () => {
-    const result = await db.execute<StatusRow>(buildDataStatusQuery());
+    const result = await db.execute<StatusRow & { refreshedAt?: string }>(buildCachedDataStatusQuery());
     const summary = result.rows[0];
     if (!summary) throw new Error("Missing data status aggregate");
-    const snapshot = { summary, sampledAt: new Date().toISOString() };
+    const { refreshedAt } = summary;
+    const snapshot = { summary, sampledAt: refreshedAt ?? new Date().toISOString() };
     lastSuccessfulRead = snapshot;
     retryAfter = 0;
     return snapshot;
@@ -94,7 +108,7 @@ async function readDataStatus(): Promise<DataStatus> {
 }
 
 // This repo uses the Next.js caching model without Cache Components.
-const readCachedDataStatus = unstable_cache(readDataStatus, ["public-data-status-v3"], {
+const readCachedDataStatus = unstable_cache(readDataStatus, ["public-data-status-v4-precomputed"], {
   // A collection-status snapshot can refresh less often than active match data.
   revalidate: 900,
 });

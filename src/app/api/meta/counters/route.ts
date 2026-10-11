@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { queryCounterStats } from "../../../../server/metaStats";
 import { observeServerOperation, withApiMonitoring } from "../../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import { rejectSharedPublicRateLimit } from "../../../../server/sharedPublicRateLimit";
 
 const getCachedCounterStats = unstable_cache(
   async (brawler: string) =>
@@ -30,6 +31,8 @@ async function getCounters(request: Request) {
   if (brawler.length > 40) {
     return NextResponse.json({ error: "브롤러 이름이 너무 깁니다." }, { status: 400 });
   }
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-meta-counters", 60);
+  if (sharedLimited) return sharedLimited;
   try {
     return NextResponse.json({ items: await getCachedCounterStats(brawler) });
   } catch (error) {

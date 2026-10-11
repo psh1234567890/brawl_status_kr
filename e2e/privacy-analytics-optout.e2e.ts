@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { getMessages } from "../src/i18n/messages";
 
 for (const locale of ["ko", "en"] as const) {
   test(`privacy page in ${locale} lets visitors exclude future analytics without consent for search`, async ({ page, context }) => {
@@ -33,7 +34,7 @@ for (const locale of ["ko", "en"] as const) {
 
     await page.goto(homePath);
     await expect(page.getByRole("textbox", {
-      name: locale === "ko" ? "플레이어 태그" : "Player Tag",
+      name: getMessages(locale).home.playerTag,
     })).toBeVisible();
   });
 }

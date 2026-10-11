@@ -122,7 +122,7 @@ export const trMessages = {
     members: "üye",
   },
   status: {
-    cacheNotice: "Sayımlar yaklaşık beş dakikada bir güncellenir; güncelleme başarısız olursa önceki veriler gösterilebilir.",
+    cacheNotice: "Sayımlar yaklaşık on beş dakikada bir güncellenir; güncelleme başarısız olursa önceki veriler gösterilebilir.",
     snapshotAt: "Sayım zamanı",
     unavailable: "Veri durumu geçici olarak kullanılamıyor. Kısa bir süre sonra sayfayı yenileyin.",
     title: "Veri Toplama Durumu",

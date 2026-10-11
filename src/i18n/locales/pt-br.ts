@@ -122,7 +122,7 @@ export const ptBrMessages = {
     members: "membros",
   },
   status: {
-    cacheNotice: "As contagens são atualizadas a cada cinco minutos aproximadamente; se a atualização falhar, dados anteriores podem ser exibidos.",
+    cacheNotice: "As contagens são atualizadas a cada quinze minutos aproximadamente; se a atualização falhar, dados anteriores podem ser exibidos.",
     snapshotAt: "Horário da contagem",
     unavailable: "O status dos dados está temporariamente indisponível. Atualize a página em breve.",
     title: "Status da coleta de dados",

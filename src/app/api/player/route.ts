@@ -27,9 +27,13 @@ async function getPlayer(request: Request) {
     const cleanTag = normalizePlayerTag(playerTag);
     const { data, freshness } = await fetchBrawlApiSnapshot<PlayerData>(
       `/players/%23${cleanTag}`, 30_000, 5 * 60_000,
+      { retryOnNetworkError: true },
     );
-    await recordUsageEvent("player_search_success", request);
-    await recordSearchTag(cleanTag, request);
+    // Independent, best-effort aggregates must not serialize database roundtrips.
+    await Promise.all([
+      recordUsageEvent("player_search_success", request),
+      recordSearchTag(cleanTag, request),
+    ]);
     return NextResponse.json({ ...data, dataFreshness: freshness }, {
       headers: { "Cache-Control": "no-store" },
     });

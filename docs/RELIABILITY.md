@@ -14,7 +14,7 @@ Denied/full browser storage no longer breaks profile search. Recent tags and fav
 
 ## Data collection status
 
-`src/server/dataStatus.ts` executes the existing count definitions and top-ten lists in one PostgreSQL statement, using one connection and a consistent snapshot. Tie ordering is deterministic. Next's Data Cache shares the locale-independent public snapshot with a 300-second revalidation interval; an in-flight read is also deduplicated within the instance. This uses `unstable_cache` because the repo has not enabled Cache Components. It does not cache account or session data.
+`src/server/dataStatus.ts` executes the existing count definitions and top-ten lists in one PostgreSQL statement, using one connection and a consistent snapshot. Tie ordering is deterministic. Next's Data Cache shares the locale-independent public snapshot with a 900-second revalidation interval to reduce aggregate pressure; an in-flight read is also deduplicated within the instance. A warm instance may display its last successful snapshot for up to one hour when revalidation fails, with a 30-second retry cooldown. This uses `unstable_cache` because the repo has not enabled Cache Components. It does not cache account or session data.
 
 The page remains request-rendered via `connection()`, keeping database reads out of builds. The UI shows the actual snapshot time and explains that a failed refresh can retain older counts. A cold-cache DB failure renders a translated unavailable notice; it does not cache an error or present fabricated zero counts.
 

@@ -68,13 +68,20 @@ export function buildDataStatusQuery() {
 }
 
 let pendingRead: Promise<DataStatus> | null = null;
+let lastSuccessfulRead: DataStatus | null = null;
+let retryAfter = 0;
+const STALE_SNAPSHOT_MAX_MS = 60 * 60_000;
+const FAILED_REFRESH_COOLDOWN_MS = 30_000;
 async function readDataStatus(): Promise<DataStatus> {
   if (pendingRead) return pendingRead;
   pendingRead = observeServerOperation("db.status.summary", async () => {
     const result = await db.execute<StatusRow>(buildDataStatusQuery());
     const summary = result.rows[0];
     if (!summary) throw new Error("Missing data status aggregate");
-    return { summary, sampledAt: new Date().toISOString() };
+    const snapshot = { summary, sampledAt: new Date().toISOString() };
+    lastSuccessfulRead = snapshot;
+    retryAfter = 0;
+    return snapshot;
   }).catch(() => {
     // Every coalesced caller must see a sanitized failure, including background refreshes.
     throw new Error("Data status query unavailable");
@@ -87,15 +94,27 @@ async function readDataStatus(): Promise<DataStatus> {
 }
 
 // This repo uses the Next.js caching model without Cache Components.
-const readCachedDataStatus = unstable_cache(readDataStatus, ["public-data-status-v2"], {
-  revalidate: 300,
+const readCachedDataStatus = unstable_cache(readDataStatus, ["public-data-status-v3"], {
+  // A collection-status snapshot can refresh less often than active match data.
+  revalidate: 900,
 });
 
 export async function getDataStatus(): Promise<DataStatus | null> {
+  const isRecent = () => lastSuccessfulRead !== null &&
+    Date.now() - Date.parse(lastSuccessfulRead.sampledAt) < STALE_SNAPSHOT_MAX_MS;
+  if (isRecent() && Date.now() < retryAfter) return lastSuccessfulRead;
   try {
-    return await readCachedDataStatus();
+    const snapshot = await readCachedDataStatus();
+    lastSuccessfulRead = snapshot;
+    retryAfter = 0;
+    return snapshot;
   } catch {
-    // A failure is thrown inside the cache, so it cannot become a cached zero-count result.
+    // A failed refresh never writes zeros to the shared cache.
+    // Serve a bounded last-known-good sample within this instance on an outage.
+    retryAfter = Date.now() + FAILED_REFRESH_COOLDOWN_MS;
+    if (isRecent()) {
+      return lastSuccessfulRead;
+    }
     return null;
   }
 }

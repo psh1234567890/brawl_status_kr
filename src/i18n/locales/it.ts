@@ -122,7 +122,7 @@ export const itMessages = {
     members: "membri",
   },
   status: {
-    cacheNotice: "I conteggi vengono aggiornati circa ogni cinque minuti; se l’aggiornamento fallisce, potrebbero essere mostrati dati precedenti.",
+    cacheNotice: "I conteggi vengono aggiornati circa ogni quindici minuti; se l’aggiornamento fallisce, potrebbero essere mostrati dati precedenti.",
     snapshotAt: "Ora del conteggio",
     unavailable: "Lo stato dei dati non è temporaneamente disponibile. Ricarica la pagina tra poco.",
     title: "Stato raccolta dati",

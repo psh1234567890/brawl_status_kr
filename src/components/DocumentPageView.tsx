@@ -6,6 +6,7 @@ import {
   getDocumentPageMessages,
   type DocumentPageMessages,
 } from "../i18n/documentPageMessages";
+import AnalyticsOptOutControl from "./AnalyticsOptOutControl";
 import LanguageSwitcher from "./LanguageSwitcher";
 import PortalLayout from "./PortalLayout";
 
@@ -72,6 +73,7 @@ export function DocumentArticlePage({
             <p className="mt-3 font-semibold leading-7 text-gray-700">{accountPolicy.privacyText}</p>
           </section>
         ) : null}
+        {pageKey === "privacy" ? <AnalyticsOptOutControl locale={locale} /> : null}
         {pageKey === "terms" ? (
           <section className="mt-8 border-t border-gray-100 pt-6">
             <h2 className="text-xl font-black text-indigo-900">{accountPolicy.termsTitle}</h2>

@@ -39,7 +39,7 @@ describe("automatic privacy-minimal tag analytics", () => {
     expect(sql).toContain("SUM(search_count)");
     expect(sql).toContain("MAX(last_searched_at)");
     expect(sql).toContain("7 days");
-    expect(sql).toContain("LIMIT 40");
+    expect(sql).toContain("LIMIT 200");
     expect(sql).not.toMatch(/JOIN|auth_users|ip_range|email|account/i);
   });
 });

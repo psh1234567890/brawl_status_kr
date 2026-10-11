@@ -34,7 +34,7 @@ test("admin dashboard switches between today, seven days, and lifetime totals", 
 });
 
 test("recent player tags stay in a fixed, keyboard-accessible scrolling table on desktop and mobile", async ({ page }) => {
-  const tags = Array.from({ length: 40 }, (_, index) => ({
+  const tags = Array.from({ length: 200 }, (_, index) => ({
     playerTag: `2PYLQ${String(index).padStart(2, "0")}`,
     searchCount: String(index + 1),
     lastSearchedAt: "2026-10-12T02:00:00.000Z",
@@ -61,7 +61,7 @@ test("recent player tags stay in a fixed, keyboard-accessible scrolling table on
   const region = page.getByRole("region", { name: "최근 검색된 플레이어 태그 목록" });
   await expect(region).toBeVisible();
   await expect(region).toHaveAttribute("tabindex", "0");
-  await expect(region.locator("tbody tr")).toHaveCount(40);
+  await expect(region.locator("tbody tr")).toHaveCount(200);
   expect(await region.evaluate((element) => ({
     scrollable: element.scrollHeight > element.clientHeight,
     maxHeight: element.getBoundingClientRect().height,

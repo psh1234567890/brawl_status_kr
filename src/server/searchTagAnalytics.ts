@@ -44,7 +44,7 @@ export async function readRecentSearchTags(): Promise<SearchTagSummary[]> {
      WHERE hour_bucket >= date_trunc('hour', now() - interval '7 days')
      GROUP BY player_tag
      ORDER BY MAX(last_searched_at) DESC, player_tag ASC
-     LIMIT 40`,
+     LIMIT 200`,
   );
   return result.rows;
 }

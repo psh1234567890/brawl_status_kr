@@ -11,7 +11,7 @@ const CONSENT_COOKIE = "brawl_search_detail_consent";
 const RETENTION_DAYS = 7;
 
 export function hasSearchDetailConsent(request: Request): boolean {
-  const match = (request.headers.get("cookie") ?? "").match(/(?:^|;\\s*)brawl_search_detail_consent=([^;]+)/);
+  const match = (request.headers.get("cookie") ?? "").match(/(?:^|;\s*)brawl_search_detail_consent=([^;]+)/);
   return match?.[1] === "1" && !isUsageOptedOut(request);
 }
 

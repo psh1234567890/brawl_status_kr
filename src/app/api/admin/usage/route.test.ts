@@ -5,9 +5,9 @@ const mocks = vi.hoisted(() => ({
   readUsageHours: vi.fn(),
   summarizeUsage: vi.fn(),
   hasUsageAdminAccess: vi.fn(),
-  readRecentConsentedSearches: vi.fn(),
+  readRecentSearchTags: vi.fn(),
 }));
-vi.mock("../../../../server/usageSearchDetails", () => ({ readRecentConsentedSearches: mocks.readRecentConsentedSearches }));
+vi.mock("../../../../server/searchTagAnalytics", () => ({ readRecentSearchTags: mocks.readRecentSearchTags }));
 vi.mock("../../../../server/account", () => ({ getAuthenticatedAccount: mocks.getAuthenticatedAccount }));
 vi.mock("../../../../server/usageAnalytics", () => ({
   hasUsageAdminAccess: mocks.hasUsageAdminAccess,
@@ -22,7 +22,7 @@ describe("private analytics dashboard API", () => {
     mocks.getAuthenticatedAccount.mockResolvedValue({ userId: "allowed" });
     mocks.hasUsageAdminAccess.mockResolvedValue(false);
     mocks.readUsageHours.mockResolvedValue([]);
-    mocks.readRecentConsentedSearches.mockResolvedValue([]);
+    mocks.readRecentSearchTags.mockResolvedValue([]);
     mocks.summarizeUsage.mockReturnValue({ today: { visits: 0 } });
   });
   const request = () => new Request("https://www.brawl-o1.site/api/admin/usage");
@@ -32,20 +32,20 @@ describe("private analytics dashboard API", () => {
     expect(mocks.getAuthenticatedAccount).toHaveBeenCalledOnce();
     expect(mocks.hasUsageAdminAccess).toHaveBeenCalledWith("allowed");
     expect(mocks.readUsageHours).not.toHaveBeenCalled();
-    expect(mocks.readRecentConsentedSearches).not.toHaveBeenCalled();
+    expect(mocks.readRecentSearchTags).not.toHaveBeenCalled();
   });
   it("hides data from non-admin users even after login", async () => {
     const response = await GET(request());
     expect(response.status).toBe(404);
     expect(mocks.readUsageHours).not.toHaveBeenCalled();
-    expect(mocks.readRecentConsentedSearches).not.toHaveBeenCalled();
+    expect(mocks.readRecentSearchTags).not.toHaveBeenCalled();
   });
   it("requires an authenticated session", async () => {
     mocks.getAuthenticatedAccount.mockRejectedValue(new Error("LOGIN_REQUIRED"));
     const response = await GET(request());
     expect(response.status).toBe(404);
     expect(mocks.readUsageHours).not.toHaveBeenCalled();
-    expect(mocks.readRecentConsentedSearches).not.toHaveBeenCalled();
+    expect(mocks.readRecentSearchTags).not.toHaveBeenCalled();
   });
   it("does not cache valid admin reports", async () => {
     mocks.hasUsageAdminAccess.mockResolvedValue(true);
@@ -53,7 +53,7 @@ describe("private analytics dashboard API", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expect(await response.json()).toEqual({ today: { visits: 0 }, recentSearches: [] });
-    expect(mocks.readRecentConsentedSearches).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ today: { visits: 0 }, recentSearchTags: [] });
+    expect(mocks.readRecentSearchTags).toHaveBeenCalledOnce();
   });
 });

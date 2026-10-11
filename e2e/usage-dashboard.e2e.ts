@@ -32,3 +32,51 @@ test("admin dashboard switches between today, seven days, and lifetime totals", 
   await expect(page.getByRole("button", { name: "전체 누적" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByText(/통계 수집 시작 이후 누적/)).toBeVisible();
 });
+
+test("recent player tags stay in a fixed, keyboard-accessible scrolling table on desktop and mobile", async ({ page }) => {
+  const tags = Array.from({ length: 40 }, (_, index) => ({
+    playerTag: `2PYLQ${String(index).padStart(2, "0")}`,
+    searchCount: String(index + 1),
+    lastSearchedAt: "2026-10-12T02:00:00.000Z",
+  }));
+  await page.route("**/api/admin/usage", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      today: { visits: 3, searches: 4, successfulSearches: 3, gameEnds: 1 },
+      last7Days: { visits: 12, searches: 20, successfulSearches: 18, gameEnds: 5 },
+      allTime: { visits: 100, searches: 250, successfulSearches: 230, gameEnds: 40 },
+      byGameToday: {},
+      byGame: {},
+      byGameAllTime: {},
+      trackingStartedAt: "2026-10-10T00:00:00.000Z",
+      daily: [],
+      recentHours: [],
+      recentSearchTags: tags,
+      sampledAt: "2026-10-12T02:00:00.000Z",
+    }),
+  }));
+
+  await page.goto("/admin/usage");
+  const region = page.getByRole("region", { name: "최근 검색된 플레이어 태그 목록" });
+  await expect(region).toBeVisible();
+  await expect(region).toHaveAttribute("tabindex", "0");
+  await expect(region.locator("tbody tr")).toHaveCount(40);
+  expect(await region.evaluate((element) => ({
+    scrollable: element.scrollHeight > element.clientHeight,
+    maxHeight: element.getBoundingClientRect().height,
+    overflowY: getComputedStyle(element).overflowY,
+  }))).toMatchObject({ scrollable: true, maxHeight: 320, overflowY: "auto" });
+  await expect(region.locator("thead")).toHaveCSS("position", "sticky");
+
+  await region.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  expect(await region.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await expect(region.locator("tbody tr").last()).toBeAttached();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await region.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    hasHorizontalScroll: element.scrollWidth > element.clientWidth,
+  }))).toEqual({ height: 288, hasHorizontalScroll: true });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});

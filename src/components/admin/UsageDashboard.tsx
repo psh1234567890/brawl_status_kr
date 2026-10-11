@@ -213,9 +213,14 @@ export default function UsageDashboard() {
             <section className="rounded-xl border bg-white p-5 shadow-sm">
               <h2 className="text-lg font-black">최근 검색된 플레이어 태그</h2>
               <p className="mt-1 text-sm text-slate-600">최근 7일(시간 단위) · 최근 검색 순 최대 40개 태그 · 검색자 IP·사이트 계정 정보는 수집하지 않음 · 태그 검색은 소유권 인증이 아님</p>
-              <div className="mt-4 overflow-x-auto">
+              <div
+                role="region"
+                aria-label="최근 검색된 플레이어 태그 목록"
+                tabIndex={0}
+                className="mt-4 h-72 overflow-auto overscroll-contain rounded-lg border border-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:h-80"
+              >
                 <table className="w-full min-w-[450px] border-collapse text-left text-xs sm:text-sm">
-                  <thead>
+                  <thead className="sticky top-0 z-10 bg-slate-50">
                     <tr className="border-b bg-slate-50 text-slate-700">
                       <th className="px-3 py-2">검색된 플레이어 태그</th>
                       <th className="px-3 py-2">마지막 검색 (한국 시간)</th>

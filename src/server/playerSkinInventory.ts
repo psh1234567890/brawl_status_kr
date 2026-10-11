@@ -7,20 +7,27 @@ import {
 import { fetchBrawlaceSkinInventory } from "./brawlaceSkins";
 import { logSkinSupplementalOutcome } from "./observability";
 import { createSkinInventoryCache } from "./skinInventoryCache";
-import { fetchBrawlApi } from "./upstream";
+import { fetchBrawlApiSnapshot } from "./upstream";
 
 const supplementalCache = createSkinInventoryCache({
   freshMs: 6 * 60 * 60 * 1000,
   staleMs: 24 * 60 * 60 * 1000,
 });
 const supplementalPending = new Map<string, Promise<PlayerSkinInventoryResponse>>();
+const supplementalBackoff = new Map<string, number>();
+const SUPPLEMENTAL_FAILURE_COOLDOWN_MS = 5 * 60_000;
 
 export async function fetchPlayerSkinInventory(
   tag: string,
 ): Promise<PlayerSkinInventoryResponse> {
   const cleanTag = normalizePlayerTag(tag);
-  const player = await fetchBrawlApi<PlayerData>(`/players/%23${cleanTag}`, 30_000);
-  const official = buildOfficialSkinInventory(player, cleanTag);
+  // The official equipped-skin baseline can survive a brief provider outage,
+  // using the same bounded profile snapshot used by player search.
+  const player = await fetchBrawlApiSnapshot<PlayerData>(
+    `/players/%23${cleanTag}`, 30_000, 5 * 60_000,
+    { retryOnNetworkError: true },
+  );
+  const official = buildOfficialSkinInventory(player.data, cleanTag);
 
   const supplemental = await fetchSupplementalSkinInventory(cleanTag).catch(() => null);
 
@@ -46,6 +53,13 @@ export async function fetchSupplementalSkinInventory(
     logSkinSupplementalOutcome("fresh_cache");
     return fresh;
   }
+  // A failing optional third-party provider must not be hammered for each tap
+  // (or for each cold session). Preserve stale known-good skin results first.
+  if ((supplementalBackoff.get(cleanTag) ?? 0) > Date.now()) {
+    const stale = supplementalCache.getStale(cleanTag);
+    if (stale) return stale;
+    return Promise.reject(new Error("Supplemental skin lookup temporarily unavailable"));
+  }
 
   const pending = supplementalPending.get(cleanTag);
   if (pending) {
@@ -57,12 +71,24 @@ export async function fetchSupplementalSkinInventory(
     const startedAt = performance.now();
     try {
       const result = await fetchBrawlaceSkinInventory(cleanTag);
+      supplementalBackoff.delete(cleanTag);
       supplementalCache.set(cleanTag, result);
       logSkinSupplementalOutcome("provider_ready", {
         durationMs: performance.now() - startedAt,
       });
       return result;
     } catch (error) {
+      supplementalBackoff.set(cleanTag, Date.now() + SUPPLEMENTAL_FAILURE_COOLDOWN_MS);
+      if (supplementalBackoff.size > 500) {
+        for (const [key, retryAt] of supplementalBackoff) {
+          if (retryAt <= Date.now()) supplementalBackoff.delete(key);
+        }
+        while (supplementalBackoff.size > 500) {
+          const oldest = supplementalBackoff.keys().next().value;
+          if (!oldest) break;
+          supplementalBackoff.delete(oldest);
+        }
+      }
       const stale = supplementalCache.getStale(cleanTag);
       if (stale) {
         logSkinSupplementalOutcome("stale_cache", {

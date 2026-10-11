@@ -5,6 +5,7 @@ import {
   fetchSupplementalSkinInventory,
 } from "../../../../server/playerSkinInventory";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import { rejectSharedPublicRateLimit } from "../../../../server/sharedPublicRateLimit";
 import { UpstreamApiError } from "../../../../server/upstream";
 import { isValidPlayerTag } from "../../../../utils/playerTag";
 
@@ -20,6 +21,8 @@ async function getPlayerSkins(request: Request) {
   if (!tag || !isValidPlayerTag(tag)) {
     return NextResponse.json({ error: "올바른 플레이어 태그가 필요합니다." }, { status: 400 });
   }
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-player-skins", 20);
+  if (sharedLimited) return sharedLimited;
 
   try {
     if (searchParams.get("supplemental") === "1") {

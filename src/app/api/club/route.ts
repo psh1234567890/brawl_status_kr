@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
+import { rejectSharedPublicRateLimit } from "../../../server/sharedPublicRateLimit";
 import { fetchBrawlApi, UpstreamApiError } from "../../../server/upstream";
 import type { ClubData, ClubMember, ClubSearchResponse } from "../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../utils/playerTag";
@@ -16,6 +17,8 @@ export async function GET(request: Request) {
   if (!tag || !isValidPlayerTag(tag)) {
     return NextResponse.json({ error: "올바른 클럽 태그가 필요합니다." }, { status: 400 });
   }
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-club-search", 40);
+  if (sharedLimited) return sharedLimited;
 
   try {
     const cleanTag = normalizePlayerTag(tag);

@@ -30,10 +30,8 @@ export async function recordUsageEvent(kind: UsageKind, request?: Request): Prom
        DO UPDATE SET event_count = analytics_private.usage_hourly.event_count + 1`,
       [kind],
     );
-    // Small indexed deletion, keeping only 90 days of anonymous counts.
-    await db.$client.query(
-      "DELETE FROM analytics_private.usage_hourly WHERE hour_bucket < date_trunc('hour', now()) - interval '90 days'",
-    );
+    // Retention is enforced daily by pg_cron, independently of site traffic.
+    // Avoid an unnecessary DELETE statement on every anonymous event write.
   } catch {
     console.warn(JSON.stringify({ event: "usage_counter_unavailable", kind }));
   }

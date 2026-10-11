@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { queryTeamCompStats, queryTeamMaps } from "../../../../server/metaStats";
 import { observeServerOperation, withApiMonitoring } from "../../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
+import { rejectSharedPublicRateLimit } from "../../../../server/sharedPublicRateLimit";
 
 const getCachedTeamItems = unstable_cache(
   async (mapName: string) =>
@@ -38,6 +39,8 @@ async function getTeams(request: Request) {
   if (mapName.length > 120) {
     return NextResponse.json({ error: "맵 이름이 너무 깁니다." }, { status: 400 });
   }
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-meta-teams", 60);
+  if (sharedLimited) return sharedLimited;
 
   try {
     const maps = await getCachedTeamMaps();

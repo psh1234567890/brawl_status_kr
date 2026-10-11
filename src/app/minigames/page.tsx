@@ -6,6 +6,7 @@ import { getMinigameMessages } from "../../i18n/minigameMessages";
 import { loadHubCounts } from "../../server/minigames";
 import { miniGames } from "../../utils/minigames/registry";
 import { getBlockedCopy } from "../../i18n/minigames/blockedGameMessages";
+import AccountBestPreview from "../../components/minigames/AccountBestPreview";
 
 export const revalidate = 3600;
 
@@ -26,6 +27,7 @@ export async function MiniGamesContent({ locale }: { locale: Locale }) {
 
   return (
     <PortalLayout locale={locale} eyebrow={copy.nav} title={copy.hubTitle} description={copy.hubDescription}>
+      <AccountBestPreview locale={locale} />
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label={copy.hubTitle}>
         {miniGames.map((game) => {
           const cardCopy = copy.games[game.id];

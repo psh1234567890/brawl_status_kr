@@ -212,7 +212,7 @@ export default function UsageDashboard() {
             </div>
             <section className="rounded-xl border bg-white p-5 shadow-sm">
               <h2 className="text-lg font-black">최근 검색된 플레이어 태그</h2>
-              <p className="mt-1 text-sm text-slate-600">최근 7일(시간 단위) · 최근 검색 순 최대 40개 태그 · 검색자 IP·사이트 계정 정보는 수집하지 않음 · 태그 검색은 소유권 인증이 아님</p>
+              <p className="mt-1 text-sm text-slate-600">최근 7일(시간 단위) · 최근 검색 순 최대 200개 태그 · 검색자 IP·사이트 계정 정보는 수집하지 않음 · 태그 검색은 소유권 인증이 아님</p>
               <div
                 role="region"
                 aria-label="최근 검색된 플레이어 태그 목록"

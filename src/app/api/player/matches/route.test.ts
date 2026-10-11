@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), save: vi.fn() }));
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), save: vi.fn(), sharedLimit: vi.fn() }));
 vi.mock("../../../../server/upstream", async (importOriginal) => ({
   ...await importOriginal<typeof import("../../../../server/upstream")>(),
   fetchBrawlApiSnapshot: mocks.fetch,
 }));
 vi.mock("../../../../server/battleLogs", () => ({ saveBattleLogs: mocks.save }));
+vi.mock("../../../../server/sharedPublicRateLimit", () => ({ rejectSharedPublicRateLimit: mocks.sharedLimit }));
 import { clearRateLimitBucketsForTest } from "../../../../server/rateLimit";
 import { UpstreamApiError } from "../../../../server/upstream";
 import { GET, POST } from "./route";
@@ -24,6 +25,7 @@ describe("battle lookup and persistence isolation", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     mocks.fetch.mockResolvedValue({ data: { items }, freshness: { status: "live", fetchedAt: "2026-10-10T00:00:00Z" } });
     mocks.save.mockResolvedValue(undefined);
+    mocks.sharedLimit.mockResolvedValue(null);
   });
   afterEach(() => vi.restoreAllMocks());
 
@@ -48,6 +50,14 @@ describe("battle lookup and persistence isolation", () => {
     expect(mocks.save).not.toHaveBeenCalled();
     expect((await POST(request("POST", "https://attacker.test"))).status).toBe(403);
     expect(mocks.fetch).toHaveBeenCalledOnce();
+  });
+
+  it("blocks expensive saves when the shared limiter rejects, before fetching upstream", async () => {
+    mocks.sharedLimit.mockResolvedValueOnce(new Response(null, { status: 429 }));
+    expect((await POST(request())).status).toBe(429);
+    expect(mocks.fetch).not.toHaveBeenCalled();
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.sharedLimit).toHaveBeenCalledWith(expect.any(Request), "public-matches-save", 15);
   });
 
   it("preserves a genuine not-found response", async () => {

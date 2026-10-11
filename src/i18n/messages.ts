@@ -132,7 +132,7 @@ export const messages = {
       members: "명",
     },
     status: {
-      cacheNotice: "집계는 약 5분마다 갱신되며, 갱신 장애 시 이전 집계가 표시될 수 있습니다.",
+      cacheNotice: "집계는 약 15분마다 갱신되며, 갱신 장애 시 이전 집계가 표시될 수 있습니다.",
       snapshotAt: "집계 시각",
       unavailable: "수집 현황을 일시적으로 불러올 수 없습니다. 잠시 후 페이지를 새로고침해 주세요.",
       title: "데이터 수집 현황",
@@ -298,7 +298,7 @@ export const messages = {
       members: "members",
     },
     status: {
-      cacheNotice: "Counts refresh about every five minutes; an earlier snapshot may be shown if refreshing fails.",
+      cacheNotice: "Counts refresh about every fifteen minutes; an earlier snapshot may be shown if refreshing fails.",
       snapshotAt: "Snapshot time",
       unavailable: "Data status is temporarily unavailable. Refresh the page shortly.",
       title: "Data Collection Status",
@@ -464,7 +464,7 @@ export const messages = {
       members: "人",
     },
     status: {
-      cacheNotice: "集計は約5分ごとに更新されます。更新に失敗した場合は以前の集計が表示されることがあります。",
+      cacheNotice: "集計は約15分ごとに更新されます。更新に失敗した場合は以前の集計が表示されることがあります。",
       snapshotAt: "集計時刻",
       unavailable: "収集状況を一時的に取得できません。少し待ってページを再読み込みしてください。",
       title: "データ収集状況",

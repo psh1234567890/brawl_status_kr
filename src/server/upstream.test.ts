@@ -68,6 +68,19 @@ describe("Brawl API outage handling", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  it("retries one cold transport error without retrying a provider HTTP failure", async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError("connection reset"));
+    fetchMock.mockResolvedValueOnce(Response.json(data));
+    expect((await client.fetchSnapshot(path, 30_000, 300_000,
+      { retryOnNetworkError: true })).data).toEqual(data);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+
+    fetchMock.mockResolvedValueOnce(new Response("blocked", { status: 403 }));
+    await expect(client.fetchSnapshot("/players/%238PQL", 30_000, 300_000,
+      { retryOnNetworkError: true })).rejects.toMatchObject({ status: 403 });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
   it.each([429, 503, 520, 525])("uses explicitly labeled stale data on temporary HTTP %i", async (status) => {
     const original = await seed();
     vi.advanceTimersByTime(31_000);

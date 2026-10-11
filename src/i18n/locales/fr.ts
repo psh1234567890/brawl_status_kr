@@ -122,7 +122,7 @@ export const frMessages = {
     members: "membres",
   },
   status: {
-    cacheNotice: "Les totaux sont actualisés environ toutes les cinq minutes ; en cas d’échec, des données antérieures peuvent être affichées.",
+    cacheNotice: "Les totaux sont actualisés environ toutes les quinze minutes ; en cas d’échec, des données antérieures peuvent être affichées.",
     snapshotAt: "Heure du relevé",
     unavailable: "L’état des données est temporairement indisponible. Actualisez la page dans quelques instants.",
     title: "État de la collecte des données",

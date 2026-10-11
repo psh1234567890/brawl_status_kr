@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { saveBattleLogs } from "../../../../server/battleLogs";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
 import { rejectCrossSiteMutation } from "../../../../server/requestGuard";
+import { rejectSharedPublicRateLimit } from "../../../../server/sharedPublicRateLimit";
 import { withApiMonitoring } from "../../../../server/observability";
 import { fetchBrawlApiSnapshot, UpstreamApiError } from "../../../../server/upstream";
 import type { BattleLogResponse } from "../../../../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../../../../utils/playerTag";
 
-async function loadBattleLogs(request: Request, shouldSave: boolean) {
-  const rejected = rejectRateLimitedRequest(
+async function loadBattleLogs(request: Request, shouldSave: boolean, locallyLimited = false) {
+  const rejected = locallyLimited ? null : rejectRateLimitedRequest(
     request,
     shouldSave ? "player-matches-save" : "player-matches-read",
     { limit: shouldSave ? 15 : 40, windowMs: 60_000 },
@@ -65,5 +66,16 @@ export const POST = withApiMonitoring("api.player.matches.save", async (request)
   const rejected = rejectCrossSiteMutation(request);
   if (rejected) return rejected;
 
-  return loadBattleLogs(request, true);
+  // Reject bursts locally before spending a database round-trip on the shared limit.
+  const localLimited = rejectRateLimitedRequest(request, "player-matches-save", {
+    limit: 15, windowMs: 60_000,
+  });
+  if (localLimited) return localLimited;
+
+  // In addition to the inexpensive local guard above, protect database writes
+  // across concurrent serverless instances.
+  const sharedLimited = await rejectSharedPublicRateLimit(request, "public-matches-save", 15);
+  if (sharedLimited) return sharedLimited;
+
+  return loadBattleLogs(request, true, true);
 });

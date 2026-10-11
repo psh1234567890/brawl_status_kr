@@ -26,7 +26,7 @@ describe("public collection snapshot", () => {
     expect(a?.summary).toEqual(summary);
     expect(b).toEqual(a);
     expect(mocks.execute).toHaveBeenCalledOnce();
-    expect(mocks.cache).toHaveBeenCalledWith(expect.any(Function), ["public-data-status-v2"], { revalidate: 300 });
+    expect(mocks.cache).toHaveBeenCalledWith(expect.any(Function), ["public-data-status-v3"], { revalidate: 900 });
   });
 
   it("does not fabricate zero counts or cache failure, and permits a later recovery", async () => {
@@ -39,6 +39,18 @@ describe("public collection snapshot", () => {
     // The function passed to Next's cache throws on failure; the UI fallback is outside it.
     mocks.execute.mockRejectedValueOnce(new Error("offline"));
     await expect(mocks.cache.mock.calls[0][0]()).rejects.toThrow("Data status query unavailable");
+  });
+
+  it("serves the last successful snapshot when a refresh fails and throttles immediate retries", async () => {
+    const summary = { totalBattles: "12", popularMaps: [], popularBrawlers: [] };
+    mocks.execute.mockResolvedValueOnce({ rows: [summary] });
+    mocks.execute.mockRejectedValueOnce(new Error("DB temporarily unavailable"));
+    const { getDataStatus } = await import("./dataStatus");
+    const first = await getDataStatus();
+    const fallback = await getDataStatus();
+    expect(fallback).toEqual(first);
+    expect(await getDataStatus()).toEqual(first);
+    expect(mocks.execute).toHaveBeenCalledTimes(2);
   });
 
   it("sanitizes a shared database failure for every concurrent cache refresh", async () => {

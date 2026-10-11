@@ -60,6 +60,7 @@ export function createBrawlApiClient(maxEntries = 2_000) {
     path: string,
     ttlMs: number,
     maxStaleAgeMs = 0,
+    options: { retryOnNetworkError?: boolean } = {},
   ): Promise<BrawlApiSnapshot<T>> {
     // Configuration errors and missing credentials must never be hidden by cached data.
     const apiKey = process.env.BRAWL_STARS_API_KEY;
@@ -83,11 +84,27 @@ export function createBrawlApiClient(maxEntries = 2_000) {
     if (!request) {
       request = (async () => {
         try {
-          const response = await fetch(key, {
-            headers: { Authorization: `Bearer ${apiKey}` },
-            cache: "no-store",
-            signal: AbortSignal.timeout(8_000),
-          });
+          // A retry is only useful on cold instances without any usable last-known
+          // good snapshot. Do not retry provider 4xx/429 or malformed responses.
+          const canRetry = options.retryOnNetworkError === true &&
+            !(cached && canUseStale(cached, maxStaleAgeMs));
+          let response: Response | undefined;
+          for (let attempt = 0; attempt < (canRetry ? 2 : 1); attempt += 1) {
+            try {
+              response = await fetch(key, {
+                headers: { Authorization: `Bearer ${apiKey}` },
+                cache: "no-store",
+                signal: AbortSignal.timeout(canRetry ? 4_000 : 8_000),
+              });
+              break;
+            } catch (error) {
+              if (!canRetry || attempt === 1 ||
+                  !(error instanceof Error && ["TypeError", "TimeoutError", "AbortError"].includes(error.name))) {
+                throw error;
+              }
+            }
+          }
+          if (!response) throw new Error("Upstream request unavailable");
           const value = await readJsonResponse(response);
           const fetchedAt = Date.now();
           const entry = {

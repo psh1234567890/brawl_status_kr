@@ -122,7 +122,7 @@ export const esMessages = {
     members: "miembros",
   },
   status: {
-    cacheNotice: "Los recuentos se actualizan aproximadamente cada cinco minutos; si falla la actualización, pueden mostrarse datos anteriores.",
+    cacheNotice: "Los recuentos se actualizan aproximadamente cada quince minutos; si falla la actualización, pueden mostrarse datos anteriores.",
     snapshotAt: "Hora del recuento",
     unavailable: "El estado de los datos no está disponible temporalmente. Recarga la página en unos momentos.",
     title: "Estado de recopilación de datos",

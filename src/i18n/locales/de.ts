@@ -122,7 +122,7 @@ export const deMessages = {
     members: "Mitglieder",
   },
   status: {
-    cacheNotice: "Die Zahlen werden etwa alle fünf Minuten aktualisiert. Bei einem Fehler kann ein früherer Stand angezeigt werden.",
+    cacheNotice: "Die Zahlen werden etwa alle fünfzehn Minuten aktualisiert. Bei einem Fehler kann ein früherer Stand angezeigt werden.",
     snapshotAt: "Stand der Auswertung",
     unavailable: "Der Datenstatus ist vorübergehend nicht verfügbar. Lade die Seite in Kürze neu.",
     title: "Status der Datenerfassung",

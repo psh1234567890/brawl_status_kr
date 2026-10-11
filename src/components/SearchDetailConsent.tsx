@@ -10,7 +10,7 @@ export default function SearchDetailConsent({ locale }: { locale: Locale }) {
   const copy = searchDetailConsentMessages[locale];
   const [enabled, setEnabled] = useState(() =>
     typeof document !== "undefined" &&
-    /(?:^|;\\s*)brawl_search_detail_consent=1(?:;|$)/.test(document.cookie)
+    /(?:^|;\s*)brawl_search_detail_consent=1(?:;|$)/.test(document.cookie)
   );
 
   function setConsent(checked: boolean) {

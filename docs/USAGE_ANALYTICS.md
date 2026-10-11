@@ -12,6 +12,10 @@ Four minigame client components send one anonymous round-ending event when enter
 
 Migration `drizzle/0006_private_usage_hourly.sql` creates `analytics_private.usage_hourly` in a separate non-exposed PostgreSQL schema, revoking `anon` and `authenticated` schema/table privileges. Each row has only `hour_bucket`, `event_kind`, and `event_count`. Concurrent writes use an atomic upsert. Events are aggregated to UTC hours, rendered in KST, and rows older than 90 days are pruned on the next successful event write. The stats begin when instrumentation is deployed; old Vercel logs cannot be backfilled into visitor counts.
 
+Migration `drizzle/0011_private_usage_lifetime.sql` adds `analytics_private.usage_lifetime`, an isolated **non-identifying** cumulative count per event kind. Apply it **before** the new dashboard API is deployed. The migration backfills still-existing hourly aggregates while holding a transactional write lock, then attaches an insert/update trigger so that both old and new app deployments atomically maintain the same totals. Expiring hourly buckets does not subtract from the lifetime totals. Pre-instrumentation events and any hourly buckets that have already expired are unrecoverable, so "전체 누적" means **since anonymous instrumentation began**, not all historical site visits. The protected cumulative counters are retained without a date-based expiry, but retain no visitor/tag/account/IP information.
+
+The admin dashboard offers **today (KST), 7 calendar days including today (KST), and lifetime cumulative** views of the same four headline counters and per-minigame completions. The fixed 7-day trend and last-24h detail remain short-window reports; the searched player tag listing remains limited to 7 days.
+
 Analytics errors are sanitized and never block primary game/search functionality. Raw production IPs and request IDs remain in Vercel infrastructure's ordinary service logs under its independent policy, **not** this analytics table.
 
 ## Access control

@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   getAuthenticatedAccount: vi.fn(),
   readUsageHours: vi.fn(),
+  readUsageLifetime: vi.fn(),
   summarizeUsage: vi.fn(),
+  summarizeLifetime: vi.fn(),
   hasUsageAdminAccess: vi.fn(),
   readRecentSearchTags: vi.fn(),
 }));
@@ -12,7 +14,9 @@ vi.mock("../../../../server/account", () => ({ getAuthenticatedAccount: mocks.ge
 vi.mock("../../../../server/usageAnalytics", () => ({
   hasUsageAdminAccess: mocks.hasUsageAdminAccess,
   readUsageHours: mocks.readUsageHours,
+  readUsageLifetime: mocks.readUsageLifetime,
   summarizeUsage: mocks.summarizeUsage,
+  summarizeLifetime: mocks.summarizeLifetime,
 }));
 import { GET } from "./route";
 
@@ -22,8 +26,10 @@ describe("private analytics dashboard API", () => {
     mocks.getAuthenticatedAccount.mockResolvedValue({ userId: "allowed" });
     mocks.hasUsageAdminAccess.mockResolvedValue(false);
     mocks.readUsageHours.mockResolvedValue([]);
+    mocks.readUsageLifetime.mockResolvedValue([]);
     mocks.readRecentSearchTags.mockResolvedValue([]);
     mocks.summarizeUsage.mockReturnValue({ today: { visits: 0 } });
+    mocks.summarizeLifetime.mockReturnValue({ allTime: { visits: 0 }, trackingStartedAt: null });
   });
   const request = () => new Request("https://www.brawl-o1.site/api/admin/usage");
 
@@ -32,6 +38,7 @@ describe("private analytics dashboard API", () => {
     expect(mocks.getAuthenticatedAccount).toHaveBeenCalledOnce();
     expect(mocks.hasUsageAdminAccess).toHaveBeenCalledWith("allowed");
     expect(mocks.readUsageHours).not.toHaveBeenCalled();
+    expect(mocks.readUsageLifetime).not.toHaveBeenCalled();
     expect(mocks.readRecentSearchTags).not.toHaveBeenCalled();
   });
   it("hides data from non-admin users even after login", async () => {
@@ -53,7 +60,13 @@ describe("private analytics dashboard API", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expect(await response.json()).toEqual({ today: { visits: 0 }, recentSearchTags: [] });
+    expect(await response.json()).toEqual({
+      today: { visits: 0 },
+      allTime: { visits: 0 },
+      trackingStartedAt: null,
+      recentSearchTags: [],
+    });
     expect(mocks.readRecentSearchTags).toHaveBeenCalledOnce();
+    expect(mocks.readUsageLifetime).toHaveBeenCalledOnce();
   });
 });

@@ -65,9 +65,10 @@ must not be used as production catalog data.
 ## Optional account personal-best sync
 
 Guest gameplay and its original localStorage keys remain the source of the
-existing browser experience. Signed-in users can separately sync nine private
+existing browser experience. Signed-in users can separately sync eleven private
 PB slots: Brawler Quiz (`3m`, `5m`, `10m`, `practice`), Silhouette (`base`),
-Map Quiz (`standard`), and Ability Quiz (`mixed`, `gadget`, `star-power`). The
+Map Quiz (`standard`), Ability Quiz (`mixed`, `gadget`, `star-power`),
+Higher or Lower (`standard`), and Release Order (`standard`). The
 server accepts only these game/mode pairs; non-Brawler games require exactly
 10 completed questions. Silhouette's local key name is mapped to the canonical
 `silhouette-quiz` ID.
@@ -79,7 +80,7 @@ The other games compare score out of ten. Exact ties leave the first cloud row
 and its revision/timestamps unchanged. A stale local candidate cannot lower a
 cloud PB.
 
-The four existing localStorage keys are read only after the user chooses
+The six existing localStorage keys are read only after the user chooses
 “Import this browser's personal bests.” Parsing is strict, percentages are
 recomputed, invalid dates become null, and the original keys are not deleted.
 The selected snapshot and operation UUID are stored in the account-scoped

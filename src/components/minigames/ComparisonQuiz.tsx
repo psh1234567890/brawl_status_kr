@@ -8,7 +8,7 @@ import { getMinigameMessages } from "../../i18n/minigameMessages";
 import { getBlockedCopy } from "../../i18n/minigames/blockedGameMessages";
 import { getComparisonMessages } from "../../i18n/minigames/comparisonMessages";
 import { buildComparisonDeck, COMPARISON_QUESTION_COUNT, type ComparisonEntry, type ComparisonQuestion } from "../../utils/minigames/comparisonQuiz";
-import { mergeRoundBest, readRoundBests, roundRecordStorageKey, type RoundBests } from "../../utils/minigames/roundRecords";
+import { useRoundBest } from "./useRoundBest";
 import RoundProgress from "./RoundProgress";
 import RoundResults, { type RoundRecap } from "./RoundResults";
 
@@ -24,44 +24,33 @@ export default function ComparisonQuiz({ kind, locale, entries }: { kind: Kind; 
   const [index, setIndex] = useState(0);
   const [recap, setRecap] = useState<RoundRecap[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
-  const [bests, setBests] = useState<RoundBests>({});
   const [earlyEnd, setEarlyEnd] = useState(false);
   const [poolError, setPoolError] = useState(false);
   const answeredRef = useRef(false);
-  const storedRef = useRef(false);
+  const recordedRef = useRef(false);
   const nextRef = useRef<HTMLButtonElement>(null);
   const questionRef = useRef<HTMLHeadingElement>(null);
-  const storageKey = roundRecordStorageKey(kind);
+  const { best, beginRound, record } = useRoundBest(kind, "standard");
   const prefer = kind === "higher-lower" ? "higher" : "earlier";
   const question = deck[index];
   const score = useMemo(() => recap.filter(item => item.wasCorrect).length, [recap]);
   const count = entries.length.toLocaleString(numberLocales[locale]);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      try { setBests(readRoundBests(window.localStorage.getItem(storageKey))); } catch { /* storage optional */ }
-    }, 0);
-    return () => window.clearTimeout(timeout);
-  }, [storageKey]);
-  useEffect(() => {
     if (phase === "playing" && selected !== null) nextRef.current?.focus();
     else if (phase === "playing") questionRef.current?.focus();
   }, [phase, selected, index]);
   useEffect(() => {
-    if (phase !== "finished" || storedRef.current || recap.length !== COMPARISON_QUESTION_COUNT) return;
-    storedRef.current = true;
-    const recordedAt = new Date().toISOString();
-    const next = mergeRoundBest(bests, "standard", score, recap.length, recordedAt);
-    if (next === bests) return;
-    try { window.localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* optional */ }
-    const timeout = window.setTimeout(() => setBests(next), 0);
-    return () => window.clearTimeout(timeout);
-  }, [bests, phase, recap.length, score, storageKey]);
+    if (phase !== "finished" || recordedRef.current || recap.length !== COMPARISON_QUESTION_COUNT) return;
+    recordedRef.current = true;
+    record(score, recap.length);
+  }, [phase, recap.length, record, score]);
 
   function start() {
     const questions = buildComparisonDeck(entries, prefer);
     if (questions.length !== COMPARISON_QUESTION_COUNT) { setPoolError(true); return; }
-    storedRef.current = false;
+    recordedRef.current = false;
+    beginRound();
     answeredRef.current = false;
     setPoolError(false);
     setDeck(questions);
@@ -99,7 +88,6 @@ export default function ComparisonQuiz({ kind, locale, entries }: { kind: Kind; 
     setEarlyEnd(recap.length < COMPARISON_QUESTION_COUNT);
     setPhase("finished");
   }
-  const best = bests.standard;
   const bestText = best ? round.best.replace("{score}", String(best.score)).replace("{percentage}", String(best.percentage)) : round.noBest;
   return (
     <section className="space-y-4" aria-label={copy.title}>

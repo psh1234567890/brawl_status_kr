@@ -17,6 +17,8 @@ export const LEGACY_MINIGAME_BEST_KEYS = [
   roundRecordStorageKey("silhouette"),
   roundRecordStorageKey("map-quiz"),
   roundRecordStorageKey("ability-quiz"),
+  roundRecordStorageKey("higher-lower"),
+  roundRecordStorageKey("release-order"),
 ] as const;
 
 export type LegacyBestStorage = Pick<Storage, "getItem">;
@@ -69,6 +71,8 @@ export function readLegacyPersonalBestCandidates(
     ["silhouette", "silhouette-quiz", ["base"]],
     ["map-quiz", "map-quiz", ["standard"]],
     ["ability-quiz", "ability-quiz", ["mixed", "gadget", "star-power"]],
+    ["higher-lower", "higher-lower", ["standard"]],
+    ["release-order", "release-order", ["standard"]],
   ] as const;
   for (const [legacyGame, gameId, modes] of roundSources) {
     try {

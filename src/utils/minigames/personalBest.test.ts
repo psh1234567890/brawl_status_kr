@@ -7,6 +7,14 @@ import {
 } from "./personalBest";
 
 describe("personal best rules", () => {
+  it("supports the two new slots without accepting partial rounds", () => {
+    for (const gameId of ["higher-lower", "release-order"]) {
+      expect(parsePersonalBestCandidate({ gameId, mode: "standard", rulesetVersion: 1, score: 7, total: 10 })).toMatchObject({
+        gameId, mode: "standard", score: 7, total: 10,
+      });
+      expect(() => parsePersonalBestCandidate({ gameId, mode: "standard", rulesetVersion: 1, score: 7, total: 9 })).toThrow("INVALID_TOTAL");
+    }
+  });
   it("compares ratios without rounding, then prefers a larger score on an exact ratio tie", () => {
     expect(comparePersonalBest({ score: 9, total: 10 }, { score: 80, total: 100 })).toBe(1);
     expect(comparePersonalBest({ score: 90, total: 100 }, { score: 9, total: 10 })).toBe(1);

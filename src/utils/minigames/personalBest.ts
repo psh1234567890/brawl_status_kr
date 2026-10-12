@@ -2,7 +2,9 @@ export type PersonalBestGameId =
   | "brawler-quiz"
   | "silhouette-quiz"
   | "map-quiz"
-  | "ability-quiz";
+  | "ability-quiz"
+  | "higher-lower"
+  | "release-order";
 
 export type PersonalBestCandidate = {
   gameId: PersonalBestGameId;
@@ -25,6 +27,8 @@ const slots: Record<PersonalBestGameId, readonly string[]> = {
   "silhouette-quiz": ["base"],
   "map-quiz": ["standard"],
   "ability-quiz": ["mixed", "gadget", "star-power"],
+  "higher-lower": ["standard"],
+  "release-order": ["standard"],
 };
 
 const allowedCandidateKeys = new Set([

@@ -31,6 +31,34 @@ test("home header exposes localized account entry without mobile overflow", asyn
   await expect(page.getByRole("button", { name: "Continue with Google", exact: true })).toBeVisible();
 });
 
+test("subpage navigation highlights the active section and reveals it on narrow screens", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  for (const locale of locales) {
+    await page.goto(localizedHref(locale, "/events"));
+    const copy = getMessages(locale).common;
+    const navigation = page.getByRole("navigation", { name: copy.mainNavigation });
+    const eventsLink = navigation.getByRole("link", { name: copy.events, exact: true });
+    await expect(eventsLink).toHaveAttribute("aria-current", "page");
+    await expect(navigation.getByRole("link", { name: copy.home, exact: true })).not.toHaveAttribute("aria-current", "page");
+    await expect(page.locator("header").getByRole("link", { name: /Brawl Status KR/ }).locator('img[src="/icon.svg"]')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
+
+  await page.goto("/en/status");
+  const copy = getMessages("en").common;
+  const navigation = page.getByRole("navigation", { name: copy.mainNavigation });
+  const statusLink = navigation.getByRole("link", { name: copy.status, exact: true });
+  await expect(statusLink).toHaveAttribute("aria-current", "page");
+  await expect.poll(() => navigation.evaluate((nav) => nav.scrollLeft)).toBeGreaterThan(0);
+  const activeVisible = await navigation.evaluate((nav) => {
+    const rect = nav.getBoundingClientRect();
+    const active = nav.querySelector('[aria-current="page"]')?.getBoundingClientRect();
+    return Boolean(active && active.left >= rect.left - 1 && active.right <= rect.right + 1);
+  });
+  expect(activeVisible).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test("home account menu works with keyboard and accounts off remains hidden", async ({ page }) => {
   // Browser-only UI fixtures; production authentication is unchanged.
   let current: object = {

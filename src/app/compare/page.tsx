@@ -3,7 +3,7 @@ import PortalLayout from "../../components/PortalLayout";
 import PlayerComparison from "../../components/PlayerComparison";
 import { getComparisonMessages } from "../../i18n/playerComparisonMessages";
 import { localeAlternates } from "../../i18n/config";
-import { validatedComparisonTags } from "../../utils/playerComparison";
+import { comparisonPrefillTags } from "../../utils/playerComparison";
 
 const copy = getComparisonMessages("ko");
 export const metadata: Metadata = {
@@ -14,11 +14,11 @@ export const metadata: Metadata = {
 
 export default async function ComparePage({ searchParams }: PageProps<"/compare">) {
   const params = await searchParams;
-  const tags = validatedComparisonTags(
+  const tags = comparisonPrefillTags(
     typeof params.a === "string" ? params.a : "",
     typeof params.b === "string" ? params.b : "",
   );
   return <PortalLayout title={copy.title} eyebrow={copy.eyebrow} description={copy.description}>
-    <PlayerComparison initialA={tags?.left} initialB={tags?.right}/>
+    <PlayerComparison initialA={tags.left} initialB={tags.right}/>
   </PortalLayout>;
 }

@@ -11,6 +11,13 @@ export function validatedComparisonTags(a: string, b: string) {
   return { left, right };
 }
 
+/** Allow a valid single-player prefill without making an incomplete VS request. */
+export function comparisonPrefillTags(a: string, b: string) {
+  const left = isValidPlayerTag(a) ? normalizePlayerTag(a) : "";
+  const second = isValidPlayerTag(b) ? normalizePlayerTag(b) : "";
+  return { left, right: second !== left ? second : "" };
+}
+
 export function comparisonPath(pathname: string, left: string, right: string) {
   const tags = validatedComparisonTags(left, right);
   if (!tags) return pathname;

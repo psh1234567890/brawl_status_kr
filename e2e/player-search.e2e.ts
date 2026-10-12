@@ -251,7 +251,7 @@ test("a browser that denies storage can still search successfully", async ({ pag
   await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
   await page.getByRole("button", { name: "검색" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
-  await page.getByRole("button", { name: "저장" }).click();
+  await page.getByRole("button", { name: "저장", exact: true }).click();
   expect(errors).toEqual([]);
 });
 

@@ -35,6 +35,7 @@ test("home header exposes localized account entry without mobile overflow", asyn
 });
 
 test("mobile menu keeps navigation and language access without a tall sticky header", async ({ context, page }) => {
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
   await context.route("**/api/account", route => route.fulfill({ json: { state: "guest", syncEnabled: false } }));
   await page.setViewportSize({ width: 390, height: 780 });
   await page.goto("/");
@@ -49,7 +50,8 @@ test("mobile menu keeps navigation and language access without a tall sticky hea
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test("admin users can reach the dashboard from the compact mobile account menu", async ({ page }) => {
+test("admin users can reach the dashboard from the compact mobile account menu", async ({ context, page }) => {
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
   await page.route("**/api/account", route => route.fulfill({ json: {
     state: "account", syncEnabled: false,
     account: {

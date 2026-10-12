@@ -1,5 +1,6 @@
 import { locales, type Locale } from "./config";
 import { searchTagNoticeMessages } from "./searchTagNoticeMessages";
+import { getCompetitiveMessages } from "./minigames/competitiveMessages";
 import launchPolicy from "../../docs/ACCOUNT_LAUNCH_POLICY.json";
 
 type DocumentBlock =
@@ -3103,13 +3104,28 @@ for (const locale of locales) {
   };
 }
 
+const competitivePrivacyNotice = {} as Record<Locale, DocumentSection>;
+for (const locale of locales) {
+  const copy = getCompetitiveMessages(locale);
+  competitivePrivacyNotice[locale] = {
+    title: copy.title,
+    blocks: [{
+      type: "paragraph",
+      text: copy.consent + " " + copy.privacy + " " +
+        (locale === "ko"
+          ? "공개 순위에는 점수·순위·무작위 별명만 표시합니다. 미검증 개인 최고기록은 공개하지 않습니다."
+          : "Public boards show only score, rank, and random alias. Unverified private personal bests are never published."),
+    }],
+  };
+}
+
 export function getDocumentPageMessages(locale: Locale) {
   const content = documentPageMessages[locale];
   return {
     ...content,
     privacy: {
       ...content.privacy,
-      sections: [...content.privacy.sections, usagePrivacyNotice[locale], searchTagPrivacyNotice[locale]],
+      sections: [...content.privacy.sections, usagePrivacyNotice[locale], searchTagPrivacyNotice[locale], competitivePrivacyNotice[locale]],
       effectiveDate: locale === "ko" ? "업데이트: 2026년 10월 12일" : "Updated: 2026-10-12",
     },
   };

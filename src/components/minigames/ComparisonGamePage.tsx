@@ -1,5 +1,6 @@
 import PortalLayout from "../PortalLayout";
 import ComparisonQuiz from "./ComparisonQuiz";
+import CompetitiveComparisonPanel from "./CompetitiveComparisonPanel";
 import { getBlockedCopy } from "../../i18n/minigames/blockedGameMessages";
 import type { Locale } from "../../i18n/config";
 import { loadComparisonEntries } from "../../server/comparisonGames";
@@ -13,6 +14,7 @@ export default async function ComparisonGamePage({ locale, kind }: {
   return (
     <PortalLayout locale={locale} eyebrow="Mini Games" title={copy.title} description={copy.description}>
       <ComparisonQuiz locale={locale} kind={kind} entries={entries} />
+      <CompetitiveComparisonPanel locale={locale} gameId={kind} />
     </PortalLayout>
   );
 }

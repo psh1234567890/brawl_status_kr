@@ -16,6 +16,14 @@ const ACCOUNT_MIGRATIONS = [
     version: "0005_account_deletion_safety_ledger",
     file: fileURLToPath(new URL("../drizzle/0005_account_deletion_safety_ledger.sql", import.meta.url)),
   },
+  {
+    version: "0016_comparison_game_personal_best_slots",
+    file: fileURLToPath(new URL("../drizzle/0016_comparison_game_personal_best_slots.sql", import.meta.url)),
+  },
+  {
+    version: "0017_verified_comparison_rankings",
+    file: fileURLToPath(new URL("../drizzle/0017_verified_comparison_rankings.sql", import.meta.url)),
+  },
 ];
 const ACCOUNT_LOCK_NAMESPACE = 9172381;
 const ACCOUNT_LOCK_ID = 3;

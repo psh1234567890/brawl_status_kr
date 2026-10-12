@@ -90,9 +90,9 @@ describe("account snapshot boundaries", () => {
     expect(isExpiredAccountArtifact({ ...artifact, name: "playwright-report" }, "staging", 1790812800)).toBe(false);
     expect(isExpiredAccountArtifact({ ...artifact, id: "../other" }, "staging", 1790812800)).toBe(false);
   });
-  it("accepts explicit 7/14 retention and only the nine account tables", () => {
+  it("accepts explicit 7/14 retention and only the 12 account and competition tables", () => {
     expect(readAccountSnapshotConfig(configEnv()).policy).toMatchObject({ backupRetentionDays: 7, deletionManifestRetentionDays: 14 });
-    expect(ACCOUNT_SNAPSHOT_TABLES).toHaveLength(9);
+    expect(ACCOUNT_SNAPSHOT_TABLES).toHaveLength(12);
     expect(ACCOUNT_SNAPSHOT_TABLES).not.toContain("students");
     expect(ACCOUNT_SNAPSHOT_TABLES).not.toContain("battle_logs");
     expect(ACCOUNT_SNAPSHOT_TABLES).not.toContain("deletion_ledger");

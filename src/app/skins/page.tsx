@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
+import StatSymbol from "../../components/StatSymbol";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 import {
@@ -360,7 +361,8 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
               </div>
               <div className="p-4">
                 <div className="mb-2 flex flex-wrap gap-1.5">
-                  <span className="rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-black text-indigo-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-black text-indigo-700">
+                    <StatSymbol kind="star" size={12} />
                     {copy.rarity[skin.rarity as keyof typeof copy.rarity] ?? skin.rarity}
                   </span>
                   <span
@@ -377,7 +379,13 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
                   {displaySkinName}
                 </h2>
                 <p className="mt-1 truncate text-xs font-bold text-indigo-700">{displayBrawlerName}</p>
-                <p className="mt-3 text-sm font-black text-gray-800">{formatPrice(skin, locale)}</p>
+                <p className="mt-3 flex items-center gap-1.5 text-sm font-black text-gray-800">
+                  {skin.gems > 0 ? <StatSymbol kind="gem" size={15} className="text-emerald-600" /> : null}
+                  {skin.bling > 0 ? <StatSymbol kind="bling" size={15} className="text-amber-600" /> : null}
+                  {skin.coins > 0 ? <StatSymbol kind="coin" size={15} className="text-amber-600" /> : null}
+                  {!isPaidSkin(skin) ? <StatSymbol kind="skin" size={15} className="text-indigo-600" /> : null}
+                  {formatPrice(skin, locale)}
+                </p>
               </div>
             </article>
             );

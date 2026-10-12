@@ -8,6 +8,7 @@ import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import MyTagSearchButton from "../components/account/MyTagSearchButton";
+import StatSymbol from "../components/StatSymbol";
 import AccountControl from "../components/account/AccountControl";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
@@ -322,12 +323,16 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                       type="button"
                       key={tab.id}
                       onClick={() => setActivePanel(tab.id)}
-                      className={`min-h-11 rounded-lg px-2 text-sm font-black transition-colors ${
+                      className={`flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-sm font-black transition-colors ${
                         activePanel === tab.id
                           ? "bg-slate-950 text-white"
                           : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"
                       }`}
                     >
+                      <StatSymbol
+                        kind={tab.id === "overview" ? "chart" : tab.id === "matches" ? "battle" : tab.id === "brawlers" ? "players" : "timer"}
+                        size={15}
+                      />
                       {tab.label}
                     </button>
                   ))}

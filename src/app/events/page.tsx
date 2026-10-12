@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import BrawlImage from "../../components/BrawlImage";
+import GameModeIcon from "../../components/GameModeIcon";
 import PortalLayout, { EmptyState, StatPill } from "../../components/PortalLayout";
 import { localeAlternates, localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
@@ -34,9 +35,9 @@ export async function EventsPageContent({ locale }: { locale: Locale }) {
       actions={<LinkButton href={localizedHref(locale, "/meta")}>{copy.action}</LinkButton>}
     >
       <section className="grid gap-3 sm:grid-cols-3">
-        <StatPill label={copy.currentEvents} value={events.active.length} />
-        <StatPill label={copy.upcomingEvents} value={events.upcoming.length} />
-        <StatPill label={copy.totalSlots} value={total} />
+        <StatPill label={copy.currentEvents} value={events.active.length} icon="win" />
+        <StatPill label={copy.upcomingEvents} value={events.upcoming.length} icon="timer" />
+        <StatPill label={copy.totalSlots} value={total} icon="map" />
       </section>
 
       <EventSection title={copy.activeSection} events={events.active} locale={locale} />
@@ -76,7 +77,10 @@ function EventSection({ title, events, locale }: { title: string; events: Brawli
                 )}
                 <div className="flex flex-col gap-3 p-4">
                   <div>
-                    <p className="text-xs font-black text-blue-500">{displayMode}</p>
+                    <p className="flex items-center gap-1.5 text-xs font-black text-blue-500">
+                      <GameModeIcon modeId={map?.gameMode?.id} mode={modeName} size={20} />
+                      {displayMode}
+                    </p>
                     <h3 className="mt-1 text-xl font-black text-slate-900">{displayMap}</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-500">

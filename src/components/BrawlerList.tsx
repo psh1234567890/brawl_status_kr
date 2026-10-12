@@ -8,6 +8,8 @@ import {
 } from "../i18n/formatters";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
+import StatSymbol from "./StatSymbol";
+import type { StatSymbolKind } from "./StatSymbol";
 
 interface BrawlerListProps {
   brawlers: Brawler[];
@@ -115,9 +117,9 @@ export default function BrawlerList({
                 </span>
 
                 <div className="mt-3 grid grid-cols-3 gap-1 text-center text-[11px] font-black">
-                  <SmallStat label="G" value={brawler.gadgets?.length ?? 0} />
-                  <SmallStat label="SP" value={brawler.starPowers?.length ?? 0} />
-                  <SmallStat label="HC" value={brawler.hyperCharges?.length ?? 0} />
+                  <SmallStat label="G" value={brawler.gadgets?.length ?? 0} icon="gadget" />
+                  <SmallStat label="SP" value={brawler.starPowers?.length ?? 0} icon="super" />
+                  <SmallStat label="HC" value={brawler.hyperCharges?.length ?? 0} icon="hyper" />
                 </div>
 
                 <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
@@ -138,11 +140,11 @@ export default function BrawlerList({
                 <div className="mt-auto pt-3">
                   <div className="flex items-end justify-between gap-2">
                     <span>
-                      <span className="block text-[11px] font-black text-slate-500">{copy.trophies}</span>
+                      <span className="flex items-center gap-1 text-[11px] font-black text-slate-500"><StatSymbol kind="trophy" size={12} />{copy.trophies}</span>
                       <span className="block text-lg font-black text-slate-950">{brawler.trophies.toLocaleString(numberLocales[locale])}</span>
                     </span>
                     <span className="text-right">
-                      <span className="block text-[11px] font-black text-slate-500">{copy.highest}</span>
+                      <span className="flex items-center justify-end gap-1 text-[11px] font-black text-slate-500"><StatSymbol kind="star" size={12} />{copy.highest}</span>
                       <span className="block text-sm font-black text-slate-700">{brawler.highestTrophies.toLocaleString(numberLocales[locale])}</span>
                     </span>
                   </div>
@@ -155,9 +157,10 @@ export default function BrawlerList({
   );
 }
 
-function SmallStat({ label, value }: { label: string; value: number }) {
+function SmallStat({ label, value, icon }: { label: string; value: number; icon: StatSymbolKind }) {
   return (
-    <span className="rounded-md border border-slate-200 bg-slate-50 px-1.5 py-1 text-slate-700">
+    <span className="inline-flex items-center justify-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-1 py-1 text-slate-700">
+      <StatSymbol kind={icon} size={13} />
       {label} {value}
     </span>
   );

@@ -6,6 +6,8 @@ import { getComponentMessages } from "../i18n/componentMessages";
 import { formatBattles, formatDays } from "../i18n/formatters";
 import type { PlayerHistoryResponse } from "../types/brawl";
 import { translateMapName, translateModeName } from "../utils/brawlTranslations";
+import GameModeIcon from "./GameModeIcon";
+import StatSymbol from "./StatSymbol";
 
 interface PlayerHistoryPanelProps {
   history: PlayerHistoryResponse | null;
@@ -31,9 +33,9 @@ export default function PlayerHistoryPanel({ history, locale = "ko" }: PlayerHis
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <Metric label={copy.totalBattles} value={formatBattles(locale, history.totalTrackedGames)} />
-        <Metric label={copy.trackedDays} value={formatDays(locale, history.trackedDays)} />
-        <Metric label={copy.trophyDelta} value={`${history.totalTrophyDelta > 0 ? "+" : ""}${history.totalTrophyDelta}`} />
+        <Metric label={copy.totalBattles} value={formatBattles(locale, history.totalTrackedGames)} icon="battle" />
+        <Metric label={copy.trackedDays} value={formatDays(locale, history.trackedDays)} icon="timer" />
+        <Metric label={copy.trophyDelta} value={`${history.totalTrophyDelta > 0 ? "+" : ""}${history.totalTrophyDelta}`} icon="trophy" />
       </div>
 
       {orderedDays.length ? (
@@ -62,18 +64,21 @@ export default function PlayerHistoryPanel({ history, locale = "ko" }: PlayerHis
       )}
 
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
-        <BucketList title={copy.topModes} rows={history.topModes} translate={(name) => translateModeName(name, locale)} locale={locale} />
+        <BucketList title={copy.topModes} rows={history.topModes} translate={(name) => translateModeName(name, locale)} locale={locale} showModeIcon />
         <BucketList title={copy.topMaps} rows={history.topMaps} translate={(name) => translateMapName(name, locale)} locale={locale} />
       </div>
     </section>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, icon }: { label: string; value: string; icon?: "battle" | "timer" | "trophy" }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
       <p className="text-xs font-black text-slate-500">{label}</p>
-      <p className="mt-1 text-xl font-black text-slate-950">{value}</p>
+      <p className="mt-1 flex items-center gap-2 text-xl font-black text-slate-950">
+        {icon ? <StatSymbol kind={icon} className="text-amber-600" /> : null}
+        {value}
+      </p>
     </div>
   );
 }
@@ -83,11 +88,13 @@ function BucketList({
   rows,
   translate,
   locale,
+  showModeIcon = false,
 }: {
   title: string;
   rows: { name: string; plays: number; winRate: number; trophyDelta: number }[];
   translate: (name: string) => string;
   locale: Locale;
+  showModeIcon?: boolean;
 }) {
   const copy = getComponentMessages(locale).history;
   return (
@@ -97,7 +104,10 @@ function BucketList({
         <div className="flex flex-col gap-2">
           {rows.map((row) => (
             <div key={row.name} className="flex min-w-0 items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
-              <span className="min-w-0 truncate text-sm font-black text-slate-800">{translate(row.name)}</span>
+              <span className="flex min-w-0 items-center gap-2 text-sm font-black text-slate-800">
+                {showModeIcon ? <GameModeIcon mode={row.name} size={20} /> : null}
+                <span className="min-w-0 truncate">{translate(row.name)}</span>
+              </span>
               <span className="shrink-0 text-xs font-bold text-blue-700">
                 {row.winRate}% · {formatBattles(locale, row.plays)} · {row.trophyDelta > 0 ? "+" : ""}{row.trophyDelta}
               </span>

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const query = vi.hoisted(() => vi.fn());
 vi.mock("../db", () => ({ db: { $client: { query } } }));
-import { hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, summarizeLifetime, summarizeUsage } from "./usageAnalytics";
+import { classifyPlayerSearchFailure, hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, summarizeLifetime, summarizeUsage } from "./usageAnalytics";
 
 describe("anonymous usage analytics", () => {
   afterEach(() => { delete process.env.USAGE_ADMIN_USER_IDS; query.mockReset(); });
@@ -11,6 +11,31 @@ describe("anonymous usage analytics", () => {
     expect(isUsageKind("minigame_map_quiz")).toBe(true);
     expect(isUsageKind("player_tag:9C82J8YPP")).toBe(false);
     expect(isUsageKind("../../admin")).toBe(false);
+  });
+  it("classifies profile errors without storing raw tags or visitor identifiers", () => {
+    expect(classifyPlayerSearchFailure(404)).toBe("player_search_error_404");
+    expect(classifyPlayerSearchFailure(429)).toBe("player_search_error_429");
+    expect(classifyPlayerSearchFailure(503)).toBe("player_search_error_5xx");
+    expect(classifyPlayerSearchFailure(520)).toBe("player_search_error_5xx");
+    expect(classifyPlayerSearchFailure(403)).toBe("player_search_error_other");
+  });
+  it("preserves search totals without double-counting the new reason counters", () => {
+    const hourly = summarizeUsage([
+      { hour: "2026-10-12 08:00", kind: "player_search_success", count: "8" },
+      { hour: "2026-10-12 08:00", kind: "player_search_error", count: "4" },
+      { hour: "2026-10-12 08:00", kind: "player_search_error_404", count: "2" },
+      { hour: "2026-10-12 08:00", kind: "player_search_error_5xx", count: "1" },
+    ], new Date("2026-10-12T00:30:00Z"));
+    expect(hourly.today.searches).toBe(12);
+    expect(hourly.today.successfulSearches).toBe(8);
+    expect(hourly.failureReasonsToday.player_search_error_404).toBe(2);
+    expect(hourly.failureReasonsLast7Days.player_search_error_5xx).toBe(1);
+    const lifetime = summarizeLifetime([
+      { kind: "player_search_error", count: "4", firstSeenAt: "2026-10-12T00:00:00Z" },
+      { kind: "player_search_error_404", count: "2", firstSeenAt: "2026-10-12T00:00:00Z" },
+    ]);
+    expect(lifetime.allTime.searches).toBe(4);
+    expect(lifetime.failureReasonsAllTime.player_search_error_404).toBe(2);
   });
   it("counts without visitor identifiers across KST days", () => {
     const summary = summarizeUsage([
@@ -40,7 +65,10 @@ describe("anonymous usage analytics", () => {
     expect(lifetime.trackingStartedAt).toBe("2026-07-01T02:00:00Z");
     expect(summarizeLifetime([])).toEqual({
       allTime: { visits: 0, searches: 0, successfulSearches: 0, gameEnds: 0 },
-      byGameAllTime: {}, trackingStartedAt: null,
+      byGameAllTime: {}, failureReasonsAllTime: {
+        player_search_error_404: 0, player_search_error_429: 0,
+        player_search_error_5xx: 0, player_search_error_other: 0,
+      }, trackingStartedAt: null,
     });
   });
   it("reads protected lifetime totals without individual visitor identifiers", async () => {

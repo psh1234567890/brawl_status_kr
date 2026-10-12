@@ -13,7 +13,7 @@ operator-browser `brawl_analytics_opt_out` cookie. Existing production rate
 limiting and authentication continue to operate independently: this change
 does not promise that the infrastructure never temporarily processes IPs.
 
-Administrators see up to 40 latest searched tags with aggregate search counts
+Administrators see up to 200 latest searched tags with aggregate search counts
 from approximately the last 7 days (hour buckets) and their last searched time,
 but not the person who made the searches. A search does not establish ownership
 of the searched game tag. The owner-only endpoint continues to require a

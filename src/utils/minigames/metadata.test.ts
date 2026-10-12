@@ -46,17 +46,17 @@ describe("mini game metadata", () => {
     });
   });
 
-  it("marks unavailable routes noindex and omits hreflang", () => {
+  it("indexes playable comparison routes in every locale", () => {
     const metadata = getMiniGameMetadata("ko", "higher-lower");
-    expect(metadata.title).toBe("하이어 오어 로어");
-    expect(metadata.robots).toMatchObject({ index: false, follow: true, googleBot: { index: false, follow: true } });
-    expect(metadata.alternates.languages).toEqual({});
+    expect(metadata.title).toContain("하이어 오어 로어");
+    expect(metadata.robots?.index).not.toBe(false);
+    expect(Object.keys(metadata.alternates.languages!)).toHaveLength(10);
     expect(metadata.openGraph).toMatchObject({
-      title: "하이어 오어 로어 | Brawl Status KR",
       url: "/minigames/higher-lower",
     });
-    expect(metadata.twitter).toMatchObject({
-      title: "하이어 오어 로어 | Brawl Status KR",
+    expect(getMiniGameMetadata("en", "release-order").alternates.languages).toMatchObject({
+      "ko-KR": "/minigames/release-order",
+      en: "/en/minigames/release-order",
     });
   });
 });

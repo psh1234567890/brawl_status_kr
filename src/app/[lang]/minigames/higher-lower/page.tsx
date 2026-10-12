@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import UnavailableGame from "../../../../components/minigames/UnavailableGame";
+import ComparisonGamePage from "../../../../components/minigames/ComparisonGamePage";
 import { isLocalizedLocale } from "../../../../i18n/config";
 import { getMiniGameMetadata } from "../../../../utils/minigames/metadata";
 
@@ -14,5 +14,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const { lang } = await params;
   if (!isLocalizedLocale(lang)) notFound();
-  return <UnavailableGame locale={lang} id="higher-lower" />;
+  return <ComparisonGamePage locale={lang} kind="higher-lower" />;
 }

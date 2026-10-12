@@ -57,7 +57,7 @@ test("quiz images load directly from the CDN without hosting transformations", a
   expect(response.status()).toBe(404);
 });
 
-test("homepage shortcut opens a six-card hub with four playable games", async ({ page }) => {
+test("homepage shortcut opens a six-card hub with six playable games", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("link", { name: getMinigameMessages("ko").quizTitle })).toHaveAttribute("href", "/minigames/brawler-quiz");
   await page.setViewportSize({ width: 390, height: 844 });
@@ -73,8 +73,8 @@ test("homepage shortcut opens a six-card hub with four playable games", async ({
   await expect(cards.nth(3).getByRole("heading", { name: "맵 이름 맞히기" })).toBeVisible();
   await expect(cards.nth(4).getByRole("heading", { name: "가젯·스타파워 주인 맞히기" })).toBeVisible();
   await expect(cards.nth(5).getByRole("heading", { name: "브롤러 출시 순서" })).toBeVisible();
-  await expect(cards.getByRole("link", { name: "게임 시작" })).toHaveCount(4);
-  await expect(cards.nth(2).getByRole("link")).toHaveCount(0);
+  await expect(cards.getByRole("link", { name: "게임 시작" })).toHaveCount(6);
+  await expect(cards.nth(2).getByRole("link")).toHaveCount(1);
   await cards.nth(0).getByRole("link", { name: "게임 시작" }).click();
   await expect(page).toHaveURL(/\/minigames\/brawler-quiz$/);
 });
@@ -282,11 +282,10 @@ test("localized English quiz renders translated controls and accepts English ans
   await expect(page.getByRole("progressbar", { name: "Brawlers found" })).toHaveAttribute("aria-valuenow", "1");
 });
 
-test("blocked game routes are localized, informational, and excluded from search", async ({ page }) => {
+test("comparison games are playable and localized for search", async ({ page }) => {
   await page.goto("/en/minigames/higher-lower");
   await expect(page.getByRole("heading", { level: 1, name: "Higher or Lower" })).toBeVisible();
-  await expect(page.getByText("Data pending")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Start game" })).toHaveCount(0);
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
-  await expect(page.locator('link[hreflang="en"]')).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Start game" })).toBeEnabled();
+  expect(await page.locator('meta[name="robots"]').getAttribute("content")).not.toContain("noindex");
+  await expect(page.locator('link[hreflang="en"]')).toHaveCount(1);
 });

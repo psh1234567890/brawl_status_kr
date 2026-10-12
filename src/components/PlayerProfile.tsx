@@ -15,6 +15,10 @@ interface PlayerProfileProps {
   nameColor: string;
   streakCount: number;
   playTime: { hours: number; minutes: number };
+  recentMatches?: number;
+  recentWinRate?: number;
+  actions?: ReactNode;
+  actionsLabel?: string;
   locale?: Locale;
 }
 
@@ -23,11 +27,28 @@ export default function PlayerProfile({
   nameColor,
   streakCount,
   playTime,
+  recentMatches = 0,
+  recentWinRate = 0,
+  actions,
+  actionsLabel,
   locale = "ko",
 }: PlayerProfileProps) {
   const copy = getComponentMessages(locale).profile;
+  const hubCopy = {
+    ko: { recent: "최근 전투 승률", missing: "최근 전투 없음", details: "전체 프로필 통계 보기", tag: "플레이어 태그", recentCount: "전투 표본" },
+    en: { recent: "Recent win rate", missing: "No recent battles", details: "View all profile stats", tag: "Player tag", recentCount: "Battles sampled" },
+    ja: { recent: "最近の勝率", missing: "最近のバトルなし", details: "全プロフィール統計", tag: "プレイヤータグ", recentCount: "集計バトル" },
+    "pt-br": { recent: "Vitórias recentes", missing: "Sem batalhas recentes", details: "Ver todas as estatísticas", tag: "Tag do jogador", recentCount: "Batalhas analisadas" },
+    es: { recent: "Victorias recientes", missing: "Sin batallas recientes", details: "Ver todas las estadísticas", tag: "Etiqueta del jugador", recentCount: "Batallas analizadas" },
+    tr: { recent: "Son galibiyet oranı", missing: "Son savaş yok", details: "Tüm profil istatistikleri", tag: "Oyuncu etiketi", recentCount: "İncelenen savaşlar" },
+    de: { recent: "Letzte Siegquote", missing: "Keine letzten Kämpfe", details: "Alle Profilstatistiken", tag: "Spielertag", recentCount: "Ausgewertete Kämpfe" },
+    fr: { recent: "Victoires récentes", missing: "Aucun combat récent", details: "Toutes les statistiques", tag: "Tag du joueur", recentCount: "Combats analysés" },
+    it: { recent: "Vittorie recenti", missing: "Nessuna battaglia recente", details: "Tutte le statistiche", tag: "Tag giocatore", recentCount: "Battaglie analizzate" },
+    ru: { recent: "Победы за последние бои", missing: "Нет недавних боёв", details: "Все показатели профиля", tag: "Тег игрока", recentCount: "Учтено боёв" },
+  }[locale];
   return (
-    <section className="mb-4 w-full rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section className="w-full overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm" aria-label={copy.profileIcon}>
+      <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           {playerData.icon ? (
@@ -36,11 +57,11 @@ export default function PlayerProfile({
               alt={copy.profileIcon}
               width={64}
               height={64}
-              className="h-14 w-14 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-cover sm:h-16 sm:w-16"
+              className="h-16 w-16 shrink-0 rounded-xl border-2 border-white bg-white object-cover shadow-sm sm:h-20 sm:w-20"
               fallbackText="P"
             />
           ) : (
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-lg font-black text-slate-400 sm:h-16 sm:w-16">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-lg font-black text-slate-400 sm:h-20 sm:w-20">
               P
             </span>
           )}
@@ -48,6 +69,9 @@ export default function PlayerProfile({
             <h1 className="truncate text-2xl font-black tracking-normal sm:text-3xl" style={{ color: nameColor }}>
               {playerData.name}
             </h1>
+            <p className="mt-0.5 break-all text-xs font-bold text-slate-500" title={hubCopy.tag}>
+              {playerData.tag}
+            </p>
             <p className="mt-1 flex min-w-0 items-center gap-1 truncate text-sm font-bold text-slate-500">
               {playerData.club ? <StatSymbol kind="shield" size={14} /> : null}
               <span className="min-w-0 truncate">{playerData.club ? `${copy.club} ${playerData.club.name}` : copy.noClub}</span>
@@ -55,14 +79,35 @@ export default function PlayerProfile({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 sm:justify-end">
-          <Badge label={copy.currentTrophies} value={playerData.trophies.toLocaleString(numberLocales[locale])} icon="trophy" />
+        <div className="hidden flex-wrap gap-2 sm:justify-end lg:flex">
           <Badge label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon="trophy" />
           {streakCount > 0 ? <Badge label={copy.streak} value={formatDays(locale, streakCount)} tone="orange" icon="win" /> : null}
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <HeroStat label={copy.currentTrophies} value={playerData.trophies.toLocaleString(numberLocales[locale])}
+          icon={<StatSymbol kind="trophy" size={26} />} />
+        <HeroStat label={hubCopy.recent} value={recentMatches > 0 ? `${recentWinRate}%` : "—"}
+          detail={recentMatches > 0 ? `${recentMatches.toLocaleString(numberLocales[locale])} ${hubCopy.recentCount}` : hubCopy.missing}
+          icon={<StatSymbol kind="win" size={22} className="text-blue-600" />} />
+        <div className="col-span-2 sm:col-span-1">
+          <HeroStat label={copy.currentRanked}
+            value={playerData.rankedRankName ? formatRank(playerData.rankedRankName, playerData.rankedElo, locale) : copy.noRecord}
+            icon={<RankedLeagueIcon rankName={playerData.rankedRankName} />} />
+        </div>
+      </div>
+      {actions ? <div className="mt-4 flex flex-wrap gap-2 border-t border-blue-100 pt-4" role="group" aria-label={actionsLabel ?? copy.profileIcon}>{actions}</div> : null}
+      </div>
+
+      <details className="group px-4 pb-4 sm:px-6 sm:pb-6">
+        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 text-sm font-black text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
+          {hubCopy.details}
+          <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
+        </summary>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <Stat label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="trophy" />} />
+        {streakCount > 0 ? <Stat label={copy.streak} value={formatDays(locale, streakCount)} icon={<StatSymbol kind="win" />} /> : null}
         <Stat
           label={copy.playEstimate}
           value={formatDuration(locale, playTime.hours, playTime.minutes)}
@@ -94,7 +139,23 @@ export default function PlayerProfile({
           icon={<StatSymbol kind="shield" className="text-blue-600" />}
         />
       </div>
+      </details>
     </section>
+  );
+}
+
+function HeroStat({ label, value, detail, icon }: {
+  label: string; value: string; detail?: string; icon: ReactNode;
+}) {
+  return (
+    <div className="min-w-0 rounded-xl border border-blue-100 bg-white/95 p-3 shadow-sm sm:p-4">
+      <p className="text-xs font-bold text-slate-500">{label}</p>
+      <div className="mt-2 flex min-w-0 items-center gap-2">
+        {icon}
+        <strong className="min-w-0 break-words text-xl font-black tabular-nums text-slate-950 sm:text-2xl">{value}</strong>
+      </div>
+      {detail ? <p className="mt-1 text-[11px] font-medium text-slate-500">{detail}</p> : null}
+    </div>
   );
 }
 

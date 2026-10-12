@@ -50,6 +50,7 @@ test("owned hypercharges show matching artwork and unknown IDs keep a fallback",
   const dialog = page.getByRole("dialog");
   const hyperImage = dialog.locator('img[src="https://cdn.bsinfox.com/hypercharges/23000613.png"]');
   await expect(hyperImage).toBeVisible();
+  await expect(dialog.locator('img[src="/game-assets/trophy.png"]')).toHaveCount(2);
   await expect(hyperImage).toHaveAttribute("alt", "Sample Hypercharge");
   await expect(dialog).toContainText("Unlisted Future Hypercharge");
   await expect(dialog.locator('img[src*="/hypercharges/99999999.png"]')).toHaveCount(0);
@@ -64,7 +65,7 @@ test("battle log and detail show the exact BrawlAPI Gem Grab mode icon", async (
         battleTime: "20261012T123045.000Z",
         event: { mode: "gemGrab", map: "Hard Rock Mine" },
         battle: {
-          type: "ranked", result: "victory", duration: 120, trophyChange: 8,
+          type: "normal", result: "victory", duration: 120, trophyChange: 8,
           teams: [[
             { tag: "#" + tag, name: "E2E Player", brawler: { id: 16000000, name: "SHELLY", power: 11, trophies: 500 } },
           ], [
@@ -83,6 +84,7 @@ test("battle log and detail show the exact BrawlAPI Gem Grab mode icon", async (
   await page.getByRole("button", { name: /젬 그랩.*암석 광산/ }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.locator('img[src*="/game-modes/regular/48000000.png"]')).toBeVisible();
+  await expect(dialog.locator('img[src="/game-assets/trophy.png"]')).toHaveCount(3);
   await expect(dialog.getByRole("heading", { name: "젬 그랩" })).toBeVisible();
 });
 

@@ -94,8 +94,9 @@ export default function BrawlerDetailsModal({
             <h2 id="brawler-dialog-title" className="truncate text-2xl font-black text-slate-950 sm:text-3xl">
               {displayName}
             </h2>
-            <p className="mt-1 text-sm font-bold text-slate-500">
-              {formatCurrentBrawlerLine(locale, brawler.trophies.toLocaleString(numberLocales[locale]), brawler.power)}
+            <p className="mt-1 flex items-center gap-1 text-sm font-bold text-slate-500">
+              <StatSymbol kind="trophy" size={15} />
+              <span className="truncate">{formatCurrentBrawlerLine(locale, brawler.trophies.toLocaleString(numberLocales[locale]), brawler.power)}</span>
             </p>
           </div>
         </div>

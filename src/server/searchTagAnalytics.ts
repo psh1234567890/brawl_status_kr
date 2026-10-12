@@ -54,6 +54,23 @@ export type SearchTagSummary = {
   countries: Array<{ countryCode: string; searchCount: string }>;
 };
 
+export type SearchCountrySummary = {
+  countryCode: string;
+  searchCount: string;
+};
+
+/** Country-only totals cover every successful tag lookup, not just the 200 recent tags. */
+export async function readSearchCountries7Days(): Promise<SearchCountrySummary[]> {
+  const result = await db.$client.query<SearchCountrySummary>(
+    `SELECT country_code AS "countryCode", SUM(search_count)::text AS "searchCount"
+     FROM analytics_private.search_tag_country_hourly
+     WHERE hour_bucket >= date_trunc('hour', now() - interval '7 days')
+     GROUP BY country_code
+     ORDER BY SUM(search_count) DESC, country_code ASC`,
+  );
+  return result.rows;
+}
+
 export async function readRecentSearchTags(): Promise<SearchTagSummary[]> {
   const result = await db.$client.query<SearchTagSummary>(
     `WITH recent AS (

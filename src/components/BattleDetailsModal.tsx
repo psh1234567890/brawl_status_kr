@@ -200,8 +200,13 @@ function PlayerCard({
         </div>
       </div>
       <div className="mt-2 flex items-center justify-between gap-2">
-        <span className="truncate text-xs font-black text-slate-500">
-          {ranked ? copy.ranked : `${brawler.trophies ?? 0} ${copy.trophies}`}
+        <span className="inline-flex min-w-0 items-center gap-1 text-xs font-black text-slate-500">
+          {ranked ? copy.ranked : (
+            <>
+              <StatSymbol kind="trophy" size={13} />
+              <span className="truncate">{brawler.trophies ?? 0} {copy.trophies}</span>
+            </>
+          )}
         </span>
         {starPlayerTag === player.tag ? (
           <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-black text-amber-700">

@@ -83,7 +83,7 @@ export const deepCopy = {
     trackedDays: "Días registrados",
     trophyDelta: "Cambio total de trofeos",
     graphTitle: "Actividad reciente",
-    graphDescription: "Muestra los 21 días más recientes de hasta 60 días activos.",
+    graphDescription: "Muestra los últimos 21 días con registros de los últimos 90 días.",
     empty: "Aún no hay historial acumulado. El análisis a largo plazo se completa a medida que sigues buscando.",
     topModes: "Modos más jugados",
     topMaps: "Mapas más jugados",

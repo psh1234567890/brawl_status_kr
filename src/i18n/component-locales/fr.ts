@@ -83,7 +83,7 @@ export const frDeepCopy = {
     trackedDays: "Jours suivis",
     trophyDelta: "Variation totale des trophées",
     graphTitle: "Activité récente",
-    graphDescription: "Affiche les 21 derniers jours parmi un maximum de 60 jours actifs.",
+    graphDescription: "Affiche les 21 derniers jours enregistrés sur les 90 derniers jours.",
     empty: "Aucun historique cumulé pour le moment. L’analyse à long terme s’enrichit au fil de vos recherches.",
     topModes: "Modes les plus joués",
     topMaps: "Cartes les plus jouées",

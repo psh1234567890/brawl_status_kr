@@ -158,7 +158,7 @@ test("owned-skin lookup falls back to the recent browser cache after a refresh f
   await expect(page.getByText("최근 보유 스킨 캐시 사용")).toBeVisible();
 });
 
-test("history tab renders tracked activity and explains the 60-day window", async ({ page }) => {
+test("history tab renders tracked activity and explains the 90-day window", async ({ page }) => {
   await page.unroute(/\/api\/player\/history\?tag=/);
   await page.route(/\/api\/player\/history\?tag=/, async (route) => {
     await route.fulfill({
@@ -201,7 +201,10 @@ test("history tab renders tracked activity and explains the 60-day window", asyn
 
   await page.getByRole("button", { name: "누적", exact: true }).click();
   await expect(page.getByRole("heading", { level: 2, name: "누적 활동 분석" })).toBeVisible();
-  await expect(page.getByText("최근 최대 60개 활동일 중 마지막 21개를 표시합니다.")).toBeVisible();
+  await expect(page.getByText("최근 90일 동안 기록된 활동일 중 마지막 21개를 표시합니다.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "최근 90일 활동 히트맵" })).toBeVisible();
+  await expect(page.getByRole("img", { name: /2026-09-22.*수집 경기: 20/ })).toBeVisible();
+  await expect(page.getByText("기록이 없는 날짜는 실제로 플레이하지 않은 날이 아닐 수도 있어.", { exact: false })).toBeVisible();
   await expect(page.getByText("09-22")).toBeVisible();
   await expect(page.getByText("09-21")).toBeVisible();
   await expect(page.getByText("젬 그랩")).toBeVisible();

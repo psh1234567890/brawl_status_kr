@@ -62,10 +62,12 @@ export async function GET(request: Request) {
           trophyDelta: sql<number>`coalesce(sum(${battleLogs.trophyChange}), 0)`,
         })
         .from(battleLogs)
-        .where(baseWhere)
+        .where(and(baseWhere, sql.raw(
+          "battle_timestamp >= ((now() AT TIME ZONE 'Asia/Seoul')::date - INTERVAL '89 days') AT TIME ZONE 'Asia/Seoul'",
+        )))
         .groupBy(dayExpr)
         .orderBy(desc(dayExpr))
-        .limit(60),
+        .limit(90),
       db
         .select({
           name: battleLogs.mode,

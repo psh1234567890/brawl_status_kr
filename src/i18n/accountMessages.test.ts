@@ -22,6 +22,29 @@ function placeholders(value: string) {
 }
 
 describe("account messages", () => {
+  it("does not present account sign-in as an unreleased feature in any locale", () => {
+    const retiredClaims: Record<(typeof locales)[number], string[]> = {
+      ko: ["현재 기본 비활성화", "계정 기능을 켜지 않습니다", "설정되기 전에는 계정 기능"],
+      en: ["disabled by default", "Accounts remain disabled", "Account features will not be enabled"],
+      ja: ["既定で無効", "保持値が承認・公開されるまで", "方針が設定されるまで"],
+      "pt-br": ["desativados por padrão", "permanecem desativadas", "não serão ativados antes"],
+      es: ["desactivadas de forma predeterminada", "seguirán desactivadas", "no se activarán hasta"],
+      tr: ["varsayılan olarak kapalıdır", "hesaplar kapalı kalır", "politikaları ayarlanmadan"],
+      de: ["standardmäßig deaktiviert", "Konten bleiben deaktiviert", "erst nach Festlegung"],
+      fr: ["désactivées par défaut", "comptes restent désactivés", "ne seront pas activées avant"],
+      it: ["disattivate per impostazione predefinita", "account restano disattivati", "non saranno attivate finché"],
+      ru: ["по умолчанию отключены", "Аккаунты останутся отключенными", "не будут включены до настройки"],
+    };
+    for (const locale of locales) {
+      const { privacyText, termsText } = accountPolicyMessages[locale];
+      expect(privacyText).toContain("Google");
+      expect(privacyText.length).toBeGreaterThan(200);
+      for (const obsoleteText of retiredClaims[locale]) {
+        expect(privacyText + " " + termsText).not.toContain(obsoleteText);
+      }
+    }
+  });
+
   it("publishes the owner-approved 16+ policy and 7/14 retention explicitly in all ten locales", () => {
     expect(parseAccountEligibilityRules(JSON.stringify(launchPolicy.eligibilityRules))).toEqual({ minimumAge: 16, regions: "all", guardianConsent: "not-supported", attestation: "self" });
     expect(parseAccountEligibilityTexts(JSON.stringify(launchPolicy.eligibilityTexts))).not.toBeNull();

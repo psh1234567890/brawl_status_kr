@@ -48,6 +48,16 @@ export function DocumentArticlePage({
           <p className="mt-4 font-semibold leading-7 text-gray-700">{copy.intro}</p>
         ) : null}
 
+        {pageKey === "privacy" ? (
+          <section className="mt-8 rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
+            <h2 className="text-xl font-black text-indigo-900">{accountPolicy.privacyTitle}</h2>
+            <p className="mt-3 font-semibold leading-7 text-gray-700">{accountPolicy.privacyText}</p>
+            <Link href={localizedHref(locale, "/account")} className="mt-3 inline-flex min-h-11 items-center font-black text-indigo-700 underline">
+              {accountPolicy.accountLink}
+            </Link>
+          </section>
+        ) : null}
+
         {copy.sections.map((section, index) => {
           const highlighted =
             (pageKey === "about" && index === copy.sections.length - 1) ||
@@ -67,12 +77,6 @@ export function DocumentArticlePage({
             </section>
           );
         })}
-        {pageKey === "privacy" ? (
-          <section className="mt-8 border-t border-gray-100 pt-6">
-            <h2 className="text-xl font-black text-indigo-900">{accountPolicy.privacyTitle}</h2>
-            <p className="mt-3 font-semibold leading-7 text-gray-700">{accountPolicy.privacyText}</p>
-          </section>
-        ) : null}
         {pageKey === "privacy" ? <AnalyticsOptOutControl locale={locale} /> : null}
         {pageKey === "terms" ? (
           <section className="mt-8 border-t border-gray-100 pt-6">

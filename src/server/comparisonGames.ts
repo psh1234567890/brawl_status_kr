@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 
 import type { Locale } from "../i18n/config";
 import { translateBrawlerName } from "../utils/brawlTranslations";
@@ -12,6 +13,39 @@ const RAW_CHARACTERS = "https://api.brawlapi.com/game/csv_logic/characters.json"
 const cdn = "https://cdn.brawlify.com/";
 
 type RawCharacter = { id?: unknown; Type?: unknown; Hitpoints?: unknown; Disabled?: unknown };
+
+// The upstream CSV logic JSON is >2MB, above Next's data-cache item limit.
+// Fetch it uncached and store only the few thousand bytes of verified Hero HP.
+// A failed upstream request throws, so we never cache a missing/empty catalog for 24h.
+export function compactHeroHealth(raw: unknown): Record<string, RawCharacter> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const result: Record<string, RawCharacter> = {};
+  for (const candidate of Object.values(raw)) {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) continue;
+    const item = candidate as RawCharacter;
+    if (!Number.isSafeInteger(item.id) || !Number.isSafeInteger(item.Hitpoints) ||
+      Number(item.Hitpoints) <= 0 || Number(item.Hitpoints) > 100_000 ||
+      item.Type !== "Hero" || item.Disabled !== false) continue;
+    result[String(item.id)] = {
+      id: item.id,
+      Hitpoints: item.Hitpoints,
+      Type: "Hero",
+      Disabled: false,
+    };
+  }
+  return result;
+}
+
+const getCachedHeroHealth = unstable_cache(async () => {
+  const response = await fetch(RAW_CHARACTERS, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(8_000),
+  });
+  if (!response.ok) throw new Error(`Character data unavailable: ${response.status}`);
+  const compact = compactHeroHealth(await response.json());
+  if (Object.keys(compact).length === 0) throw new Error("No valid active hero HP data");
+  return compact;
+}, ["comparison-hero-health-v1"], { revalidate: 86_400 });
 
 function safeBrawlerList(list: BrawlifyBrawler[], locale: Locale) {
   const seen = new Set<number>();
@@ -64,11 +98,7 @@ export async function loadComparisonEntries(kind: "higher-lower" | "release-orde
   const catalog = await getBrawlifyBrawlers().catch(() => ({ list: [] as BrawlifyBrawler[] }));
   if (kind === "release-order") return projectReleaseEntries(catalog.list, locale);
   try {
-    const response = await fetch(RAW_CHARACTERS, { next: { revalidate: 86_400 }, signal: AbortSignal.timeout(8000) });
-    if (!response.ok) return [];
-    const payload: unknown = await response.json();
-    if (!payload || typeof payload !== "object" || Array.isArray(payload)) return [];
-    return projectHealthEntries(catalog.list, payload as Record<string, RawCharacter>, locale);
+    return projectHealthEntries(catalog.list, await getCachedHeroHealth(), locale);
   } catch {
     return [];
   }

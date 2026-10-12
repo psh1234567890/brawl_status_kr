@@ -9,7 +9,7 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data: blob: https://cdn.brawlify.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
+  "img-src 'self' data: blob: https://cdn.brawlify.com https://cdn.bsinfox.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
   "connect-src 'self' https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net",
   "frame-src 'self' https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
   `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"} https://pagead2.googlesyndication.com`,
@@ -92,6 +92,11 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "cdn.brawlify.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.bsinfox.com",
+        pathname: "/hypercharges/*.png",
       },
     ],
   },

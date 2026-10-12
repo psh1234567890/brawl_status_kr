@@ -6,6 +6,7 @@ import { getCatalogPageMessages } from "../i18n/catalogPageMessages";
 import type { ClubSearchResponse } from "../types/brawl";
 import { getClubBadgeUrl, getPlayerIconUrl } from "../utils/brawlAssets";
 import BrawlImage from "./BrawlImage";
+import StatSymbol from "./StatSymbol";
 
 async function fetchClub(tag: string, locale: Locale, fallbackError: string) {
   const response = await fetch(`/api/club?tag=${encodeURIComponent(tag)}`);
@@ -93,10 +94,10 @@ export default function ClubSearch({ locale = "ko" }: { locale?: Locale }) {
               </div>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-4">
-              <Metric label={copy.totalTrophies} value={data.club.trophies.toLocaleString(numberLocales[locale])} />
+              <Metric label={copy.totalTrophies} value={data.club.trophies.toLocaleString(numberLocales[locale])} trophy />
               <Metric label={copy.members} value={`${data.members.length}/30`} />
-              <Metric label={copy.averageTrophies} value={averageTrophies.toLocaleString(numberLocales[locale])} />
-              <Metric label={copy.requiredTrophies} value={(data.club.requiredTrophies ?? 0).toLocaleString(numberLocales[locale])} />
+              <Metric label={copy.averageTrophies} value={averageTrophies.toLocaleString(numberLocales[locale])} trophy />
+              <Metric label={copy.requiredTrophies} value={(data.club.requiredTrophies ?? 0).toLocaleString(numberLocales[locale])} trophy />
             </div>
           </section>
 
@@ -122,7 +123,7 @@ export default function ClubSearch({ locale = "ko" }: { locale?: Locale }) {
                   <div className="min-w-0">
                     <p className="truncate font-black text-slate-900">{member.name}</p>
                     <p className="text-xs font-bold text-slate-500">
-                      {formatClubRole(member.role, locale)} · {member.trophies.toLocaleString(numberLocales[locale])} {copy.trophiesUnit}
+                      {formatClubRole(member.role, locale)} · <StatSymbol kind="trophy" size={13} /> {member.trophies.toLocaleString(numberLocales[locale])} {copy.trophiesUnit}
                     </p>
                   </div>
                 </article>
@@ -152,11 +153,14 @@ function formatClubRole(role: string, locale: Locale) {
   return labels[locale][key] ?? role;
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, trophy = false }: { label: string; value: string; trophy?: boolean }) {
   return (
     <div className="rounded-lg bg-blue-50 p-3">
       <p className="text-xs font-black text-blue-400">{label}</p>
-      <p className="mt-1 text-xl font-black text-blue-900">{value}</p>
+      <p className="mt-1 flex items-center gap-2 text-xl font-black text-blue-900">
+        {trophy ? <StatSymbol kind="trophy" size={19} /> : null}
+        {value}
+      </p>
     </div>
   );
 }

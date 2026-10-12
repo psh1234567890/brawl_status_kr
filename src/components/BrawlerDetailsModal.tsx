@@ -30,6 +30,7 @@ import {
 import BrawlImage from "./BrawlImage";
 import StatSymbol from "./StatSymbol";
 import type { StatSymbolKind } from "./StatSymbol";
+import { getHyperchargeImageUrl } from "../utils/hyperchargeImages";
 
 interface BrawlerDetailsModalProps {
   brawler: Brawler;
@@ -374,27 +375,34 @@ function AbilityGroup({
       </h4>
       {abilities?.length ? (
         <div className="grid gap-2 sm:grid-cols-2">
-          {abilities.map((ability) => (
-            <div key={ability.id} className="flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
-              {imageType === "hypercharges" ? (
-                <span aria-hidden="true" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneClass}`}>
-                  <StatSymbol kind="hyper" size={25} />
+          {abilities.map((ability) => {
+            const isHypercharge = imageType === "hypercharges";
+            const imageUrl = isHypercharge
+              ? getHyperchargeImageUrl(ability.id)
+              : `https://cdn.brawlify.com/${imageType}/regular/${ability.id}.png`;
+            return (
+              <div key={ability.id} className="flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+                {imageUrl ? (
+                  <BrawlImage
+                    src={imageUrl}
+                    alt={ability.name}
+                    width={36}
+                    height={36}
+                    fallbackText={label.slice(0, 1)}
+                    fallbackContent={isHypercharge ? <StatSymbol kind="hyper" size={25} /> : undefined}
+                    className={`h-9 w-9 shrink-0 rounded-lg ${toneClass}`}
+                  />
+                ) : (
+                  <span aria-label={ability.name} className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneClass}`}>
+                    <StatSymbol kind="hyper" size={25} />
+                  </span>
+                )}
+                <span className="min-w-0 truncate text-sm font-black text-slate-800">
+                  {translateAbilityName(ability.id, ability.name, locale)}
                 </span>
-              ) : (
-                <BrawlImage
-                  src={`https://cdn.brawlify.com/${imageType}/regular/${ability.id}.png`}
-                  alt={ability.name}
-                  width={36}
-                  height={36}
-                  fallbackText={label.slice(0, 1)}
-                  className={`h-9 w-9 shrink-0 rounded-lg ${toneClass}`}
-                />
-              )}
-              <span className="min-w-0 truncate text-sm font-black text-slate-800">
-                {translateAbilityName(ability.id, ability.name, locale)}
-              </span>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-xs font-bold text-slate-400">

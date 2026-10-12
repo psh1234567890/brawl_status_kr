@@ -6,6 +6,7 @@ import type { PlayerData } from "../types/brawl";
 import { getPlayerIconUrl } from "../utils/brawlAssets";
 import BrawlImage from "./BrawlImage";
 import RankedLeagueIcon from "./RankedLeagueIcon";
+import GameModeIcon from "./GameModeIcon";
 import StatSymbol from "./StatSymbol";
 import type { ReactNode } from "react";
 
@@ -56,7 +57,7 @@ export default function PlayerProfile({
 
         <div className="flex flex-wrap gap-2 sm:justify-end">
           <Badge label={copy.currentTrophies} value={playerData.trophies.toLocaleString(numberLocales[locale])} icon="trophy" />
-          <Badge label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon="star" />
+          <Badge label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon="trophy" />
           {streakCount > 0 ? <Badge label={copy.streak} value={formatDays(locale, streakCount)} tone="orange" icon="win" /> : null}
         </div>
       </div>
@@ -71,8 +72,8 @@ export default function PlayerProfile({
         />
         <Stat label={copy.expLevel} value={playerData.expLevel} icon={<StatSymbol kind="level" className="text-blue-600" />} />
         <Stat label={copy.victories3v3} value={playerData["3vs3Victories"].toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="players" className="text-blue-600" />} />
-        <Stat label={copy.solo} value={playerData.soloVictories.toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="win" className="text-emerald-600" />} />
-        <Stat label={copy.duo} value={playerData.duoVictories.toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="players" className="text-blue-600" />} />
+        <Stat label={copy.solo} value={playerData.soloVictories.toLocaleString(numberLocales[locale])} icon={<GameModeIcon modeId={48000006} size={32} />} />
+        <Stat label={copy.duo} value={playerData.duoVictories.toLocaleString(numberLocales[locale])} icon={<GameModeIcon modeId={48000009} size={32} />} />
         <Stat
           label={copy.allTimeRanked}
           value={formatRank(playerData.highestAllTimeRankedRankName, playerData.highestAllTimeRankedElo, locale)}
@@ -85,8 +86,8 @@ export default function PlayerProfile({
           icon={<RankedLeagueIcon rankName={playerData.rankedRankName} />}
           wide
         />
-        <Stat label={copy.roboRumble} value={playerData.bestRoboRumbleTime ?? "-"} icon={<StatSymbol kind="timer" className="text-blue-600" />} />
-        <Stat label={copy.bigBrawler} value={playerData.bestTimeAsBigBrawler ?? "-"} icon={<StatSymbol kind="timer" className="text-blue-600" />} />
+        <Stat label={copy.roboRumble} value={playerData.bestRoboRumbleTime ?? "-"} icon={<GameModeIcon modeId={48000008} size={32} />} />
+        <Stat label={copy.bigBrawler} value={playerData.bestTimeAsBigBrawler ?? "-"} icon={<GameModeIcon modeId={48000007} size={32} />} />
         <Stat
           label={copy.championship}
           value={playerData.isQualifiedFromChampionshipChallenge ? copy.qualified : copy.notQualified}
@@ -113,7 +114,7 @@ function Badge({
   label: string;
   value: string;
   tone?: "slate" | "orange";
-  icon?: "trophy" | "star" | "win";
+  icon?: "trophy" | "win";
 }) {
   const toneClass =
     tone === "orange"
@@ -124,7 +125,7 @@ function Badge({
     <span className={`inline-flex min-h-11 flex-col justify-center rounded-lg border px-3 ${toneClass}`}>
       <span className="text-[11px] font-black text-slate-500">{label}</span>
       <span className="flex items-center gap-1.5 text-sm font-black">
-        {icon ? <StatSymbol kind={icon} size={15} className={icon === "trophy" || icon === "star" ? "text-amber-600" : ""} /> : null}
+        {icon ? <StatSymbol kind={icon} size={18} /> : null}
         {value}
       </span>
     </span>

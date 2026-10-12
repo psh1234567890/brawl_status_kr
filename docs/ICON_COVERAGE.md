@@ -20,26 +20,38 @@ This change complements the existing official in-game league imagery PR #82.
 
 ## Generic interface icons (not official game graphics)
 
-Use consistent small SVG symbols adjacent to the **existing numeric values
-and localized labels** for trophies, highest trophies, wins, time, player
-level, skins, power, equipment types, ranks, rarities, battles, map links and
-history. These UI symbols are intentionally not represented as game assets.
-Unknown data receives text, not a made-up game icon.
+Where the game artwork is available and semantically exact, prefer it: all
+current and highest trophy counts show the classic gold in-game trophy PNG;
+currency coin amounts use the in-game coin icon; solo showdown and duo showdown
+victories show the correct separate Brawlify game-mode icon (48000006 versus
+48000009). Robo Rumble and Big Game records also use their real mode artwork.
+Other stats such as wins across all 3v3 modes, time, level, equipment category
+counts and history use small generic SVGs alongside their existing localized
+labels. Never pass a generic UI icon off as official in-game art.
 
 ## Important fallback
 
-At implementation time Brawlify CDN had **no hypercharges directory**,
-despite prior code trying to load its /hypercharges/regular/{id}.png URLs.
-Owned hypercharge names continue to be displayed, but now use a local generic
-hypercharge-category icon instead of making broken remote requests.
-All remote game imagery retains the existing BrawlImage onError fallback.
+Brawlify CDN still has **no hypercharges directory**. Instead we use
+BSInfo CDN, which publishes /hypercharges/{abilityId}.png. The static
+src/utils/hyperchargeImages.ts allowlist contains 107 numeric IDs directly
+cross-checked with its actual published image listing on 2026-10-12.
+Recognized hypercharge IDs render the correct in-game ability image alongside
+its translated ability name, just like gadgets and star powers. Unknown IDs
+or images that fail to load gracefully fall back to the generic lightning
+symbol instead of sending speculative image requests. This is important
+because new game updates may add IDs ahead of the CDN.
 
-Official game imagery is fetched from a third-party community CDN subject
-to its availability and third-party fan content conditions. Site identity
+The gold trophy icon and coin icon were confirmed visually from the fan-made
+Brawl Stars asset collection at
+https://github.com/raharisonAina/BrawlStars/tree/main/assets and are bundled
+locally under /public/game-assets. They do not add a network dependency.
+Game-mode and equipment art comes from community CDNs, subject
+to their availability and third-party fan content conditions. Site identity
 remains our own logo and the existing unofficial-fan-content disclaimer.
 No backend data collection or account/database mutation was added.
 
 References:
 - https://github.com/Brawlify/CDN
+- https://github.com/lot-xq/BSInfo-CDN
 - https://brawlapi-v1.pages.dev/v1/gamemodes
 - https://supercell.com/en/fan-content-policy/

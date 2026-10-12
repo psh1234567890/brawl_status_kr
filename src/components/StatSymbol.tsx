@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 
 export type StatSymbolKind =
   | "trophy" | "star" | "shield" | "battle" | "timer"
@@ -6,13 +7,30 @@ export type StatSymbolKind =
   | "super" | "hyper" | "gear" | "map" | "chart"
   | "gem" | "coin" | "bling";
 
-/** Small generic UI symbols for stats without a verified matching game asset.
- * These are intentionally not presented as official Brawl Stars artwork. */
+/** In-game trophy/coin artwork; all remaining symbols are generic UI icons. */
 export default function StatSymbol({
   kind, size = 16, className = "",
 }: { kind: StatSymbolKind; size?: number; className?: string }) {
+  const artwork = kind === "trophy"
+    ? "/game-assets/trophy.png"
+    : kind === "coin"
+      ? "/game-assets/coin.png"
+      : null;
+  if (artwork) {
+    return (
+      <Image
+        src={artwork}
+        alt=""
+        aria-hidden="true"
+        width={size}
+        height={size}
+        unoptimized
+        className={`inline-block shrink-0 object-contain ${className}`}
+      />
+    );
+  }
   const paths: Record<StatSymbolKind, ReactNode> = {
-    trophy: <><path d="M7 4h10v7a5 5 0 0 1-10 0V4Z" /><path d="M7 6H4v2a4 4 0 0 0 4 4M17 6h3v2a4 4 0 0 1-4 4M12 16v3M8 21h8" /></>,
+    trophy: null,
     star: <path d="m12 2 3.1 6.4 7.1 1-5.1 5 1.2 7.1L12 18.1l-6.3 3.4 1.2-7.1-5.1-5 7.1-1L12 2Z" />,
     shield: <path d="m12 2 8 3v6c0 5.5-3 9-8 11-5-2-8-5.5-8-11V5l8-3Z" />,
     battle: <><path d="m5 4 15 15M19 4 4 19M3 6l3-3 3 3M15 6l3-3 3 3M3 18l3 3 3-3M15 18l3 3 3-3" /></>,
@@ -28,7 +46,7 @@ export default function StatSymbol({
     map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6ZM9 3v15m6-12v15" /></>,
     chart: <><path d="M4 20V11m6 9V5m6 15v-8m5 8H2" /></>,
     gem: <><path d="M6 3h12l5 6-11 13L1 9l5-6ZM1 9h22M6 3l6 6 6-6m-6 6v13" /></>,
-    coin: <><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5c-3-2-7-.5-7 2s7 1.5 7 4.2-4.5 4-7 1.7M12 5.5v13" /></>,
+    coin: null,
     bling: <><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z" /></>,
   };
   return (

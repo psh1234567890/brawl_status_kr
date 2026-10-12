@@ -6,6 +6,7 @@ import { getMessages } from "../i18n/messages";
 import AccountControl from "./account/AccountControl";
 import AdSenseUnit from "./AdSenseUnit";
 import LanguageSwitcher from "./LanguageSwitcher";
+import PrimaryNavigation from "./PrimaryNavigation";
 import StatSymbol from "./StatSymbol";
 import type { StatSymbolKind } from "./StatSymbol";
 
@@ -42,13 +43,14 @@ export default function PortalLayout({
   actions,
   locale = "ko",
 }: PortalLayoutProps) {
-  const copy = getMessages(locale).common;
+  const messages = getMessages(locale);
+  const copy = messages.common;
 
   return (
     <main className="min-h-screen bg-[#f6f7fb] px-4 py-4 text-slate-950 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
         <header className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3 py-1 lg:py-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 py-1 lg:py-2">
             <Link
               href={localizedHref(locale, "/")}
               className="group inline-flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:gap-3"
@@ -69,27 +71,21 @@ export default function PortalLayout({
                   Brawl Status KR
                 </span>
                 <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
-                  {copy.home}
+                  {messages.home.brandSubtitle}
                 </span>
               </span>
             </Link>
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
               <AccountControl locale={locale} />
               <LanguageSwitcher locale={locale} />
             </div>
           </div>
 
-          <nav className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label={copy.mainNavigation}>
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={localizedHref(locale, item.href)}
-                className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 sm:px-4 sm:text-sm"
-              >
-                {copy[item.key]}
-              </Link>
-            ))}
-          </nav>
+          <PrimaryNavigation
+            locale={locale}
+            ariaLabel={copy.mainNavigation}
+            items={navItems.map((item) => ({ href: item.href, label: copy[item.key] }))}
+          />
 
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">

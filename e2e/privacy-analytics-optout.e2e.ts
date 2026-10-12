@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { getMessages } from "../src/i18n/messages";
 
 for (const locale of ["ko", "en"] as const) {
   test(`privacy page in ${locale} lets visitors exclude future analytics without consent for search`, async ({ page, context }) => {
@@ -33,8 +32,7 @@ for (const locale of ["ko", "en"] as const) {
     )).toBe(false);
 
     await page.goto(homePath);
-    await expect(page.getByRole("textbox", {
-      name: getMessages(locale).home.playerTag,
-    })).toBeVisible();
+    // A previously saved language preference can redirect '/' to '/en'.
+    await expect(page.getByRole("textbox", { name: /^(플레이어 태그|Player tag)$/ })).toBeVisible();
   });
 }

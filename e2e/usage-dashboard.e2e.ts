@@ -44,8 +44,11 @@ test("admin dashboard switches between today, seven days, and lifetime totals", 
 test("recent player tags stay in a fixed, keyboard-accessible scrolling table on desktop and mobile", async ({ page }) => {
   const tags = Array.from({ length: 200 }, (_, index) => ({
     playerTag: `2PYLQ${String(index).padStart(2, "0")}`,
-    searchCount: String(index + 1),
+    searchCount: String(index === 0 ? 5 : index + 1),
     lastSearchedAt: "2026-10-12T02:00:00.000Z",
+    countries: index === 0
+      ? [{ countryCode: "KR", searchCount: "2" }, { countryCode: "JP", searchCount: "1" }]
+      : index === 1 ? [{ countryCode: "ZZ", searchCount: "2" }] : [],
   }));
   await page.route("**/api/admin/usage", (route) => route.fulfill({
     status: 200,
@@ -70,6 +73,12 @@ test("recent player tags stay in a fixed, keyboard-accessible scrolling table on
   await expect(region).toBeVisible();
   await expect(region).toHaveAttribute("tabindex", "0");
   await expect(region.locator("tbody tr")).toHaveCount(200);
+  await expect(region.locator("thead")).toContainText("검색 방문자 접속 국가별 횟수");
+  await expect(region.locator("tbody tr").first()).toContainText(/🇰🇷 (한국|대한민국) 2회/);
+  await expect(region.locator("tbody tr").first()).toContainText("일본 1회");
+  await expect(region.locator("tbody tr").first()).toContainText("이전 기록·미분류 2회");
+  await expect(region.locator("tbody tr").nth(1)).toContainText("국가 미확인 2회");
+  await expect(region.locator("tbody tr").nth(1)).not.toContainText("이전 기록");
   expect(await region.evaluate((element) => ({
     scrollable: element.scrollHeight > element.clientHeight,
     maxHeight: element.getBoundingClientRect().height,

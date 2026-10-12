@@ -8,8 +8,12 @@ const mocks = vi.hoisted(() => ({
   summarizeLifetime: vi.fn(),
   hasUsageAdminAccess: vi.fn(),
   readRecentSearchTags: vi.fn(),
+  readSearchCountries7Days: vi.fn(),
 }));
-vi.mock("../../../../server/searchTagAnalytics", () => ({ readRecentSearchTags: mocks.readRecentSearchTags }));
+vi.mock("../../../../server/searchTagAnalytics", () => ({
+  readRecentSearchTags: mocks.readRecentSearchTags,
+  readSearchCountries7Days: mocks.readSearchCountries7Days,
+}));
 vi.mock("../../../../server/account", () => ({ getAuthenticatedAccount: mocks.getAuthenticatedAccount }));
 vi.mock("../../../../server/usageAnalytics", () => ({
   hasUsageAdminAccess: mocks.hasUsageAdminAccess,
@@ -28,6 +32,7 @@ describe("private analytics dashboard API", () => {
     mocks.readUsageHours.mockResolvedValue([]);
     mocks.readUsageLifetime.mockResolvedValue([]);
     mocks.readRecentSearchTags.mockResolvedValue([]);
+    mocks.readSearchCountries7Days.mockResolvedValue([]);
     mocks.summarizeUsage.mockReturnValue({ today: { visits: 0 } });
     mocks.summarizeLifetime.mockReturnValue({ allTime: { visits: 0 }, trackingStartedAt: null });
   });
@@ -40,6 +45,7 @@ describe("private analytics dashboard API", () => {
     expect(mocks.readUsageHours).not.toHaveBeenCalled();
     expect(mocks.readUsageLifetime).not.toHaveBeenCalled();
     expect(mocks.readRecentSearchTags).not.toHaveBeenCalled();
+    expect(mocks.readSearchCountries7Days).not.toHaveBeenCalled();
   });
   it("hides data from non-admin users even after login", async () => {
     const response = await GET(request());
@@ -65,8 +71,10 @@ describe("private analytics dashboard API", () => {
       allTime: { visits: 0 },
       trackingStartedAt: null,
       recentSearchTags: [],
+      searchCountries7Days: [],
     });
     expect(mocks.readRecentSearchTags).toHaveBeenCalledOnce();
+    expect(mocks.readSearchCountries7Days).toHaveBeenCalledOnce();
     expect(mocks.readUsageLifetime).toHaveBeenCalledOnce();
   });
 });

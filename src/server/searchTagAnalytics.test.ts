@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const query = vi.hoisted(() => vi.fn());
 vi.mock("../db", () => ({ db: { $client: { query } } }));
-import { readRecentSearchTags, recordSearchTag, searchVisitorCountry } from "./searchTagAnalytics";
+import { readRecentSearchTags, readSearchCountries7Days, recordSearchTag, searchVisitorCountry } from "./searchTagAnalytics";
 
 describe("automatic privacy-minimal tag analytics", () => {
   beforeEach(() => {
@@ -58,6 +58,16 @@ describe("automatic privacy-minimal tag analytics", () => {
     expect(sql).toContain("jsonb_agg");
     expect(sql).toContain("LEFT JOIN breakdown");
     expect(sql).not.toMatch(/auth_users|ip_range|email|account_id|requester_ip/i);
+  });
+  it("country totals aggregate all searches without IP, accounts or per-request data", async () => {
+    await readSearchCountries7Days();
+    expect(query).toHaveBeenCalledOnce();
+    const sql = String(query.mock.calls[0][0]);
+    expect(sql).toContain("SUM(search_count)");
+    expect(sql).toContain("search_tag_country_hourly");
+    expect(sql).toContain("GROUP BY country_code");
+    expect(sql).toContain("7 days");
+    expect(sql).not.toMatch(/ip_address|user_agent|request_id|account_id|auth_users/i);
   });
   it("does not count a blocked request and falls back to ZZ on valid search without country header", async () => {
     await recordSearchTag("#9C82J8YPP", new Request("https://example.com"));

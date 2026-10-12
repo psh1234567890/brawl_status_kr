@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { countryShare, searchSuccessRate } from "../../utils/adminUsageMetrics";
 
 type Counts = { visits: number; searches: number; successfulSearches: number; gameEnds: number };
 type FailureReasons = Record<string, number>;
@@ -13,6 +14,7 @@ type SearchTagSummary = {
 };
 type Summary = {
   recentSearchTags: SearchTagSummary[];
+  searchCountries7Days?: Array<{ countryCode: string; searchCount: string }>;
   today: Counts;
   last7Days: Counts;
   allTime: Counts;
@@ -70,6 +72,8 @@ export default function UsageDashboard() {
   const [data, setData] = useState<Summary | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "denied" | "error">("loading");
   const [period, setPeriod] = useState<Period>("today");
+  const [tagFilter, setTagFilter] = useState("");
+  const [tagSort, setTagSort] = useState<"recent" | "popular">("recent");
   const [optOut, setOptOut] = useState(() =>
     typeof document !== "undefined" && document.cookie.includes("brawl_analytics_opt_out=1")
   );
@@ -118,6 +122,7 @@ export default function UsageDashboard() {
   }
 
   const max = Math.max(1, ...((data?.daily ?? []).map(item => item.visits)));
+  const searchMax = Math.max(1, ...((data?.daily ?? []).map(item => item.searches)));
   const counts = data ? (
     period === "today" ? data.today : period === "week" ? data.last7Days : data.allTime
   ) : null;
@@ -130,6 +135,14 @@ export default function UsageDashboard() {
         : data.failureReasonsAllTime
   ) ?? {} : {};
   const failedSearches = Math.max(0, (counts?.searches ?? 0) - (counts?.successfulSearches ?? 0));
+  const successRate = counts ? searchSuccessRate(counts) : null;
+  const countryRows = data?.searchCountries7Days ?? [];
+  const countryTotal = countryRows.reduce((sum, row) => sum + Number(row.searchCount), 0);
+  const visibleTags = (data?.recentSearchTags ?? [])
+    .filter((row) => row.playerTag.toUpperCase().includes(tagFilter.trim().replace(/^#/, "").toUpperCase()))
+    .sort((a, b) => tagSort === "popular"
+      ? Number(b.searchCount) - Number(a.searchCount) || a.playerTag.localeCompare(b.playerTag)
+      : new Date(b.lastSearchedAt).getTime() - new Date(a.lastSearchedAt).getTime());
   const classifiedFailures = failureKinds.reduce((total, reason) => total + (failureCounts[reason.key] ?? 0), 0);
   const unknownFailures = Math.max(0, failedSearches - classifiedFailures);
   const periodLabel = periods.find(item => item.key === period)?.label ?? "오늘";
@@ -191,6 +204,16 @@ export default function UsageDashboard() {
                       }부터 · 이전 Vercel 로그는 포함되지 않음`}
               </p>
             </div>
+            <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-blue-200 bg-blue-50 p-5">
+              <div>
+                <h2 className="text-sm font-black text-blue-950">{periodLabel} 플레이어 검색 성공률</h2>
+                <p className="mt-1 text-xs leading-5 text-blue-700">성공 검색 ÷ 전체 검색 요청. 검색 요청이 없으면 비율을 표시하지 않음</p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-black tabular-nums text-blue-900">{successRate === null ? "—" : `${successRate.toFixed(1)}%`}</p>
+                <p className="text-xs font-semibold text-blue-700">{n(counts?.successfulSearches ?? 0)} / {n(counts?.searches ?? 0)}건</p>
+              </div>
+            </section>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 [`${periodLabel} 방문 세션`, counts?.visits ?? 0],
@@ -233,6 +256,47 @@ export default function UsageDashboard() {
                 ))}
               </div>
             </section>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <section className="rounded-xl border bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-black">최근 7일 플레이어 검색 추이</h2>
+                <p className="mt-1 text-sm text-slate-600">일별 검색 요청과 성공 횟수 · 한국 시간 기준</p>
+                <div className="mt-5 flex h-44 items-end justify-between gap-2" role="img" aria-label="최근 7일 날짜별 검색 요청 횟수 막대그래프">
+                  {data.daily.map(day => (
+                    <div key={day.day} className="flex min-w-0 flex-1 flex-col items-center gap-2" title={`${day.day}: 검색 ${day.searches}회, 성공 ${day.successfulSearches}회`}>
+                      <span className="text-xs font-semibold tabular-nums">{n(day.searches)}</span>
+                      <div className="w-full rounded-t bg-indigo-600" style={{ height: day.searches === 0 ? 0 : Math.max(2, (day.searches / searchMax) * 120) }} />
+                      <span className="text-[11px] text-slate-500">{day.day.slice(5)}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <section className="rounded-xl border bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-black">최근 7일 검색 방문 국가</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  전체 검색 태그 기준 국가별 누적 요청 · {n(countryTotal)}회 · IP/계정 저장 없음
+                </p>
+                {countryTotal === 0 ? <p className="mt-4 text-sm text-slate-500">집계된 국가 정보가 없습니다.</p> : null}
+                <div className="mt-3 space-y-3">
+                  {countryRows.slice(0, 8).map((row) => {
+                    const country = visitorCountryLabel(row.countryCode);
+                    const count = Number(row.searchCount);
+                    const share = countryShare(count, countryTotal);
+                    return (
+                      <div key={row.countryCode}>
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                          <span className="font-semibold">{country.emoji} {country.label}</span>
+                          <span className="tabular-nums text-slate-600">{n(count)}회 · {share.toFixed(1)}%</span>
+                        </div>
+                        <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+                          <div className="h-full rounded-full bg-blue-600" style={{ width: `${Math.min(100, share)}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {countryRows.length > 8 ? <p className="text-xs text-slate-500">상위 8개 국가 표시 · 기타 {countryRows.length - 8}개 국가</p> : null}
+                </div>
+              </section>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <section className="rounded-xl border bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-black">{periodLabel} 미니게임별 종료</h2>
@@ -258,6 +322,30 @@ export default function UsageDashboard() {
             <section className="rounded-xl border bg-white p-5 shadow-sm">
               <h2 className="text-lg font-black">최근 검색된 플레이어 태그</h2>
               <p className="mt-1 text-sm text-slate-600">최근 7일(시간 단위) · 최근 검색 순 최대 200개 태그 · 방문자의 접속 국가 추정치(플레이어 계정 국가 아님) · 검색자 IP·사이트 계정 정보는 검색 통계에 저장하지 않음 · 기존 기록의 국가는 알 수 없음</p>
+              <div className="mt-4 flex flex-wrap items-end gap-3">
+                <label className="min-w-48 flex-1 text-xs font-bold text-slate-600">
+                  태그 검색
+                  <input
+                    type="search"
+                    value={tagFilter}
+                    onChange={(event) => setTagFilter(event.target.value)}
+                    placeholder="플레이어 태그 입력"
+                    className="mt-1 block min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </label>
+                <label className="text-xs font-bold text-slate-600">
+                  정렬
+                  <select
+                    value={tagSort}
+                    onChange={(event) => setTagSort(event.target.value as "recent" | "popular")}
+                    className="mt-1 block min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900"
+                  >
+                    <option value="recent">마지막 검색 순</option>
+                    <option value="popular">검색 횟수 순</option>
+                  </select>
+                </label>
+                <span className="pb-3 text-xs text-slate-500">{n(visibleTags.length)}개 표시</span>
+              </div>
               <div
                 role="region"
                 aria-label="최근 검색된 플레이어 태그 목록"
@@ -274,7 +362,7 @@ export default function UsageDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(data.recentSearchTags ?? []).map((item) => {
+                    {visibleTags.map((item) => {
                       const countries = item.countries ?? [];
                       const unclassified = Math.max(0,
                         Number(item.searchCount) - countries.reduce((sum, entry) => sum + Number(entry.searchCount), 0));
@@ -301,6 +389,9 @@ export default function UsageDashboard() {
                 </table>
                 {(data.recentSearchTags ?? []).length === 0 ? (
                   <p className="px-3 py-4 text-sm text-slate-500">아직 새 방식으로 기록된 검색 태그가 없습니다. 배포 이후의 성공 검색부터 집계합니다.</p>
+                ) : null}
+                {(data.recentSearchTags ?? []).length > 0 && visibleTags.length === 0 ? (
+                  <p className="px-3 py-4 text-sm text-slate-500">검색 조건에 맞는 태그가 없습니다.</p>
                 ) : null}
               </div>
             </section>

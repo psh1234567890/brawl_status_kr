@@ -13,6 +13,7 @@ import { getCatalogPageMessages } from "../../../i18n/catalogPageMessages";
 import { getBrawlifyMaps } from "../../../server/brawlify";
 import { translateMapName, translateModeName } from "../../../utils/brawlTranslations";
 import { isIndexableMap, selectIndexableMaps } from "../../../utils/seoIndexing";
+import { detailSeoDescription, detailSocialMetadata } from "../../../utils/detailSeo";
 
 interface MapDetailPageProps {
   params: Promise<{ id: string }>;
@@ -29,11 +30,18 @@ export async function getMapDetailMetadata(id: string, locale: Locale): Promise<
   const map = maps.find((item) => String(item.id) === id);
   const shouldIndex = map ? isIndexableMap(map, maps) : false;
   const basePath = `/maps/${id}`;
+  const title = map
+    ? `${translateMapName(map.name, locale)}${copy.metadata.detailTitleSuffix}`
+    : copy.metadata.detailFallbackTitle;
+  const description = detailSeoDescription(
+    map ? translateMapName(map.name, locale) : copy.metadata.detailFallbackTitle,
+    map?.gameMode?.name ? `${translateModeName(map.gameMode.name, locale)}. ${copy.detail.description}` : "",
+    copy.detail.description,
+  );
 
   return {
-    title: map
-      ? `${translateMapName(map.name, locale)}${copy.metadata.detailTitleSuffix}`
-      : copy.metadata.detailFallbackTitle,
+    title,
+    ...detailSocialMetadata(locale, title, description, basePath),
     alternates: {
       canonical: localizedHref(locale, basePath),
       languages: localeAlternates(basePath),

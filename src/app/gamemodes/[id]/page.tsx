@@ -16,6 +16,7 @@ import {
   selectIndexableGameModes,
   selectIndexableMaps,
 } from "../../../utils/seoIndexing";
+import { detailSeoDescription, detailSocialMetadata } from "../../../utils/detailSeo";
 
 interface GameModeDetailPageProps {
   params: Promise<{ id: string }>;
@@ -35,10 +36,17 @@ export async function getGameModeDetailMetadata(id: string, locale: Locale): Pro
     : false;
 
   const basePath = `/gamemodes/${id}`;
+  const title = mode
+    ? `${translateModeName(mode.name, locale)}${copy.metadata.detailTitleSuffix}`
+    : copy.metadata.detailFallbackTitle;
+  const description = detailSeoDescription(
+    mode ? translateModeName(mode.name, locale) : copy.metadata.detailFallbackTitle,
+    mode ? translateModeDescription(mode.name, mode.description ?? mode.shortDescription, locale) : "",
+    copy.detail.descriptionFallback,
+  );
   return {
-    title: mode
-      ? `${translateModeName(mode.name, locale)}${copy.metadata.detailTitleSuffix}`
-      : copy.metadata.detailFallbackTitle,
+    title,
+    ...detailSocialMetadata(locale, title, description, basePath),
     alternates: {
       canonical: localizedHref(locale, basePath),
       languages: localeAlternates(basePath),

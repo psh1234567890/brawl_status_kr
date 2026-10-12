@@ -14,6 +14,7 @@ import {
   translateRarityName,
 } from "../../../utils/brawlTranslations";
 import { selectIndexableBrawlers } from "../../../utils/seoIndexing";
+import { detailSeoDescription, detailSocialMetadata } from "../../../utils/detailSeo";
 
 interface BrawlerDetailPageProps {
   params: Promise<{ id: string }>;
@@ -34,8 +35,15 @@ export async function getBrawlerDetailMetadata(id: string, locale: Locale): Prom
     : false;
 
   const basePath = `/brawlers/${id}`;
+  const title = `${name}${copy.metadata.detailTitleSuffix}`;
+  const description = detailSeoDescription(
+    name,
+    brawler ? translateBrawlerDescription(brawler.name, brawler.description, locale) : "",
+    copy.detail.descriptionFallback,
+  );
   return {
-    title: `${name}${copy.metadata.detailTitleSuffix}`,
+    title,
+    ...detailSocialMetadata(locale, title, description, basePath),
     alternates: {
       canonical: localizedHref(locale, basePath),
       languages: localeAlternates(basePath),

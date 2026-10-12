@@ -3074,11 +3074,84 @@ const launchRetentionCopy: Record<Locale, string> = {
   ru: "Утверждённые сроки хранения при запуске: 7 дней для резервных копий и 14 дней для манифестов удаления. Аккаунты будут включены только после настройки и проверки зашифрованного хранения и очистки просроченных данных.",
 };
 
-export const accountPolicyMessages = Object.fromEntries(locales.map((locale) => [locale, {
-  ...baseAccountPolicyMessages[locale],
-  privacyText: baseAccountPolicyMessages[locale].privacyText + " " + launchPolicy.eligibilityTexts[locale] + " " + launchRetentionCopy[locale],
-  termsText: baseAccountPolicyMessages[locale].termsText + " " + launchPolicy.eligibilityTexts[locale],
-}])) as Record<Locale, AccountPolicyCopy>;
+// The account launch is controlled by deployment configuration and eligibility,
+// not by the older "disabled by default / will launch later" policy draft.
+// Keep a current availability statement in every language without implying that
+// sign-in is unavailable to everyone. Retain the detailed data/retention copy.
+const accountAvailabilityCopy: Record<Locale, {
+  intro: string;
+  retiredRetentionGate: string;
+  retiredTermsGate: string;
+}> = {
+  ko: {
+    intro: "계정 사용은 선택 사항이며, 이용 조건을 충족하는 경우 Google 로그인을 이용할 수 있습니다.",
+    retiredRetentionGate: "실제 보존 값이 확정·설정되기 전까지 계정 기능을 켜지 않습니다.",
+    retiredTermsGate: "계정 정책과 자격 요건이 설정되기 전에는 계정 기능을 활성화하지 않습니다.",
+  },
+  en: {
+    intro: "Accounts are optional; eligible visitors may use Google sign-in where available.",
+    retiredRetentionGate: "Accounts remain disabled until the actual retention values are approved and disclosed.",
+    retiredTermsGate: "Account features will not be enabled until account and eligibility policies are configured.",
+  },
+  ja: {
+    intro: "アカウントの利用は任意で、利用条件を満たす場合はGoogleログインを利用できます。",
+    retiredRetentionGate: "実際の保持値が承認・公開されるまでアカウント機能は無効です。",
+    retiredTermsGate: "アカウントと利用条件の方針が設定されるまで機能を有効化しません。",
+  },
+  "pt-br": {
+    intro: "As contas são opcionais; usuários elegíveis podem entrar com Google quando o recurso estiver disponível.",
+    retiredRetentionGate: "As contas permanecem desativadas até que os valores reais sejam aprovados e divulgados.",
+    retiredTermsGate: "Os recursos de conta não serão ativados antes da configuração das políticas de conta e elegibilidade.",
+  },
+  es: {
+    intro: "Las cuentas son opcionales; quienes cumplan los requisitos pueden iniciar sesión con Google cuando esté disponible.",
+    retiredRetentionGate: "Las cuentas seguirán desactivadas hasta aprobar y publicar los valores reales.",
+    retiredTermsGate: "Las funciones de cuenta no se activarán hasta configurar las políticas de cuenta y elegibilidad.",
+  },
+  tr: {
+    intro: "Hesap isteğe bağlıdır; uygun kullanıcılar kullanılabilir olduğunda Google ile giriş yapabilir.",
+    retiredRetentionGate: "Gerçek süreler onaylanıp açıklanana kadar hesaplar kapalı kalır.",
+    retiredTermsGate: "Hesap ve uygunluk politikaları ayarlanmadan özellik açılmaz.",
+  },
+  de: {
+    intro: "Ein Konto ist freiwillig; berechtigte Nutzer können die Google-Anmeldung verwenden, sofern sie verfügbar ist.",
+    retiredRetentionGate: "Konten bleiben deaktiviert, bis die tatsächlichen Fristen beschlossen und veröffentlicht sind.",
+    retiredTermsGate: "Kontofunktionen werden erst nach Festlegung der Konto- und Teilnahmebedingungen aktiviert.",
+  },
+  fr: {
+    intro: "Le compte est facultatif ; les utilisateurs éligibles peuvent se connecter avec Google lorsque cette fonction est disponible.",
+    retiredRetentionGate: "Les comptes restent désactivés tant que les valeurs réelles ne sont pas approuvées et publiées.",
+    retiredTermsGate: "Les fonctions de compte ne seront pas activées avant la définition des règles du compte et d’éligibilité.",
+  },
+  it: {
+    intro: "L'account è facoltativo; gli utenti idonei possono accedere con Google quando la funzione è disponibile.",
+    retiredRetentionGate: "Gli account restano disattivati finché i valori effettivi non saranno approvati e pubblicati.",
+    retiredTermsGate: "Le funzioni account non saranno attivate finché le policy di account e idoneità non saranno configurate.",
+  },
+  ru: {
+    intro: "Аккаунт необязателен; подходящие пользователи могут войти через Google, если эта функция доступна.",
+    retiredRetentionGate: "Аккаунты останутся отключенными, пока фактические сроки не будут утверждены и опубликованы.",
+    retiredTermsGate: "Функции аккаунта не будут включены до настройки правил аккаунта и допуска.",
+  },
+};
+
+function dropRetiredSentence(text: string, sentence: string) {
+  return text.replace(sentence, "").replace(/\s{2,}/g, " ").trim();
+}
+
+export const accountPolicyMessages = Object.fromEntries(locales.map((locale) => {
+  const base = baseAccountPolicyMessages[locale];
+  const status = accountAvailabilityCopy[locale];
+  // All ten legacy privacy drafts start with an obsolete disabled-by-default sentence.
+  const restOfPrivacy = base.privacyText.replace(/^[^.。]+[.。]\s*/, "");
+  return [locale, {
+    ...base,
+    privacyText: status.intro + " " + dropRetiredSentence(restOfPrivacy, status.retiredRetentionGate) +
+      " " + launchPolicy.eligibilityTexts[locale] + " " + launchRetentionCopy[locale],
+    termsText: dropRetiredSentence(base.termsText, status.retiredTermsGate) +
+      " " + launchPolicy.eligibilityTexts[locale],
+  }];
+})) as Record<Locale, AccountPolicyCopy>;
 
 const usagePrivacyNotice: Record<Locale, DocumentSection> = {
   "ko": { title: "익명 사이트 이용 통계", blocks: [{ type: "paragraph", text: "서비스 이용 현황을 확인하기 위해 브라우저 탭 방문 세션 수, 플레이어 검색 성공·실패 횟수, 미니게임 종료 횟수를 한국 시간 기준 시간대별 합계로 저장합니다. 이 통계에는 플레이어 태그, IP, 계정 ID, 기기 식별자나 검색어를 저장하지 않습니다. 방문 세션은 고유 사용자 수가 아닙니다. 집계는 최대 90일 보관하며 새 활동이 기록될 때 지난 집계를 정리합니다. 브라우저는 같은 탭에서 중복 방문 수를 줄이기 위해 sessionStorage를 사용하며, 운영자 화면에서는 이 브라우저의 분석 제외 쿠키를 설정할 수 있습니다." }] },
@@ -3126,7 +3199,7 @@ export function getDocumentPageMessages(locale: Locale) {
     privacy: {
       ...content.privacy,
       sections: [...content.privacy.sections, usagePrivacyNotice[locale], searchTagPrivacyNotice[locale], competitivePrivacyNotice[locale]],
-      effectiveDate: locale === "ko" ? "업데이트: 2026년 10월 12일" : "Updated: 2026-10-12",
+      effectiveDate: locale === "ko" ? "업데이트: 2026년 10월 13일" : "Updated: 2026-10-13",
     },
   };
 }

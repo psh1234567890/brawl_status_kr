@@ -122,7 +122,7 @@ export default function UsageDashboard() {
   }
 
   const max = Math.max(1, ...((data?.daily ?? []).map(item => item.visits)));
-  const searchMax = Math.max(1, ...((data?.daily ?? []).map(item => item.searches)));
+  const searchMax = Math.max(1, ...((data?.daily ?? []).map(item => item.searches ?? 0)));
   const counts = data ? (
     period === "today" ? data.today : period === "week" ? data.last7Days : data.allTime
   ) : null;
@@ -262,9 +262,9 @@ export default function UsageDashboard() {
                 <p className="mt-1 text-sm text-slate-600">일별 검색 요청과 성공 횟수 · 한국 시간 기준</p>
                 <div className="mt-5 flex h-44 items-end justify-between gap-2" role="img" aria-label="최근 7일 날짜별 검색 요청 횟수 막대그래프">
                   {data.daily.map(day => (
-                    <div key={day.day} className="flex min-w-0 flex-1 flex-col items-center gap-2" title={`${day.day}: 검색 ${day.searches}회, 성공 ${day.successfulSearches}회`}>
-                      <span className="text-xs font-semibold tabular-nums">{n(day.searches)}</span>
-                      <div className="w-full rounded-t bg-indigo-600" style={{ height: day.searches === 0 ? 0 : Math.max(2, (day.searches / searchMax) * 120) }} />
+                    <div key={day.day} className="flex min-w-0 flex-1 flex-col items-center gap-2" title={`${day.day}: 검색 ${day.searches ?? 0}회, 성공 ${day.successfulSearches ?? 0}회`}>
+                      <span className="text-xs font-semibold tabular-nums">{n(day.searches ?? 0)}</span>
+                      <div className="w-full rounded-t bg-indigo-600" style={{ height: !day.searches ? 0 : Math.max(2, (day.searches / searchMax) * 120) }} />
                       <span className="text-[11px] text-slate-500">{day.day.slice(5)}</span>
                     </div>
                   ))}

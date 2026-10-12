@@ -33,16 +33,6 @@ export const metadata: Metadata = {
   authors: [{ name: "Brawl Status KR" }],
   creator: "Brawl Status KR",
   publisher: "Brawl Status KR",
-  keywords: [
-    "브롤스타즈 전적",
-    "브롤스타즈 전적 검색",
-    "브롤스타즈 프로필",
-    "브롤스타즈 승률",
-    "브롤스타즈 맵별 브롤러 추천",
-    "브롤스타즈 추천 브롤러",
-    "브롤스타즈 스킨",
-    "브롤스타즈 통계",
-  ],
   alternates: {
     canonical: "/",
     languages: localeAlternates("/"),
@@ -80,27 +70,30 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: siteName,
+    "@id": siteUrl + "/#webapp",
+    name: "Brawl Status KR",
     url: siteUrl,
     applicationCategory: "GameApplication",
     operatingSystem: "Web",
-    inLanguage: "ko-KR",
-    description: siteDescription,
+    // Global product information is language-neutral; the [lang] layout
+    // adds locale-specific WebSite structured data for translated routes.
+    inLanguage: Object.values(numberLocales),
+    description: "Brawl Stars player statistics, recent battles, map meta and Brawler comparisons in multiple languages.",
     offers: {
       "@type": "Offer",
       price: "0",
       priceCurrency: "KRW",
     },
     featureList: [
-      "브롤스타즈 플레이어 전적 검색",
-      "최근 전투 기록 분석",
-      "맵별 추천 브롤러 통계",
-      "브롤스타즈 스킨 카탈로그",
+      "Brawl Stars player search",
+      "Recent battle analysis",
+      "Map-based Brawler recommendations",
+      "Skin catalog and player comparison",
     ],
   };
 
   return (
-    <html lang={numberLocales.ko} suppressHydrationWarning>
+    <html lang="und" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: documentLangScript }} />
       </head>

@@ -21,7 +21,42 @@ const labels = {
     note: "色は保存された対戦履歴の数です。空白の日でもゲームをプレイしていないとは限りません。",
     unknown: "記録なし", games: "記録された試合", days: "記録日数", legend: "多い",
   },
-};
+  "pt-br": {
+    title: "Atividade dos últimos 90 dias",
+    note: "As cores mostram apenas batalhas registradas. Dias sem registros não significam necessariamente que o jogador ficou inativo.",
+    unknown: "Sem registros", games: "Batalhas registradas", days: "Dias registrados", legend: "Mais",
+  },
+  es: {
+    title: "Actividad de los últimos 90 días",
+    note: "Los colores muestran solo batallas registradas. Un día sin registros no significa necesariamente que no se jugó.",
+    unknown: "Sin registros", games: "Batallas registradas", days: "Días registrados", legend: "Más",
+  },
+  tr: {
+    title: "Son 90 günün etkinliği",
+    note: "Renkler yalnızca kaydedilen savaşları gösterir. Kayıt olmaması, oyuncunun o gün oynamadığı anlamına gelmez.",
+    unknown: "Kayıt yok", games: "Kaydedilen savaşlar", days: "Kayıtlı günler", legend: "Daha fazla",
+  },
+  de: {
+    title: "Aktivität der letzten 90 Tage",
+    note: "Die Farben zeigen nur erfasste Kämpfe. Ein Tag ohne Daten bedeutet nicht, dass der Spieler inaktiv war.",
+    unknown: "Keine Daten", games: "Erfasste Kämpfe", days: "Erfasste Tage", legend: "Mehr",
+  },
+  fr: {
+    title: "Activité des 90 derniers jours",
+    note: "Les couleurs indiquent uniquement les combats enregistrés. Un jour sans données ne signifie pas forcément que le joueur n'a pas joué.",
+    unknown: "Aucune donnée", games: "Combats enregistrés", days: "Jours enregistrés", legend: "Plus",
+  },
+  it: {
+    title: "Attività degli ultimi 90 giorni",
+    note: "I colori mostrano solo le battaglie registrate. Un giorno senza dati non significa necessariamente che il giocatore fosse inattivo.",
+    unknown: "Nessun dato", games: "Battaglie registrate", days: "Giorni registrati", legend: "Più",
+  },
+  ru: {
+    title: "Активность за последние 90 дней",
+    note: "Цвет показывает только сохранённые бои. Отсутствие записей не означает, что игрок в этот день не играл.",
+    unknown: "Нет записей", games: "Сохранённые бои", days: "Дней с записями", legend: "Больше",
+  },
+} satisfies Record<Locale, { title: string; note: string; unknown: string; games: string; days: string; legend: string }>;
 
 const colors = ["bg-slate-200", "bg-blue-200", "bg-blue-400", "bg-blue-600", "bg-blue-800"] as const;
 
@@ -30,7 +65,7 @@ export default function PlayerActivityHeatmap({ daily, locale = "ko" }: {
   locale?: Locale;
 }) {
   const view = useMemo(() => buildActivityHeatmap(daily), [daily]);
-  const copy = locale === "ko" ? labels.ko : locale === "ja" ? labels.ja : labels.en;
+  const copy = labels[locale];
   return <section aria-labelledby="activity-heatmap-title" className="mt-4 rounded-lg border border-slate-200 bg-white p-4">
     <div className="flex flex-wrap items-baseline justify-between gap-2">
       <h3 id="activity-heatmap-title" className="text-sm font-black text-slate-950">{copy.title}</h3>

@@ -39,6 +39,10 @@ export const ACCOUNT_USER_RATE_LIMIT_SCOPES = [
   "minigame-read-user",
   "minigame-write-user-minute",
   "minigame-write-user-hour",
+  // Competition scopes derived from account IDs also must disappear on deletion.
+  "competitive-start-user-hour",
+  "competitive-answer-user-minute",
+  "competitive-withdraw-user-hour",
 ] as const;
 
 export async function consumeAccountRateLimits(

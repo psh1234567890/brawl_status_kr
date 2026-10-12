@@ -67,6 +67,12 @@ describe("account-only encrypted backup PostgreSQL integration", () => {
       }
       await source.query("INSERT INTO public.auth_sessions (user_id, token, expires_at) VALUES ($1, $2, now() + interval '1 day')", [survivorId, randomUUID()]);
       await source.query("INSERT INTO public.auth_verifications (identifier, value, expires_at) VALUES ('synthetic-consumed-state', 'synthetic-only', now() + interval '1 hour')");
+      // Competition rows belong to synthetic accounts and must survive account
+      // backups, then disappear under the signed deletion manifest.
+      await source.query("INSERT INTO public.competitive_aliases (user_id, public_alias) VALUES ($1, 'Player-ABCDEF1234')", [survivorId]);
+      await source.query("INSERT INTO public.competitive_aliases (user_id, public_alias) VALUES ($1, 'Player-0000111122')", [deletedId]);
+      await source.query("INSERT INTO public.competitive_results (round_id, user_id, game_id, score) VALUES ($1, $2, 'higher-lower', 7)", [randomUUID(), survivorId]);
+      await source.query("INSERT INTO public.competitive_results (round_id, user_id, game_id, score) VALUES ($1, $2, 'release-order', 8)", [randomUUID(), deletedId]);
       run(process.execPath, ["scripts/snapshot-accounts.mjs", "backup"], env);
       const initialFiles = await readdir(temporary);
       const backup = initialFiles.find((name) => name.endsWith(".dump.enc"));
@@ -94,10 +100,13 @@ describe("account-only encrypted backup PostgreSQL integration", () => {
       const tables = await restore.query("SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename");
       expect(tables.rows.map((row) => row.tablename)).toEqual([...ACCOUNT_SNAPSHOT_TABLES].sort());
       expect((await restore.query("SELECT count(*)::int AS count FROM public.auth_users")).rows[0].count).toBe(2);
+      expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_results")).rows[0].count).toBe(2);
       run(process.execPath, ["scripts/migrate-accounts.mjs"], { ...env, ACCOUNT_MIGRATION_DATABASE_URL: restoreUrl.toString() });
       const result = await applyDeletionManifest(restore, manifest, secret, new Date(), { revokeRestoredAuthentication: true });
       expect(result).toMatchObject({ deletedUsers: 1, revokedSessions: 1, removedVerifications: 1 });
       expect((await restore.query("SELECT id FROM public.auth_users")).rows).toEqual([{ id: survivorId }]);
+      expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_results")).rows[0].count).toBe(1);
+      expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_aliases")).rows[0].count).toBe(1);
       expect((await restore.query("SELECT count(*)::int AS count FROM account_safety.deletion_ledger")).rows[0].count).toBe(1);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.auth_sessions")).rows[0].count).toBe(0);
     } finally {

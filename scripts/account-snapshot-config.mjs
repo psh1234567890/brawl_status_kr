@@ -13,6 +13,7 @@ export const ACCOUNT_SNAPSHOT_TABLES = Object.freeze([
   "auth_users", "auth_accounts", "auth_sessions", "auth_verifications",
   "minigame_personal_bests", "account_sync_receipts", "account_rate_limits",
   "account_deletion_tombstones", "account_schema_migrations",
+  "competitive_aliases", "competitive_rounds", "competitive_results",
 ]);
 
 export function readAccountSnapshotConfig(env, repoRoot = process.cwd()) {

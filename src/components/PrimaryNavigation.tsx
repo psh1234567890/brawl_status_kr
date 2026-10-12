@@ -43,7 +43,7 @@ export default function PrimaryNavigation({ locale, ariaLabel, items }: PrimaryN
             ref={active ? activeLinkRef : undefined}
             href={localizedHref(locale, href)}
             aria-current={active ? "page" : undefined}
-            className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-black shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:px-4 sm:text-sm ${
+            className={`inline-flex min-h-11 shrink-0 items-center rounded-lg border px-3 py-2 text-xs font-black shadow-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:px-4 sm:text-sm ${
               active
                 ? "border-blue-700 bg-blue-700 text-white"
                 : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"

@@ -62,7 +62,121 @@ const ja: typeof en = {
   freshnessStale: "キャッシュされた情報（最新ではない可能性があります）", tag: "タグ", notAvailable: "—",
 };
 
+const ptBr: typeof en = {
+  title: "Comparar jogadores", eyebrow: "Jogador vs. jogador",
+  description: "Compare dois perfis de Brawl Stars: troféus, vitórias, evolução dos Brawlers e classificação.",
+  first: "Tag do jogador A", second: "Tag do jogador B", action: "Comparar", busy: "Comparando…",
+  invalid: "Insira duas tags válidas e diferentes.", failed: "Não foi possível carregar o perfil.",
+  retry: "Tentar novamente", share: "Copiar link", copied: "Link copiado", copyFailed: "Não foi possível copiar o link.",
+  intro: "Insira duas tags para iniciar a comparação.", stats: "Comparação de perfis",
+  trophy: "Troféus", peak: "Recorde de troféus", victory3: "Vitórias 3v3", solo: "Vitórias solo",
+  duo: "Vitórias em dupla", owned: "Brawlers obtidos", max: "Brawlers no poder 11",
+  power: "Progresso das melhorias", coins: "Moedas até poder 11",
+  gadget: "Acessórios obtidos", star: "Poderes de estrela", hyper: "Hipercargas obtidas",
+  ranked: "Classificação atual", rankedHighest: "Melhor classificação", noRanked: "Sem registro",
+  top: "Brawlers com mais troféus",
+  caveat: "Vitórias são totais acumulados e não medem habilidade. O progresso de melhorias considera apenas Brawlers obtidos. Não representa vitórias em confrontos diretos.",
+  freshnessStale: "Perfil em cache (pode estar desatualizado)", tag: "Tag", notAvailable: "—",
+};
+const es: typeof en = {
+  title: "Comparar jugadores", eyebrow: "Jugador contra jugador",
+  description: "Compara los trofeos, victorias, mejoras de brawlers y rangos de dos jugadores de Brawl Stars.",
+  first: "Etiqueta del jugador A", second: "Etiqueta del jugador B", action: "Comparar", busy: "Comparando…",
+  invalid: "Introduce dos etiquetas válidas y diferentes.", failed: "No se pudo cargar el perfil.",
+  retry: "Reintentar", share: "Copiar enlace", copied: "Enlace copiado", copyFailed: "No se pudo copiar el enlace.",
+  intro: "Introduce dos etiquetas para ver la comparación.", stats: "Comparación de perfiles",
+  trophy: "Trofeos", peak: "Máximo de trofeos", victory3: "Victorias 3c3", solo: "Victorias en solitario",
+  duo: "Victorias en dúo", owned: "Brawlers obtenidos", max: "Brawlers a fuerza 11",
+  power: "Progreso de mejoras", coins: "Monedas hasta fuerza 11",
+  gadget: "Accesorios obtenidos", star: "Habilidades estelares", hyper: "Hipercargas obtenidas",
+  ranked: "Rango actual", rankedHighest: "Mejor rango", noRanked: "Sin datos",
+  top: "Brawlers con más trofeos",
+  caveat: "Las victorias son acumuladas y no demuestran mayor habilidad. El progreso de mejoras solo incluye brawlers obtenidos. No es una tasa de victorias entre ambos.",
+  freshnessStale: "Perfil en caché (puede estar desactualizado)", tag: "Etiqueta", notAvailable: "—",
+};
+const tr: typeof en = {
+  title: "Oyuncuları Karşılaştır", eyebrow: "Oyuncu karşılaştırması",
+  description: "İki Brawl Stars oyuncusunun kupalarını, galibiyetlerini, karakter gelişimini ve derecelerini karşılaştır.",
+  first: "Oyuncu A etiketi", second: "Oyuncu B etiketi", action: "Karşılaştır", busy: "Karşılaştırılıyor…",
+  invalid: "Birbirinden farklı iki geçerli oyuncu etiketi gir.", failed: "Profil yüklenemedi.",
+  retry: "Tekrar dene", share: "Bağlantıyı kopyala", copied: "Bağlantı kopyalandı", copyFailed: "Bağlantı kopyalanamadı.",
+  intro: "Karşılaştırmak için iki oyuncu etiketi gir.", stats: "Profil karşılaştırması",
+  trophy: "Kupalar", peak: "En yüksek kupa", victory3: "3'e 3 galibiyet", solo: "Tekli galibiyet",
+  duo: "İkili galibiyet", owned: "Sahip olunan karakterler", max: "Güç 11 karakterler",
+  power: "Güç geliştirme ilerlemesi", coins: "Güç 11 için gereken altın",
+  gadget: "Aksesuarlar", star: "Yıldız güçleri", hyper: "Hiper şarjlar",
+  ranked: "Güncel dereceli", rankedHighest: "En yüksek dereceli", noRanked: "Kayıt yok",
+  top: "En çok kupalı karakterler",
+  caveat: "Galibiyet sayıları toplamdır; yüksek sayı daha iyi bir oyuncu olduğunu göstermez. Gelişim yalnızca sahip olunan karakterleri kapsar ve oyuncular arası kazanma oranı değildir.",
+  freshnessStale: "Önbellekteki profil (güncel olmayabilir)", tag: "Etiket", notAvailable: "—",
+};
+const de: typeof en = {
+  title: "Spieler vergleichen", eyebrow: "Spieler gegen Spieler",
+  description: "Vergleiche Trophäen, Siege, Brawler-Upgrades und Ranglistenwerte zweier Brawl-Stars-Spieler.",
+  first: "Spielertag A", second: "Spielertag B", action: "Vergleichen", busy: "Vergleiche…",
+  invalid: "Gib zwei unterschiedliche, gültige Spielertags ein.", failed: "Das Profil konnte nicht geladen werden.",
+  retry: "Erneut versuchen", share: "Vergleichslink kopieren", copied: "Link kopiert", copyFailed: "Link konnte nicht kopiert werden.",
+  intro: "Gib zwei Spielertags ein, um sie zu vergleichen.", stats: "Profilvergleich",
+  trophy: "Trophäen", peak: "Trophäenrekord", victory3: "3-gegen-3-Siege", solo: "Solo-Siege",
+  duo: "Duo-Siege", owned: "Eigene Brawler", max: "Brawler auf Power 11",
+  power: "Upgrade-Fortschritt", coins: "Münzen bis Power 11",
+  gadget: "Gadgets", star: "Star Powers", hyper: "Hypercharges",
+  ranked: "Aktueller Rang", rankedHighest: "Höchster Rang", noRanked: "Kein Eintrag",
+  top: "Brawler mit den meisten Trophäen",
+  caveat: "Siege sind Gesamtwerte und kein Beweis für höheres Können. Der Upgrade-Fortschritt umfasst nur eigene Brawler und ist keine direkte Duell-Siegquote.",
+  freshnessStale: "Zwischengespeichertes Profil (eventuell veraltet)", tag: "Tag", notAvailable: "—",
+};
+const fr: typeof en = {
+  title: "Comparer les joueurs", eyebrow: "Face-à-face",
+  description: "Comparez les trophées, victoires, améliorations et rangs de deux joueurs de Brawl Stars.",
+  first: "Tag du joueur A", second: "Tag du joueur B", action: "Comparer", busy: "Comparaison…",
+  invalid: "Saisissez deux tags valides et différents.", failed: "Impossible de charger le profil.",
+  retry: "Réessayer", share: "Copier le lien", copied: "Lien copié", copyFailed: "Impossible de copier le lien.",
+  intro: "Saisissez deux tags pour commencer.", stats: "Comparaison des profils",
+  trophy: "Trophées", peak: "Record de trophées", victory3: "Victoires 3c3", solo: "Victoires solo",
+  duo: "Victoires duo", owned: "Brawlers possédés", max: "Brawlers puissance 11",
+  power: "Progression des améliorations", coins: "Pièces jusqu'à puissance 11",
+  gadget: "Gadgets possédés", star: "Pouvoirs star", hyper: "Hypercharges",
+  ranked: "Rang actuel", rankedHighest: "Meilleur rang", noRanked: "Aucun résultat",
+  top: "Brawlers avec le plus de trophées",
+  caveat: "Les victoires sont cumulées et ne prouvent pas un meilleur niveau. Les améliorations concernent uniquement les Brawlers possédés, sans représenter un taux de victoire en duel.",
+  freshnessStale: "Profil en cache (peut être obsolète)", tag: "Tag", notAvailable: "—",
+};
+const it: typeof en = {
+  title: "Confronta giocatori", eyebrow: "Giocatore contro giocatore",
+  description: "Confronta trofei, vittorie, potenziamenti e gradi di due giocatori di Brawl Stars.",
+  first: "Tag giocatore A", second: "Tag giocatore B", action: "Confronta", busy: "Confronto in corso…",
+  invalid: "Inserisci due tag validi e diversi.", failed: "Impossibile caricare il profilo.",
+  retry: "Riprova", share: "Copia link", copied: "Link copiato", copyFailed: "Impossibile copiare il link.",
+  intro: "Inserisci due tag per iniziare.", stats: "Confronto dei profili",
+  trophy: "Trofei", peak: "Record di trofei", victory3: "Vittorie 3v3", solo: "Vittorie in solitaria",
+  duo: "Vittorie in coppia", owned: "Brawler posseduti", max: "Brawler a potenza 11",
+  power: "Progressi potenziamenti", coins: "Monete fino a potenza 11",
+  gadget: "Gadget posseduti", star: "Abilità stellari", hyper: "Ipercariche",
+  ranked: "Grado attuale", rankedHighest: "Grado massimo", noRanked: "Nessun dato",
+  top: "Brawler con più trofei",
+  caveat: "Le vittorie sono cumulative e non misurano l'abilità. I potenziamenti includono solo i Brawler posseduti e non rappresentano la percentuale di vittorie negli scontri diretti.",
+  freshnessStale: "Profilo nella cache (potrebbe non essere aggiornato)", tag: "Tag", notAvailable: "—",
+};
+const ru: typeof en = {
+  title: "Сравнение игроков", eyebrow: "Игрок против игрока",
+  description: "Сравните трофеи, победы, улучшения бойцов и ранги двух игроков Brawl Stars.",
+  first: "Тег игрока A", second: "Тег игрока B", action: "Сравнить", busy: "Сравниваем…",
+  invalid: "Введите два разных действительных тега игроков.", failed: "Не удалось загрузить профиль.",
+  retry: "Повторить", share: "Скопировать ссылку", copied: "Ссылка скопирована", copyFailed: "Не удалось скопировать ссылку.",
+  intro: "Введите два тега игроков для сравнения.", stats: "Сравнение профилей",
+  trophy: "Трофеи", peak: "Максимум трофеев", victory3: "Победы 3 на 3", solo: "Победы в одиночном",
+  duo: "Победы в парном", owned: "Полученные бойцы", max: "Бойцы 11 уровня",
+  power: "Прогресс улучшений", coins: "Монеты до 11 уровня",
+  gadget: "Гаджеты", star: "Звёздные силы", hyper: "Гиперзаряды",
+  ranked: "Текущий ранг", rankedHighest: "Лучший ранг", noRanked: "Нет данных",
+  top: "Бойцы с наибольшим числом трофеев",
+  caveat: "Победы учитываются за всё время и не доказывают превосходство игрока. Прогресс улучшений относится только к имеющимся бойцам и не отражает победы в личных встречах.",
+  freshnessStale: "Данные из кеша (могли устареть)", tag: "Тег", notAvailable: "—",
+};
+
+const translated = { ko, en, ja, "pt-br": ptBr, es, tr, de, fr, it, ru } satisfies Record<Locale, typeof en>;
+
 export function getComparisonMessages(locale: Locale) {
-  // Base English fallback for languages not yet fully translated.
-  return locale === "ko" ? ko : locale === "ja" ? ja : en;
+  return translated[locale];
 }

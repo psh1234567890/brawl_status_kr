@@ -34,13 +34,78 @@ const ja: typeof en = {
   unknown: "パワーレベルが不明なキャラクターは計算から除外しています。",
   note: "所持キャラクターをパワー11まで強化する固定費用のみ。未所持キャラの解放、ガジェット、スターパワー、ギア、ハイパーチャージ、バフィー、現在の所持資源は含みません。価格は変更される場合があります。",
 };
+const ptBr: typeof en = {
+  title: "Evolução e custos dos Brawlers", subtitle: "Progresso de poder dos Brawlers que você possui",
+  progress: "Melhorias de poder (por custo em moedas)", full: "No poder 11",
+  coins: "Moedas até poder 11", points: "Pontos de poder necessários", owned: "Brawlers obtidos",
+  hyper: "Hipercargas", gadgets: "Acessórios", stars: "Poderes de estrela",
+  show: "Ver custo por Brawler", hide: "Ocultar detalhes", level: "Poder",
+  unknown: "Brawlers com nível desconhecido não entram na estimativa.",
+  note: "Apenas custos fixos para evoluir Brawlers obtidos até poder 11. Não inclui desbloqueios, habilidades, equipamentos, Buffies ou saldo de recursos. Os custos podem mudar.",
+};
+const es: typeof en = {
+  title: "Progreso y costes de los Brawlers", subtitle: "Evolución de los brawlers obtenidos",
+  progress: "Mejoras de fuerza (según coste en monedas)", full: "A fuerza 11",
+  coins: "Monedas hasta fuerza 11", points: "Puntos de fuerza necesarios", owned: "Brawlers obtenidos",
+  hyper: "Hipercargas", gadgets: "Accesorios", stars: "Habilidades estelares",
+  show: "Ver costes por brawler", hide: "Ocultar detalles", level: "Fuerza",
+  unknown: "Se excluyen los brawlers con niveles desconocidos.",
+  note: "Solo costes fijos para subir a fuerza 11 los brawlers obtenidos. No incluye desbloqueos, habilidades, equipos, Buffies ni recursos actuales. Los costes pueden cambiar.",
+};
+const tr: typeof en = {
+  title: "Karakter gelişimi ve maliyetleri", subtitle: "Sahip olduğun karakterlerin güç seviyeleri",
+  progress: "Güç yükseltme ilerlemesi (altın maliyetine göre)", full: "Güç 11",
+  coins: "Güç 11 için gereken altın", points: "Gereken güç puanları", owned: "Karakterler",
+  hyper: "Hiper şarjlar", gadgets: "Aksesuarlar", stars: "Yıldız güçleri",
+  show: "Karakter maliyetlerini göster", hide: "Ayrıntıları gizle", level: "Güç",
+  unknown: "Güç seviyesi bilinmeyen karakterler hesaplamaya dahil edilmez.",
+  note: "Yalnızca sahip olunan karakterlerin Güç 11'e yükseltme masraflarıdır. Yeni karakterler, yetenekler, ekipmanlar, Buffies ve mevcut kaynaklar dahil değildir. Maliyetler değişebilir.",
+};
+const de: typeof en = {
+  title: "Brawler-Fortschritt und Kosten", subtitle: "Power-Level deiner eigenen Brawler",
+  progress: "Upgrade-Fortschritt (nach Münzkosten)", full: "Auf Power 11",
+  coins: "Münzen bis Power 11", points: "Benötigte Powerpunkte", owned: "Eigene Brawler",
+  hyper: "Hypercharges", gadgets: "Gadgets", stars: "Star Powers",
+  show: "Kosten pro Brawler anzeigen", hide: "Details ausblenden", level: "Power",
+  unknown: "Brawler mit unbekanntem Power-Level werden nicht geschätzt.",
+  note: "Nur feste Level-Up-Kosten für eigene Brawler bis Power 11. Ohne Freischaltungen, Fähigkeiten, Ausrüstung, Buffies und aktuelle Ressourcen. Kosten können sich ändern.",
+};
+const fr: typeof en = {
+  title: "Progression et coûts des Brawlers", subtitle: "Niveaux de puissance des Brawlers possédés",
+  progress: "Progression des améliorations (en pièces)", full: "Puissance 11",
+  coins: "Pièces jusqu'à puissance 11", points: "Points de pouvoir requis", owned: "Brawlers possédés",
+  hyper: "Hypercharges", gadgets: "Gadgets", stars: "Pouvoirs star",
+  show: "Voir le coût par Brawler", hide: "Masquer les détails", level: "Puissance",
+  unknown: "Les Brawlers dont le niveau est inconnu sont exclus.",
+  note: "Coûts fixes pour améliorer les Brawlers possédés jusqu'au niveau 11. Sans déblocages, capacités, équipements, Buffies ou ressources actuelles. Les coûts peuvent changer.",
+};
+const it: typeof en = {
+  title: "Progressi e costi dei Brawler", subtitle: "Livelli di potenza dei Brawler posseduti",
+  progress: "Progresso potenziamenti (in monete)", full: "A potenza 11",
+  coins: "Monete fino a potenza 11", points: "Punti energia necessari", owned: "Brawler posseduti",
+  hyper: "Ipercariche", gadgets: "Gadget", stars: "Abilità stellari",
+  show: "Mostra costi per Brawler", hide: "Nascondi dettagli", level: "Potenza",
+  unknown: "Sono esclusi i Brawler con livello sconosciuto.",
+  note: "Solo costi fissi per portare a potenza 11 i Brawler posseduti. Esclusi sblocchi, abilità, equipaggiamenti, Buffies e risorse attuali. I costi possono variare.",
+};
+const ru: typeof en = {
+  title: "Развитие бойцов и стоимость улучшений", subtitle: "Уровни силы ваших бойцов",
+  progress: "Прогресс улучшений (по стоимости монет)", full: "На 11 уровне силы",
+  coins: "Монет до 11 уровня", points: "Нужно очков силы", owned: "Полученные бойцы",
+  hyper: "Гиперзаряды", gadgets: "Гаджеты", stars: "Звёздные силы",
+  show: "Стоимость по каждому бойцу", hide: "Скрыть подробности", level: "Сила",
+  unknown: "Бойцы с неизвестным уровнем силы не учитываются.",
+  note: "Учтена только фиксированная стоимость повышения имеющихся бойцов до 11 уровня. Не включены разблокировка бойцов, способности, снаряжение, Buffies и текущие ресурсы. Цены могут измениться.",
+};
+
+const localized = { ko, en, ja, "pt-br": ptBr, es, tr, de, fr, it, ru } satisfies Record<Locale, typeof en>;
 
 export default function PlayerProgressionPanel({ brawlers, locale = "ko" }: {
   brawlers: Brawler[];
   locale?: Locale;
 }) {
   const data = useMemo(() => calculatePlayerProgression(brawlers), [brawlers]);
-  const copy = locale === "ko" ? ko : locale === "ja" ? ja : en;
+  const copy = localized[locale];
   const [expanded, setExpanded] = useState(false);
   const fmt = (n: number) => n.toLocaleString(numberLocales[locale]);
   return (

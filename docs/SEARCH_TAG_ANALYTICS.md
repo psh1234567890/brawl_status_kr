@@ -7,6 +7,23 @@ public game tag, recording the latest search time. No optional consent control.
 
 The new `analytics_private.search_tag_hourly` table stores only
 `hour_bucket`, `player_tag`, `search_count`, `last_searched_at`.
+Migration `drizzle/0015_search_tag_country_hourly.sql` adds
+`analytics_private.search_tag_country_hourly`, containing only
+`hour_bucket`, `player_tag`, ISO-style two-letter `country_code`, and
+`search_count`. The country code is Vercel's estimated *visitor connection*
+country (`x-vercel-ip-country`), NOT the searched player account's country.
+When unavailable/invalid or off-platform, record `ZZ` (unknown). No raw IP,
+IP-derived hash, account, device, session, cookie, User-Agent or individual
+request row is written by this feature. Country + tag combinations can still
+be sensitive for rare searches; don't expose the owner dashboard publicly.
+Vercel's geolocation may be inaccurate, e.g. when the user has a VPN.
+
+The general tag counter and new country counter increment in **one atomic SQL
+statement**, so total counts do not increase twice. The owner report fetches
+the newest 200 tags before aggregating their country counts. Country counts
+start at migration/deployment time: legacy searches cannot be geo-backfilled,
+so the dashboard shows `이전 기록·미분류` for any remaining historic searches.
+No new consent switch: the existing analytics opt-out prevents both writes.
 **Do not add requester IPs, accounts, sessions, cookies, User-Agent, referrers,
 or device identifiers**. The request is consulted only to respect the existing
 operator-browser `brawl_analytics_opt_out` cookie. Existing production rate
@@ -15,7 +32,8 @@ does not promise that the infrastructure never temporarily processes IPs.
 
 Administrators see up to 200 latest searched tags with aggregate search counts
 from approximately the last 7 days (hour buckets) and their last searched time,
-but not the person who made the searches. A search does not establish ownership
+and country-by-country counts, but not the person who made the searches.
+A search does not establish ownership
 of the searched game tag. The owner-only endpoint continues to require a
 valid session plus the private admin allowlist.
 
@@ -28,8 +46,9 @@ Even public game tags may be personal information when relatable to people.
 
 ## Retention / legacy
 Supabase migration `drizzle/0010_search_tag_hourly.sql` installs an hourly
-`pg_cron` job `brawl-search-tag-expire-hourly` running at minute 11, deleting
-only rows older than the hourly 7-day threshold. The owner-facing query never
+`pg_cron` job `brawl-search-tag-expire-hourly` running at minute 11. Migration
+`0015` updates that *same job* to purge both the base aggregate and country
+aggregate older than the 7-day hourly threshold. The owner-facing query never
 includes expired buckets. Exact per-search timestamps are not stored; the
 newest search timestamp is updated with each aggregate.
 

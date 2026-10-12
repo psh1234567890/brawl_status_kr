@@ -3110,7 +3110,7 @@ export function getDocumentPageMessages(locale: Locale) {
     privacy: {
       ...content.privacy,
       sections: [...content.privacy.sections, usagePrivacyNotice[locale], searchTagPrivacyNotice[locale]],
-      effectiveDate: locale === "ko" ? "업데이트: 2026년 10월 11일" : "Updated: 2026-10-11",
+      effectiveDate: locale === "ko" ? "업데이트: 2026년 10월 12일" : "Updated: 2026-10-12",
     },
   };
 }

@@ -9,6 +9,7 @@ type SearchTagSummary = {
   playerTag: string;
   searchCount: string;
   lastSearchedAt: string;
+  countries?: Array<{ countryCode: string; searchCount: string }>;
 };
 type Summary = {
   recentSearchTags: SearchTagSummary[];
@@ -46,6 +47,12 @@ const activities: Record<string, string> = {
   minigame_ability_quiz: "능력 맞추기 종료",
 };
 const n = (value: number) => value.toLocaleString("ko-KR");
+const regionNames = new Intl.DisplayNames(["ko-KR"], { type: "region" });
+function visitorCountryLabel(code: string) {
+  if (code === "ZZ" || !/^[A-Z]{2}$/.test(code)) return { emoji: "🌐", label: "국가 미확인" };
+  const emoji = [...code].map(letter => String.fromCodePoint(0x1f1e6 + letter.charCodeAt(0) - 65)).join("");
+  return { emoji, label: code === "KR" ? "한국" : regionNames.of(code) ?? code };
+}
 type Period = "today" | "week" | "all";
 const periods: Array<{ key: Period; label: string }> = [
   { key: "today", label: "오늘" },
@@ -132,7 +139,7 @@ export default function UsageDashboard() {
         <header className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="text-sm font-bold text-blue-600">Brawl Status KR · PRIVATE</p>
           <h1 className="mt-1 text-3xl font-black">사이트 이용 통계</h1>
-          <p className="mt-2 text-sm text-slate-600">방문은 익명 시간대별 합계로, 검색 태그는 7일간 시간대별 합계로 기록합니다. 검색자의 IP·사이트 계정 정보는 검색 통계에 저장하지 않습니다. 방문 세션은 순 방문자 수가 아닙니다.</p>
+          <p className="mt-2 text-sm text-slate-600">방문은 익명 시간대별 합계로, 검색 태그와 방문자 접속 국가 코드는 7일간 시간대별 합계로 기록합니다. 검색자의 IP·사이트 계정 정보는 검색 통계에 저장하지 않습니다. 방문 세션은 순 방문자 수가 아닙니다.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Link href="/" className="rounded-lg border px-3 py-2 text-sm font-bold">사이트로 돌아가기</Link>
             <button type="button" className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-bold text-white" onClick={() => void refresh()}>새로고침</button>
@@ -250,29 +257,46 @@ export default function UsageDashboard() {
             </div>
             <section className="rounded-xl border bg-white p-5 shadow-sm">
               <h2 className="text-lg font-black">최근 검색된 플레이어 태그</h2>
-              <p className="mt-1 text-sm text-slate-600">최근 7일(시간 단위) · 최근 검색 순 최대 200개 태그 · 검색자 IP·사이트 계정 정보는 수집하지 않음 · 태그 검색은 소유권 인증이 아님</p>
+              <p className="mt-1 text-sm text-slate-600">최근 7일(시간 단위) · 최근 검색 순 최대 200개 태그 · 방문자의 접속 국가 추정치(플레이어 계정 국가 아님) · 검색자 IP·사이트 계정 정보는 검색 통계에 저장하지 않음 · 기존 기록의 국가는 알 수 없음</p>
               <div
                 role="region"
                 aria-label="최근 검색된 플레이어 태그 목록"
                 tabIndex={0}
                 className="mt-4 h-72 overflow-auto overscroll-contain rounded-lg border border-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:h-80"
               >
-                <table className="w-full min-w-[450px] border-collapse text-left text-xs sm:text-sm">
+                <table className="w-full min-w-[660px] border-collapse text-left text-xs sm:text-sm">
                   <thead className="sticky top-0 z-10 bg-slate-50">
                     <tr className="border-b bg-slate-50 text-slate-700">
                       <th className="px-3 py-2">검색된 플레이어 태그</th>
                       <th className="px-3 py-2">마지막 검색 (한국 시간)</th>
                       <th className="px-3 py-2">최근 검색 횟수</th>
+                      <th className="px-3 py-2">검색 방문자 접속 국가별 횟수</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(data.recentSearchTags ?? []).map((item) => (
-                      <tr className="border-b" key={item.playerTag}>
+                    {(data.recentSearchTags ?? []).map((item) => {
+                      const countries = item.countries ?? [];
+                      const unclassified = Math.max(0,
+                        Number(item.searchCount) - countries.reduce((sum, entry) => sum + Number(entry.searchCount), 0));
+                      return <tr className="border-b" key={item.playerTag}>
                         <td className="px-3 py-2 font-bold">#{item.playerTag}</td>
                         <td className="px-3 py-2 whitespace-nowrap">{new Date(item.lastSearchedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</td>
                         <td className="px-3 py-2">{n(Number(item.searchCount))}회</td>
-                      </tr>
-                    ))}
+                        <td className="px-3 py-2">
+                          <div className="flex flex-wrap gap-1.5">
+                            {countries.map(entry => {
+                              const country = visitorCountryLabel(entry.countryCode);
+                              return <span key={entry.countryCode} title={entry.countryCode} className="inline-flex whitespace-nowrap rounded-md bg-blue-50 px-2 py-1 font-semibold text-blue-900">
+                                {country.emoji} {country.label} {n(Number(entry.searchCount))}회
+                              </span>;
+                            })}
+                            {unclassified > 0 ? <span className="inline-flex whitespace-nowrap rounded-md bg-slate-100 px-2 py-1 font-semibold text-slate-600">
+                              이전 기록·미분류 {n(unclassified)}회
+                            </span> : null}
+                          </div>
+                        </td>
+                      </tr>;
+                    })}
                   </tbody>
                 </table>
                 {(data.recentSearchTags ?? []).length === 0 ? (

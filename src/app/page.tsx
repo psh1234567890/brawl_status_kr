@@ -356,6 +356,8 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                     onSelectBattle={setSelectedBattle}
                     locale={locale}
                   />
+                ) : search.battleLoading ? (
+                  <LoadingPanel label={copy.home.tabs.matches} loadingText={copy.home.searching} />
                 ) : (
                   <EmptyPanel title={copy.home.battleMissingTitle} body={copy.home.battleMissingBody} />
                 )
@@ -374,6 +376,8 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
               {activePanel === "history" ? (
                 search.playerHistory ? (
                   <PlayerHistoryPanel history={search.playerHistory} locale={locale} />
+                ) : search.historyLoading ? (
+                  <LoadingPanel label={copy.home.tabs.history} loadingText={copy.home.searching} />
                 ) : (
                   <EmptyPanel title={copy.home.historyPreparingTitle} body={copy.home.historyPreparingBody} />
                 )
@@ -607,6 +611,19 @@ function EmptyPanel({ title, body }: { title: string; body: string }) {
     <section className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center shadow-sm">
       <h2 className="text-lg font-black text-slate-950">{title}</h2>
       <p className="mt-2 text-sm font-bold leading-6 text-slate-500">{body}</p>
+    </section>
+  );
+}
+
+function LoadingPanel({ label, loadingText }: { label: string; loadingText: string }) {
+  return (
+    <section role="status" aria-live="polite" className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-base font-black text-slate-800">{label} · {loadingText}</h2>
+      <div aria-hidden="true" className="mt-4 animate-pulse space-y-3">
+        <div className="h-6 w-2/3 rounded-lg bg-slate-100" />
+        <div className="h-16 rounded-lg bg-slate-100" />
+        <div className="h-16 rounded-lg bg-slate-100" />
+      </div>
     </section>
   );
 }

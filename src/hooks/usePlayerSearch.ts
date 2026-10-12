@@ -114,6 +114,8 @@ export function usePlayerSearch(locale: Locale = "ko") {
   const [skinInventoryStatus, setSkinInventoryStatus] = useState<PlayerSkinInventoryStatus>("idle");
   const [skinInventoryError, setSkinInventoryError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [battleLoading, setBattleLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const activeRequest = useRef<AbortController | null>(null);
@@ -154,6 +156,8 @@ export function usePlayerSearch(locale: Locale = "ko") {
 
       setTag(targetTag);
       setLoading(true);
+      setBattleLoading(true);
+      setHistoryLoading(true);
       setError("");
       setNotice("");
       setPlayerData(null);
@@ -164,78 +168,76 @@ export function usePlayerSearch(locale: Locale = "ko") {
       setSkinInventoryStatus("idle");
       setSkinInventoryError("");
 
+      // Start both calls together, but do not block profile rendering on battle persistence.
+      // Attach a rejection handler immediately so a fast failure cannot be unhandled.
+      const battleResult = fetchJson<BattleLogResponse>(
+        `/api/player/matches?tag=${safeTag}`,
+        { method: "POST", signal: controller.signal },
+        copy.dataLoad,
+        locale === "ko",
+      ).then(
+        (value) => ({ status: "fulfilled" as const, value }),
+        (reason: unknown) => ({ status: "rejected" as const, reason }),
+      );
+
       try {
-        const [profileResult, battleResult] = await Promise.allSettled([
-          fetchJson<PlayerData>(
-            `/api/player?tag=${safeTag}`,
-            { signal: controller.signal },
-            copy.dataLoad,
-            locale === "ko",
-          ),
-          fetchJson<BattleLogResponse>(
-            `/api/player/matches?tag=${safeTag}`,
-            { method: "POST", signal: controller.signal },
-            copy.dataLoad,
-            locale === "ko",
-          ),
-        ]);
-
+        const profile = await fetchJson<PlayerData>(
+          `/api/player?tag=${safeTag}`,
+          { signal: controller.signal },
+          copy.dataLoad,
+          locale === "ko",
+        );
         if (!isCurrent()) return;
-        if (profileResult.status === "rejected") {
-          controller.abort();
-          throw profileResult.reason;
-        }
 
-        setPlayerData(profileResult.value);
+        setPlayerData(profile);
+        setLoading(false);
         const updatedRecent = [
           targetTag,
           ...recentSearches.filter((recentTag) => recentTag !== targetTag),
         ].slice(0, 5);
         persistStoredTags(RECENT_TAGS_KEY, updatedRecent, RECENT_TAGS_CHANGED_EVENT);
 
-        const notices: string[] = [];
-        if (profileResult.value.dataFreshness?.status === "stale" ||
-            (battleResult.status === "fulfilled" && battleResult.value.dataFreshness?.status === "stale")) {
-          notices.push(copy.staleNotice);
-        }
+        const addNotice = (message: string) =>
+          setNotice((current) => current.includes(message) ? current : [current, message].filter(Boolean).join(" "));
+        if (profile.dataFreshness?.status === "stale") addNotice(copy.staleNotice);
 
-        if (battleResult.status === "fulfilled") {
-          setBattleLog(battleResult.value);
-          if (battleResult.value.storageStatus === "unavailable") notices.push(copy.saveNotice);
-        } else if (!isAbortError(battleResult.reason)) {
-          notices.push(copy.battleNotice);
-        }
-        setNotice(notices.join(" "));
-
-        try {
-          const [stats, history] = await Promise.allSettled([
-            fetchJson<PlayerDbStats>(
-              `/api/player/db-stats?tag=${safeTag}`,
-              { signal: controller.signal },
-              copy.dataLoad,
-              locale === "ko",
-            ),
-            fetchJson<PlayerHistoryResponse>(
-              `/api/player/history?tag=${safeTag}`,
-              { signal: controller.signal },
-              copy.dataLoad,
-              locale === "ko",
-            ),
-          ]);
-          if (isCurrent()) {
-            if (stats.status === "fulfilled") setDbStats(stats.value);
-            if (history.status === "fulfilled") setPlayerHistory(history.value);
-            if (stats.status === "rejected" || history.status === "rejected") {
-              setNotice((current) => [current, copy.statsNotice].filter(Boolean).join(" "));
-            }
+        // Each optional section updates independently and ignores stale searches.
+        void battleResult.then((result) => {
+          if (!isCurrent()) return;
+          setBattleLoading(false);
+          if (result.status === "fulfilled") {
+            setBattleLog(result.value);
+            if (result.value.dataFreshness?.status === "stale") addNotice(copy.staleNotice);
+            if (result.value.storageStatus === "unavailable") addNotice(copy.saveNotice);
+          } else if (!isAbortError(result.reason)) {
+            addNotice(copy.battleNotice);
           }
-        } catch (statsError) {
-          if (!isAbortError(statsError) && isCurrent()) {
-            setNotice((current) => [current, copy.statsNotice].filter(Boolean).join(" "));
-          }
-        }
+        });
+        void fetchJson<PlayerDbStats>(
+          `/api/player/db-stats?tag=${safeTag}`,
+          { signal: controller.signal },
+          copy.dataLoad,
+          locale === "ko",
+        ).then(
+          (stats) => { if (isCurrent()) setDbStats(stats); },
+          (reason) => { if (isCurrent() && !isAbortError(reason)) addNotice(copy.statsNotice); },
+        );
+        void fetchJson<PlayerHistoryResponse>(
+          `/api/player/history?tag=${safeTag}`,
+          { signal: controller.signal },
+          copy.dataLoad,
+          locale === "ko",
+        ).then(
+          (history) => { if (isCurrent()) setPlayerHistory(history); },
+          (reason) => { if (isCurrent() && !isAbortError(reason)) addNotice(copy.statsNotice); },
+        ).finally(() => {
+          if (isCurrent()) setHistoryLoading(false);
+        });
       } catch (requestError) {
         if (!isAbortError(requestError) && isCurrent()) {
+          controller.abort();
+          setBattleLoading(false);
+          setHistoryLoading(false);
           setSkinInventoryStatus("idle");
           setSkinInventoryError("");
           setError(
@@ -333,6 +335,8 @@ export function usePlayerSearch(locale: Locale = "ko") {
     skinInventoryStatus,
     skinInventoryError,
     loading,
+    battleLoading,
+    historyLoading,
     error,
     notice,
     recentSearches,

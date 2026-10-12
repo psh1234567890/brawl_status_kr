@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { localizedHref, type Locale } from "../i18n/config";
 import { getMessages } from "../i18n/messages";
@@ -46,12 +47,28 @@ export default function PortalLayout({
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
         <header className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3 py-1 lg:py-2">
-            <Link href={localizedHref(locale, "/")} className="min-w-0">
-              <span className="block text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
-                Brawl Status KR
-              </span>
-              <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
-                {copy.home}
+            <Link
+              href={localizedHref(locale, "/")}
+              className="group inline-flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:gap-3"
+              aria-label={`Brawl Status KR · ${copy.home}`}
+            >
+              <Image
+                src="/icon.svg"
+                alt=""
+                aria-hidden="true"
+                width={48}
+                height={48}
+                priority
+                unoptimized
+                className="h-10 w-10 shrink-0 rounded-xl shadow-sm ring-1 ring-blue-200/70 transition-transform group-hover:scale-105 sm:h-12 sm:w-12"
+              />
+              <span className="block min-w-0">
+                <span className="block truncate text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
+                  Brawl Status KR
+                </span>
+                <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
+                  {copy.home}
+                </span>
               </span>
             </Link>
             <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">

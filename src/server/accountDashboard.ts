@@ -13,6 +13,10 @@ export type DashboardPlayer = {
   victories3v3: number;
   brawlerCount: number;
   iconId: number | null;
+  currentRankedRankName?: string | null;
+  currentRankedElo?: number | null;
+  highestRankedRankName?: string | null;
+  highestRankedElo?: number | null;
 };
 export type MyRank = {
   gameId: "higher-lower" | "release-order";
@@ -37,6 +41,10 @@ export async function readDashboardPlayer(defaultTag: string | null): Promise<Da
     victories3v3: data["3vs3Victories"],
     brawlerCount: Array.isArray(data.brawlers) ? data.brawlers.length : 0,
     iconId: data.icon?.id ?? null,
+    currentRankedRankName: data.rankedRankName ?? null,
+    currentRankedElo: data.rankedElo ?? null,
+    highestRankedRankName: data.highestAllTimeRankedRankName ?? null,
+    highestRankedElo: data.highestAllTimeRankedElo ?? null,
   };
 }
 

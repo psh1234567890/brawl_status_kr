@@ -12,6 +12,8 @@ test("home header exposes localized account entry without mobile overflow", asyn
 
   for (const locale of locales) {
     await page.goto(localizedHref(locale, "/"));
+    const siteHome = page.locator("header").getByRole("link", { name: getMessages(locale).home.homeAria, exact: true });
+    await expect(siteHome.locator('img[src="/icon.svg"]')).toBeVisible();
     const login = page.locator("header").getByRole("link", { name: getAccountMessages(locale).navLogin, exact: true });
     await expect(login).toBeVisible();
     await expect(login).toHaveAttribute("href", localizedHref(locale, "/account"));
@@ -20,6 +22,9 @@ test("home header exposes localized account entry without mobile overflow", asyn
   }
 
   await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/en");
+  await page.goto("/en/events");
+  await expect(page.locator("header").getByRole("link", { name: /Brawl Status KR/ }).locator('img[src="/icon.svg"]')).toBeVisible();
   await page.goto("/en");
   await page.locator("header").getByRole("link", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/en\/account$/);

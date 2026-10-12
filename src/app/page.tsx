@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import Image from "next/image";
 import { useMemo, useState, type ReactNode } from "react";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
@@ -122,12 +123,28 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
       <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
         <header className="sticky top-0 z-30 -mx-4 border-b border-slate-200/80 bg-[#f6f7fb]/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <Link href={localizedHref(locale, "/")} className="min-w-0" aria-label={copy.home.homeAria}>
-              <h1 className="block text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
-                Brawl Status KR
-              </h1>
-              <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
-                {copy.home.brandSubtitle}
+            <Link
+              href={localizedHref(locale, "/")}
+              className="group inline-flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:gap-3"
+              aria-label={copy.home.homeAria}
+            >
+              <Image
+                src="/icon.svg"
+                width={48}
+                height={48}
+                alt=""
+                aria-hidden="true"
+                priority
+                unoptimized
+                className="h-10 w-10 shrink-0 rounded-xl shadow-sm ring-1 ring-blue-200/70 transition-transform group-hover:scale-105 sm:h-12 sm:w-12"
+              />
+              <span className="block min-w-0">
+                <h1 className="block truncate text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
+                  Brawl Status KR
+                </h1>
+                <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
+                  {copy.home.brandSubtitle}
+                </span>
               </span>
             </Link>
             <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">

@@ -25,6 +25,9 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await expect(profile.locator('img[src*="/ranked/regular/Legendary.png"]')).toBeVisible();
   await expect(profile).toContainText("신화 II");
   await expect(profile).toContainText("전설 I");
+  await expect(profile.locator('img[src="/game-assets/trophy.png"]')).toHaveCount(2);
+  await expect(profile.locator('img[src*="/game-modes/regular/48000006.png"]')).toBeVisible();
+  await expect(profile.locator('img[src*="/game-modes/regular/48000009.png"]')).toBeVisible();
   await expect(page.getByText(`현재 태그 ${tag}`)).toBeVisible();
   await expect(page.getByRole("button", { name: "즐겨찾기 추가" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("recentTags"))).toContain(tag);
@@ -35,6 +38,21 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await page.getByRole("button", { name: "보유 스킨 조회" }).click();
   await expect.poll(() => skinRequests).toBe(1);
   await expect(page.getByText("현재 착용 스킨 확인 완료")).toBeVisible();
+});
+
+test("owned hypercharges show matching artwork and unknown IDs keep a fallback", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+  await page.getByRole("button", { name: "검색", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+  await page.getByRole("button", { name: "브롤러", exact: true }).click();
+  await page.getByRole("button", { name: /쉘리/ }).first().click();
+  const dialog = page.getByRole("dialog");
+  const hyperImage = dialog.locator('img[src="https://cdn.bsinfox.com/hypercharges/23000613.png"]');
+  await expect(hyperImage).toBeVisible();
+  await expect(hyperImage).toHaveAttribute("alt", "Sample Hypercharge");
+  await expect(dialog).toContainText("Unlisted Future Hypercharge");
+  await expect(dialog.locator('img[src*="/hypercharges/99999999.png"]')).toHaveCount(0);
 });
 
 test("battle log and detail show the exact BrawlAPI Gem Grab mode icon", async ({ page }) => {
@@ -240,7 +258,10 @@ async function mockPlayerApis(page: Page, options: { stale?: boolean; storageUna
             highestTrophies: 700,
             gadgets: [],
             starPowers: [],
-            hyperCharges: [],
+            hyperCharges: [
+              { id: 23000613, name: "Sample Hypercharge" },
+              { id: 99999999, name: "Unlisted Future Hypercharge" },
+            ],
             gears: [],
           },
         ],

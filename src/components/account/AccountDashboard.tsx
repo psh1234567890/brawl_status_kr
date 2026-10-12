@@ -126,7 +126,7 @@ export default function AccountDashboard({ locale, accountId, revision, nickname
             <dl className="mt-4 grid grid-cols-2 gap-2">
               {([
                 [copy.trophies, active.player.trophies, "trophy"],
-                [copy.highest, active.player.highestTrophies, "star"],
+                [copy.highest, active.player.highestTrophies, "trophy"],
                 [copy.victories, active.player.victories3v3, "players"],
                 [copy.brawlers, active.player.brawlerCount, "battle"],
               ] as readonly (readonly [string, number, StatSymbolKind])[]).map(([label, value, icon]) => <div key={label} className="rounded-lg bg-slate-50 p-3">

@@ -144,7 +144,7 @@ export default function BrawlerList({
                       <span className="block text-lg font-black text-slate-950">{brawler.trophies.toLocaleString(numberLocales[locale])}</span>
                     </span>
                     <span className="text-right">
-                      <span className="flex items-center justify-end gap-1 text-[11px] font-black text-slate-500"><StatSymbol kind="star" size={12} />{copy.highest}</span>
+                      <span className="flex items-center justify-end gap-1 text-[11px] font-black text-slate-500"><StatSymbol kind="trophy" size={12} />{copy.highest}</span>
                       <span className="block text-sm font-black text-slate-700">{brawler.highestTrophies.toLocaleString(numberLocales[locale])}</span>
                     </span>
                   </div>

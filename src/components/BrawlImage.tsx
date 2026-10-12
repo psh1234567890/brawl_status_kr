@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import type { ReactNode } from "react";
 
 interface BrawlImageProps {
   src: string;
@@ -10,6 +11,7 @@ interface BrawlImageProps {
   height: number;
   className?: string;
   fallbackText?: string;
+  fallbackContent?: ReactNode;
   title?: string;
   loading?: "eager" | "lazy";
   sizes?: string;
@@ -24,6 +26,7 @@ export default function BrawlImage({
   height,
   className = "",
   fallbackText,
+  fallbackContent,
   title,
   loading,
   sizes,
@@ -39,7 +42,7 @@ export default function BrawlImage({
         className={`flex items-center justify-center bg-blue-50 font-black text-blue-300 ${className}`}
         title={title}
       >
-        {fallbackText ?? alt.slice(0, 1)}
+        {fallbackContent ?? fallbackText ?? alt.slice(0, 1)}
       </span>
     );
   }

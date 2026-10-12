@@ -9,6 +9,35 @@ test.beforeEach(async ({ context, page }) => {
   await mockPlayerApis(page);
 });
 
+test("progression panel calculates remaining coins and resources for owned Brawlers", async ({ page }) => {
+  await page.unroute(/\/api\/player\?tag=/);
+  await page.route(/\/api\/player\?tag=/, route => route.fulfill({ json: {
+    tag: "#" + tag, name: "Progression Player",
+    trophies: 16000, highestTrophies: 16000, expLevel: 60,
+    "3vs3Victories": 300, soloVictories: 10, duoVictories: 12,
+    brawlers: [
+      { id: 16000000, name: "SHELLY", power: 1, trophies: 0, highestTrophies: 0,
+        gadgets: [{ id: 1, name: "Test" }], starPowers: [], hyperCharges: [] },
+      { id: 16000001, name: "COLT", power: 11, trophies: 500, highestTrophies: 600,
+        gadgets: [], starPowers: [], hyperCharges: [] },
+    ],
+  } }));
+  await page.setViewportSize({ width: 375, height: 760 });
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+  await page.getByRole("button", { name: "검색", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Progression Player" })).toBeVisible();
+  const panel = page.getByRole("region", { name: "브롤러 성장률·강화 비용" });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "50");
+  await expect(panel).toContainText("7,765");
+  await expect(panel).toContainText("3,740");
+  await panel.getByRole("button", { name: "브롤러별 강화 비용 보기" }).click();
+  await expect(panel.locator("tbody tr")).toHaveCount(2);
+  await expect(panel.locator("tbody")).toContainText("쉘리");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
 test("player search renders a profile and stores the recent tag", async ({ page }) => {
   let skinRequests = 0;
   page.on("request", (request) => {

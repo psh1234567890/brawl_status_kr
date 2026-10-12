@@ -18,6 +18,9 @@ test("home header exposes localized account entry without mobile overflow", asyn
     await expect(login).toBeVisible();
     await expect(login).toHaveAttribute("href", localizedHref(locale, "/account"));
     expect((await login.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    await expect(page.locator("header summary")).toBeVisible();
+    const header = await page.locator("header").boundingBox();
+    expect(header?.height).toBeLessThanOrEqual(76);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
 
@@ -29,6 +32,46 @@ test("home header exposes localized account entry without mobile overflow", asyn
   await page.locator("header").getByRole("link", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/en\/account$/);
   await expect(page.getByRole("button", { name: "Continue with Google", exact: true })).toBeVisible();
+});
+
+test("mobile menu keeps navigation and language access without a tall sticky header", async ({ context, page }) => {
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await context.route("**/api/account", route => route.fulfill({ json: { state: "guest", syncEnabled: false } }));
+  await page.setViewportSize({ width: 390, height: 780 });
+  await page.goto("/");
+
+  const header = page.locator("header");
+  await expect.poll(async () => (await header.boundingBox())?.height ?? 999).toBeLessThanOrEqual(76);
+  await header.locator('summary[aria-label="전체 메뉴"]').click();
+  await expect(header.getByRole("navigation", { name: getMessages("ko").common.mainNavigation })).toBeVisible();
+  await expect(header.getByRole("combobox", { name: "언어" })).toBeVisible();
+  await header.getByRole("link", { name: "플레이어 비교" }).click();
+  await expect(page).toHaveURL(/\/compare$/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test("admin users can reach the dashboard from the compact mobile account menu", async ({ context, page }) => {
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await page.route("**/api/account", route => route.fulfill({ json: {
+    state: "account", syncEnabled: false,
+    account: {
+      id: "00000000-0000-4000-8000-000000000001", nickname: "NOSU2",
+      defaultPlayerTag: null, profileRevision: 1, onboardingComplete: true,
+      onboardingCompletedAt: "2026-01-01T00:00:00Z", policyReady: true,
+      eligibilityPolicyTexts: null, eligibilityRules: null, policyVersions: null,
+    },
+  } }));
+  await page.route("**/api/admin/access", route => route.fulfill({ status: 204 }));
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto("/");
+  const header = page.locator("header");
+  await expect.poll(async () => (await header.boundingBox())?.height ?? 999).toBeLessThanOrEqual(76);
+  const avatar = header.getByRole("button", { name: "계정 메뉴: NOSU2" });
+  await avatar.click();
+  const admin = header.getByRole("menuitem", { name: "운영자 대시보드" });
+  await expect(admin).toBeVisible();
+  await expect(admin).toHaveAttribute("href", "/admin/usage");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test("subpage navigation highlights the active section and reveals it on narrow screens", async ({ page }) => {

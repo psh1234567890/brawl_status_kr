@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import MobileHeaderMenu from "../components/MobileHeaderMenu";
 import MyTagSearchButton from "../components/account/MyTagSearchButton";
 import StatSymbol from "../components/StatSymbol";
 import AccountControl from "../components/account/AccountControl";
@@ -159,12 +160,12 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
 
   return (
     <main className="min-h-screen bg-[#f6f7fb] pb-24 text-slate-950 sm:pb-12">
-      <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
-        <header className="sticky top-0 z-30 -mx-4 border-b border-slate-200/80 bg-[#f6f7fb]/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="mx-auto w-full max-w-6xl px-4 pt-0 pb-4 sm:px-6 sm:pt-4 lg:px-8">
+        <header className="sticky top-0 z-30 -mx-4 border-b border-slate-200/80 bg-[#f6f7fb]/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-5">
+          <div className="flex items-center justify-between gap-2 md:flex-wrap md:gap-3">
             <Link
               href={localizedHref(locale, "/")}
-              className="group inline-flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:gap-3"
+              className="group inline-flex min-w-0 items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:gap-3"
               aria-label={copy.home.homeAria}
             >
               <Image
@@ -175,18 +176,18 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                 aria-hidden="true"
                 priority
                 unoptimized
-                className="h-10 w-10 shrink-0 rounded-xl shadow-sm ring-1 ring-blue-200/70 transition-transform group-hover:scale-105 sm:h-12 sm:w-12"
+                className="h-9 w-9 shrink-0 rounded-lg shadow-sm ring-1 ring-blue-200/70 transition-transform group-hover:scale-105 sm:h-12 sm:w-12"
               />
               <span className="block min-w-0">
-                <h1 className="block truncate text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
+                <h1 className="block truncate text-base font-black tracking-tight text-slate-950 sm:text-2xl">
                   Brawl Status KR
                 </h1>
-                <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
+                <span className="hidden truncate text-xs font-bold text-slate-500 sm:block sm:text-sm">
                   {copy.home.brandSubtitle}
                 </span>
               </span>
             </Link>
-            <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
+            <div className="ml-auto flex shrink-0 items-center justify-end gap-1.5 md:max-w-full md:flex-wrap md:gap-2">
               <nav className="hidden items-center gap-2 md:flex" aria-label={copy.common.mainNavigation}>
                 {primaryLinks.map((link) => (
                   <Link
@@ -199,7 +200,8 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                 ))}
               </nav>
               <AccountControl locale={locale} />
-              <LanguageSwitcher locale={locale} />
+              <div className="hidden md:block"><LanguageSwitcher locale={locale} /></div>
+              <MobileHeaderMenu locale={locale} />
             </div>
           </div>
         </header>
@@ -343,7 +345,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                 <>
                   <Link
                     href={`${localizedHref(locale, "/compare")}?a=${encodeURIComponent(normalizedCurrentTag)}`}
-                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:flex-none"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:w-auto sm:flex-none"
                   >
                     <StatSymbol kind="players" size={18} />
                     {actionCopy.compare}
@@ -372,7 +374,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
             <div className="min-w-0">
 
-              <div className="sticky top-[73px] z-20 -mx-4 border-y border-slate-200 bg-[#f6f7fb]/95 px-4 py-2 backdrop-blur sm:static sm:mx-0 sm:mb-4 sm:rounded-xl sm:border sm:bg-white sm:p-1">
+              <div className="sticky top-[60px] z-20 -mx-4 border-y border-slate-200 bg-[#f6f7fb]/95 px-4 py-2 backdrop-blur sm:static sm:mx-0 sm:mb-4 sm:rounded-xl sm:border sm:bg-white sm:p-1">
                 <div className="grid grid-cols-4 gap-1">
                   {resultTabs.map((tab) => (
                     <button
@@ -718,20 +720,22 @@ function Message({ text, tone }: { text: string; tone: "error" | "notice" }) {
 function MobileNavigation({ locale }: { locale: Locale }) {
   const copy = getMessages(locale);
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 py-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden" aria-label={copy.home.mobileNav}>
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden" aria-label={copy.home.mobileNav}>
       <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
-        {[
-          ["/", copy.home.mobileHome],
-          ["/meta", copy.home.mobileMeta],
-          ["/skins", copy.common.skins],
-          ["/rankings", copy.common.rankings],
-        ].map(([href, label]) => (
+        {([
+          ["/", copy.home.mobileHome, "trophy"],
+          ["/meta", copy.home.mobileMeta, "map"],
+          ["/skins", copy.common.skins, "skin"],
+          ["/rankings", copy.common.rankings, "chart"],
+        ] as const).map(([href, label, icon]) => (
           <Link
             key={href}
             href={localizedHref(locale, href)}
-            className="min-h-11 rounded-lg px-2 py-2 text-center text-xs font-black text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
+            aria-current={href === "/" ? "page" : undefined}
+            className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-center text-[11px] font-black transition-colors ${href === "/" ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}
           >
-            {label}
+            <StatSymbol kind={icon} size={17} />
+            <span>{label}</span>
           </Link>
         ))}
       </div>

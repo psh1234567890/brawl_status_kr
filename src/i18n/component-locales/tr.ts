@@ -83,7 +83,7 @@ export const deepCopy = {
     trackedDays: "Takip edilen günler",
     trophyDelta: "Toplam kupa değişimi",
     graphTitle: "Son etkinlik",
-    graphDescription: "En fazla 60 aktif günün en son 21 gününü gösterir.",
+    graphDescription: "Son 90 gündeki kayıtlı etkinliklerin en son 21 gününü gösterir.",
     empty: "Henüz birikmiş geçmiş yok. Arama yaptıkça uzun vadeli analiz dolmaya başlar.",
     topModes: "En çok oynanan modlar",
     topMaps: "En çok oynanan haritalar",

@@ -5,6 +5,7 @@ import type { Locale } from "../i18n/config";
 import { getComponentMessages } from "../i18n/componentMessages";
 import { formatBattles, formatDays } from "../i18n/formatters";
 import type { PlayerHistoryResponse } from "../types/brawl";
+import PlayerActivityHeatmap from "./PlayerActivityHeatmap";
 import { translateMapName, translateModeName } from "../utils/brawlTranslations";
 import GameModeIcon from "./GameModeIcon";
 import StatSymbol from "./StatSymbol";
@@ -37,6 +38,7 @@ export default function PlayerHistoryPanel({ history, locale = "ko" }: PlayerHis
         <Metric label={copy.trackedDays} value={formatDays(locale, history.trackedDays)} icon="timer" />
         <Metric label={copy.trophyDelta} value={`${history.totalTrophyDelta > 0 ? "+" : ""}${history.totalTrophyDelta}`} icon="trophy" />
       </div>
+      <PlayerActivityHeatmap daily={history.daily} locale={locale}/>
 
       {orderedDays.length ? (
         <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">

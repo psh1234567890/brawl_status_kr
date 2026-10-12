@@ -83,7 +83,7 @@ export const deDeepCopy = {
     trackedDays: "Erfasste Tage",
     trophyDelta: "Gesamte Trophäenänderung",
     graphTitle: "Letzte Aktivität",
-    graphDescription: "Zeigt die letzten 21 von bis zu 60 aktiven Tagen.",
+    graphDescription: "Zeigt die letzten 21 erfassten Aktivitätstage der letzten 90 Tage.",
     empty: "Noch kein gesammelter Verlauf vorhanden. Die Langzeitanalyse füllt sich mit weiteren Suchen.",
     topModes: "Meistgespielte Modi",
     topMaps: "Meistgespielte Karten",

@@ -181,6 +181,11 @@ test("account PB list refreshes after a delayed import acknowledgement without r
       },
     },
   }));
+  // This browser-only fixture uses an in-memory account response. Prevent
+  // background private dashboard requests from reaching real auth/DB services.
+  await page.route("**/api/account/dashboard", route => route.fulfill({
+    json: { defaultPlayerTag: null, player: null, rankings: [] },
+  }));
   await page.route("**/api/account/minigame-bests", (route) => {
     bestReads += 1;
     return route.fulfill({ json: { personalBests: [best] } });
@@ -211,8 +216,7 @@ test("account PB list refreshes after a delayed import acknowledgement without r
     releaseMerge();
     await expect(bestSection).toContainText("8 / 10");
     await expect(bestSection.getByText("Synced", { exact: true })).toBeVisible();
-    await page.waitForLoadState("networkidle");
-    expect(bestReads).toBe(2);
+    await expect.poll(() => bestReads).toBe(2);
     await expect(page).toHaveURL(/\/en\/account$/);
   } finally {
     releaseMerge();

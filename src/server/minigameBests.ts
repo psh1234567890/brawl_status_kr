@@ -10,7 +10,7 @@ import {
   type PersonalBestRecord,
 } from "../utils/minigames/personalBest";
 
-export const MAX_PERSONAL_BEST_SLOTS = 9;
+export const MAX_PERSONAL_BEST_SLOTS = 11;
 
 function canonicalPayload(
   source: "legacy_import" | "client_play",

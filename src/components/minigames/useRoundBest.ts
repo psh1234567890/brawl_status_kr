@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mergeRoundBest, readRoundBests, roundRecordStorageKey, type RoundBest, type RoundBests, type RoundRecordMode } from "../../utils/minigames/roundRecords";
 import { usePersonalBest } from "../../hooks/useAccount";
 
-export function useRoundBest(game: "silhouette" | "map-quiz" | "ability-quiz", mode: RoundRecordMode) {
+export function useRoundBest(game: "silhouette" | "map-quiz" | "ability-quiz" | "higher-lower" | "release-order", mode: RoundRecordMode) {
   const key = useMemo(() => roundRecordStorageKey(game), [game]);
   const [bests, setBests] = useState<RoundBests>({});
   const bestsRef = useRef(bests);

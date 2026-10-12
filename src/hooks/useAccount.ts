@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useSyncExternalStore } from "react";
+import type { PersonalBestGameId } from "../utils/minigames/personalBest";
 import {
   clearAccountPersonalBestCache,
   flushPendingAccountOperations,
@@ -337,7 +338,7 @@ export function usePersonalBest() {
       : null;
   }, [state.account?.id, state.account?.onboardingComplete, state.status, state.syncEnabled]);
   const recordPersonalBest = useCallback(async (
-    gameId: "brawler-quiz" | "silhouette-quiz" | "map-quiz" | "ability-quiz",
+    gameId: PersonalBestGameId,
     mode: string,
     score: number,
     total: number,

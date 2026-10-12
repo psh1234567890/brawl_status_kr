@@ -6,6 +6,7 @@ import { getMessages } from "../i18n/messages";
 import AccountControl from "./account/AccountControl";
 import AdSenseUnit from "./AdSenseUnit";
 import LanguageSwitcher from "./LanguageSwitcher";
+import MobileHeaderMenu from "./MobileHeaderMenu";
 import { compareNavLabels } from "../i18n/playerComparisonMessages";
 import PrimaryNavigation from "./PrimaryNavigation";
 import StatSymbol from "./StatSymbol";
@@ -48,13 +49,13 @@ export default function PortalLayout({
   const copy = messages.common;
 
   return (
-    <main className="min-h-screen bg-[#f6f7fb] px-4 py-4 text-slate-950 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-5">
-        <header className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 py-1 lg:py-2">
+    <main className="min-h-screen bg-[#f6f7fb] px-3 py-3 text-slate-950 sm:px-6 sm:py-4 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 sm:gap-5">
+        <header className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex items-center justify-between gap-2 py-1 md:flex-wrap md:gap-3 lg:py-2">
             <Link
               href={localizedHref(locale, "/")}
-              className="group inline-flex min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:gap-3"
+              className="group inline-flex min-w-0 items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:gap-3"
               aria-label={`Brawl Status KR · ${copy.home}`}
             >
               <Image
@@ -65,47 +66,50 @@ export default function PortalLayout({
                 height={48}
                 priority
                 unoptimized
-                className="h-10 w-10 shrink-0 rounded-xl shadow-sm ring-1 ring-blue-200/70 transition-transform group-hover:scale-105 sm:h-12 sm:w-12"
+                className="h-8 w-8 shrink-0 rounded-xl shadow-sm ring-1 ring-blue-200/70 transition-transform group-hover:scale-105 sm:h-12 sm:w-12"
               />
               <span className="block min-w-0">
-                <span className="block truncate text-lg font-black tracking-normal text-slate-950 sm:text-2xl">
+                <span className="block truncate text-base font-black tracking-normal text-slate-950 sm:text-2xl">
                   Brawl Status KR
                 </span>
-                <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
+                <span className="hidden truncate text-xs font-bold text-slate-500 md:block sm:text-sm">
                   {messages.home.brandSubtitle}
                 </span>
               </span>
             </Link>
-            <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
+            <div className="ml-auto flex shrink-0 items-center justify-end gap-2">
               <AccountControl locale={locale} />
-              <LanguageSwitcher locale={locale} />
+              <div className="hidden md:block"><LanguageSwitcher locale={locale} /></div>
+              <MobileHeaderMenu locale={locale} />
             </div>
           </div>
 
-          <PrimaryNavigation
-            locale={locale}
-            ariaLabel={copy.mainNavigation}
-            items={[
-              { href: "/", label: copy.home },
-              { href: "/compare", label: compareNavLabels[locale] },
-              ...navItems.slice(1).map((item) => ({ href: item.href, label: copy[item.key] })),
-            ]}
-          />
+          <div className="hidden md:block">
+            <PrimaryNavigation
+              locale={locale}
+              ariaLabel={copy.mainNavigation}
+              items={[
+                { href: "/", label: copy.home },
+                { href: "/compare", label: compareNavLabels[locale] },
+                ...navItems.slice(1).map((item) => ({ href: item.href, label: copy[item.key] })),
+              ]}
+            />
+          </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-6">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
-              {eyebrow ? (
-                <p className="mb-2 text-xs font-black uppercase tracking-[0.08em] text-blue-600">
-                  {eyebrow}
-                </p>
-              ) : null}
-              <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
-              {description ? (
-                <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-slate-500 sm:text-base">
-                  {description}
-                </p>
-              ) : null}
+                {eyebrow ? (
+                  <p className="mb-1 text-xs font-black uppercase tracking-[0.08em] text-blue-600 sm:mb-2">
+                    {eyebrow}
+                  </p>
+                ) : null}
+                <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
+                {description ? (
+                  <p className="mt-2 max-w-3xl text-sm font-medium leading-5 text-slate-500 sm:mt-3 sm:text-base sm:font-bold sm:leading-6">
+                    {description}
+                  </p>
+                ) : null}
               </div>
               {actions ? (
                 <div className="flex shrink-0 flex-wrap items-center gap-2">

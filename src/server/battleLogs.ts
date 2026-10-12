@@ -2,6 +2,7 @@ import { db } from "../db";
 import { battleLogs, battleTeamParticipants } from "../db/schema";
 import type { BattleLogItem } from "../types/brawl";
 import {
+  checkIsFriendly,
   createBattleFingerprint,
   getNormalizedBattleResult,
   getPlayerBrawler,
@@ -13,7 +14,9 @@ import {
 import { normalizePlayerTag } from "../utils/playerTag";
 
 export async function saveBattleLogs(playerTag: string, items: BattleLogItem[]) {
-  const validItems = items;
+  // Friendly matches can use ordinary maps/modes; exclude by battle type before
+  // either source table can feed public meta, team, or counter aggregates.
+  const validItems = items.filter((match) => !checkIsFriendly(match));
   if (validItems.length === 0) return;
 
   const values = validItems.map((match) => {

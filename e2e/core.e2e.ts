@@ -74,10 +74,25 @@ test("admin users can reach the dashboard from the compact mobile account menu",
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
-test("subpage navigation highlights the active section and reveals it on narrow screens", async ({ page }) => {
+test("compact subpage header keeps the mobile comparison form visible", async ({ context, page }) => {
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await page.setViewportSize({ width: 375, height: 760 });
+  await page.goto("/compare");
+  await expect(page.getByRole("textbox", { name: "플레이어 A 태그" })).toBeVisible();
+  await expect.poll(async () => (await page.locator("header").boundingBox())?.height ?? 999).toBeLessThan(240);
+  await page.locator("header summary").click();
+  const navigation = page.getByRole("navigation", { name: getMessages("ko").common.mainNavigation });
+  await expect(navigation.getByRole("link", { name: "플레이어 비교" })).toHaveAttribute("aria-current", "page");
+  await expect(page.locator("header").getByRole("combobox", { name: "언어" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.locator("header summary").click();
+});
+
+test("subpage mobile menu highlights the active section and keeps all destinations", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 });
   for (const locale of locales) {
     await page.goto(localizedHref(locale, "/events"));
+    await page.locator("header summary").click();
     const copy = getMessages(locale).common;
     const navigation = page.getByRole("navigation", { name: copy.mainNavigation });
     const eventsLink = navigation.getByRole("link", { name: copy.events, exact: true });
@@ -88,17 +103,15 @@ test("subpage navigation highlights the active section and reveals it on narrow 
   }
 
   await page.goto("/en/status");
+  await page.locator("header summary").click();
   const copy = getMessages("en").common;
   const navigation = page.getByRole("navigation", { name: copy.mainNavigation });
   const statusLink = navigation.getByRole("link", { name: copy.status, exact: true });
   await expect(statusLink).toHaveAttribute("aria-current", "page");
-  await expect.poll(() => navigation.evaluate((nav) => nav.scrollLeft)).toBeGreaterThan(0);
-  const activeVisible = await navigation.evaluate((nav) => {
-    const rect = nav.getBoundingClientRect();
-    const active = nav.querySelector('[aria-current="page"]')?.getBoundingClientRect();
-    return Boolean(active && active.left >= rect.left - 1 && active.right <= rect.right + 1);
-  });
-  expect(activeVisible).toBe(true);
+  await expect(statusLink).toBeVisible();
+  await expect(navigation.getByRole("link", { name: copy.skins, exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: copy.counters, exact: true })).toBeVisible();
+  await expect(navigation.getByRole("link", { name: copy.rankings, exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 

@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
-import { queryMapMetaStats } from "../../../server/metaStats";
+import { assertMetaSnapshotFresh, MetaSnapshotUnavailableError, queryMapMetaStats } from "../../../server/metaStats";
 import { observeServerOperation, withApiMonitoring } from "../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 import { rejectSharedPublicRateLimit } from "../../../server/sharedPublicRateLimit";
@@ -64,9 +64,9 @@ const getCachedMetaStats = unstable_cache(
     for (const entry of result) {
       entry.brawlers.sort((left, right) => right.score - left.score);
     }
-    return result;
+    return { maps: result, refreshedAt: queryResult.rows[0]?.refreshedAt ?? null };
   },
-  ["meta-stats-v11-materialized-snapshot"],
+  ["meta-stats-v12-checked-snapshot"],
   { revalidate: 300, tags: ["meta-stats"] },
 );
 
@@ -90,8 +90,19 @@ async function getMeta(request: Request) {
   if (sharedLimited) return sharedLimited;
 
   try {
-    return NextResponse.json(await getCachedMetaStats());
+    const snapshot = await getCachedMetaStats();
+    // Revalidation can retain a previously successful cache after DB errors.
+    // Enforce the age limit on cache hits as well as newly queried snapshots.
+    if (snapshot.refreshedAt !== null) assertMetaSnapshotFresh(snapshot.refreshedAt);
+    return NextResponse.json(snapshot.maps);
   } catch (error) {
+    if (error instanceof MetaSnapshotUnavailableError) {
+      console.warn(JSON.stringify({ event: "meta_snapshot_unavailable" }));
+      return NextResponse.json(
+        { error: "메타 통계 갱신이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.", code: "META_SNAPSHOT_UNAVAILABLE" },
+        { status: 503, headers: { "Cache-Control": "no-store", "Retry-After": "60" } },
+      );
+    }
     console.error("Failed to calculate meta stats:", error);
     return NextResponse.json(
       { error: "메타 통계를 계산하지 못했습니다." },

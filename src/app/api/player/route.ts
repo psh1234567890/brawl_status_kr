@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 import { rejectSharedPublicRateLimit } from "../../../server/sharedPublicRateLimit";
 import { withApiMonitoring } from "../../../server/observability";
@@ -32,11 +32,13 @@ async function getPlayer(request: Request) {
       `/players/%23${cleanTag}`, 30_000, 5 * 60_000,
       { retryOnNetworkError: true },
     );
-    // Independent, best-effort aggregates must not serialize database roundtrips.
-    await Promise.all([
-      recordUsageEvent("player_search_success", request),
-      recordSearchTag(cleanTag, request),
-    ]);
+    // Optional analytics run after the response, even when their DB is slow.
+    after(async () => {
+      await Promise.all([
+        recordUsageEvent("player_search_success", request),
+        recordSearchTag(cleanTag, request),
+      ]);
+    });
     return NextResponse.json({ ...data, dataFreshness: freshness }, {
       headers: { "Cache-Control": "no-store" },
     });
@@ -46,10 +48,12 @@ async function getPlayer(request: Request) {
       error instanceof UpstreamApiError
         ? error.message
         : "서버와 연결할 수 없습니다.";
-    await Promise.all([
-      recordUsageEvent("player_search_error", request),
-      recordUsageEvent(classifyPlayerSearchFailure(status), request),
-    ]);
+    after(async () => {
+      await Promise.all([
+        recordUsageEvent("player_search_error", request),
+        recordUsageEvent(classifyPlayerSearchFailure(status), request),
+      ]);
+    });
     return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
   }
 }

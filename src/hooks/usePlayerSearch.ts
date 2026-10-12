@@ -201,7 +201,8 @@ export function usePlayerSearch(locale: Locale = "ko") {
           setNotice((current) => current.includes(message) ? current : [current, message].filter(Boolean).join(" "));
         if (profile.dataFreshness?.status === "stale") addNotice(copy.staleNotice);
 
-        // Each optional section updates independently and ignores stale searches.
+        // Render the profile immediately; DB summaries must follow persistence
+        // so this search's newly saved battles are included in the same view.
         void battleResult.then((result) => {
           if (!isCurrent()) return;
           setBattleLoading(false);
@@ -212,26 +213,26 @@ export function usePlayerSearch(locale: Locale = "ko") {
           } else if (!isAbortError(result.reason)) {
             addNotice(copy.battleNotice);
           }
-        });
-        void fetchJson<PlayerDbStats>(
-          `/api/player/db-stats?tag=${safeTag}`,
-          { signal: controller.signal },
-          copy.dataLoad,
-          locale === "ko",
-        ).then(
-          (stats) => { if (isCurrent()) setDbStats(stats); },
-          (reason) => { if (isCurrent() && !isAbortError(reason)) addNotice(copy.statsNotice); },
-        );
-        void fetchJson<PlayerHistoryResponse>(
-          `/api/player/history?tag=${safeTag}`,
-          { signal: controller.signal },
-          copy.dataLoad,
-          locale === "ko",
-        ).then(
-          (history) => { if (isCurrent()) setPlayerHistory(history); },
-          (reason) => { if (isCurrent() && !isAbortError(reason)) addNotice(copy.statsNotice); },
-        ).finally(() => {
-          if (isCurrent()) setHistoryLoading(false);
+          void fetchJson<PlayerDbStats>(
+            `/api/player/db-stats?tag=${safeTag}`,
+            { signal: controller.signal },
+            copy.dataLoad,
+            locale === "ko",
+          ).then(
+            (stats) => { if (isCurrent()) setDbStats(stats); },
+            (reason) => { if (isCurrent() && !isAbortError(reason)) addNotice(copy.statsNotice); },
+          );
+          void fetchJson<PlayerHistoryResponse>(
+            `/api/player/history?tag=${safeTag}`,
+            { signal: controller.signal },
+            copy.dataLoad,
+            locale === "ko",
+          ).then(
+            (history) => { if (isCurrent()) setPlayerHistory(history); },
+            (reason) => { if (isCurrent() && !isAbortError(reason)) addNotice(copy.statsNotice); },
+          ).finally(() => {
+            if (isCurrent()) setHistoryLoading(false);
+          });
         });
       } catch (requestError) {
         if (!isAbortError(requestError) && isCurrent()) {

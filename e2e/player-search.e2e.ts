@@ -9,6 +9,37 @@ test.beforeEach(async ({ context, page }) => {
   await mockPlayerApis(page);
 });
 
+test("player summaries wait for persistence without delaying the profile", async ({ page }) => {
+  let finishSave!: () => void;
+  const pendingSave = new Promise<void>((resolve) => { finishSave = resolve; });
+  let saved = false;
+  let summaryRequests = 0;
+  let readBeforeSave = false;
+  await page.unroute(/\/api\/player\/matches\?tag=/);
+  await page.route(/\/api\/player\/matches\?tag=/, async (route) => {
+    await pendingSave;
+    saved = true;
+    await route.fulfill({ json: { items: [], storageStatus: "saved" } });
+  });
+  page.on("request", (request) => {
+    if (/\/api\/player\/(db-stats|history)\?tag=/.test(request.url())) {
+      summaryRequests += 1;
+      if (!saved) readBeforeSave = true;
+    }
+  });
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+  await page.getByRole("button", { name: "검색", exact: true }).click();
+  try {
+    await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+    expect(summaryRequests).toBe(0);
+  } finally {
+    finishSave();
+  }
+  await expect.poll(() => summaryRequests).toBe(2);
+  expect(readBeforeSave).toBe(false);
+});
+
 test("progression panel calculates remaining coins and resources for owned Brawlers", async ({ page }) => {
   await page.unroute(/\/api\/player\?tag=/);
   await page.route(/\/api\/player\?tag=/, route => route.fulfill({ json: {

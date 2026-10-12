@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Home from "../page";
+import Home from "../../components/HomePage";
 import {
   isLocalizedLocale,
   localeAlternates,

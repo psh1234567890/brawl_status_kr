@@ -37,6 +37,20 @@ export type MapMetaRawRow = {
   draws: number | string;
 };
 
+export class MetaSnapshotUnavailableError extends Error {
+  constructor() {
+    super("Meta snapshot refresh is overdue");
+    this.name = "MetaSnapshotUnavailableError";
+  }
+}
+
+export function assertMetaSnapshotFresh(refreshedAt: string) {
+  const timestamp = Date.parse(refreshedAt);
+  if (!Number.isFinite(timestamp) || timestamp < Date.now() - 45 * 60_000) {
+    throw new MetaSnapshotUnavailableError();
+  }
+}
+
 export function buildMapMetaStatsQuery(minimumPlays = MINIMUM_META_PLAYS) {
   return sql`
     -- Pre-aggregate each source before UNION ALL to avoid grouping ~100k raw rows
@@ -88,13 +102,16 @@ export function buildMapMetaStatsQuery(minimumPlays = MINIMUM_META_PLAYS) {
 export async function queryMapMetaStats(minimumPlays = MINIMUM_META_PLAYS) {
   // Pre-aggregated 30-day snapshot refreshed by pg_cron. This avoids a full
   // participant+perspective scan on every cold function invocation.
-  return db.execute<MapMetaRawRow>(sql`
+  const result = await db.execute<MapMetaRawRow & { refreshedAt: string }>(sql`
     SELECT mode, map, brawler_id AS "brawlerId", brawler_name AS "brawlerName",
-           plays, wins, draws
+           plays, wins, draws, refreshed_at::text AS "refreshedAt"
     FROM analytics_private.meta_brawler_snapshot
     WHERE plays >= ${minimumPlays}
-      AND refreshed_at >= now() - interval '45 minutes'
   `);
+  // Inspect freshness instead of filtering overdue rows into a successful empty
+  // result. A genuinely empty sample remains empty; stale statistics are errors.
+  for (const row of result.rows) assertMetaSnapshotFresh(row.refreshedAt);
+  return result;
 }
 
 export function buildCounterStatsQuery(brawler: string) {

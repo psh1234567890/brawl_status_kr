@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Counts = { visits: number; searches: number; successfulSearches: number; gameEnds: number };
+type FailureReasons = Record<string, number>;
 type SearchTagSummary = {
   playerTag: string;
   searchCount: string;
@@ -19,6 +20,9 @@ type Summary = {
   byGame: Record<string, number>;
   byGameToday: Record<string, number>;
   byGameAllTime: Record<string, number>;
+  failureReasonsToday?: FailureReasons;
+  failureReasonsLast7Days?: FailureReasons;
+  failureReasonsAllTime?: FailureReasons;
   recentHours: Array<{ hour: string; kind: string; count: string }>;
   sampledAt: string;
 };
@@ -32,6 +36,10 @@ const activities: Record<string, string> = {
   visit_session: "방문 세션",
   player_search_success: "성공한 플레이어 검색",
   player_search_error: "실패한 플레이어 검색",
+  player_search_error_404: "실패 원인: 존재하지 않는 태그 (404)",
+  player_search_error_429: "실패 원인: 외부 요청 제한 (429)",
+  player_search_error_5xx: "실패 원인: 서버·외부 API 장애 (5xx)",
+  player_search_error_other: "실패 원인: 기타 오류",
   minigame_brawler_quiz: "브롤러 맞추기 종료",
   minigame_silhouette_quiz: "실루엣 맞추기 종료",
   minigame_map_quiz: "맵 맞추기 종료",
@@ -44,6 +52,12 @@ const periods: Array<{ key: Period; label: string }> = [
   { key: "week", label: "최근 7일" },
   { key: "all", label: "전체 누적" },
 ];
+const failureKinds = [
+  { key: "player_search_error_404", label: "플레이어 없음 (404)" },
+  { key: "player_search_error_429", label: "외부 API 요청 제한 (429)" },
+  { key: "player_search_error_5xx", label: "서버·외부 API 오류 (5xx)" },
+  { key: "player_search_error_other", label: "기타 응답 오류" },
+] as const;
 
 export default function UsageDashboard() {
   const [data, setData] = useState<Summary | null>(null);
@@ -103,6 +117,14 @@ export default function UsageDashboard() {
   const gameCounts = data ? (
     period === "today" ? data.byGameToday : period === "week" ? data.byGame : data.byGameAllTime
   ) : {};
+  const failureCounts = data ? (
+    period === "today" ? data.failureReasonsToday
+      : period === "week" ? data.failureReasonsLast7Days
+        : data.failureReasonsAllTime
+  ) ?? {} : {};
+  const failedSearches = Math.max(0, (counts?.searches ?? 0) - (counts?.successfulSearches ?? 0));
+  const classifiedFailures = failureKinds.reduce((total, reason) => total + (failureCounts[reason.key] ?? 0), 0);
+  const unknownFailures = Math.max(0, failedSearches - classifiedFailures);
   const periodLabel = periods.find(item => item.key === period)?.label ?? "오늘";
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
@@ -175,6 +197,22 @@ export default function UsageDashboard() {
                 </article>
               ))}
             </div>
+            <section className="rounded-xl border bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-black">{periodLabel} 플레이어 검색 실패 원인</h2>
+              <p className="mt-1 text-sm text-slate-600">조회에 실패한 검색 {n(failedSearches)}회 · 오류 유형은 집계 기능 도입 이후부터 구분됩니다.</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {failureKinds.map(reason => (
+                  <div key={reason.key} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-3 text-sm">
+                    <span>{reason.label}</span>
+                    <strong>{n(failureCounts[reason.key] ?? 0)}회</strong>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-100 px-3 py-3 text-sm">
+                  <span>이전 기록·미분류 오류</span>
+                  <strong>{n(unknownFailures)}회</strong>
+                </div>
+              </div>
+            </section>
             <section className="rounded-xl border bg-white p-5 shadow-sm">
               <h2 className="text-lg font-black">최근 7일 방문 세션 추이</h2>
               <p className="mt-1 text-sm text-slate-600">합계 {n(data.last7Days.visits)}회 방문 세션 · {n(data.last7Days.searches)}회 검색 · {n(data.last7Days.gameEnds)}회 게임 종료</p>

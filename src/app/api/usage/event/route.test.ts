@@ -21,7 +21,15 @@ describe("anonymous usage event endpoint", () => {
     expect(mocks.recordUsageEvent).not.toHaveBeenCalled();
   });
   it("rejects arbitrary identifiers and forged search events", async () => {
-    for (const input of [{ event: "player_search_success" }, { event: "visit_session", playerTag: "PRIVATE" }, { event: "evil" }]) {
+    for (const input of [
+      { event: "player_search_success" },
+      { event: "player_search_error_404" },
+      { event: "player_search_error_429" },
+      { event: "player_search_error_5xx" },
+      { event: "player_search_error_other" },
+      { event: "visit_session", playerTag: "PRIVATE" },
+      { event: "evil" },
+    ]) {
       expect((await POST(event(input))).status).toBe(400);
     }
     expect(mocks.recordUsageEvent).not.toHaveBeenCalled();

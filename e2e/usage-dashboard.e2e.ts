@@ -11,6 +11,9 @@ test("admin dashboard switches between today, seven days, and lifetime totals", 
       byGameToday: { map_quiz: 1 },
       byGame: { map_quiz: 5 },
       byGameAllTime: { map_quiz: 90 },
+      failureReasonsToday: { player_search_error_404: 1 },
+      failureReasonsLast7Days: { player_search_error_404: 1, player_search_error_5xx: 1 },
+      failureReasonsAllTime: { player_search_error_404: 5, player_search_error_5xx: 10 },
       trackingStartedAt: "2026-10-10T00:00:00.000Z",
       daily: [{ day: "2026-10-12", visits: 2 }],
       recentHours: [],
@@ -22,12 +25,17 @@ test("admin dashboard switches between today, seven days, and lifetime totals", 
   const stats = page.locator("article");
   await expect(stats.first()).toContainText("오늘 방문 세션");
   await expect(stats.first()).toContainText("2");
+  await expect(page.getByRole("heading", { name: "오늘 플레이어 검색 실패 원인" })).toBeVisible();
+  await expect(page.getByText("플레이어 없음 (404)").locator("..")).toContainText("1회");
   await page.getByRole("button", { name: "최근 7일", exact: true }).click();
   await expect(stats.first()).toContainText("최근 7일 방문 세션");
   await expect(stats.first()).toContainText("8");
+  await expect(page.getByRole("heading", { name: "최근 7일 플레이어 검색 실패 원인" })).toBeVisible();
   await page.getByRole("button", { name: "전체 누적", exact: true }).click();
   await expect(stats.first()).toContainText("전체 누적 방문 세션");
   await expect(stats.first()).toContainText("123");
+  await expect(page.getByRole("heading", { name: "전체 누적 플레이어 검색 실패 원인" })).toBeVisible();
+  await expect(page.getByText("이전 기록·미분류 오류").locator("..")).toContainText("15회");
   await expect(page.getByRole("heading", { name: "전체 누적 미니게임별 종료" })).toBeVisible();
   await expect(page.getByRole("button", { name: "전체 누적" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByText(/통계 수집 시작 이후 누적/)).toBeVisible();

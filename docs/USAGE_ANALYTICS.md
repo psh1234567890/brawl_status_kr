@@ -4,7 +4,18 @@
 
 This opt-in administrator view distinguishes **browser-tab sessions** from real distinct people. A script in the shared Next.js layout sends one `visit_session` event per tab/session using `sessionStorage`. This is an estimate, not authenticated unique users; it can be affected by blocked JS, storage denial, bots or tabs. The event has **no IP address, tag, cookie identifier, fingerprint, account ID, URL or referrer stored** in the analytics table.
 
-The existing `GET /api/player` server handler counts a valid profile fetch as `player_search_success` and upstream errors as `player_search_error`. Invalid input and rate-limited requests are not counted. This is a request count, not a count of people. Successful history saves are not a second search event.
+The existing `GET /api/player` server handler counts a valid profile fetch as `player_search_success` and upstream errors as `player_search_error`. Invalid input and locally rate-limited requests are not counted. This is a request count, not a count of people. Successful history saves are not a second search event.
+
+Migration `0014_player_search_failure_reasons.sql` adds four private
+failure **detail** counters: HTTP 404 (not found), 429 (upstream rate limit),
+5xx (server or upstream failure), and other statuses (e.g. 401/403).
+Each counted failure increments the existing `player_search_error` **and**
+exactly one new detail counter. Totals must count only the original success
+and error kinds; adding the reason counters into totals would double-count.
+The dashboard groups the legacy/unclassified remainder separately. It does
+not backfill historical error reasons and cannot attribute them to visitors.
+The public anonymous event POST rejects all search counters, including the
+new reason counters, to prevent clients from inventing search statistics.
 
 Four minigame client components send one anonymous round-ending event when entering `finished`, including early endings; they do not submit scores, player IDs, prompts, or mode. Client POSTs require a same-origin Origin header, an allowlisted literal event name, a bounded JSON body and a per-process request rate limit. They remain best-effort and can be spoofed; **do not treat these counters as billing, security or fraud evidence**.
 

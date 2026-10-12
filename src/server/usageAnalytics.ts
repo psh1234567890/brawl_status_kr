@@ -3,10 +3,29 @@ import { db } from "../db";
 
 export const usageKinds = [
   "visit_session", "player_search_success", "player_search_error",
+  "player_search_error_404", "player_search_error_429",
+  "player_search_error_5xx", "player_search_error_other",
   "minigame_brawler_quiz", "minigame_silhouette_quiz",
   "minigame_map_quiz", "minigame_ability_quiz",
 ] as const;
 export type UsageKind = (typeof usageKinds)[number];
+
+export const searchFailureKinds = [
+  "player_search_error_404", "player_search_error_429",
+  "player_search_error_5xx", "player_search_error_other",
+] as const;
+export type SearchFailureKind = (typeof searchFailureKinds)[number];
+
+export function classifyPlayerSearchFailure(status: number): SearchFailureKind {
+  if (status === 404) return "player_search_error_404";
+  if (status === 429) return "player_search_error_429";
+  if (status >= 500) return "player_search_error_5xx";
+  return "player_search_error_other";
+}
+
+function emptyFailureBreakdown(): Record<SearchFailureKind, number> {
+  return Object.fromEntries(searchFailureKinds.map(kind => [kind, 0])) as Record<SearchFailureKind, number>;
+}
 
 export function isUsageKind(value: unknown): value is UsageKind {
   return typeof value === "string" && (usageKinds as readonly string[]).includes(value);
@@ -75,6 +94,7 @@ function emptyCounts() {
 
 export function summarizeLifetime(rows: UsageLifetimeRow[]) {
   const allTime = emptyCounts();
+  const failureReasonsAllTime = emptyFailureBreakdown();
   const byGameAllTime: Record<string, number> = {};
   let trackingStartedAt: string | null = null;
   for (const row of rows) {
@@ -89,13 +109,16 @@ export function summarizeLifetime(rows: UsageLifetimeRow[]) {
       allTime.searches += count;
       allTime.successfulSearches += count;
     } else if (row.kind === "player_search_error") allTime.searches += count;
+    else if ((searchFailureKinds as readonly string[]).includes(row.kind)) {
+      failureReasonsAllTime[row.kind as SearchFailureKind] += count;
+    }
     else if (row.kind.startsWith("minigame_")) {
       allTime.gameEnds += count;
       const game = row.kind.slice("minigame_".length);
       byGameAllTime[game] = (byGameAllTime[game] ?? 0) + count;
     }
   }
-  return { allTime, byGameAllTime, trackingStartedAt };
+  return { allTime, byGameAllTime, failureReasonsAllTime, trackingStartedAt };
 }
 
 export function summarizeUsage(
@@ -112,13 +135,21 @@ export function summarizeUsage(
   const last7Days = { visits: 0, searches: 0, successfulSearches: 0, gameEnds: 0 };
   const byGame: Record<string, number> = {};
   const byGameToday: Record<string, number> = {};
+  const failureReasonsToday = emptyFailureBreakdown();
+  const failureReasonsLast7Days = emptyFailureBreakdown();
   const cutoff = days[0];
   for (const row of rows) {
     const count = Number(row.count);
     if (!Number.isSafeInteger(count) || count < 0) continue;
     const day = row.hour.slice(0, 10);
+    if ((searchFailureKinds as readonly string[]).includes(row.kind)) {
+      const kind = row.kind as SearchFailureKind;
+      if (day === todayKst) failureReasonsToday[kind] += count;
+      if (day >= cutoff && day <= todayKst) failureReasonsLast7Days[kind] += count;
+      continue;
+    }
     const key = row.kind === "visit_session" ? "visits"
-      : row.kind.startsWith("player_search") ? "searches" : "gameEnds";
+      : row.kind === "player_search_success" || row.kind === "player_search_error" ? "searches" : "gameEnds";
     const apply = (target: typeof today) => {
       target[key] += count;
       if (row.kind === "player_search_success") target.successfulSearches += count;
@@ -137,7 +168,7 @@ export function summarizeUsage(
     }
   }
   return {
-    today, last7Days, daily, byGame, byGameToday,
+    today, last7Days, daily, byGame, byGameToday, failureReasonsToday, failureReasonsLast7Days,
     recentHours: rows.filter(row => row.hour >= new Date(now.getTime() + 9 * 3600_000 - 24 * 3600_000)
       .toISOString().slice(0, 13).replace("T", " ")).slice(0, 35),
     sampledAt: now.toISOString(),

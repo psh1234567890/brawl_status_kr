@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   }
   if (!body || typeof body !== "object" || Array.isArray(body) ||
       Object.keys(body).length !== 1 || !("event" in body) || !isUsageKind(body.event) ||
-      body.event === "player_search_success" || body.event === "player_search_error") {
+      !(body.event === "visit_session" || body.event.startsWith("minigame_"))) {
     return NextResponse.json({ error: "INVALID_EVENT" }, { status: 400 });
   }
   await recordUsageEvent(body.event, request);

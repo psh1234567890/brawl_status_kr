@@ -1,3 +1,5 @@
+import { scheduleApiPerformance } from "./apiPerformance";
+
 type ApiMonitorOptions = {
   slowMs?: number;
 };
@@ -48,6 +50,7 @@ export function withApiMonitoring(
         requestId,
         slow: durationMs >= slowMs,
       });
+      scheduleApiPerformance(request, route, response.status, durationMs);
       return response;
     } catch (error) {
       const durationMs = elapsedMs(startedAt);
@@ -62,6 +65,7 @@ export function withApiMonitoring(
           deployment: deploymentContext(),
         }),
       );
+      scheduleApiPerformance(request, route, 500, durationMs);
       throw error;
     }
   };

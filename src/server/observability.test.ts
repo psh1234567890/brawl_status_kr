@@ -4,6 +4,7 @@ import {
   observeServerOperation,
   withApiMonitoring,
 } from "./observability";
+vi.mock("./apiPerformance", () => ({ scheduleApiPerformance: vi.fn() }));
 
 afterEach(() => {
   vi.restoreAllMocks();

@@ -50,15 +50,20 @@ test("player search renders a profile and stores the recent tag", async ({ page 
 
   await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
   const profile = page.getByRole("heading", { level: 1, name: "E2E Player" }).locator("xpath=ancestor::section[1]");
-  await expect(profile.locator('img[src*="/ranked/regular/Mythic.png"]')).toBeVisible();
+  await expect(profile.getByText("#" + tag)).toBeVisible();
+  await expect(profile.getByRole("link", { name: "친구와 비교" })).toHaveAttribute("href", "/compare?a=" + tag);
+  await expect(profile.getByRole("button", { name: "저장" })).toBeVisible();
+  await expect(profile.getByRole("button", { name: "공유" })).toBeVisible();
+  await profile.locator("summary").click();
+  await expect(profile.locator('img[src*="/ranked/regular/Mythic.png"]').first()).toBeVisible();
   await expect(profile.locator('img[src*="/ranked/regular/Legendary.png"]')).toBeVisible();
   await expect(profile).toContainText("신화 II");
   await expect(profile).toContainText("전설 I");
-  await expect(profile.locator('img[src="/game-assets/trophy.png"]')).toHaveCount(2);
+  await expect(profile.locator('img[src="/game-assets/trophy.png"]')).toHaveCount(3);
   await expect(profile.locator('img[src*="/game-modes/regular/48000006.png"]')).toBeVisible();
   await expect(profile.locator('img[src*="/game-modes/regular/48000009.png"]')).toBeVisible();
-  await expect(page.getByText(`현재 태그 ${tag}`)).toBeVisible();
-  await expect(page.getByRole("button", { name: "즐겨찾기 추가" })).toBeVisible();
+  await profile.getByRole("button", { name: "저장" }).click();
+  await expect(profile.getByRole("button", { name: "저장됨" })).toHaveAttribute("aria-pressed", "true");
   await expect.poll(() => page.evaluate(() => localStorage.getItem("recentTags"))).toContain(tag);
   expect(skinRequests).toBe(0);
 
@@ -67,6 +72,17 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await page.getByRole("button", { name: "보유 스킨 조회" }).click();
   await expect.poll(() => skinRequests).toBe(1);
   await expect(page.getByText("현재 착용 스킨 확인 완료")).toBeVisible();
+});
+
+test("a shared player link opens the profile and comparison pre-fills the tag", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 760 });
+  await page.goto("/?tag=" + tag);
+  await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "플레이어 태그" })).toHaveValue(tag);
+  await page.getByRole("link", { name: "친구와 비교" }).click();
+  await expect(page).toHaveURL(new RegExp("/compare\\?a=" + tag));
+  await expect(page.getByRole("textbox", { name: "플레이어 A 태그" })).toHaveValue(tag);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test("owned hypercharges show matching artwork and unknown IDs keep a fallback", async ({ page }) => {
@@ -234,7 +250,7 @@ test("a browser that denies storage can still search successfully", async ({ pag
   await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
   await page.getByRole("button", { name: "검색" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
-  await page.getByRole("button", { name: "즐겨찾기 추가" }).click();
+  await page.getByRole("button", { name: "저장" }).click();
   expect(errors).toEqual([]);
 });
 

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -26,6 +26,7 @@ import {
 import { getMessages } from "../i18n/messages";
 import { getMinigameMessages } from "../i18n/minigameMessages";
 import { compareNavLabels } from "../i18n/playerComparisonMessages";
+import { profileHubMessages } from "../i18n/profileHubMessages";
 import type {
   BattleLogItem,
   Brawler,
@@ -39,7 +40,7 @@ import {
   estimatePlayTime,
 } from "../utils/brawlHelpers";
 import { translateModeName } from "../utils/brawlTranslations";
-import { normalizePlayerTag } from "../utils/playerTag";
+import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
 
 const BattleDetailsModal = dynamic(() => import("../components/BattleDetailsModal"));
 const BrawlerDetailsModal = dynamic(() => import("../components/BrawlerDetailsModal"));
@@ -52,10 +53,25 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
   const copy = getMessages(locale);
   const minigameCopy = getMinigameMessages(locale);
   const githubStarCopy = getGithubStarCopy(locale);
+  const actionCopy = profileHubMessages[locale];
   const search = usePlayerSearch(locale);
+  const handlePlayerSearch = search.handleSearch;
   const [activePanel, setActivePanel] = useState<ResultPanel>("overview");
   const [selectedBrawler, setSelectedBrawler] = useState<Brawler | null>(null);
   const [selectedBattle, setSelectedBattle] = useState<BattleLogItem | null>(null);
+  const [shareFeedback, setShareFeedback] = useState<"idle" | "copied" | "failed">("idle");
+  const initialTagHandled = useRef(false);
+
+  // Shared profile URLs only initiate a normal, validated player lookup.
+  // A ref prevents duplicated requests when search state updates.
+  useEffect(() => {
+    if (initialTagHandled.current) return;
+    initialTagHandled.current = true;
+    const fromUrl = new URLSearchParams(window.location.search).get("tag");
+    if (fromUrl && isValidPlayerTag(fromUrl)) {
+      void handlePlayerSearch(normalizePlayerTag(fromUrl));
+    }
+  }, [handlePlayerSearch]);
 
   const summary = useMemo(
     () => calculateRecentBattleSummary(search.battleLog),
@@ -119,7 +135,26 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
 
   function runSearch(targetTag?: string) {
     setActivePanel("overview");
+    setShareFeedback("idle");
     void search.handleSearch(targetTag);
+  }
+
+  async function shareProfile() {
+    if (!search.playerData || !normalizedCurrentTag) return;
+    const url = new URL(localizedHref(locale, "/"), window.location.origin);
+    url.searchParams.set("tag", normalizedCurrentTag);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: search.playerData.name, url: url.href });
+        setShareFeedback("idle");
+      } else {
+        await navigator.clipboard.writeText(url.href);
+        setShareFeedback("copied");
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setShareFeedback("failed");
+    }
   }
 
   return (
@@ -237,21 +272,6 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
               </p>
             </div>
 
-            {search.playerData ? (
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => search.toggleFavorite(search.playerData?.tag)}
-                  className="min-h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-800 transition-colors hover:border-blue-300 hover:text-blue-700"
-                >
-                  {isFavorite ? copy.home.removeFavorite : copy.home.addFavorite}
-                </button>
-                <span className="text-xs font-bold text-slate-500">
-                  {copy.home.currentTag} {normalizedCurrentTag}
-                </span>
-              </div>
-            ) : null}
-
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <SearchChipGroup
                 label={copy.home.favorites}
@@ -309,15 +329,48 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
         {search.notice ? <Message text={search.notice} tone="notice" /> : null}
 
         {search.playerData ? (
-          <section className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label={copy.home.results}>
+          <section className="mt-5 space-y-4" aria-label={copy.home.results}>
+            <PlayerProfile
+              playerData={search.playerData}
+              nameColor={nameColor}
+              streakCount={summary.streakCount}
+              playTime={playTime}
+              recentMatches={summary.total}
+              recentWinRate={summary.winRate}
+              locale={locale}
+              actionsLabel={actionCopy.actionLabel}
+              actions={
+                <>
+                  <Link
+                    href={`${localizedHref(locale, "/compare")}?a=${encodeURIComponent(normalizedCurrentTag)}`}
+                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:flex-none"
+                  >
+                    <StatSymbol kind="players" size={18} />
+                    {actionCopy.compare}
+                  </Link>
+                  <button
+                    type="button"
+                    aria-pressed={isFavorite}
+                    onClick={() => search.toggleFavorite(search.playerData?.tag)}
+                    className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:flex-none ${isFavorite ? "border-blue-300 bg-blue-100 text-blue-900" : "border-slate-200 bg-white text-slate-800 hover:border-blue-300 hover:bg-blue-50"}`}
+                  >
+                    <StatSymbol kind="star" size={18} />
+                    {isFavorite ? actionCopy.saved : actionCopy.save}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void shareProfile()}
+                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-800 transition-colors hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:flex-none"
+                  >
+                    <StatSymbol kind="chart" size={18} />
+                    {shareFeedback === "copied" ? actionCopy.copied : actionCopy.share}
+                  </button>
+                  {shareFeedback === "failed" ? <span role="status" className="self-center text-xs font-bold text-rose-700">{actionCopy.failed}</span> : null}
+                </>
+              }
+            />
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
             <div className="min-w-0">
-              <PlayerProfile
-                playerData={search.playerData}
-                nameColor={nameColor}
-                streakCount={summary.streakCount}
-                playTime={playTime}
-                locale={locale}
-              />
 
               <div className="sticky top-[73px] z-20 -mx-4 border-y border-slate-200 bg-[#f6f7fb]/95 px-4 py-2 backdrop-blur sm:static sm:mx-0 sm:mb-4 sm:rounded-xl sm:border sm:bg-white sm:p-1">
                 <div className="grid grid-cols-4 gap-1">
@@ -396,6 +449,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
               <SideSummary title={copy.home.ownedBrawlers} value={formatItems(locale, search.playerData.brawlers.length)} detail={copy.home.brawlerTabDetail} />
               <SideSummary title={copy.home.storedBattles} value={formatBattles(locale, search.playerHistory?.totalTrackedGames ?? 0)} detail={copy.home.friendlyExcluded} />
             </aside>
+            </div>
           </section>
         ) : (
           <EmptyStart locale={locale} />

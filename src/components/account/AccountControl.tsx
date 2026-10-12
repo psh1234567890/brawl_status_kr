@@ -119,7 +119,7 @@ export default function AccountControl({ locale }: { locale: Locale }) {
       {adminConfirmed ? (
         <Link
           href="/admin/usage"
-          className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-2 text-xs font-black text-blue-800 shadow-sm hover:border-blue-400 hover:bg-blue-100 sm:px-3"
+          className="hidden min-h-11 shrink-0 items-center rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-2 text-xs font-black text-blue-800 shadow-sm hover:border-blue-400 hover:bg-blue-100 sm:inline-flex sm:px-3"
         >
           {adminLabels[locale]}
         </Link>
@@ -137,10 +137,10 @@ export default function AccountControl({ locale }: { locale: Locale }) {
             triggerRef.current?.focus();
           }
         }}
-        className="inline-flex min-h-11 max-w-48 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-black text-slate-700 shadow-sm hover:border-blue-300 sm:px-3"
+        className="inline-flex min-h-11 max-w-48 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-black text-slate-700 shadow-sm hover:border-blue-300 sm:px-3"
       >
         <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-black text-blue-800">{initial}</span>
-        <span className="max-w-32 truncate">{account.account.nickname}</span>
+        <span className="hidden max-w-32 truncate sm:inline">{account.account.nickname}</span>
       </button>
       {open ? (
         <div
@@ -172,6 +172,16 @@ export default function AccountControl({ locale }: { locale: Locale }) {
           }}
           className="absolute right-0 top-full z-50 mt-2 flex min-w-48 flex-col gap-1 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
         >
+          {adminConfirmed ? (
+            <Link
+              href="/admin/usage"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-blue-800 hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-none sm:hidden"
+            >
+              {adminLabels[locale]}
+            </Link>
+          ) : null}
           <Link
             href={localizedHref(locale, "/account")}
             role="menuitem"

@@ -100,12 +100,12 @@ export default function PlayerProfile({
       {actions ? <div className="mt-4 flex flex-wrap gap-2 border-t border-blue-100 pt-4" role="group" aria-label={actionsLabel ?? copy.profileIcon}>{actions}</div> : null}
       </div>
 
-      <details className="group px-4 pb-4 sm:px-6 sm:pb-6">
+      <details className="group px-3 pb-3 sm:px-6 sm:pb-6">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 text-sm font-black text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
           {hubCopy.details}
           <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
         </summary>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4">
         <Stat label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="trophy" />} />
         {streakCount > 0 ? <Stat label={copy.streak} value={formatDays(locale, streakCount)} icon={<StatSymbol kind="win" />} /> : null}
         <Stat
@@ -208,13 +208,13 @@ function Stat({
 }) {
   return (
     <div
-      className={`min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-3 ${wide ? "sm:col-span-2" : ""}`}
+      className={`flex min-w-0 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 sm:block sm:p-3 ${wide ? "sm:col-span-2" : ""}`}
       title={title}
     >
-      <p className="truncate text-xs font-black text-slate-500">{label}</p>
-      <div className="mt-1 flex min-w-0 items-center gap-2">
+      <p className="min-w-0 flex-1 text-xs font-bold leading-5 text-slate-500 sm:truncate sm:font-black">{label}</p>
+      <div className="flex min-w-0 shrink-0 items-center gap-2 sm:mt-1 sm:shrink">
         {icon}
-        <p className="min-w-0 truncate text-base font-black text-slate-950">{value}</p>
+        <p className="min-w-0 break-words text-sm font-black tabular-nums text-slate-950 sm:truncate sm:text-base">{value}</p>
       </div>
     </div>
   );

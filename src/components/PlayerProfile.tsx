@@ -5,6 +5,8 @@ import { formatDays, formatDuration } from "../i18n/formatters";
 import type { PlayerData } from "../types/brawl";
 import { getPlayerIconUrl } from "../utils/brawlAssets";
 import BrawlImage from "./BrawlImage";
+import RankedLeagueIcon from "./RankedLeagueIcon";
+import type { ReactNode } from "react";
 
 interface PlayerProfileProps {
   playerData: PlayerData;
@@ -68,8 +70,18 @@ export default function PlayerProfile({
         <Stat label={copy.victories3v3} value={playerData["3vs3Victories"].toLocaleString(numberLocales[locale])} />
         <Stat label={copy.solo} value={playerData.soloVictories.toLocaleString(numberLocales[locale])} />
         <Stat label={copy.duo} value={playerData.duoVictories.toLocaleString(numberLocales[locale])} />
-        <Stat label={copy.allTimeRanked} value={formatRank(playerData.highestAllTimeRankedRankName, playerData.highestAllTimeRankedElo, locale)} wide />
-        <Stat label={copy.currentRanked} value={formatRank(playerData.rankedRankName, playerData.rankedElo, locale)} wide />
+        <Stat
+          label={copy.allTimeRanked}
+          value={formatRank(playerData.highestAllTimeRankedRankName, playerData.highestAllTimeRankedElo, locale)}
+          icon={<RankedLeagueIcon rankName={playerData.highestAllTimeRankedRankName} />}
+          wide
+        />
+        <Stat
+          label={copy.currentRanked}
+          value={formatRank(playerData.rankedRankName, playerData.rankedElo, locale)}
+          icon={<RankedLeagueIcon rankName={playerData.rankedRankName} />}
+          wide
+        />
         <Stat label={copy.roboRumble} value={playerData.bestRoboRumbleTime ?? "-"} />
         <Stat label={copy.bigBrawler} value={playerData.bestTimeAsBigBrawler ?? "-"} />
         <Stat
@@ -115,11 +127,13 @@ function Stat({
   value,
   title,
   wide = false,
+  icon,
 }: {
   label: string;
   value: string | number;
   title?: string;
   wide?: boolean;
+  icon?: ReactNode;
 }) {
   return (
     <div
@@ -127,7 +141,10 @@ function Stat({
       title={title}
     >
       <p className="truncate text-xs font-black text-slate-500">{label}</p>
-      <p className="mt-1 truncate text-base font-black text-slate-950">{value}</p>
+      <div className="mt-1 flex min-w-0 items-center gap-2">
+        {icon}
+        <p className="min-w-0 truncate text-base font-black text-slate-950">{value}</p>
+      </div>
     </div>
   );
 }

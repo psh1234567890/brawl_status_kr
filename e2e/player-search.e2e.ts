@@ -20,6 +20,11 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await page.getByRole("button", { name: "검색" }).click();
 
   await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+  const profile = page.getByRole("heading", { level: 1, name: "E2E Player" }).locator("xpath=ancestor::section[1]");
+  await expect(profile.locator('img[src*="/ranked/regular/Mythic.png"]')).toBeVisible();
+  await expect(profile.locator('img[src*="/ranked/regular/Legendary.png"]')).toBeVisible();
+  await expect(profile).toContainText("신화 II");
+  await expect(profile).toContainText("전설 I");
   await expect(page.getByText(`현재 태그 ${tag}`)).toBeVisible();
   await expect(page.getByRole("button", { name: "즐겨찾기 추가" })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("recentTags"))).toContain(tag);
@@ -183,6 +188,10 @@ async function mockPlayerApis(page: Page, options: { stale?: boolean; storageUna
         tag: `#${tag}`,
         dataFreshness,
         name: "E2E Player",
+        rankedRankName: "MYTHIC II",
+        rankedElo: 7000,
+        highestAllTimeRankedRankName: "LEGENDARY I",
+        highestAllTimeRankedElo: 9000,
         nameColor: "0xff3366cc",
         trophies: 12345,
         highestTrophies: 13000,

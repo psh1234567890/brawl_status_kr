@@ -11,10 +11,14 @@ describe("account dashboard private data", () => {
     mocks.snapshot.mockResolvedValue({ data: {
       tag: "#2PY", name: "Preview", trophies: 1234, highestTrophies: 1600,
       "3vs3Victories": 44, brawlers: [{ name: "Shelly" }], icon: { id: 28000000 },
+      rankedRankName: "MYTHIC II", rankedElo: 7000,
+      highestAllTimeRankedRankName: "LEGENDARY I", highestAllTimeRankedElo: 9000,
     } });
     expect(await readDashboardPlayer("#2py")).toEqual({
       tag: "2PY", name: "Preview", trophies: 1234, highestTrophies: 1600,
       victories3v3: 44, brawlerCount: 1, iconId: 28000000,
+      currentRankedRankName: "MYTHIC II", currentRankedElo: 7000,
+      highestRankedRankName: "LEGENDARY I", highestRankedElo: 9000,
     });
     expect(mocks.snapshot.mock.calls[0][0]).toBe("/players/%232PY");
     expect(mocks.query).not.toHaveBeenCalled();

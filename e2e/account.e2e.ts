@@ -56,7 +56,11 @@ test("dashboard endpoint requires login and only returns account-owned summary",
     status: 200, contentType: "application/json",
     body: JSON.stringify({
       defaultPlayerTag: "2PY",
-      player: { tag: "2PY", name: "Dashboard Hero", trophies: 2500, highestTrophies: 2700, victories3v3: 200, brawlerCount: 15, iconId: null },
+      player: {
+        tag: "2PY", name: "Dashboard Hero", trophies: 2500, highestTrophies: 2700, victories3v3: 200,
+        brawlerCount: 15, iconId: null, currentRankedRankName: "MYTHIC II", currentRankedElo: 7000,
+        highestRankedRankName: "LEGENDARY I", highestRankedElo: 9000,
+      },
       rankings: [
         { gameId: "higher-lower", period: "week", rank: 3, score: 9 },
         { gameId: "release-order", period: "week", rank: null, score: null },
@@ -66,6 +70,9 @@ test("dashboard endpoint requires login and only returns account-owned summary",
   await page.goto("/en/account");
   await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
   await expect(page.getByText("Dashboard Hero")).toBeVisible();
+  const playerCard = page.getByRole("article", { name: "My player" });
+  await expect(playerCard.locator('img[src*="/ranked/regular/Mythic.png"]')).toBeVisible();
+  await expect(playerCard.locator('img[src*="/ranked/regular/Legendary.png"]')).toBeVisible();
   await expect(page.getByRole("article", { name: "My verified ranks" })).toContainText("3 rank");
   await expect(page.getByRole("article", { name: "Recent searches on this device" })).toContainText("Recent searches belong only to this browser");
 });

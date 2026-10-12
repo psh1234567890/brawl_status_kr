@@ -5,11 +5,14 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { accountDashboardMessages } from "../../i18n/accountDashboardMessages";
 import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { getAccountMessages, localizedModeLabel } from "../../i18n/accountMessages";
+import { getComponentMessages } from "../../i18n/componentMessages";
+import { rankDict } from "../../constants/brawl";
 import type { PersonalBestGameId, PersonalBestRecord } from "../../utils/minigames/personalBest";
 import type { DashboardPlayer, MyRank } from "../../server/accountDashboard";
 import { isValidPlayerTag, normalizePlayerTag } from "../../utils/playerTag";
 import { getPlayerIconUrl } from "../../utils/brawlAssets";
 import BrawlImage from "../BrawlImage";
+import RankedLeagueIcon from "../RankedLeagueIcon";
 
 type Overview = {
   defaultPlayerTag: string | null;
@@ -127,6 +130,25 @@ export default function AccountDashboard({ locale, accountId, revision, nickname
                 <dd className="mt-1 text-lg font-black tabular-nums">{fmt(value)}</dd>
               </div>)}
             </dl>
+            {(active.player.currentRankedRankName || active.player.highestRankedRankName) ? (
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {([
+                  [getComponentMessages(locale).profile.currentRanked, active.player.currentRankedRankName, active.player.currentRankedElo],
+                  [getComponentMessages(locale).profile.allTimeRanked, active.player.highestRankedRankName, active.player.highestRankedElo],
+                ] as const).map(([label, rankName, elo]) => rankName ? (
+                  <div key={label} className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-100 bg-blue-50/60 px-3 py-2">
+                    <RankedLeagueIcon rankName={rankName} className="h-10 w-10" />
+                    <div className="min-w-0">
+                      <p className="truncate text-[11px] font-bold text-slate-500">{label}</p>
+                      <p className="truncate text-sm font-black text-slate-900">
+                        {locale === "ko" ? rankDict[rankName] ?? rankName : rankName}
+                        {typeof elo === "number" ? ` (${fmt(elo)})` : ""}
+                      </p>
+                    </div>
+                  </div>
+                ) : null)}
+              </div>
+            ) : null}
           </> : <p role={dataError ? "alert" : "status"} className="mt-4 text-sm text-slate-600">{copy.unavailable}</p>}
         {validTag ? <Link href={localizedHref(locale, "/")} className="mt-4 inline-flex min-h-11 items-center text-sm font-black text-blue-700 underline">{copy.openSearch} →</Link> : null}
       </article>

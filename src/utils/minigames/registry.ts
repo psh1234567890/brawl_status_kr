@@ -27,8 +27,8 @@ export type MiniGameDefinition = {
 export const miniGames: readonly MiniGameDefinition[] = [
   { id: "brawler-quiz", href: "/minigames/brawler-quiz", enabled: true, contentUpdatedAt: "2026-10-05" },
   { id: "silhouette-quiz", href: "/minigames/silhouette-quiz", enabled: true },
-  { id: "higher-lower", href: "/minigames/higher-lower", enabled: false, blockedReason: "data-pending" },
+  { id: "higher-lower", href: "/minigames/higher-lower", enabled: true },
   { id: "map-quiz", href: "/minigames/map-quiz", enabled: true },
   { id: "ability-quiz", href: "/minigames/ability-quiz", enabled: true },
-  { id: "release-order", href: "/minigames/release-order", enabled: false, blockedReason: "data-pending" },
+  { id: "release-order", href: "/minigames/release-order", enabled: true },
 ];

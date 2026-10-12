@@ -2,7 +2,7 @@ export type RoundRecordMode = "standard" | "base" | "mixed" | "gadget" | "star-p
 export type RoundBest = { mode: RoundRecordMode; score: number; total: 10; percentage: number; recordedAt: string };
 export type RoundBests = Partial<Record<RoundRecordMode, RoundBest>>;
 
-export function roundRecordStorageKey(game: "silhouette" | "map-quiz" | "ability-quiz") {
+export function roundRecordStorageKey(game: "silhouette" | "map-quiz" | "ability-quiz" | "higher-lower" | "release-order") {
   return "brawl-status:minigames:" + game + ":v1:best";
 }
 

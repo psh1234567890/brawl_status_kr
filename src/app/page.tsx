@@ -25,6 +25,7 @@ import {
 } from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
 import { getMinigameMessages } from "../i18n/minigameMessages";
+import { compareNavLabels } from "../i18n/playerComparisonMessages";
 import type {
   BattleLogItem,
   Brawler,
@@ -104,6 +105,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
     { href: "/minigames", label: copy.common.minigames, description: minigameCopy.homeDescription },
   ];
   const utilityLinks = [
+    ["/compare", compareNavLabels[locale]],
     ["/events", copy.common.events],
     ["/maps", copy.common.maps],
     ["/gamemodes", copy.common.modes],

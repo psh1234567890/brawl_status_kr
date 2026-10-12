@@ -26,6 +26,7 @@ const localizedStaticConfig: Array<
   [string, SitemapEntry["changeFrequency"], number]
 > = [
   ["", "weekly", 1],
+  ["/compare", "weekly", 0.8],
   ["/meta", "daily", 0.9],
   ["/skins", "monthly", 0.8],
   ["/events", "hourly", 0.7],

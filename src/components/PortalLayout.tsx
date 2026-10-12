@@ -6,6 +6,7 @@ import { getMessages } from "../i18n/messages";
 import AccountControl from "./account/AccountControl";
 import AdSenseUnit from "./AdSenseUnit";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { compareNavLabels } from "../i18n/playerComparisonMessages";
 import PrimaryNavigation from "./PrimaryNavigation";
 import StatSymbol from "./StatSymbol";
 import type { StatSymbolKind } from "./StatSymbol";
@@ -84,7 +85,11 @@ export default function PortalLayout({
           <PrimaryNavigation
             locale={locale}
             ariaLabel={copy.mainNavigation}
-            items={navItems.map((item) => ({ href: item.href, label: copy[item.key] }))}
+            items={[
+              { href: "/", label: copy.home },
+              { href: "/compare", label: compareNavLabels[locale] },
+              ...navItems.slice(1).map((item) => ({ href: item.href, label: copy[item.key] })),
+            ]}
           />
 
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">

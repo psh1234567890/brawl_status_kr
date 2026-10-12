@@ -181,6 +181,12 @@ export default function BrawlerDetailsModal({
                 </p>
               ) : null}
 
+              {skinInventoryStatus === "ready" && skinSupplementalStatus === "unavailable" ? (
+                <p role="status" className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-black text-amber-700">
+                  {copy.skinPartial}
+                </p>
+              ) : null}
+
               {skinInventoryStatus === "ready" && skinInventoryCoverage === "equipped" ? (
                 <p className="mt-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs font-black text-blue-700">
                   {copy.skinEquippedOnly}

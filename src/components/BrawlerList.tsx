@@ -38,8 +38,10 @@ export default function BrawlerList({
       ? copy.skinLoading
       : skinInventoryStatus === "error"
         ? copy.skinError
-        : skinInventoryStatus === "ready"
-          ? skinInventory?.coverage === "equipped"
+      : skinInventoryStatus === "ready"
+          ? skinInventory?.supplementalStatus === "unavailable"
+            ? copy.skinError
+            : skinInventory?.coverage === "equipped"
             ? copy.skinEquippedReady
             : skinInventory?.supplementalStatus === "stale"
               ? copy.skinStaleReady
@@ -49,7 +51,7 @@ export default function BrawlerList({
     skinInventoryStatus === "loading"
       ? copy.loading
       : skinInventoryStatus === "ready"
-        ? copy.skinRefresh
+        ? skinInventory?.supplementalStatus === "unavailable" ? copy.skinRetry : copy.skinRefresh
         : skinInventoryStatus === "error"
           ? copy.skinRetry
           : copy.skinLookup;
@@ -67,6 +69,7 @@ export default function BrawlerList({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span
+            aria-live="polite"
             className="inline-flex min-h-9 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-black text-slate-600"
             title={skinInventoryError || undefined}
           >
@@ -76,7 +79,7 @@ export default function BrawlerList({
             type="button"
             onClick={() => void onLoadSkinInventory()}
             disabled={skinInventoryStatus === "loading"}
-            className="min-h-9 rounded-lg bg-blue-600 px-3 text-xs font-black text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500"
+            className="min-h-11 rounded-lg bg-blue-600 px-3 text-xs font-black text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500"
           >
             {skinActionLabel}
           </button>

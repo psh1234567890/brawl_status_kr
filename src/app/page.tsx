@@ -12,6 +12,7 @@ import StatSymbol from "../components/StatSymbol";
 import AccountControl from "../components/account/AccountControl";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
+import PlayerProgressionPanel from "../components/PlayerProgressionPanel";
 import SearchTagNotice from "../components/SearchTagNotice";
 import { usePlayerSearch } from "../hooks/usePlayerSearch";
 import { localizedHref, type Locale } from "../i18n/config";
@@ -340,13 +341,16 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
               </div>
 
               {activePanel === "overview" ? (
-                <OverviewPanel
-                  locale={locale}
-                  summary={summary}
-                  history={search.playerHistory}
-                  brawlerCount={search.playerData.brawlers.length}
-                  onOpenPanel={setActivePanel}
-                />
+                <>
+                  <OverviewPanel
+                    locale={locale}
+                    summary={summary}
+                    history={search.playerHistory}
+                    brawlerCount={search.playerData.brawlers.length}
+                    onOpenPanel={setActivePanel}
+                  />
+                  <PlayerProgressionPanel brawlers={search.playerData.brawlers} locale={locale} />
+                </>
               ) : null}
               {activePanel === "matches" ? (
                 search.battleLog ? (

@@ -6,6 +6,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import MyTagSearchButton from "../components/account/MyTagSearchButton";
 import AccountControl from "../components/account/AccountControl";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
@@ -203,6 +204,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
               </button>
             </div>
 
+            <MyTagSearchButton locale={locale} loading={search.loading} onSearch={runSearch} />
             <SearchTagNotice locale={locale} />
 
             <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">

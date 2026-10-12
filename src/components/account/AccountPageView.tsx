@@ -22,6 +22,7 @@ import { localizedModeLabel } from "../../i18n/accountMessages";
 import { publishAccountSessionChange, refreshAccountStatus } from "../../hooks/useAccount";
 import { signOutAccount, startGoogleSignIn } from "../../utils/accountAuthClient";
 import SyncStatus from "./SyncStatus";
+import AccountDashboard from "./AccountDashboard";
 
 type ApiErrorBody = { error?: unknown; account?: unknown; personalBests?: unknown };
 const DELETE_TARGET_SESSION_KEY = "brawl-status:account:pending-deletion-user";
@@ -457,7 +458,17 @@ export default function AccountPageView({ locale }: { locale: Locale }) {
         </section>
       ) : null}
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      {!profileLocked && state.account ? <AccountDashboard
+        locale={locale}
+        accountId={state.account.id}
+        revision={state.account.profileRevision}
+        nickname={state.account.nickname}
+        savedTag={state.account.defaultPlayerTag}
+        bests={displayedBests}
+        bestLoading={bestLoading}
+      /> : null}
+
+      <section id="account-profile-settings" className="scroll-mt-24 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div><h2 className="text-lg font-black text-slate-950">{copy.accountTitle}</h2><p className="mt-1 text-sm font-bold text-slate-500">{state.account?.nickname}</p></div>
           <SyncStatus locale={locale} state={state.syncState} pendingCount={state.pendingCount} onRetry={() => void state.retrySync()} />

@@ -24,6 +24,67 @@ test("account page remains optional and private account APIs return a safe DTO",
   expect(response.headers()["cache-control"]).toContain("private, no-store");
 });
 
+test("dashboard endpoint requires login and only returns account-owned summary", async ({ page, context, syntheticAccount, browser }, testInfo) => {
+  const origin = String(testInfo.project.use.baseURL);
+  const mine = await context.request.get("/api/account/dashboard", { headers: { Origin: origin } });
+  expect(mine.status()).toBe(200);
+  expect(mine.headers()["cache-control"]).toContain("private, no-store");
+  const data = await mine.json();
+  expect(data.defaultPlayerTag).toBeNull();
+  expect(data.player).toBeNull();
+  expect(data.rankings).toHaveLength(6);
+  expect(data.rankings.every((item: { rank: number | null }) => item.rank === null)).toBe(true);
+  expect(JSON.stringify(data)).not.toContain(syntheticAccount.email);
+
+  const guestContext = await browser.newContext();
+  try {
+    const anonymous = await guestContext.request.get(origin + "/api/account/dashboard");
+    expect(anonymous.status()).toBe(401);
+  } finally { await guestContext.close(); }
+
+  const savedTag = await context.request.patch("/api/account/profile", {
+    headers: { Origin: origin },
+    data: {
+      expectedUserId: syntheticAccount.userId,
+      expectedRevision: 1,
+      nickname: "CI Dashboard",
+      defaultPlayerTag: "#2PY",
+    },
+  });
+  expect(savedTag.status()).toBe(200);
+  await page.route("**/api/account/dashboard", route => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify({
+      defaultPlayerTag: "2PY",
+      player: { tag: "2PY", name: "Dashboard Hero", trophies: 2500, highestTrophies: 2700, victories3v3: 200, brawlerCount: 15, iconId: null },
+      rankings: [
+        { gameId: "higher-lower", period: "week", rank: 3, score: 9 },
+        { gameId: "release-order", period: "week", rank: null, score: null },
+      ],
+    }),
+  }));
+  await page.goto("/en/account");
+  await expect(page.getByRole("heading", { name: "My dashboard" })).toBeVisible();
+  await expect(page.getByText("Dashboard Hero")).toBeVisible();
+  await expect(page.getByRole("article", { name: "My verified ranks" })).toContainText("3 rank");
+  await expect(page.getByRole("article", { name: "Recent searches on this device" })).toContainText("Recent searches belong only to this browser");
+});
+
+test("logged-in homepage shows one-click search for saved tag after profile save", async ({ page, context, syntheticAccount }, testInfo) => {
+  const origin = String(testInfo.project.use.baseURL);
+  const update = await context.request.patch("/api/account/profile", {
+    headers: { Origin: origin },
+    data: { expectedUserId: syntheticAccount.userId, expectedRevision: 1, nickname: "Saved Tag Test", defaultPlayerTag: "#2py" },
+  });
+  expect(update.status()).toBe(200);
+  await page.goto("/en/");
+  const shortcut = page.getByRole("button", { name: /Search my saved player tag.*#2PY/ });
+  await expect(shortcut).toBeVisible();
+  const requested = page.waitForRequest(request => request.url().includes("/api/player?tag=2PY"));
+  await shortcut.click();
+  await requested;
+});
+
 test("private account deletion activity expires with the server intent", async ({ context, syntheticAccount }, testInfo) => {
   const origin = String(testInfo.project.use.baseURL);
   const started = await context.request.post("/api/account/deletion/reauth", {

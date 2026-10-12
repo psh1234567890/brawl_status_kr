@@ -7,14 +7,46 @@ import { getAccountMessages } from "../../i18n/accountMessages";
 import { useAccount } from "../../hooks/useAccount";
 import { signOutAccount } from "../../utils/accountAuthClient";
 
+const adminLabels: Record<Locale, string> = {
+  ko: "운영자 대시보드",
+  en: "Admin dashboard",
+  ja: "管理者ダッシュボード",
+  "pt-br": "Painel de administração",
+  es: "Panel de administración",
+  tr: "Yönetici paneli",
+  de: "Admin-Dashboard",
+  fr: "Tableau de bord admin",
+  it: "Pannello amministratore",
+  ru: "Панель администратора",
+};
+
 export default function AccountControl({ locale }: { locale: Locale }) {
   const copy = getAccountMessages(locale);
   const account = useAccount();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState("");
+  const [confirmedAdminUserId, setConfirmedAdminUserId] = useState<string | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const activeUserId = account.status === "account" ? account.account?.id : undefined;
+  useEffect(() => {
+    if (!activeUserId) return;
+    const controller = new AbortController();
+    void fetch("/api/admin/access", {
+      cache: "no-store",
+      credentials: "same-origin",
+      signal: controller.signal,
+    }).then((response) => {
+      if (!controller.signal.aborted) {
+        setConfirmedAdminUserId(response.status === 204 ? activeUserId : null);
+      }
+    }).catch(() => {
+      // Fail closed: a network error never displays the admin navigation.
+    });
+    return () => controller.abort();
+  }, [activeUserId]);
 
   useEffect(() => {
     if (!open) return;
@@ -80,8 +112,18 @@ export default function AccountControl({ locale }: { locale: Locale }) {
     }
   }
 
+  const adminConfirmed = confirmedAdminUserId === account.account.id;
+
   return (
-    <div className="relative">
+    <div className="relative flex max-w-full items-center gap-2">
+      {adminConfirmed ? (
+        <Link
+          href="/admin/usage"
+          className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-2 text-xs font-black text-blue-800 shadow-sm hover:border-blue-400 hover:bg-blue-100 sm:px-3"
+        >
+          {adminLabels[locale]}
+        </Link>
+      ) : null}
       <button
         ref={triggerRef}
         type="button"

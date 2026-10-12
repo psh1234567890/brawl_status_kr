@@ -26,6 +26,27 @@ describe("battle log persistence", () => {
     expect(mocks.insert).not.toHaveBeenCalled();
   });
 
+  it("does not persist friendly matches played on an ordinary meta map", async () => {
+    const item = {
+      battleTime: "20261013T010203.000Z",
+      event: { mode: "brawlBall", map: "Sneaky Fields" },
+      battle: {
+        type: "friendly", result: "victory",
+        teams: [
+          [{ tag: "#2PYLQ", brawler: { id: 1, name: "SHELLY", power: 11, trophies: 500 } }],
+          [{ tag: "#8PQL", brawler: { id: 2, name: "COLT", power: 11, trophies: 500 } }],
+        ],
+      },
+    } as BattleLogItem;
+
+    await saveBattleLogs("2PYLQ", [item]);
+    expect(mocks.insert).not.toHaveBeenCalled();
+
+    await saveBattleLogs("2PYLQ", [item, { ...item, battle: { ...item.battle, type: "normal" } }]);
+    expect(mocks.values.mock.calls[0][0]).toHaveLength(1);
+    expect(mocks.values.mock.calls[1][0]).toHaveLength(2);
+  });
+
   it("uses conflict-safe insertion with the stable battle fingerprint", async () => {
     const item = {
       battleTime: "20260725T010203.000Z",

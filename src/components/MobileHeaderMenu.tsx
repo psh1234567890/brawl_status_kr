@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { localizedHref, type Locale } from "../i18n/config";
 import { getMessages } from "../i18n/messages";
 import { compareNavLabels } from "../i18n/playerComparisonMessages";
+import { isActiveNavigationItem } from "../utils/navigation";
 
 const menuLabels: Record<Locale, string> = {
   ko: "전체 메뉴", en: "Menu", ja: "メニュー", "pt-br": "Menu",
@@ -15,15 +17,22 @@ const menuLabels: Record<Locale, string> = {
 /** Keep the mobile header one row high; secondary destinations live here. */
 export default function MobileHeaderMenu({ locale }: { locale: Locale }) {
   const details = useRef<HTMLDetailsElement>(null);
+  const pathname = usePathname();
   const copy = getMessages(locale).common;
   const links = [
+    ["/", copy.home],
     ["/compare", compareNavLabels[locale]],
     ["/meta", copy.meta],
     ["/events", copy.events],
     ["/minigames", copy.minigames],
     ["/brawlers", copy.brawlers],
+    ["/maps", copy.maps],
+    ["/gamemodes", copy.modes],
+    ["/skins", copy.skins],
+    ["/rankings", copy.rankings],
     ["/clubs", copy.clubs],
     ["/teams", copy.teams],
+    ["/counters", copy.counters],
     ["/status", copy.status],
   ] as const;
 
@@ -43,8 +52,9 @@ export default function MobileHeaderMenu({ locale }: { locale: Locale }) {
             <Link
               key={href}
               href={localizedHref(locale, href)}
+              aria-current={isActiveNavigationItem(pathname, href) ? "page" : undefined}
               onClick={() => { if (details.current) details.current.open = false; }}
-              className="flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-slate-700 hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-blue-600"
+              className="flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-slate-700 hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-blue-600 aria-[current=page]:bg-blue-700 aria-[current=page]:text-white aria-[current=page]:hover:bg-blue-800 aria-[current=page]:focus-visible:bg-blue-800"
             >
               {label}
             </Link>

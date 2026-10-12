@@ -486,7 +486,7 @@ function SearchChipGroup({
               type="button"
               key={savedTag}
               onClick={() => onSearch(savedTag)}
-              className={`min-h-9 rounded-lg px-3 text-xs font-black transition-colors ${
+              className={`min-h-11 rounded-lg px-3 text-xs font-black transition-colors ${
                 strong
                   ? "bg-slate-950 text-white hover:bg-blue-700"
                   : "border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"

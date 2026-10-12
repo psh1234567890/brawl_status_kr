@@ -204,7 +204,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
           </div>
         </header>
 
-        <div className="mt-2 flex flex-wrap items-center justify-end gap-2 px-1">
+        <div className={`${search.playerData ? "hidden lg:flex" : "flex"} mt-2 flex-wrap items-center justify-end gap-2 px-1`}>
           <p className="text-xs font-bold text-slate-500 sm:text-sm">
             {githubStarCopy.title}
           </p>
@@ -263,7 +263,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             <MyTagSearchButton locale={locale} loading={search.loading} onSearch={runSearch} />
             <SearchTagNotice locale={locale} />
 
-            <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
+            <div className={`${search.playerData ? "hidden md:block" : ""} mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3`}>
               <p className="text-lg font-black text-blue-900 sm:text-2xl">
                 {copy.home.searchEvery25Title}
               </p>
@@ -272,7 +272,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
               </p>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className={`${search.playerData ? "hidden lg:grid" : "grid"} mt-4 gap-3 sm:grid-cols-2`}>
               <SearchChipGroup
                 label={copy.home.favorites}
                 emptyLabel={copy.home.noFavorites}
@@ -291,7 +291,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             </div>
           </div>
 
-          <aside className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <aside className={`${search.playerData ? "hidden lg:block" : ""} rounded-xl border border-slate-200 bg-white p-4 shadow-sm`}>
             <h2 className="text-sm font-black text-slate-950">{copy.home.shortcuts}</h2>
             <div className="mt-3 grid gap-2">
               {primaryLinks.map((link) => (

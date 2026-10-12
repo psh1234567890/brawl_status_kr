@@ -78,6 +78,7 @@ test("a shared player link opens the profile and comparison pre-fills the tag", 
   await page.setViewportSize({ width: 375, height: 760 });
   await page.goto("/?tag=" + tag);
   await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "바로가기" })).toBeHidden();
   await expect(page.getByRole("textbox", { name: "플레이어 태그" })).toHaveValue(tag);
   await page.getByRole("link", { name: "친구와 비교" }).click();
   await expect(page).toHaveURL(new RegExp("/compare\\?a=" + tag));

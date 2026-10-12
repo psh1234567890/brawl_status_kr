@@ -15,6 +15,7 @@ import {
   translateRarityName,
 } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
+import StatSymbol from "./StatSymbol";
 
 export type BrawlerBrowserItem = {
   id: number;
@@ -165,7 +166,8 @@ export default function BrawlersBrowser({
                     <h2 className="truncate text-lg font-black text-slate-900">
                       {displayName}
                     </h2>
-                    <p className="text-xs font-bold text-blue-600">
+                    <p className="flex items-center gap-1 text-xs font-bold text-blue-600">
+                      <StatSymbol kind="star" size={13} />
                       {translateRarityName(brawler.rarityName, locale) || catalogCopy.unknown}
                     </p>
                     <p className="text-xs font-bold text-slate-400">

@@ -17,6 +17,8 @@ import {
   translateModeName,
 } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
+import GameModeIcon from "./GameModeIcon";
+import StatSymbol from "./StatSymbol";
 
 interface BattleDetailsModalProps {
   battle: BattleLogItem;
@@ -62,8 +64,9 @@ export default function BattleDetailsModal({
                 {battle.battle.duration ? formatSecondsDuration(locale, battle.battle.duration) : copy.noTime}
               </span>
             </div>
-            <h2 id="battle-dialog-title" className="truncate text-2xl font-black text-slate-950 sm:text-3xl">
-              {translateModeName(battle.event.mode, locale) || copy.friendly}
+            <h2 id="battle-dialog-title" className="flex min-w-0 items-center gap-2 text-2xl font-black text-slate-950 sm:text-3xl">
+              <GameModeIcon mode={battle.event.mode} size={32} />
+              <span className="min-w-0 truncate">{translateModeName(battle.event.mode, locale) || copy.friendly}</span>
             </h2>
             <p className="mt-1 truncate text-sm font-bold text-slate-500">
               {translateMapName(battle.event.map, locale) || copy.friendlyBattle}
@@ -76,6 +79,7 @@ export default function BattleDetailsModal({
             </p>
             {battle.battle.trophyChange !== undefined && !isRanked && !isFriendly ? (
               <p className={`mt-1 text-sm font-black ${battle.battle.trophyChange > 0 ? "text-amber-600" : "text-red-600"}`}>
+                <StatSymbol kind="trophy" size={14} />{" "}
                 {battle.battle.trophyChange > 0 ? "+" : ""}
                 {battle.battle.trophyChange} {copy.trophies}
               </p>

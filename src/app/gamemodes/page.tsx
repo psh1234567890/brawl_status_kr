@@ -34,9 +34,9 @@ export async function GameModesPageContent({ locale }: { locale: Locale }) {
       actions={<LinkButton href={localizedHref(locale, "/maps")}>{copy.list.action}</LinkButton>}
     >
       <section className="grid gap-3 sm:grid-cols-3">
-        <StatPill label={copy.list.totalModes} value={modes.length} />
-        <StatPill label={copy.list.activeModes} value={enabled.length} />
-        <StatPill label={copy.list.inactiveIncluded} value={modes.length - enabled.length} />
+        <StatPill label={copy.list.totalModes} value={modes.length} icon="battle" />
+        <StatPill label={copy.list.activeModes} value={enabled.length} icon="win" />
+        <StatPill label={copy.list.inactiveIncluded} value={modes.length - enabled.length} icon="timer" />
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

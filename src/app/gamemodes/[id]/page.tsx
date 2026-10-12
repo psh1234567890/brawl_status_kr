@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BrawlImage from "../../../components/BrawlImage";
+import StatSymbol from "../../../components/StatSymbol";
 import PortalLayout, { StatPill } from "../../../components/PortalLayout";
 import { localeAlternates, localizedHref, type Locale } from "../../../i18n/config";
 import { getCatalogPageMessages } from "../../../i18n/catalogPageMessages";
@@ -109,7 +110,10 @@ export async function GameModeDetailPageContent({ id, locale }: { id: string; lo
               href={localizedHref(locale, `/maps/${map.id}`)}
               className="rounded-lg border border-slate-200 bg-white p-4 font-black text-slate-800 shadow-sm transition-transform hover:-translate-y-0.5"
             >
-              {translateMapName(map.name, locale)}
+              <span className="flex min-w-0 items-center gap-2">
+                <StatSymbol kind="map" size={17} className="text-blue-600" />
+                <span className="min-w-0 truncate">{translateMapName(map.name, locale)}</span>
+              </span>
             </Link>
           ))}
         </div>

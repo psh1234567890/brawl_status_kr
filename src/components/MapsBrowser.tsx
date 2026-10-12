@@ -10,6 +10,7 @@ import {
 } from "../i18n/mapBrowserMessages";
 import { translateMapName, translateModeName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
+import GameModeIcon from "./GameModeIcon";
 
 const PAGE_SIZE = 48;
 
@@ -19,6 +20,7 @@ export type MapBrowserItem = {
   imageUrl?: string;
   lastActive?: number;
   gameModeName?: string;
+  gameModeId?: number;
 };
 
 export default function MapsBrowser({
@@ -140,7 +142,8 @@ export default function MapsBrowser({
                 )}
 
                 <div className="p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.06em] text-blue-600">
+                  <p className="flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.06em] text-blue-600">
+                    <GameModeIcon modeId={map.gameModeId} mode={map.gameModeName} size={20} />
                     {displayMode}
                   </p>
                   <h2

@@ -19,6 +19,8 @@ import {
   translateMapName,
   translateModeName,
 } from "../utils/brawlTranslations";
+import GameModeIcon from "./GameModeIcon";
+import StatSymbol from "./StatSymbol";
 
 interface BattleLogListProps {
   battleLog: BattleLogResponse;
@@ -100,7 +102,7 @@ export default function BattleLogList({
       <div className="mt-4 grid grid-cols-3 gap-2">
         <SummaryCell label={copy.winRate} value={`${summary.winRate}%`} detail={formatBattles(locale, summary.total)} />
         <SummaryCell label={copy.wins} value={formatWins(locale, summary.wins)} detail={formatLossDraw(locale, summary.defeats, summary.draws)} />
-        <SummaryCell label={copy.bestMode} value={translateModeName(summary.bestMode, locale)} detail={summary.maxModeWins > 0 ? formatWins(locale, summary.maxModeWins) : copy.notEnough} />
+        <SummaryCell label={copy.bestMode} value={translateModeName(summary.bestMode, locale)} detail={summary.maxModeWins > 0 ? formatWins(locale, summary.maxModeWins) : copy.notEnough} icon={<GameModeIcon mode={summary.bestMode} />} />
       </div>
 
       <div className="mt-4 grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -154,8 +156,11 @@ export default function BattleLogList({
                     <BattleTypeBadge friendly={isFriendly} ranked={isRanked} locale={locale} />
                     <span className="text-xs font-bold text-slate-400">{formatBattleTime(match.battleTime, locale)}</span>
                   </span>
-                  <span className="block truncate text-base font-black text-slate-950">
-                    {translateModeName(match.event.mode, locale) || copy.friendly} · {translateMapName(match.event.map, locale) || copy.friendlyBattle}
+                  <span className="flex min-w-0 items-center gap-2 text-base font-black text-slate-950">
+                    <GameModeIcon mode={match.event.mode} />
+                    <span className="min-w-0 truncate">
+                      {translateModeName(match.event.mode, locale) || copy.friendly} · {translateMapName(match.event.map, locale) || copy.friendlyBattle}
+                    </span>
                   </span>
                 </span>
                 <span className="text-right">
@@ -165,6 +170,7 @@ export default function BattleLogList({
                   </span>
                   {match.battle.trophyChange !== undefined && !isRanked && !isFriendly ? (
                     <span className={`mt-1 block text-xs font-black ${match.battle.trophyChange > 0 ? "text-amber-600" : "text-red-600"}`}>
+                      <StatSymbol kind="trophy" size={13} />{" "}
                       {match.battle.trophyChange > 0 ? "+" : ""}
                       {match.battle.trophyChange} {copy.trophies}
                     </span>
@@ -187,15 +193,20 @@ function SummaryCell({
   label,
   value,
   detail,
+  icon,
 }: {
   label: string;
   value: string;
   detail: string;
+  icon?: ReactNode;
 }) {
   return (
     <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-3">
       <p className="truncate text-xs font-black text-slate-500">{label}</p>
-      <p className="mt-1 truncate text-lg font-black text-slate-950 sm:text-2xl">{value}</p>
+      <div className="mt-1 flex min-w-0 items-center gap-1.5">
+        {icon}
+        <p className="min-w-0 truncate text-lg font-black text-slate-950 sm:text-2xl">{value}</p>
+      </div>
       <p className="mt-1 truncate text-xs font-bold text-slate-500">{detail}</p>
     </div>
   );

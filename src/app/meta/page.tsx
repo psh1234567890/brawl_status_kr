@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
+import GameModeIcon from "../../components/GameModeIcon";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import OwnedBrawlerRecommendations from "../../components/OwnedBrawlerRecommendations";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
@@ -26,6 +27,16 @@ import { translateBrawlerName, translateMapName, translateModeName } from "../..
 import { replaceBrowserSearch, useBrowserSearch } from "../../utils/urlState";
 
 const MODE_LIST = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
+// Existing meta grouping names are not always precise game mode keys.
+// Only unambiguous groups get an exact BrawlAPI mode icon.
+const META_MODE_KEYS: Record<string, string> = {
+  "젬 그랩": "gemGrab",
+  "브롤 볼": "brawlBall",
+  "하이스트": "heist",
+  "바운티": "bounty",
+  "핫 존": "hotZone",
+  "녹아웃": "knockout",
+};
 const DEFAULT_VISIBLE_COUNT = 15;
 const MIN_PLAY_OPTIONS = [5, 10, 20, 50];
 
@@ -262,7 +273,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                     : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"
                 }`}
               >
-                {translateMetaModeLabel(modeName, locale)}
+                <span className="inline-flex items-center gap-1.5">
+                  <GameModeIcon mode={META_MODE_KEYS[modeName]} size={20} />
+                  {translateMetaModeLabel(modeName, locale)}
+                </span>
               </button>
             ))}
           </div>

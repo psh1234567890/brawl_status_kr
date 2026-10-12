@@ -28,6 +28,8 @@ import {
   translateSkinName,
 } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
+import StatSymbol from "./StatSymbol";
+import type { StatSymbolKind } from "./StatSymbol";
 
 interface BrawlerDetailsModalProps {
   brawler: Brawler;
@@ -98,9 +100,9 @@ export default function BrawlerDetailsModal({
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <MiniMetric label={copy.highestTrophies} value={brawler.highestTrophies.toLocaleString(numberLocales[locale])} />
-          <MiniMetric label={copy.gadgets} value={formatOwnedCount(locale, brawler.gadgets?.length ?? 0)} />
-          <MiniMetric label={copy.starPowers} value={formatOwnedCount(locale, brawler.starPowers?.length ?? 0)} />
+          <MiniMetric label={copy.highestTrophies} value={brawler.highestTrophies.toLocaleString(numberLocales[locale])} icon="trophy" />
+          <MiniMetric label={copy.gadgets} value={formatOwnedCount(locale, brawler.gadgets?.length ?? 0)} icon="gadget" />
+          <MiniMetric label={copy.starPowers} value={formatOwnedCount(locale, brawler.starPowers?.length ?? 0)} icon="super" />
         </div>
 
         <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
@@ -334,11 +336,11 @@ function toTitleCase(value: string) {
     .join(" ");
 }
 
-function MiniMetric({ label, value }: { label: string; value: string }) {
+function MiniMetric({ label, value, icon }: { label: string; value: string; icon: StatSymbolKind }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
       <p className="text-xs font-black text-slate-500">{label}</p>
-      <p className="mt-1 truncate text-lg font-black text-slate-950">{value}</p>
+      <p className="mt-1 flex items-center gap-1.5 truncate text-lg font-black text-slate-950"><StatSymbol kind={icon} size={17} className="text-blue-600" />{value}</p>
     </div>
   );
 }
@@ -366,19 +368,28 @@ function AbilityGroup({
 
   return (
     <div>
-      <h4 className="mb-2 text-xs font-black text-slate-500">{label}</h4>
+      <h4 className="mb-2 flex items-center gap-1.5 text-xs font-black text-slate-500">
+        <StatSymbol kind={imageType === "gadgets" ? "gadget" : imageType === "star-powers" ? "super" : "hyper"} size={15} />
+        {label}
+      </h4>
       {abilities?.length ? (
         <div className="grid gap-2 sm:grid-cols-2">
           {abilities.map((ability) => (
             <div key={ability.id} className="flex min-w-0 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
-              <BrawlImage
-                src={`https://cdn.brawlify.com/${imageType}/regular/${ability.id}.png`}
-                alt={ability.name}
-                width={36}
-                height={36}
-                fallbackText={label.slice(0, 1)}
-                className={`h-9 w-9 shrink-0 rounded-lg ${toneClass}`}
-              />
+              {imageType === "hypercharges" ? (
+                <span aria-hidden="true" className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneClass}`}>
+                  <StatSymbol kind="hyper" size={25} />
+                </span>
+              ) : (
+                <BrawlImage
+                  src={`https://cdn.brawlify.com/${imageType}/regular/${ability.id}.png`}
+                  alt={ability.name}
+                  width={36}
+                  height={36}
+                  fallbackText={label.slice(0, 1)}
+                  className={`h-9 w-9 shrink-0 rounded-lg ${toneClass}`}
+                />
+              )}
               <span className="min-w-0 truncate text-sm font-black text-slate-800">
                 {translateAbilityName(ability.id, ability.name, locale)}
               </span>
@@ -398,7 +409,7 @@ function GearGroup({ brawler, locale }: { brawler: Brawler; locale: Locale }) {
   const copy = getComponentMessages(locale).brawlerDetails;
   return (
     <div>
-      <h4 className="mb-2 text-xs font-black text-slate-500">{copy.gears}</h4>
+      <h4 className="mb-2 flex items-center gap-1.5 text-xs font-black text-slate-500"><StatSymbol kind="gear" size={15} />{copy.gears}</h4>
       {brawler.gears?.length ? (
         <div className="grid gap-2 sm:grid-cols-2">
           {brawler.gears.map((gear) => (

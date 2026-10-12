@@ -37,6 +37,37 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await expect(page.getByText("현재 착용 스킨 확인 완료")).toBeVisible();
 });
 
+test("battle log and detail show the exact BrawlAPI Gem Grab mode icon", async ({ page }) => {
+  await page.unroute(/\/api\/player\/matches\?tag=/);
+  await page.route(/\/api\/player\/matches\?tag=/, async route => {
+    await route.fulfill({ json: {
+      storageStatus: "saved",
+      items: [{
+        battleTime: "20261012T123045.000Z",
+        event: { mode: "gemGrab", map: "Hard Rock Mine" },
+        battle: {
+          type: "ranked", result: "victory", duration: 120, trophyChange: 8,
+          teams: [[
+            { tag: "#" + tag, name: "E2E Player", brawler: { id: 16000000, name: "SHELLY", power: 11, trophies: 500 } },
+          ], [
+            { tag: "#9R90", name: "Opponent", brawler: { id: 16000001, name: "COLT", power: 9, trophies: 400 } },
+          ]],
+        },
+      }],
+    } });
+  });
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+  await page.getByRole("button", { name: "검색", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "E2E Player", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "전투", exact: true }).click();
+  await expect(page.locator('img[src*="/game-modes/regular/48000000.png"]').first()).toBeVisible();
+  await page.getByRole("button", { name: /젬 그랩.*암석 광산/ }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.locator('img[src*="/game-modes/regular/48000000.png"]')).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "젬 그랩" })).toBeVisible();
+});
+
 test("owned-skin lookup falls back to the recent browser cache after a refresh failure", async ({ page }) => {
   await page.unroute(/\/api\/player\/skins\?tag=/);
   let skinRequests = 0;

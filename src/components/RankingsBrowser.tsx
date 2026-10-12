@@ -8,6 +8,7 @@ import type { RankingItem, RankingsResponse } from "../types/brawl";
 import { getClubBadgeUrl, getPlayerIconUrl } from "../utils/brawlAssets";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
+import StatSymbol from "./StatSymbol";
 
 type RankingType = "players" | "clubs" | "brawlers";
 
@@ -166,7 +167,8 @@ export default function RankingsBrowser({
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 text-sm font-black text-blue-700">
+                <span className="inline-flex shrink-0 items-center gap-1 text-sm font-black text-blue-700">
+                  <StatSymbol kind="trophy" size={15} className="text-amber-600" />
                   {item.trophies.toLocaleString(numberLocales[locale])} {copy.rankings.trophies}
                 </span>
               </article>

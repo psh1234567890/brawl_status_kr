@@ -10,6 +10,7 @@ import { useAccount } from "../hooks/useAccount";
 import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import BrawlImage from "./BrawlImage";
+import StatSymbol from "./StatSymbol";
 
 const RECENT_TAGS_KEY = "recentTags";
 const RECENT_TAGS_CHANGED_EVENT = "recentTagsChanged";
@@ -202,8 +203,8 @@ export default function OwnedBrawlerRecommendations({
                   </div>
                 </div>
                 <div className="mt-3 flex justify-between gap-2 text-[11px] font-bold text-slate-500">
-                  <span>{copy.trophies} {owned.trophies.toLocaleString(numberLocales[locale])}</span>
-                  <span>{copy.power} {owned.power}</span>
+                  <span className="inline-flex items-center gap-1"><StatSymbol kind="trophy" size={12} />{copy.trophies} {owned.trophies.toLocaleString(numberLocales[locale])}</span>
+                  <span className="inline-flex items-center gap-1"><StatSymbol kind="level" size={12} />{copy.power} {owned.power}</span>
                 </div>
               </Link>
             );

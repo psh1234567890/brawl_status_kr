@@ -34,9 +34,9 @@ export async function MapsPageContent({ locale }: { locale: Locale }) {
       actions={<LinkButton href={localizedHref(locale, "/events")}>{copy.list.action}</LinkButton>}
     >
       <section className="grid gap-3 sm:grid-cols-3">
-        <StatPill label={copy.list.totalMaps} value={maps.length.toLocaleString(numberLocales[locale])} />
-        <StatPill label={copy.list.activeMaps} value={displayMaps.length.toLocaleString(numberLocales[locale])} />
-        <StatPill label={copy.list.gameModes} value={modes.size.toLocaleString(numberLocales[locale])} />
+        <StatPill label={copy.list.totalMaps} value={maps.length.toLocaleString(numberLocales[locale])} icon="map" />
+        <StatPill label={copy.list.activeMaps} value={displayMaps.length.toLocaleString(numberLocales[locale])} icon="win" />
+        <StatPill label={copy.list.gameModes} value={modes.size.toLocaleString(numberLocales[locale])} icon="battle" />
       </section>
 
       <MapsBrowser
@@ -47,6 +47,7 @@ export async function MapsPageContent({ locale }: { locale: Locale }) {
           imageUrl: map.imageUrl,
           lastActive: map.lastActive,
           gameModeName: map.gameMode?.name,
+          gameModeId: map.gameMode?.id,
         }))}
       />
     </PortalLayout>

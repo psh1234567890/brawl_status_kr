@@ -13,6 +13,8 @@ import { isValidPlayerTag, normalizePlayerTag } from "../../utils/playerTag";
 import { getPlayerIconUrl } from "../../utils/brawlAssets";
 import BrawlImage from "../BrawlImage";
 import RankedLeagueIcon from "../RankedLeagueIcon";
+import StatSymbol from "../StatSymbol";
+import type { StatSymbolKind } from "../StatSymbol";
 
 type Overview = {
   defaultPlayerTag: string | null;
@@ -123,10 +125,12 @@ export default function AccountDashboard({ locale, accountId, revision, nickname
             </div>
             <dl className="mt-4 grid grid-cols-2 gap-2">
               {([
-                [copy.trophies, active.player.trophies], [copy.highest, active.player.highestTrophies],
-                [copy.victories, active.player.victories3v3], [copy.brawlers, active.player.brawlerCount],
-              ] as const).map(([label, value]) => <div key={label} className="rounded-lg bg-slate-50 p-3">
-                <dt className="text-xs font-bold text-slate-500">{label}</dt>
+                [copy.trophies, active.player.trophies, "trophy"],
+                [copy.highest, active.player.highestTrophies, "star"],
+                [copy.victories, active.player.victories3v3, "players"],
+                [copy.brawlers, active.player.brawlerCount, "battle"],
+              ] as readonly (readonly [string, number, StatSymbolKind])[]).map(([label, value, icon]) => <div key={label} className="rounded-lg bg-slate-50 p-3">
+                <dt className="flex items-center gap-1 text-xs font-bold text-slate-500"><StatSymbol kind={icon} size={14} />{label}</dt>
                 <dd className="mt-1 text-lg font-black tabular-nums">{fmt(value)}</dd>
               </div>)}
             </dl>

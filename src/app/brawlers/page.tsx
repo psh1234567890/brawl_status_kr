@@ -34,9 +34,9 @@ export async function BrawlersPageContent({ locale }: { locale: Locale }) {
       actions={<LinkButton href={localizedHref(locale, "/")}>{copy.list.action}</LinkButton>}
     >
       <section className="grid gap-3 sm:grid-cols-3">
-        <StatPill label={copy.list.totalBrawlers} value={brawlers.length} />
-        <StatPill label={copy.list.releasedBrawlers} value={released.length} />
-        <StatPill label={copy.list.rarityCount} value={rarities.size} />
+        <StatPill label={copy.list.totalBrawlers} value={brawlers.length} icon="players" />
+        <StatPill label={copy.list.releasedBrawlers} value={released.length} icon="win" />
+        <StatPill label={copy.list.rarityCount} value={rarities.size} icon="star" />
       </section>
 
       <BrawlersBrowser

@@ -6,6 +6,8 @@ import { numberLocales, type Locale } from "../i18n/config";
 import { formatMetaWindow } from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
 import { translateBrawlerName, translateMapName } from "../utils/brawlTranslations";
+import { generatedBrawlerImageIdByName } from "../constants/generatedBrawlTranslations";
+import BrawlImage from "./BrawlImage";
 
 type TeamComp = {
   map: string;
@@ -109,7 +111,24 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
           {items.map((item) => (
             <article key={`${item.map}-${item.team}`} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs font-black text-blue-600">{translateMapName(item.map, locale)}</p>
-              <h2 className="mt-1 text-xl font-black text-slate-950">{translateTeamName(item.team, locale)}</h2>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {item.team.split(" + ").map((name, index) => {
+                  const brawlerId = generatedBrawlerImageIdByName[name.toUpperCase()];
+                  return <span key={name + index} className="inline-flex min-w-0 items-center gap-1.5">
+                    {brawlerId ? <BrawlImage
+                      src={`https://cdn.brawlify.com/brawlers/borders/${brawlerId}.png`}
+                      alt=""
+                      width={36}
+                      height={36}
+                      sizes="36px"
+                      className="h-9 w-9 shrink-0 rounded-md object-contain"
+                      fallbackText=""
+                    /> : null}
+                    <span className="text-sm font-black text-slate-900">{translateBrawlerName(name, locale)}</span>
+                    {index < item.team.split(" + ").length - 1 ? <span className="text-xs text-slate-400">+</span> : null}
+                  </span>;
+                })}
+              </div>
               <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                 <Metric label={copy.common.recommendationScore} value={String(item.score)} />
                 <Metric label={copy.common.winRate} value={`${item.winRate}%`} />
@@ -128,10 +147,6 @@ export default function TeamMetaBrowser({ locale = "ko" }: { locale?: Locale }) 
       )}
     </div>
   );
-}
-
-function translateTeamName(team: string, locale: Locale) {
-  return team.split(" + ").map((name) => translateBrawlerName(name, locale)).join(" + ");
 }
 
 function Metric({ label, value }: { label: string; value: string }) {

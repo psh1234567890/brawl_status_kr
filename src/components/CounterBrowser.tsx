@@ -8,6 +8,8 @@ import { getMessages } from "../i18n/messages";
 import type { BrawlifyBrawler } from "../types/brawlify";
 import { translateBrawlerName } from "../utils/brawlTranslations";
 import { replaceBrowserSearch, useBrowserSearch } from "../utils/urlState";
+import BrawlImage from "./BrawlImage";
+import StatSymbol from "./StatSymbol";
 
 type CounterItem = {
   brawler: string;
@@ -34,6 +36,10 @@ export default function CounterBrowser({
   const released = useMemo(
     () => brawlers.filter((brawler) => brawler.released !== false),
     [brawlers],
+  );
+  const byName = useMemo(
+    () => new Map(released.map(brawler => [brawler.name.toUpperCase(), brawler.id])),
+    [released],
   );
   const catalogUnavailable = released.length === 0;
   const search = useBrowserSearch();
@@ -124,10 +130,24 @@ export default function CounterBrowser({
           {items.map((item, index) => (
             <article key={item.brawler} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-xs font-black text-blue-300">#{index + 1}</p>
-              <h2 className="mt-1 text-xl font-black text-slate-950">
-                {translateBrawlerName(item.brawler, locale)}
-              </h2>
-              <p className="mt-3 text-sm font-bold text-slate-500">
+              <div className="mt-1 flex items-center gap-3">
+                {byName.get(item.brawler.toUpperCase()) ? (
+                  <BrawlImage
+                    src={`https://cdn.brawlify.com/brawlers/borders/${byName.get(item.brawler.toUpperCase())}.png`}
+                    alt=""
+                    width={52}
+                    height={52}
+                    sizes="52px"
+                    className="h-13 w-13 shrink-0 rounded-lg object-contain"
+                    fallbackText=""
+                  />
+                ) : null}
+                <h2 className="min-w-0 truncate text-xl font-black text-slate-950">
+                  {translateBrawlerName(item.brawler, locale)}
+                </h2>
+              </div>
+              <p className="mt-3 flex items-center gap-1.5 text-sm font-bold text-slate-500">
+                <StatSymbol kind="chart" size={15} />
                 {formatCounterWinRate(locale, Number(item.winRate))}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 text-center">

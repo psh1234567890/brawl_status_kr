@@ -6,6 +6,8 @@ import { getMessages } from "../i18n/messages";
 import AccountControl from "./account/AccountControl";
 import AdSenseUnit from "./AdSenseUnit";
 import LanguageSwitcher from "./LanguageSwitcher";
+import StatSymbol from "./StatSymbol";
+import type { StatSymbolKind } from "./StatSymbol";
 
 interface PortalLayoutProps {
   title: string;
@@ -148,11 +150,14 @@ export default function PortalLayout({
   );
 }
 
-export function StatPill({ label, value }: { label: string; value: string | number }) {
+export function StatPill({ label, value, icon }: { label: string; value: string | number; icon?: StatSymbolKind }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
       <p className="text-xs font-black uppercase tracking-[0.06em] text-slate-400">{label}</p>
-      <p className="mt-1 text-xl font-black text-blue-700">{value}</p>
+      <p className="mt-1 flex items-center gap-1.5 text-xl font-black text-blue-700">
+        {icon ? <StatSymbol kind={icon} size={19} /> : null}
+        {value}
+      </p>
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { countryShare, searchSuccessRate } from "../../utils/adminUsageMetrics";
+import { summarizeApiPerformance, type ApiPerformanceCounts } from "../../utils/apiPerformanceMetrics";
 
 type Counts = { visits: number; searches: number; successfulSearches: number; gameEnds: number };
 type FailureReasons = Record<string, number>;
@@ -14,6 +15,8 @@ type SearchTagSummary = {
 };
 type Summary = {
   recentSearchTags: SearchTagSummary[];
+  apiPerformance24h?: ApiPerformanceCounts[];
+  apiPerformance7d?: ApiPerformanceCounts[];
   searchCountries7Days?: Array<{ countryCode: string; searchCount: string }>;
   today: Counts;
   last7Days: Counts;
@@ -67,6 +70,15 @@ const failureKinds = [
   { key: "player_search_error_5xx", label: "서버·외부 API 오류 (5xx)" },
   { key: "player_search_error_other", label: "기타 응답 오류" },
 ] as const;
+const monitoredRoutes: Record<string, string> = {
+  "api.player": "플레이어 프로필",
+  "api.player.matches.read": "전투 기록 조회",
+  "api.player.matches.save": "전투 기록 저장",
+  "api.player.skins": "보유 스킨",
+  "api.meta": "맵 메타",
+  "api.meta.counters": "카운터 추천",
+  "api.meta.teams": "팀 추천",
+};
 
 export default function UsageDashboard() {
   const [data, setData] = useState<Summary | null>(null);
@@ -74,6 +86,7 @@ export default function UsageDashboard() {
   const [period, setPeriod] = useState<Period>("today");
   const [tagFilter, setTagFilter] = useState("");
   const [tagSort, setTagSort] = useState<"recent" | "popular">("recent");
+  const [performancePeriod, setPerformancePeriod] = useState<"24h" | "7d">("24h");
   const [optOut, setOptOut] = useState(() =>
     typeof document !== "undefined" && document.cookie.includes("brawl_analytics_opt_out=1")
   );
@@ -146,6 +159,8 @@ export default function UsageDashboard() {
   const classifiedFailures = failureKinds.reduce((total, reason) => total + (failureCounts[reason.key] ?? 0), 0);
   const unknownFailures = Math.max(0, failedSearches - classifiedFailures);
   const periodLabel = periods.find(item => item.key === period)?.label ?? "오늘";
+  const apiPerformance = (performancePeriod === "24h" ? data?.apiPerformance24h : data?.apiPerformance7d) ?? [];
+  const totalMeasured = apiPerformance.reduce((sum, item) => sum + summarizeApiPerformance(item).requests, 0);
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-5xl space-y-6">
@@ -173,6 +188,71 @@ export default function UsageDashboard() {
         {data && status === "ready" ? (
           <>
             <p className="text-xs text-slate-500">한국 시간 기준 · 갱신: {new Date(data.sampledAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</p>
+            <section className="rounded-xl border bg-white p-5 shadow-sm" aria-labelledby="api-performance-title">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 id="api-performance-title" className="text-lg font-black">API 응답 성능·장애</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    신규 집계 도입 이후 API별 익명 시간대 통계 · 검색자·태그·IP·계정·요청 ID 저장 없음
+                  </p>
+                </div>
+                <div role="group" aria-label="API 성능 집계 기간" className="flex gap-2">
+                  {(["24h", "7d"] as const).map((value) => (
+                    <button key={value} type="button" aria-pressed={performancePeriod === value}
+                      onClick={() => setPerformancePeriod(value)}
+                      className={`min-h-11 rounded-lg border px-3 text-sm font-bold ${performancePeriod === value
+                        ? "border-blue-700 bg-blue-700 text-white"
+                        : "border-slate-200 bg-white text-slate-700"}`}>
+                      {value === "24h" ? "API 24시간" : "API 7일"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-3 text-xs font-semibold text-slate-500">
+                측정 요청 {n(totalMeasured)}건 · 5xx는 서버/외부 API 장애 응답 · 429는 요청 제한
+                · P95는 시간 구간별 근삿값이며 정확한 밀리초 측정치가 아닙니다
+              </p>
+              {totalMeasured === 0 ? (
+                <p className="mt-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                  해당 기간 측정된 운영 API 요청이 없습니다. 배포 이전 데이터는 소급해 표시할 수 없습니다.
+                </p>
+              ) : (
+                <div role="region" aria-label="API별 성능 집계표" tabIndex={0}
+                  className="mt-4 overflow-x-auto rounded-lg border border-slate-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                  <table className="w-full min-w-[675px] border-collapse text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-700">
+                      <tr>
+                        <th scope="col" className="px-3 py-3">API</th>
+                        <th scope="col" className="px-3 py-3 text-right">요청</th>
+                        <th scope="col" className="px-3 py-3 text-right">평균</th>
+                        <th scope="col" className="px-3 py-3 text-right">P95 구간</th>
+                        <th scope="col" className="px-3 py-3 text-right">5xx</th>
+                        <th scope="col" className="px-3 py-3 text-right">429</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {apiPerformance.map((item) => {
+                        const summary = summarizeApiPerformance(item);
+                        return (
+                          <tr key={item.route} className="border-t border-slate-100">
+                            <td className="px-3 py-3 font-bold" title={item.route}>{monitoredRoutes[item.route] ?? item.route}</td>
+                            <td className="px-3 py-3 text-right tabular-nums">{n(summary.requests)}</td>
+                            <td className="px-3 py-3 text-right tabular-nums">{summary.averageMs === null ? "—" : `${n(summary.averageMs)}ms`}</td>
+                            <td className="px-3 py-3 text-right whitespace-nowrap">{summary.p95Band ?? "—"}</td>
+                            <td className="px-3 py-3 text-right tabular-nums">
+                              {n(summary.serverErrors)}건 ({summary.serverErrorRate?.toFixed(1) ?? "—"}%)
+                            </td>
+                            <td className="px-3 py-3 text-right tabular-nums">
+                              {n(summary.rateLimited)}건 ({summary.limitRate?.toFixed(1) ?? "—"}%)
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
             <div className="rounded-xl border bg-white p-4 shadow-sm">
               <h2 className="text-base font-black text-slate-900">집계 기간</h2>
               <div role="group" aria-label="집계 기간 선택" className="mt-3 flex flex-wrap gap-2">

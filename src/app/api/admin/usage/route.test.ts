@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   hasUsageAdminAccess: vi.fn(),
   readRecentSearchTags: vi.fn(),
   readSearchCountries7Days: vi.fn(),
+  readApiPerformanceHours: vi.fn(),
 }));
 vi.mock("../../../../server/searchTagAnalytics", () => ({
   readRecentSearchTags: mocks.readRecentSearchTags,
@@ -23,6 +24,9 @@ vi.mock("../../../../server/usageAnalytics", () => ({
   summarizeLifetime: mocks.summarizeLifetime,
 }));
 import { GET } from "./route";
+vi.mock("../../../../server/apiPerformance", () => ({
+  readApiPerformanceHours: mocks.readApiPerformanceHours,
+}));
 
 describe("private analytics dashboard API", () => {
   beforeEach(() => {
@@ -33,6 +37,7 @@ describe("private analytics dashboard API", () => {
     mocks.readUsageLifetime.mockResolvedValue([]);
     mocks.readRecentSearchTags.mockResolvedValue([]);
     mocks.readSearchCountries7Days.mockResolvedValue([]);
+    mocks.readApiPerformanceHours.mockResolvedValue([]);
     mocks.summarizeUsage.mockReturnValue({ today: { visits: 0 } });
     mocks.summarizeLifetime.mockReturnValue({ allTime: { visits: 0 }, trackingStartedAt: null });
   });
@@ -46,6 +51,7 @@ describe("private analytics dashboard API", () => {
     expect(mocks.readUsageLifetime).not.toHaveBeenCalled();
     expect(mocks.readRecentSearchTags).not.toHaveBeenCalled();
     expect(mocks.readSearchCountries7Days).not.toHaveBeenCalled();
+    expect(mocks.readApiPerformanceHours).not.toHaveBeenCalled();
   });
   it("hides data from non-admin users even after login", async () => {
     const response = await GET(request());
@@ -72,9 +78,12 @@ describe("private analytics dashboard API", () => {
       trackingStartedAt: null,
       recentSearchTags: [],
       searchCountries7Days: [],
+      apiPerformance24h: [],
+      apiPerformance7d: [],
     });
     expect(mocks.readRecentSearchTags).toHaveBeenCalledOnce();
     expect(mocks.readSearchCountries7Days).toHaveBeenCalledOnce();
     expect(mocks.readUsageLifetime).toHaveBeenCalledOnce();
+    expect(mocks.readApiPerformanceHours).toHaveBeenCalledTimes(2);
   });
 });

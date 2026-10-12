@@ -1,5 +1,7 @@
 import "server-only";
 import { db } from "../db";
+import { isUsageOptedOut } from "../utils/analyticsOptOut";
+export { isUsageOptedOut } from "../utils/analyticsOptOut";
 
 export const usageKinds = [
   "visit_session", "player_search_success", "player_search_error",
@@ -29,10 +31,6 @@ function emptyFailureBreakdown(): Record<SearchFailureKind, number> {
 
 export function isUsageKind(value: unknown): value is UsageKind {
   return typeof value === "string" && (usageKinds as readonly string[]).includes(value);
-}
-
-export function isUsageOptedOut(request: Request): boolean {
-  return /(?:^|;\s*)brawl_analytics_opt_out=1(?:;|$)/.test(request.headers.get("cookie") ?? "");
 }
 
 // The DB contains only counters; never pass tags, IPs, cookies, user IDs or

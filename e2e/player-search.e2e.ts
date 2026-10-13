@@ -69,8 +69,10 @@ test("saved player reopens with a real trophy delta and anonymous action counts"
   await expect.poll(() => events.includes("profile_reopen")).toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   await page.getByText(/지난 조회 대비.*\+55/).scrollIntoViewIfNeeded();
+  const trophyValue = page.locator("strong").filter({ hasText: /^12,400$/ });
+  expect(await trophyValue.evaluate(element => element.getBoundingClientRect().height <= parseFloat(getComputedStyle(element).lineHeight) * 1.1)).toBe(true);
   expect(runtimeErrors).toEqual([]);
-  await page.screenshot({ path: test.info().outputPath("saved-player-mobile.png"), fullPage: false });
+  await page.getByRole("heading", { name: "Return Player" }).locator("xpath=ancestor::section[1]").screenshot({ path: test.info().outputPath("saved-player-mobile.png") });
 });
 
 test("progression panel calculates remaining coins and resources for owned Brawlers", async ({ page }) => {

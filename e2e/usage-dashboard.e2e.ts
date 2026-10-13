@@ -26,7 +26,7 @@ test("operator sees measured returns and leaves unknown monthly costs blank", as
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await panel.scrollIntoViewIfNeeded();
-  await page.screenshot({ path: test.info().outputPath("monthly-finance-mobile.png"), fullPage: false });
+  await panel.screenshot({ path: test.info().outputPath("monthly-finance-mobile.png") });
 });
 
 test("admin dashboard switches between today, seven days, and lifetime totals", async ({ page }) => {

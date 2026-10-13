@@ -86,9 +86,9 @@ export default function PlayerProfile({
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <HeroStat label={copy.currentTrophies} value={playerData.trophies.toLocaleString(numberLocales[locale])}
+        <HeroStat numeric label={copy.currentTrophies} value={playerData.trophies.toLocaleString(numberLocales[locale])}
           icon={<StatSymbol kind="trophy" size={26} />} />
-        <HeroStat label={hubCopy.recent} value={recentMatches > 0 ? `${recentWinRate}%` : "—"}
+        <HeroStat numeric label={hubCopy.recent} value={recentMatches > 0 ? `${recentWinRate}%` : "—"}
           detail={recentMatches > 0 ? `${recentMatches.toLocaleString(numberLocales[locale])} ${hubCopy.recentCount}` : hubCopy.missing}
           icon={<StatSymbol kind="win" size={22} className="text-blue-600" />} />
         <div className="col-span-2 sm:col-span-1">
@@ -144,15 +144,15 @@ export default function PlayerProfile({
   );
 }
 
-function HeroStat({ label, value, detail, icon }: {
-  label: string; value: string; detail?: string; icon: ReactNode;
+function HeroStat({ label, value, detail, icon, numeric = false }: {
+  label: string; value: string; detail?: string; icon: ReactNode; numeric?: boolean;
 }) {
   return (
     <div className="min-w-0 rounded-xl border border-blue-100 bg-white/95 p-3 shadow-sm sm:p-4">
       <p className="text-xs font-bold text-slate-500">{label}</p>
-      <div className="mt-2 flex min-w-0 items-center gap-2">
+      <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
         {icon}
-        <strong className="min-w-0 break-words text-xl font-black tabular-nums text-slate-950 sm:text-2xl">{value}</strong>
+        <strong className={`font-black tabular-nums text-slate-950 sm:text-2xl ${numeric ? "shrink-0 whitespace-nowrap text-lg" : "min-w-0 break-words text-xl"}`}>{value}</strong>
       </div>
       {detail ? <p className="mt-1 text-[11px] font-medium text-slate-500">{detail}</p> : null}
     </div>

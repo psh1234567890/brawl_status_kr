@@ -12,7 +12,7 @@ import "./globals.css";
 const siteUrl = "https://www.brawl-o1.site";
 const siteName = "브롤스타즈 전적 검색";
 const siteDescription =
-  "브롤스타즈 플레이어 전적 검색, 최근 전투 분석, 맵별 추천 브롤러, 스킨 카탈로그를 한국어로 확인하세요.";
+  "브롤스타즈 전적 검색부터 브롤러 퀴즈까지. Brawloop에서 최근 전투와 성장 기록을 확인하고 친구와 비교해 보세요.";
 const documentLangByPathSegment = Object.fromEntries(
   localizedLocales.map((locale) => [locale, numberLocales[locale]]),
 );
@@ -26,29 +26,29 @@ const documentLangScript =
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName} | Brawl Status KR`,
-    template: `%s | Brawl Status KR`,
+    default: `${siteName} | Brawloop`,
+    template: `%s | Brawloop`,
   },
   description: siteDescription,
-  applicationName: "Brawl Status KR",
-  authors: [{ name: "Brawl Status KR" }],
-  creator: "Brawl Status KR",
-  publisher: "Brawl Status KR",
+  applicationName: "Brawloop",
+  authors: [{ name: "Brawloop" }],
+  creator: "Brawloop",
+  publisher: "Brawloop",
   alternates: {
     canonical: "/",
     languages: localeAlternates("/"),
   },
   openGraph: {
-    title: `${siteName} | Brawl Status KR`,
+    title: `${siteName} | Brawloop`,
     description: siteDescription,
     url: siteUrl,
-    siteName,
+    siteName: "Brawloop",
     locale: "ko_KR",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: `${siteName} | Brawl Status KR`,
+    title: `${siteName} | Brawloop`,
     description: siteDescription,
   },
   robots: {
@@ -72,7 +72,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "@id": siteUrl + "/#webapp",
-    name: "Brawl Status KR",
+    name: "Brawloop",
     url: siteUrl,
     applicationCategory: "GameApplication",
     operatingSystem: "Web",

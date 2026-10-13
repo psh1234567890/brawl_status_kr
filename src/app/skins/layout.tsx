@@ -12,14 +12,14 @@ export const metadata: Metadata = {
     languages: localeAlternates("/skins"),
   },
   openGraph: {
-    title: `${koCopy.title} | Brawl Status KR`,
+    title: `${koCopy.title} | Brawloop`,
     description: koCopy.description,
     url: "/skins",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: `${koCopy.title} | Brawl Status KR`,
+    title: `${koCopy.title} | Brawloop`,
     description: koCopy.description,
   },
 };

@@ -33,7 +33,7 @@ export default function LanguageSwitcher({ locale }: { locale: Locale }) {
         aria-label={copy.language}
         value={locale}
         onChange={(event) => changeLocale(event.target.value as Locale)}
-        className="min-h-11 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 shadow-sm outline-none transition-colors hover:border-blue-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+        className="min-h-11 max-w-36 rounded-md border-0 bg-transparent px-2 text-sm font-medium text-slate-600 outline-none focus-visible:ring-2 focus-visible:ring-[#5842ce]"
       >
         {(Object.keys(localeLabels) as Locale[]).map((value) => (
           <option key={value} value={value}>

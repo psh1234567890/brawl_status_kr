@@ -30,7 +30,7 @@ export default async function LocalizedLayout({
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": url + "#website",
-    name: "Brawl Status KR",
+    name: "Brawloop",
     url,
     inLanguage: numberLocales[lang],
     description: seo.description,

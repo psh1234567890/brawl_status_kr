@@ -176,7 +176,7 @@ export default function UsageDashboard() {
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-5xl space-y-6">
         <header className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-sm font-bold text-blue-600">Brawl Status KR · PRIVATE</p>
+          <p className="text-sm font-bold text-blue-600">Brawloop · PRIVATE</p>
           <h1 className="mt-1 text-3xl font-black">사이트 이용 통계</h1>
           <p className="mt-2 text-sm text-slate-600">방문은 익명 시간대별 합계로, 검색 태그와 방문자 접속 국가 코드는 7일간 시간대별 합계로 기록합니다. 검색자의 IP·사이트 계정 정보는 검색 통계에 저장하지 않습니다. 방문 세션은 순 방문자 수가 아닙니다.</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">

@@ -20,16 +20,16 @@ export async function generateMetadata({ params }: PageProps<"/[lang]">): Promis
       languages: localeAlternates("/"),
     },
     openGraph: {
-      title: `${title} | Brawl Status KR`,
+      title: `${title} | Brawloop`,
       description,
       url: `/${lang}`,
-      siteName: "Brawl Status KR",
+      siteName: "Brawloop",
       locale: openGraphLocale,
       type: "website",
     },
     twitter: {
       card: "summary",
-      title: `${title} | Brawl Status KR`,
+      title: `${title} | Brawloop`,
       description,
     },
   };

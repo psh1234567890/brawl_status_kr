@@ -70,13 +70,13 @@ export function getLocalizedSiteSeo(locale: LocalizedLocale) {
 
 export function getLocalizedSocialMetadata(locale: LocalizedLocale): Pick<Metadata, "openGraph" | "twitter"> {
   const { title, description, openGraphLocale } = getLocalizedSiteSeo(locale);
-  const socialTitle = `${title} | Brawl Status KR`;
+  const socialTitle = `${title} | Brawloop`;
 
   return {
     openGraph: {
       title: socialTitle,
       description,
-      siteName: "Brawl Status KR",
+      siteName: "Brawloop",
       locale: openGraphLocale,
       type: "website",
     },

@@ -17,7 +17,7 @@ describe("localized SEO metadata", () => {
 
     expect(metadata.openGraph).toMatchObject({
       locale: "en_US",
-      siteName: "Brawl Status KR",
+      siteName: "Brawloop",
       type: "website",
     });
     expect(metadata.twitter).toMatchObject({

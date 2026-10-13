@@ -11,7 +11,7 @@ export function getMiniGameMetadata(locale: Locale, id: MiniGameId) {
   const copy = messages.games[id];
   const canonical = localizedHref(locale, game.href);
   if (!game.enabled) {
-    const socialTitle = copy.title + " | Brawl Status KR";
+    const socialTitle = copy.title + " | Brawloop";
     return {
       title: copy.title,
       description: copy.metaDescription,
@@ -34,7 +34,7 @@ export function getMiniGameMetadata(locale: Locale, id: MiniGameId) {
   }
   const isBrawlerQuiz = id === "brawler-quiz";
   const pageTitle = copy.title + " | " + (isBrawlerQuiz ? brawlerQuizGuideMessages[locale].searchLabel : messages.hubTitle);
-  const socialTitle = pageTitle + " | Brawl Status KR";
+  const socialTitle = pageTitle + " | Brawloop";
   const socialImage = isBrawlerQuiz
     ? [{ url: brawlerQuizSocialImage, width: 1200, height: 630, alt: copy.title }]
     : undefined;
@@ -46,7 +46,7 @@ export function getMiniGameMetadata(locale: Locale, id: MiniGameId) {
       title: socialTitle,
       description: copy.metaDescription,
       url: canonical,
-      siteName: "Brawl Status KR",
+      siteName: "Brawloop",
       locale: locale === "ko" ? "ko_KR" : getLocalizedSiteSeo(locale).openGraphLocale,
       type: "website" as const,
       ...(socialImage ? { images: socialImage } : {}),

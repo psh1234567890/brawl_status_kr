@@ -35,7 +35,7 @@ test("Russian HTML carries Russian structured data, not Korean product snippets"
   const application = structured.find((schema) => schema["@type"] === "WebApplication");
   expect(site?.inLanguage).toBe("ru-RU");
   expect(site?.description).toMatch(/[А-Яа-яЁё]/);
-  expect(application?.name).toBe("Brawl Status KR");
+  expect(application?.name).toBe("Brawloop");
   expect(application?.inLanguage).toContain("ru-RU");
   expect(application?.description).not.toMatch(/[가-힣]/);
 });

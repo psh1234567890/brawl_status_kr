@@ -47,8 +47,8 @@ export default function PlayerProfile({
     ru: { recent: "Победы за последние бои", missing: "Нет недавних боёв", details: "Все показатели профиля", tag: "Тег игрока", recentCount: "Учтено боёв" },
   }[locale];
   return (
-    <section className="w-full overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm" aria-label={copy.profileIcon}>
-      <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6">
+    <section className="w-full overflow-hidden border-b border-slate-200 bg-white" aria-label={copy.profileIcon}>
+      <div className="py-4 sm:py-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           {playerData.icon ? (
@@ -57,7 +57,7 @@ export default function PlayerProfile({
               alt={copy.profileIcon}
               width={64}
               height={64}
-              className="h-16 w-16 shrink-0 rounded-xl border-2 border-white bg-white object-cover shadow-sm sm:h-20 sm:w-20"
+              className="h-16 w-16 shrink-0 -rotate-3 rounded-xl border-4 border-[#ffdf6b] bg-[#ffdf6b] object-cover sm:h-20 sm:w-20"
               fallbackText="P"
             />
           ) : (
@@ -85,7 +85,7 @@ export default function PlayerProfile({
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-[#f5f4fa] p-3 sm:grid-cols-3 sm:p-4">
         <HeroStat numeric label={copy.currentTrophies} value={playerData.trophies.toLocaleString(numberLocales[locale])}
           icon={<StatSymbol kind="trophy" size={26} />} />
         <HeroStat numeric label={hubCopy.recent} value={recentMatches > 0 ? `${recentWinRate}%` : "—"}
@@ -100,7 +100,7 @@ export default function PlayerProfile({
       {actions ? <div className="mt-4 flex flex-wrap gap-2 border-t border-blue-100 pt-4" role="group" aria-label={actionsLabel ?? copy.profileIcon}>{actions}</div> : null}
       </div>
 
-      <details className="group px-3 pb-3 sm:px-6 sm:pb-6">
+      <details className="group pb-3 sm:pb-6">
         <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 text-sm font-black text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
           {hubCopy.details}
           <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
@@ -148,11 +148,11 @@ function HeroStat({ label, value, detail, icon, numeric = false }: {
   label: string; value: string; detail?: string; icon: ReactNode; numeric?: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-blue-100 bg-white/95 p-3 shadow-sm sm:p-4">
+    <div className="min-w-0 p-2 sm:p-3">
       <p className="text-xs font-bold text-slate-500">{label}</p>
       <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
         {icon}
-        <strong className={`font-black tabular-nums text-slate-950 sm:text-2xl ${numeric ? "shrink-0 whitespace-nowrap text-lg" : "min-w-0 break-words text-xl"}`}>{value}</strong>
+        <strong className={`font-extrabold tabular-nums text-blue-700 sm:text-3xl ${numeric ? "shrink-0 whitespace-nowrap text-2xl" : "min-w-0 break-words text-xl"}`}>{value}</strong>
       </div>
       {detail ? <p className="mt-1 text-[11px] font-medium text-slate-500">{detail}</p> : null}
     </div>

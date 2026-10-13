@@ -176,7 +176,7 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
   }
 
   async function shareResult() {
-    const summary = `${copy.quizTitle}: ${foundIds.length}/${brawlers.length} (${percent}%) | Brawl Status KR`;
+    const summary = `${copy.quizTitle}: ${foundIds.length}/${brawlers.length} (${percent}%) | Brawloop`;
     const url = "https://www.brawl-o1.site" + localizedHref(locale, "/minigames/brawler-quiz");
     try {
       if (navigator.share) {

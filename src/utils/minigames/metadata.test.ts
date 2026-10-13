@@ -15,7 +15,7 @@ describe("mini game metadata", () => {
       expect(metadata.alternates.canonical).toBe(localizedHref(locale, "/minigames/brawler-quiz"));
       expect(Object.keys(metadata.alternates.languages!)).toHaveLength(10);
       expect(metadata.openGraph).toMatchObject({
-        title: metadata.title + " | Brawl Status KR",
+        title: metadata.title + " | Brawloop",
         description: copy.quizMetaDescription,
         images: [{ url: "/images/minigames/brawler-quiz-100.png", width: 1200, height: 630, alt: copy.quizTitle }],
       });
@@ -30,11 +30,11 @@ describe("mini game metadata", () => {
     expect(metadata.alternates.languages).toMatchObject({ "ko-KR": "/minigames/map-quiz", en: "/en/minigames/map-quiz" });
     expect(metadata.description).toContain("10");
     expect(metadata.openGraph).toMatchObject({
-      title: "Map Name Quiz | Brawl Stars Mini Games | Brawl Status KR",
+      title: "Map Name Quiz | Brawl Stars Mini Games | Brawloop",
       url: "/en/minigames/map-quiz",
     });
     expect(metadata.twitter).toMatchObject({
-      title: "Map Name Quiz | Brawl Stars Mini Games | Brawl Status KR",
+      title: "Map Name Quiz | Brawl Stars Mini Games | Brawloop",
     });
   });
 
@@ -42,7 +42,7 @@ describe("mini game metadata", () => {
     const metadata = getMiniGameMetadata("ja", "map-quiz");
     expect(metadata.title).toBe("マップ名クイズ | ブロスタ ミニゲーム");
     expect(metadata.openGraph).toMatchObject({
-      title: "マップ名クイズ | ブロスタ ミニゲーム | Brawl Status KR",
+      title: "マップ名クイズ | ブロスタ ミニゲーム | Brawloop",
     });
   });
 

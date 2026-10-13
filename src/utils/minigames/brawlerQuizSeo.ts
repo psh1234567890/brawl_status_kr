@@ -22,7 +22,7 @@ export function getBrawlerQuizStructuredData(locale: Locale) {
         inLanguage: numberLocales[locale],
         mainEntity: { "@id": url + "#game" },
         breadcrumb: { "@id": url + "#breadcrumb" },
-        isPartOf: { "@type": "WebSite", name: "Brawl Status KR", url: siteUrl },
+        isPartOf: { "@type": "WebSite", name: "Brawloop", url: siteUrl },
       },
       {
         "@type": "WebApplication",

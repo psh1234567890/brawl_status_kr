@@ -36,8 +36,9 @@ test("home header exposes localized account entry without mobile overflow", asyn
 
   for (const locale of locales) {
     await page.goto(localizedHref(locale, "/"));
-    const siteHome = page.locator("header").getByRole("link", { name: getMessages(locale).home.homeAria, exact: true });
-    await expect(siteHome.locator('img[src="/icon.svg"]')).toBeVisible();
+    const siteHome = page.locator("header").getByRole("link", { name: `Brawloop · ${getMessages(locale).common.home}`, exact: true });
+    await expect(siteHome).toHaveText("brawloop");
+    await expect(siteHome).toHaveAttribute("href", localizedHref(locale, "/"));
     const login = page.locator("header").getByRole("link", { name: getAccountMessages(locale).navLogin, exact: true });
     await expect(login).toBeVisible();
     await expect(login).toHaveAttribute("href", localizedHref(locale, "/account"));
@@ -51,7 +52,7 @@ test("home header exposes localized account entry without mobile overflow", asyn
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/en");
   await page.goto("/en/events");
-  await expect(page.locator("header").getByRole("link", { name: /Brawl Status KR/ }).locator('img[src="/icon.svg"]')).toBeVisible();
+  await expect(page.locator("header").getByRole("link", { name: /Brawloop/ })).toBeVisible();
   await page.goto("/en");
   await page.locator("header").getByRole("link", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/en\/account$/);
@@ -122,7 +123,7 @@ test("subpage mobile menu highlights the active section and keeps all destinatio
     const eventsLink = navigation.getByRole("link", { name: copy.events, exact: true });
     await expect(eventsLink).toHaveAttribute("aria-current", "page");
     await expect(navigation.getByRole("link", { name: copy.home, exact: true })).not.toHaveAttribute("aria-current", "page");
-    await expect(page.locator("header").getByRole("link", { name: /Brawl Status KR/ }).locator('img[src="/icon.svg"]')).toBeVisible();
+    await expect(page.locator("header").getByRole("link", { name: /Brawloop/ })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
 

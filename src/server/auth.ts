@@ -204,7 +204,7 @@ function createAuthInstance(deletionOnly = false) {
   }
 
   return betterAuth({
-    appName: "Brawl Status KR",
+    appName: "Brawloop",
     baseURL: config.baseURL.origin,
     secret: config.secret,
     // Keep OAuth codes, state, provider responses, and account data out of logs.

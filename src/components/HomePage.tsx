@@ -2,18 +2,14 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { sendUsageEvent } from "../utils/clientUsage";
 import { parsePublicProfiles, publicProfileSnapshot, rememberPublicProfile, subscribePublicProfiles, type CachedPublicProfile } from "../utils/publicProfileCache";
 import { profileReturnMessages } from "../i18n/profileReturnMessages";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
-import LanguageSwitcher from "../components/LanguageSwitcher";
-import MobileHeaderMenu from "../components/MobileHeaderMenu";
 import MyTagSearchButton from "../components/account/MyTagSearchButton";
 import StatSymbol from "../components/StatSymbol";
-import AccountControl from "../components/account/AccountControl";
 import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
 import PlayerProgressionPanel from "../components/PlayerProgressionPanel";
@@ -27,8 +23,6 @@ import {
   formatWins,
 } from "../i18n/formatters";
 import { getMessages } from "../i18n/messages";
-import { getMinigameMessages } from "../i18n/minigameMessages";
-import { compareNavLabels } from "../i18n/playerComparisonMessages";
 import { profileHubMessages } from "../i18n/profileHubMessages";
 import type {
   BattleLogItem,
@@ -48,14 +42,20 @@ import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
 const BattleDetailsModal = dynamic(() => import("../components/BattleDetailsModal"));
 const BrawlerDetailsModal = dynamic(() => import("../components/BrawlerDetailsModal"));
 
+import BrandHeader from "./brand/BrandHeader";
+import BrandFooter from "./brand/BrandFooter";
+import HomeDiscovery from "./brand/HomeDiscovery";
+import { BrandCharacter, BrandArrow, SearchIcon } from "./brand/BrandArt";
+import { getBrandMessages } from "../i18n/brandMessages";
+import brandStyles from "./brand/brand.module.css";
+
 type ResultPanel = "overview" | "matches" | "brawlers" | "history";
 
 const RESULT_TAB_IDS: ResultPanel[] = ["overview", "matches", "brawlers", "history"];
 
 export default function Home({ locale = "ko" }: { locale?: Locale }) {
   const copy = getMessages(locale);
-  const minigameCopy = getMinigameMessages(locale);
-  const githubStarCopy = getGithubStarCopy(locale);
+  const brand = getBrandMessages(locale);
   const actionCopy = profileHubMessages[locale];
   const search = usePlayerSearch(locale);
   const handlePlayerSearch = search.handleSearch;
@@ -124,23 +124,6 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
     ? search.favoriteSearches.includes(normalizedCurrentTag)
     : false;
   const resultTabs = RESULT_TAB_IDS.map((id) => ({ id, label: copy.home.tabs[id] }));
-  const primaryLinks = [
-    { href: "/meta", label: copy.common.meta, description: copy.home.mapMetaDescription },
-    { href: "/skins", label: copy.home.skinCatalog, description: copy.home.skinCatalogDescription },
-    { href: "/minigames", label: copy.common.minigames, description: minigameCopy.homeDescription },
-  ];
-  const utilityLinks = [
-    ["/compare", compareNavLabels[locale]],
-    ["/events", copy.common.events],
-    ["/maps", copy.common.maps],
-    ["/gamemodes", copy.common.modes],
-    ["/brawlers", copy.common.brawlers],
-    ["/clubs", copy.common.clubs],
-    ["/rankings", copy.common.rankings],
-    ["/teams", copy.common.teams],
-    ["/counters", copy.common.counters],
-    ["/status", copy.common.status],
-  ] as const;
 
   function runSearch(targetTag?: string) {
     setActivePanel("overview");
@@ -168,174 +151,26 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f7fb] pb-24 text-slate-950 sm:pb-12">
-      <div className="mx-auto w-full max-w-6xl px-4 pt-0 pb-4 sm:px-6 sm:pt-4 lg:px-8">
-        <header className="sticky top-0 z-30 -mx-4 border-b border-slate-200/80 bg-[#f6f7fb]/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-5">
-          <div className="flex items-center justify-between gap-2 md:flex-wrap md:gap-3">
-            <Link
-              href={localizedHref(locale, "/")}
-              className="group inline-flex min-w-0 items-center gap-2 rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:gap-3"
-              aria-label={copy.home.homeAria}
-            >
-              <Image
-                src="/icon.svg"
-                width={48}
-                height={48}
-                alt=""
-                aria-hidden="true"
-                priority
-                unoptimized
-                className="h-9 w-9 shrink-0 rounded-lg shadow-sm ring-1 ring-blue-200/70 transition-transform group-hover:scale-105 sm:h-12 sm:w-12"
-              />
-              <span className="block min-w-0">
-                <h1 className="block truncate text-base font-black tracking-tight text-slate-950 sm:text-2xl">
-                  Brawl Status KR
-                </h1>
-                <span className="hidden truncate text-xs font-bold text-slate-500 sm:block sm:text-sm">
-                  {copy.home.brandSubtitle}
-                </span>
-              </span>
-            </Link>
-            <div className="ml-auto flex shrink-0 items-center justify-end gap-1.5 md:max-w-full md:flex-wrap md:gap-2">
-              <nav className="hidden items-center gap-2 md:flex" aria-label={copy.common.mainNavigation}>
-                {primaryLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={localizedHref(locale, link.href)}
-                    className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-800 shadow-sm transition-colors hover:border-blue-300 hover:text-blue-700"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </nav>
-              <AccountControl locale={locale} />
-              <div className="hidden md:block"><LanguageSwitcher locale={locale} /></div>
-              <MobileHeaderMenu locale={locale} />
-            </div>
-          </div>
-        </header>
-
-        <div className={`${search.playerData ? "hidden lg:flex" : "flex"} mt-2 flex-wrap items-center justify-end gap-2 px-1`}>
-          <p className="text-xs font-bold text-slate-500 sm:text-sm">
-            {githubStarCopy.title}
-          </p>
-          <a
-            href="https://github.com/psh1234567890/brawl_status_kr"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-[7px] rounded-lg border border-slate-300 bg-white px-3.5 text-[13px] font-[650] text-slate-950 transition-colors hover:border-slate-950 hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-200"
-          >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-              <path d="M9 18c-4.51 2-5-2-7-2" />
-            </svg>
-            <span>{githubStarCopy.button}</span>
-          </a>
-        </div>
-
-        <section className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]" aria-label={copy.home.playerSearchAria}>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <label className="min-w-0 flex-1">
-                <span className="text-xs font-black uppercase tracking-[0.08em] text-slate-500">
-                  {copy.home.playerTag}
-                </span>
-                <input
-                  type="text"
-                  value={search.tag}
-                  onChange={(event) => search.setTag(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") runSearch();
-                  }}
-                  placeholder={copy.home.playerTagPlaceholder}
-                  aria-label={copy.home.playerTag}
-                  className="mt-2 h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-base font-black text-slate-950 outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                />
-              </label>
-              <button
-                type="button"
-                onClick={() => runSearch()}
-                disabled={search.loading}
-                className="h-12 rounded-lg bg-blue-600 px-6 text-base font-black text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 sm:min-w-32"
-              >
-                {search.loading ? copy.home.searching : copy.home.search}
-              </button>
-            </div>
-
+    <div className={brandStyles.page} lang={locale}>
+      <BrandHeader locale={locale} />
+      <main className={brandStyles.main}>
+        <section className={search.playerData ? brandStyles.compactSearch : brandStyles.searchHero} aria-label={copy.home.playerSearchAria}>
+          <div className={brandStyles.heroContent}>
+            {!search.playerData && <><h1 className={brandStyles.multiline}>{brand.hero}</h1><p className={brandStyles.heroIntro}>{brand.intro}</p></>}
+            <form className={brandStyles.searchForm} onSubmit={(event) => { event.preventDefault(); runSearch(); }}>
+              <SearchIcon />
+              <input value={search.tag} onChange={(event) => search.setTag(event.target.value)} placeholder={copy.home.playerTagPlaceholder} aria-label={copy.home.playerTag} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={16} />
+              <button type="submit" disabled={search.loading}>{search.loading ? copy.home.searching : copy.home.search}<BrandArrow /></button>
+            </form>
             <MyTagSearchButton locale={locale} loading={search.loading} onSearch={runSearch} />
-
-            <div className={`${search.playerData ? "hidden md:block" : ""} mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3`}>
-              <p className="text-lg font-black text-blue-900 sm:text-2xl">
-                {copy.home.searchEvery25Title}
-              </p>
-              <p className="mt-1 text-sm font-bold leading-6 text-blue-700">
-                {copy.home.searchEvery25Body}
-              </p>
-            </div>
-
-            <div className={`${search.playerData ? "hidden lg:grid" : "grid"} mt-4 gap-3 sm:grid-cols-2`}>
-              <SearchChipGroup
-                label={copy.home.favorites}
-                emptyLabel={copy.home.noFavorites}
-                tags={search.favoriteSearches}
-                profiles={savedProfiles}
-                onSearch={runSearch}
-                locale={locale}
-                strong
-              />
-              <SearchChipGroup
-                label={copy.home.recentSearches}
-                emptyLabel={copy.home.recentSearchesEmpty}
-                tags={search.recentSearches}
-                profiles={savedProfiles}
-                onSearch={runSearch}
-                locale={locale}
-              />
-            </div>
+            {!search.playerData && <details className={brandStyles.tagHelp}><summary>{brand.tagHelp}</summary><p>{brand.tagHelpBody}</p><p>{copy.home.searchEvery25Body}</p></details>}
           </div>
-
-          <aside className={`${search.playerData ? "hidden lg:block" : ""} rounded-xl border border-slate-200 bg-white p-4 shadow-sm`}>
-            <h2 className="text-sm font-black text-slate-950">{copy.home.shortcuts}</h2>
-            <div className="mt-3 grid gap-2">
-              {primaryLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={localizedHref(locale, link.href)}
-                  className="rounded-lg border border-slate-200 px-3 py-3 transition-colors hover:border-blue-300 hover:bg-blue-50"
-                >
-                  <span className="block text-sm font-black text-slate-900">{link.label}</span>
-                  <span className="mt-1 block text-xs font-bold text-slate-500">{link.description}</span>
-                </Link>
-              ))}
-            </div>
-            <Link
-              href={localizedHref(locale, "/minigames/brawler-quiz")}
-              className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-black text-blue-800 hover:bg-blue-100"
-            >
-              {minigameCopy.quizTitle}<span aria-hidden="true">→</span>
-            </Link>
-            <nav className="mt-4 flex flex-wrap gap-2" aria-label={copy.home.extendedFeatures}>
-              {utilityLinks.map(([href, label]) => (
-                <Link
-                  key={href}
-                  href={localizedHref(locale, href)}
-                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 transition-colors hover:border-blue-300 hover:bg-white hover:text-blue-700"
-                >
-                  {label}
-                </Link>
-              ))}
-            </nav>
-          </aside>
+          {!search.playerData && <div className={brandStyles.heroArt} aria-hidden="true"><span className={brandStyles.heroDisc} /><BrandCharacter id={16000005} className={brandStyles.heroSpike} eager /><BrandCharacter id={16000023} className={brandStyles.heroLeon} eager /><span className={brandStyles.heroLabel}>LET’S<br />BRAWL!</span></div>}
         </section>
+        {(search.favoriteSearches.length > 0 || search.recentSearches.length > 0) && <div className={brandStyles.savedSearches}>
+          <SearchChipGroup label={copy.home.favorites} tags={search.favoriteSearches} profiles={savedProfiles} onSearch={runSearch} locale={locale} strong />
+          <SearchChipGroup label={copy.home.recentSearches} tags={search.recentSearches} profiles={savedProfiles} onSearch={runSearch} locale={locale} />
+        </div>}
 
         {search.error ? <Message text={search.error} tone="error" /> : null}
         {search.notice ? <Message text={search.notice} tone="notice" /> : null}
@@ -389,7 +224,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
             <div className="min-w-0">
 
-              <div className="sticky top-[60px] z-20 -mx-4 border-y border-slate-200 bg-[#f6f7fb]/95 px-4 py-2 backdrop-blur sm:static sm:mx-0 sm:mb-4 sm:rounded-xl sm:border sm:bg-white sm:p-1">
+              <div className="sticky top-0 z-20 -mx-4 border-y border-slate-200 bg-white px-4 py-2 sm:static sm:mx-0 sm:mb-4 sm:rounded-xl sm:border sm:bg-white sm:p-1">
                 <div className="grid grid-cols-4 gap-1">
                   {resultTabs.map((tab) => (
                     <button
@@ -469,7 +304,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
             </div>
           </section>
         ) : (
-          <EmptyStart locale={locale} />
+          <HomeDiscovery locale={locale} />
         )}
 
         {selectedBrawler && recentBrawlerStat ? (
@@ -498,50 +333,14 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
           />
         ) : null}
 
-        <footer className="mt-10 flex flex-col justify-between gap-4 border-t border-slate-200 py-6 text-sm font-bold text-slate-500 sm:flex-row sm:items-center">
-          <div>
-            <p>© 2026 Brawl Stars Analytics</p>
-            <p className="mt-1 text-xs font-medium text-slate-400">
-              {copy.home.bugContact}: seunghunbag76@gmail.com
-            </p>
-            <p className="mt-1 max-w-xl text-xs font-medium text-slate-400">
-              {copy.common.fanDisclaimer}{" "}
-              <a
-                href="https://supercell.com/en/fan-content-policy/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-slate-700 hover:underline"
-              >
-                Fan Content Policy
-              </a>
-            </p>
-          </div>
-          <nav className="flex flex-wrap gap-3" aria-label={copy.home.siteInfo}>
-            <Link href={localizedHref(locale, "/about")} className="hover:text-slate-950 hover:underline">{copy.home.about}</Link>
-            <Link href={localizedHref(locale, "/methodology")} className="hover:text-slate-950 hover:underline">{copy.common.methodology}</Link>
-            <Link href={localizedHref(locale, "/privacy")} className="hover:text-slate-950 hover:underline">{copy.common.privacy}</Link>
-            <Link href={localizedHref(locale, "/terms")} className="hover:text-slate-950 hover:underline">{copy.home.terms}</Link>
-            <Link href={localizedHref(locale, "/contact")} className="hover:text-slate-950 hover:underline">{copy.home.contact}</Link>
-            <a
-              href="https://github.com/psh1234567890/brawl_status_kr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-950 hover:underline"
-            >
-              {copy.common.openSource}
-            </a>
-          </nav>
-        </footer>
-      </div>
-
-      <MobileNavigation locale={locale} />
-    </main>
+      </main>
+      <BrandFooter locale={locale} />
+    </div>
   );
 }
 
 function SearchChipGroup({
   label,
-  emptyLabel,
   tags,
   locale,
   strong = false,
@@ -549,13 +348,13 @@ function SearchChipGroup({
   profiles,
 }: {
   label: string;
-  emptyLabel: string;
   tags: string[];
   locale: Locale;
   strong?: boolean;
   onSearch: (tag: string) => void;
   profiles: CachedPublicProfile[];
 }) {
+  if (tags.length === 0) return null;
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
@@ -583,11 +382,7 @@ function SearchChipGroup({
             </button>
           ); })}
         </div>
-      ) : (
-        <p className="rounded-lg border border-dashed border-slate-200 px-3 py-2 text-xs font-bold text-slate-400">
-          {emptyLabel}
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -711,18 +506,6 @@ function LoadingPanel({ label, loadingText }: { label: string; loadingText: stri
   );
 }
 
-function EmptyStart({ locale }: { locale: Locale }) {
-  const copy = getMessages(locale).home;
-  return (
-    <section className="mt-5 rounded-xl border border-dashed border-slate-300 bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-black text-slate-950">{copy.emptyStartTitle}</h2>
-      <p className="mt-2 max-w-2xl text-sm font-bold leading-6 text-slate-500">
-        {copy.emptyStartBody}
-      </p>
-    </section>
-  );
-}
-
 function Message({ text, tone }: { text: string; tone: "error" | "notice" }) {
   return (
     <div
@@ -738,32 +521,6 @@ function Message({ text, tone }: { text: string; tone: "error" | "notice" }) {
   );
 }
 
-function MobileNavigation({ locale }: { locale: Locale }) {
-  const copy = getMessages(locale);
-  return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:hidden" aria-label={copy.home.mobileNav}>
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
-        {([
-          ["/", copy.home.mobileHome, "trophy"],
-          ["/meta", copy.home.mobileMeta, "map"],
-          ["/skins", copy.common.skins, "skin"],
-          ["/rankings", copy.common.rankings, "chart"],
-        ] as const).map(([href, label, icon]) => (
-          <Link
-            key={href}
-            href={localizedHref(locale, href)}
-            aria-current={href === "/" ? "page" : undefined}
-            className={`flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-center text-[11px] font-black transition-colors ${href === "/" ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"}`}
-          >
-            <StatSymbol kind={icon} size={17} />
-            <span>{label}</span>
-          </Link>
-        ))}
-      </div>
-    </nav>
-  );
-}
-
 function getExternalSkinsForBrawler(
   byBrawler: Record<string, PlayerOwnedSkin[]> | undefined,
   brawlerName: string,
@@ -776,51 +533,4 @@ function normalizeBrawlerSkinKey(value: string) {
     .toUpperCase()
     .replace(/&/g, "AND")
     .replace(/[^A-Z0-9]+/g, "");
-}
-
-function getGithubStarCopy(locale: Locale) {
-  const copy = {
-    ko: {
-      title: "사이트가 마음에 들었다면 Star 한 번만 부탁해요 🥺",
-      button: "GitHub에서 Star",
-    },
-    en: {
-      title: "If this site helped, a Star would mean a lot 🥺",
-      button: "Star on GitHub",
-    },
-    ja: {
-      title: "役に立ったら Star をひとつお願いします 🥺",
-      button: "GitHubでStar",
-    },
-    "pt-br": {
-      title: "Se o site ajudou, deixa uma Star pra gente 🥺",
-      button: "Dar Star no GitHub",
-    },
-    es: {
-      title: "Si te sirvió, una Star nos ayudaría mucho 🥺",
-      button: "Dar Star en GitHub",
-    },
-    tr: {
-      title: "Site işine yaradıysa bir Star bırakır mısın? 🥺",
-      button: "GitHub'da Star ver",
-    },
-    de: {
-      title: "Wenn dir die Seite hilft, freuen wir uns über einen Star 🥺",
-      button: "Star auf GitHub",
-    },
-    fr: {
-      title: "Si le site t'aide, une Star nous ferait très plaisir 🥺",
-      button: "Mettre une Star",
-    },
-    it: {
-      title: "Se il sito ti è utile, lasciaci una Star 🥺",
-      button: "Metti una Star",
-    },
-    ru: {
-      title: "Если сайт полезен, поставь нам Star 🥺",
-      button: "Star на GitHub",
-    },
-  } satisfies Record<Locale, { title: string; button: string }>;
-
-  return copy[locale];
 }

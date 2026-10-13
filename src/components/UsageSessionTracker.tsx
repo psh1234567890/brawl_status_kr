@@ -1,29 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { isUsageOptedOutCookie } from "../utils/analyticsOptOut";
+import { BROWSER_ACTIVITY_KEY, browserSessionEvents, type ClientUsageKind } from "../utils/usageEvents";
+import { sendUsageEvents } from "../utils/clientUsage";
+export { sendUsageEvent } from "../utils/clientUsage";
 
 // Estimates browser tab sessions, NOT unique people. No identifying data is sent.
-export function sendUsageEvent(event: "visit_session" | "minigame_brawler_quiz" |
-  "minigame_silhouette_quiz" | "minigame_map_quiz" | "minigame_ability_quiz") {
-  if (typeof window === "undefined" || document.cookie.includes("brawl_analytics_opt_out=1")) return;
-  void fetch("/api/usage/event", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ event }),
-    keepalive: true,
-  }).catch(() => { /* Analytics is optional, never interrupt gameplay. */ });
-}
-
 export default function UsageSessionTracker() {
+  const pathname = usePathname();
+  const lastPath = useRef<string | null>(null);
   useEffect(() => {
-    if (location.pathname.startsWith("/admin/")) return;
+    if (!pathname || /^\/(admin|api)(\/|$)/.test(pathname) || isUsageOptedOutCookie(document.cookie)) return;
+    if (lastPath.current === pathname) return;
+    lastPath.current = pathname;
+    const events: ClientUsageKind[] = ["page_view"];
     try {
-      if (sessionStorage.getItem("brawl_usage_session_v1") === "1") return;
-      sessionStorage.setItem("brawl_usage_session_v1", "1");
-      sendUsageEvent("visit_session");
+      const now = Date.now();
+      const sessionEvents = browserSessionEvents(localStorage.getItem(BROWSER_ACTIVITY_KEY), now);
+      localStorage.setItem(BROWSER_ACTIVITY_KEY, String(now));
+      events.push(...sessionEvents);
+    } catch {
+      // With blocked local storage, report PV only; do not infer a return visit.
+    }
+    try {
+      if (sessionStorage.getItem("brawl_usage_session_v1") !== "1") {
+        sessionStorage.setItem("brawl_usage_session_v1", "1");
+        events.push("visit_session");
+      }
     } catch {
       // Storage-denied visitors can still use the site; do not fingerprint them.
     }
-  }, []);
+    sendUsageEvents(events);
+  }, [pathname]);
   return null;
 }

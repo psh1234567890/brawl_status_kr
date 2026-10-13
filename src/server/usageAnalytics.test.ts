@@ -2,9 +2,24 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const query = vi.hoisted(() => vi.fn());
 vi.mock("../db", () => ({ db: { $client: { query } } }));
-import { classifyPlayerSearchFailure, hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, summarizeLifetime, summarizeUsage } from "./usageAnalytics";
+import { classifyPlayerSearchFailure, hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, summarizeLifetime, summarizeUsage, summarizeEngagement } from "./usageAnalytics";
 
 describe("anonymous usage analytics", () => {
+  it("keeps new PV and return counters separate from legacy visits and game endings", () => {
+    const now = new Date("2026-10-13T00:00:00Z");
+    const rows = [
+      { hour: "2026-10-13 09:00", kind: "page_view" as const, count: "100" },
+      { hour: "2026-10-13 09:00", kind: "browser_session" as const, count: "20" },
+      { hour: "2026-10-13 09:00", kind: "browser_return_7d" as const, count: "5" },
+      { hour: "2026-10-12 09:00", kind: "profile_save" as const, count: "3" },
+    ];
+    expect(summarizeUsage(rows, now).last7Days.gameEnds).toBe(0);
+    const result = summarizeEngagement(rows, [{ kind: "page_view", count: "200", firstSeenAt: "2026-10-12T00:00:00Z" }], now);
+    expect(result.today).toMatchObject({ pageViews: 100, browserSessions: 20, returningBrowserSessions: 5, saves: 0 });
+    expect(result.last7Days.saves).toBe(3);
+    expect(result.allTime.pageViews).toBe(200);
+    expect(result.trackingStartedAt).toBe("2026-10-12T00:00:00Z");
+  });
   afterEach(() => { delete process.env.USAGE_ADMIN_USER_IDS; query.mockReset(); });
   it("rejects unrecognized client event kinds", () => {
     expect(isUsageKind("visit_session")).toBe(true);

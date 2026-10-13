@@ -1,14 +1,14 @@
 import "server-only";
 import { db } from "../db";
 import { isUsageOptedOut } from "../utils/analyticsOptOut";
+import { clientUsageKinds, engagementFields, emptyEngagement } from "../utils/usageEvents";
 export { isUsageOptedOut } from "../utils/analyticsOptOut";
 
 export const usageKinds = [
-  "visit_session", "player_search_success", "player_search_error",
+  ...clientUsageKinds,
+  "player_search_success", "player_search_error",
   "player_search_error_404", "player_search_error_429",
   "player_search_error_5xx", "player_search_error_other",
-  "minigame_brawler_quiz", "minigame_silhouette_quiz",
-  "minigame_map_quiz", "minigame_ability_quiz",
 ] as const;
 export type UsageKind = (typeof usageKinds)[number];
 
@@ -51,6 +51,25 @@ export async function recordUsageEvent(kind: UsageKind, request?: Request): Prom
     // Avoid an unnecessary DELETE statement on every anonymous event write.
   } catch {
     console.warn(JSON.stringify({ event: "usage_counter_unavailable", kind }));
+  }
+}
+
+/**
+ * One bounded round trip for a page-view batch. Every entry is a fixed event
+ * name validated by the caller; lifetime totals remain maintained by the trigger.
+ */
+export async function recordUsageEvents(kinds: UsageKind[], request?: Request): Promise<void> {
+  if (process.env.VERCEL_ENV !== "production" || (request && isUsageOptedOut(request))) return;
+  try {
+    await db.$client.query(
+      `INSERT INTO analytics_private.usage_hourly (hour_bucket, event_kind, event_count)
+       SELECT date_trunc('hour', now()), kind, 1 FROM unnest($1::text[]) AS kind
+       ON CONFLICT (hour_bucket, event_kind)
+       DO UPDATE SET event_count = analytics_private.usage_hourly.event_count + 1`,
+      [kinds],
+    );
+  } catch {
+    console.warn(JSON.stringify({ event: "usage_counter_unavailable", batchSize: kinds.length }));
   }
 }
 
@@ -137,6 +156,7 @@ export function summarizeUsage(
   const failureReasonsLast7Days = emptyFailureBreakdown();
   const cutoff = days[0];
   for (const row of rows) {
+    if (!isUsageKind(row.kind) || Object.hasOwn(engagementFields, row.kind)) continue;
     const count = Number(row.count);
     if (!Number.isSafeInteger(count) || count < 0) continue;
     const day = row.hour.slice(0, 10);
@@ -171,6 +191,35 @@ export function summarizeUsage(
       .toISOString().slice(0, 13).replace("T", " ")).slice(0, 35),
     sampledAt: now.toISOString(),
   };
+}
+
+export function summarizeEngagement(rows: UsageHourRow[], lifetime: UsageLifetimeRow[], now = new Date()) {
+  const today = emptyEngagement();
+  const last7Days = emptyEngagement();
+  const allTime = emptyEngagement();
+  const todayKst = new Date(now.getTime() + 9 * 3600_000).toISOString().slice(0, 10);
+  const cutoff = new Date(Date.parse(todayKst + "T00:00:00Z") - 6 * 86_400_000).toISOString().slice(0, 10);
+  let trackingStartedAt: string | null = null;
+  for (const row of rows) {
+    if (!Object.hasOwn(engagementFields, row.kind)) continue;
+    const count = Number(row.count);
+    if (!Number.isSafeInteger(count) || count < 0) continue;
+    const key = engagementFields[row.kind as keyof typeof engagementFields];
+    const day = row.hour.slice(0, 10);
+    if (day === todayKst) today[key] += count;
+    if (day >= cutoff && day <= todayKst) last7Days[key] += count;
+  }
+  for (const row of lifetime) {
+    if (!Object.hasOwn(engagementFields, row.kind)) continue;
+    const count = Number(row.count);
+    if (!Number.isSafeInteger(count) || count < 0) continue;
+    allTime[engagementFields[row.kind as keyof typeof engagementFields]] += count;
+    if (Number.isFinite(Date.parse(row.firstSeenAt)) &&
+        (!trackingStartedAt || Date.parse(row.firstSeenAt) < Date.parse(trackingStartedAt))) {
+      trackingStartedAt = row.firstSeenAt;
+    }
+  }
+  return { today, last7Days, allTime, trackingStartedAt };
 }
 
 export function isUsageAdminUser(userId: string): boolean {

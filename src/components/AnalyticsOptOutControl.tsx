@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import type { Locale } from "../i18n/config";
 import { analyticsOptOutMessages } from "../i18n/analyticsOptOutMessages";
+import { BROWSER_ACTIVITY_KEY } from "../utils/usageEvents";
 
 const COOKIE_NAME = "brawl_analytics_opt_out";
 const OPT_OUT_CHANGE_EVENT = "brawl:analytics-optout-changed";
@@ -26,6 +27,7 @@ export default function AnalyticsOptOutControl({ locale }: { locale: Locale }) {
       ? `${COOKIE_NAME}=1; Path=/; Max-Age=31536000; SameSite=Lax${secure}`
       : `${COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
     window.dispatchEvent(new Event(OPT_OUT_CHANGE_EVENT));
+    if (checked) { try { localStorage.removeItem(BROWSER_ACTIVITY_KEY); } catch { /* Optional storage. */ } }
   }
 
   return (

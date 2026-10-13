@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { rejectCrossSiteMutation } from "../../../../server/requestGuard";
 import { rejectRateLimitedRequest } from "../../../../server/rateLimit";
-import { isUsageKind, recordUsageEvent } from "../../../../server/usageAnalytics";
+import { recordUsageEvent, recordUsageEvents } from "../../../../server/usageAnalytics";
+import { isClientUsageKind } from "../../../../utils/usageEvents";
 
 export const runtime = "nodejs";
 
@@ -22,11 +23,16 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "INVALID_EVENT" }, { status: 400 });
   }
-  if (!body || typeof body !== "object" || Array.isArray(body) ||
-      Object.keys(body).length !== 1 || !("event" in body) || !isUsageKind(body.event) ||
-      !(body.event === "visit_session" || body.event.startsWith("minigame_"))) {
+  if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body).length !== 1) {
     return NextResponse.json({ error: "INVALID_EVENT" }, { status: 400 });
   }
-  await recordUsageEvent(body.event, request);
+  if ("event" in body && isClientUsageKind(body.event)) {
+    await recordUsageEvent(body.event, request);
+  } else if ("events" in body && Array.isArray(body.events) && body.events.length >= 1 && body.events.length <= 4 &&
+      body.events.every(isClientUsageKind) && new Set(body.events).size === body.events.length) {
+    await recordUsageEvents(body.events, request);
+  } else {
+    return NextResponse.json({ error: "INVALID_EVENT" }, { status: 400 });
+  }
   return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
 }

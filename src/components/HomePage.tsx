@@ -3,7 +3,10 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { sendUsageEvent } from "../utils/clientUsage";
+import { parsePublicProfiles, publicProfileSnapshot, rememberPublicProfile, subscribePublicProfiles, type CachedPublicProfile } from "../utils/publicProfileCache";
+import { profileReturnMessages } from "../i18n/profileReturnMessages";
 import BattleLogList from "../components/BattleLogList";
 import BrawlerList from "../components/BrawlerList";
 import LanguageSwitcher from "../components/LanguageSwitcher";
@@ -15,7 +18,7 @@ import PlayerHistoryPanel from "../components/PlayerHistoryPanel";
 import PlayerProfile from "../components/PlayerProfile";
 import PlayerProgressionPanel from "../components/PlayerProgressionPanel";
 import { usePlayerSearch } from "../hooks/usePlayerSearch";
-import { localizedHref, type Locale } from "../i18n/config";
+import { localizedHref, numberLocales, type Locale } from "../i18n/config";
 import {
   formatBattleRecord,
   formatBattles,
@@ -61,6 +64,12 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
   const [selectedBattle, setSelectedBattle] = useState<BattleLogItem | null>(null);
   const [shareFeedback, setShareFeedback] = useState<"idle" | "copied" | "failed">("idle");
   const initialTagHandled = useRef(false);
+  const profileSnapshot = useSyncExternalStore(subscribePublicProfiles, publicProfileSnapshot, () => "[]");
+  const savedProfiles = useMemo(() => parsePublicProfiles(profileSnapshot), [profileSnapshot]);
+  const cachedProfile = savedProfiles.find(item => item.tag === normalizePlayerTag(search.playerData?.tag ?? ""));
+  useEffect(() => {
+    if (search.playerData && search.playerData.dataFreshness?.status !== "stale") rememberPublicProfile(search.playerData);
+  }, [search.playerData]);
 
   // Shared profile URLs only initiate a normal, validated player lookup.
   // A ref prevents duplicated requests when search state updates.
@@ -151,6 +160,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
         await navigator.clipboard.writeText(url.href);
         setShareFeedback("copied");
       }
+      sendUsageEvent("profile_share");
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setShareFeedback("failed");
@@ -277,6 +287,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                 label={copy.home.favorites}
                 emptyLabel={copy.home.noFavorites}
                 tags={search.favoriteSearches}
+                profiles={savedProfiles}
                 onSearch={runSearch}
                 locale={locale}
                 strong
@@ -285,6 +296,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                 label={copy.home.recentSearches}
                 emptyLabel={copy.home.recentSearchesEmpty}
                 tags={search.recentSearches}
+                profiles={savedProfiles}
                 onSearch={runSearch}
                 locale={locale}
               />
@@ -343,6 +355,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                 <>
                   <Link
                     href={`${localizedHref(locale, "/compare")}?a=${encodeURIComponent(normalizedCurrentTag)}`}
+                    onClick={() => sendUsageEvent("profile_compare")}
                     className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:w-auto sm:flex-none"
                   >
                     <StatSymbol kind="players" size={18} />
@@ -366,6 +379,10 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                     {shareFeedback === "copied" ? actionCopy.copied : actionCopy.share}
                   </button>
                   {shareFeedback === "failed" ? <span role="status" className="self-center text-xs font-bold text-rose-700">{actionCopy.failed}</span> : null}
+                  {cachedProfile?.previousTrophies !== undefined ? <span className="self-center text-xs font-bold text-slate-600">
+                    {profileReturnMessages[locale].previous} · {search.playerData.trophies - cachedProfile.previousTrophies > 0 ? "+" : ""}{(search.playerData.trophies - cachedProfile.previousTrophies).toLocaleString(numberLocales[locale])}
+                    <StatSymbol kind="trophy" size={14} className="ml-1 inline" />
+                  </span> : null}
                 </>
               }
             />
@@ -529,6 +546,7 @@ function SearchChipGroup({
   locale,
   strong = false,
   onSearch,
+  profiles,
 }: {
   label: string;
   emptyLabel: string;
@@ -536,6 +554,7 @@ function SearchChipGroup({
   locale: Locale;
   strong?: boolean;
   onSearch: (tag: string) => void;
+  profiles: CachedPublicProfile[];
 }) {
   return (
     <div>
@@ -545,20 +564,24 @@ function SearchChipGroup({
       </div>
       {tags.length ? (
         <div className="flex flex-wrap gap-2">
-          {tags.map((savedTag) => (
+          {tags.map((savedTag) => {
+            const profile = profiles.find(item => item.tag === normalizePlayerTag(savedTag));
+            return (
             <button
               type="button"
               key={savedTag}
-              onClick={() => onSearch(savedTag)}
+              onClick={() => { sendUsageEvent("profile_reopen"); onSearch(savedTag); }}
+              title={profile ? `${profileReturnMessages[locale].local}: ${new Date(profile.checkedAt).toLocaleString(numberLocales[locale])}` : undefined}
               className={`min-h-11 rounded-lg px-3 text-xs font-black transition-colors ${
                 strong
                   ? "bg-slate-950 text-white hover:bg-blue-700"
                   : "border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
               }`}
             >
-              {savedTag}
+              {profile ? <span className="block max-w-48 truncate">{profile.name} · {profile.trophies.toLocaleString(numberLocales[locale])}</span> : null}
+              <span className={profile ? "block text-[10px] opacity-70" : ""}>{savedTag}</span>
             </button>
-          ))}
+          ); })}
         </div>
       ) : (
         <p className="rounded-lg border border-dashed border-slate-200 px-3 py-2 text-xs font-bold text-slate-400">

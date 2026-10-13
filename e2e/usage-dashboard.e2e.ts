@@ -1,4 +1,33 @@
 import { expect, test } from "@playwright/test";
+import { emptyEngagement } from "../src/utils/usageEvents";
+
+test("operator sees measured returns and leaves unknown monthly costs blank", async ({ page }) => {
+  const counts = { visits: 10, searches: 10, successfulSearches: 9, gameEnds: 1 };
+  const engagementCounts = { ...emptyEngagement(), pageViews: 25, browserSessions: 10, returningBrowserSessions: 3, saves: 2 };
+  await page.route("**/api/admin/usage", route => route.fulfill({ json: {
+    today: counts, last7Days: counts, allTime: counts, daily: [], byGame: {}, byGameToday: {}, byGameAllTime: {},
+    recentHours: [], recentSearchTags: [], trackingStartedAt: "2026-10-13T00:00:00Z", sampledAt: "2026-10-13T03:00:00Z",
+    engagement: { today: engagementCounts, last7Days: engagementCounts, allTime: engagementCounts, trackingStartedAt: "2026-10-13T00:00:00Z" },
+  } }));
+  await page.goto("/admin/usage");
+  await expect(page.getByText("7일 내 재방문 세션 비중: 30.0%")).toBeVisible();
+  await expect(page.getByText("수익·비용 차액: 미확인", { exact: true })).toBeVisible();
+  const panel = page.getByRole("region", { name: "월별 수익·운영비" });
+  await panel.getByLabel("집계 월").fill("2026-10");
+  for (const label of ["광고 수익 (원)", "스폰서 수익 (원)", "순수 후원 (원)", "호스팅 비용 (원)", "DB 비용 (원)", "도메인 월 환산 비용 (원)", "기타 비용·수수료 (원)"]) {
+    await panel.getByLabel(label, { exact: true }).fill(label === "광고 수익 (원)" ? "1000" : label === "DB 비용 (원)" ? "500" : "0");
+  }
+  await expect(panel.getByRole("status").first()).toContainText("차액 500원");
+  await panel.getByRole("button", { name: "이 브라우저에 저장" }).click();
+  await page.reload();
+  await panel.getByLabel("집계 월").fill("2026-10");
+  await panel.getByRole("button", { name: "선택 월 불러오기" }).click();
+  await expect(panel.getByRole("status").first()).toContainText("차액 500원");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await panel.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: test.info().outputPath("monthly-finance-mobile.png"), fullPage: false });
+});
 
 test("admin dashboard switches between today, seven days, and lifetime totals", async ({ page }) => {
   await page.route("**/api/admin/usage", (route) => route.fulfill({

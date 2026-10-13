@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ recordUsageEvent: vi.fn() }));
+const mocks = vi.hoisted(() => ({ recordUsageEvent: vi.fn(), recordUsageEvents: vi.fn() }));
 vi.mock("../../../../server/usageAnalytics", () => ({
   isUsageKind: (x: unknown) => ["visit_session", "minigame_map_quiz"].includes(String(x)),
   recordUsageEvent: mocks.recordUsageEvent,
+  recordUsageEvents: mocks.recordUsageEvents,
 }));
 import { POST } from "./route";
 
@@ -39,5 +40,17 @@ describe("anonymous usage event endpoint", () => {
     const response = await POST(request);
     expect(response.status).toBe(204);
     expect(mocks.recordUsageEvent).toHaveBeenCalledWith("minigame_map_quiz", request);
+  });
+  it("accepts a bounded page-view batch without identity fields", async () => {
+    const request = event({ events: ["page_view", "browser_session", "browser_return_7d", "visit_session"] });
+    expect((await POST(request)).status).toBe(204);
+    expect(mocks.recordUsageEvents).toHaveBeenCalledWith(["page_view", "browser_session", "browser_return_7d", "visit_session"], request);
+  });
+  it("rejects duplicate, oversized and server-owned event batches", async () => {
+    for (const events of [[], ["page_view", "page_view"], ["player_search_success"],
+      ["page_view", "profile_save", "profile_share", "profile_compare", "comparison_run"]]) {
+      expect((await POST(event({ events }))).status).toBe(400);
+    }
+    expect(mocks.recordUsageEvents).not.toHaveBeenCalled();
   });
 });

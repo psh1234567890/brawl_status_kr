@@ -1,5 +1,6 @@
 import { locales, type Locale } from "./config";
 import { searchTagNoticeMessages } from "./searchTagNoticeMessages";
+import { engagementPrivacyMessages, engagementPrivacyTitles } from "./engagementPrivacyMessages";
 import { getCompetitiveMessages } from "./minigames/competitiveMessages";
 import launchPolicy from "../../docs/ACCOUNT_LAUNCH_POLICY.json";
 
@@ -3198,7 +3199,10 @@ export function getDocumentPageMessages(locale: Locale) {
     ...content,
     privacy: {
       ...content.privacy,
-      sections: [...content.privacy.sections, usagePrivacyNotice[locale], searchTagPrivacyNotice[locale], competitivePrivacyNotice[locale]],
+      sections: [...content.privacy.sections, usagePrivacyNotice[locale], searchTagPrivacyNotice[locale], competitivePrivacyNotice[locale], {
+        title: engagementPrivacyTitles[locale],
+        blocks: [{ type: "paragraph" as const, text: engagementPrivacyMessages[locale] }],
+      }],
       effectiveDate: locale === "ko" ? "업데이트: 2026년 10월 13일" : "Updated: 2026-10-13",
     },
   };

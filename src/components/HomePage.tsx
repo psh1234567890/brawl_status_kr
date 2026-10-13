@@ -167,7 +167,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
           </div>
           {!search.playerData && <div className={brandStyles.heroArt} aria-hidden="true"><span className={brandStyles.heroDisc} /><BrandCharacter id={16000005} className={brandStyles.heroSpike} eager /><BrandCharacter id={16000023} className={brandStyles.heroLeon} eager /><span className={brandStyles.heroLabel}>LET’S<br />BRAWL!</span></div>}
         </section>
-        {(search.favoriteSearches.length > 0 || search.recentSearches.length > 0) && <div className={brandStyles.savedSearches}>
+        {(search.favoriteSearches.length > 0 || search.recentSearches.length > 0) && <div className={`${brandStyles.savedSearches} ${search.playerData ? brandStyles.hideSavedOnMobile : ""}`}>
           <SearchChipGroup label={copy.home.favorites} tags={search.favoriteSearches} profiles={savedProfiles} onSearch={runSearch} locale={locale} strong />
           <SearchChipGroup label={copy.home.recentSearches} tags={search.recentSearches} profiles={savedProfiles} onSearch={runSearch} locale={locale} />
         </div>}

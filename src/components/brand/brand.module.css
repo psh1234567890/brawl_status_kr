@@ -403,3 +403,6 @@
 @media (prefers-reduced-motion: reduce) {
   .page :is(button, a), .gameArt .character { transition: none; }
 }
+@media (max-width: 1023px) {
+  .hideSavedOnMobile { display: none; }
+}

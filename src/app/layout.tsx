@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Suspense } from "react";
 import UsageSessionTracker from "../components/UsageSessionTracker";
 import {
   localeAlternates,
@@ -111,7 +112,7 @@ export default function RootLayout({
             strategy="beforeInteractive"
           />
         ) : null}
-        <UsageSessionTracker />
+        <Suspense fallback={null}><UsageSessionTracker /></Suspense>
         {children}
       </body>
     </html>

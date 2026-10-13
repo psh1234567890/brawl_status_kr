@@ -3,6 +3,30 @@ import { getAccountMessages } from "../src/i18n/accountMessages";
 import { locales, localizedHref } from "../src/i18n/config";
 import { getMessages } from "../src/i18n/messages";
 
+test("page views are batched anonymously and analytics opt-out stops all client counters", async ({ context, page }) => {
+  const batches: unknown[] = [];
+  const events: string[] = [];
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await context.route("**/api/usage/event", route => {
+    const body = route.request().postDataJSON();
+    batches.push(body); events.push(...(body.events ?? [body.event]));
+    return route.fulfill({ status: 204 });
+  });
+  await page.goto("/");
+  await expect.poll(() => events.filter(event => event === "page_view").length).toBe(1);
+  expect(batches).toHaveLength(1);
+  expect(events).toContain("browser_session");
+  expect(JSON.stringify(batches)).not.toMatch(/tag|userId|pathname|referrer/);
+  await page.goto("/privacy");
+  await expect.poll(() => events.filter(event => event === "page_view").length).toBe(2);
+  await page.getByRole("checkbox", { name: "방문·검색·미니게임 통계 및 검색 태그 기록 제외" }).check();
+  const before = batches.length;
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  expect(batches).toHaveLength(before);
+  expect(await page.evaluate(() => localStorage.getItem("brawl_usage_last_activity_v1"))).toBeNull();
+});
+
 test("home header exposes localized account entry without mobile overflow", async ({ context, page }) => {
   await context.route("**/api/account", (route) => route.fulfill({
     json: { state: "guest", syncEnabled: false },

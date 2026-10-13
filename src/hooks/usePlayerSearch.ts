@@ -9,7 +9,8 @@ import type {
   PlayerSkinInventoryResponse,
   PlayerSkinInventoryStatus,
 } from "../types/brawl";
-import { normalizePlayerTag } from "../utils/playerTag";
+import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
+import { sendUsageEvent } from "../utils/clientUsage";
 import {
   buildOfficialSkinInventory,
   mergeSkinInventories,
@@ -40,9 +41,11 @@ function persistStoredTags(key: string, tags: string[], eventName: string) {
   try {
     window.localStorage.setItem(key, JSON.stringify(tags));
     window.dispatchEvent(new Event(eventName));
+    return true;
   } catch {
     // Storage denial must not turn a successful public lookup into an error.
   }
+  return false;
 }
 
 function subscribeStoredTags(eventName: string, onStoreChange: () => void) {
@@ -314,13 +317,15 @@ export function usePlayerSearch(locale: Locale = "ko") {
   const toggleFavorite = useCallback(
     (target?: string) => {
       const targetTag = normalizePlayerTag(target ?? tag);
-      if (!targetTag) return;
+      if (!isValidPlayerTag(targetTag)) return;
 
       const nextFavorites = favoriteSearches.includes(targetTag)
         ? favoriteSearches.filter((favoriteTag) => favoriteTag !== targetTag)
         : [targetTag, ...favoriteSearches.filter((favoriteTag) => favoriteTag !== targetTag)].slice(0, 12);
 
-      persistStoredTags(FAVORITE_TAGS_KEY, nextFavorites, FAVORITE_TAGS_CHANGED_EVENT);
+      if (persistStoredTags(FAVORITE_TAGS_KEY, nextFavorites, FAVORITE_TAGS_CHANGED_EVENT)) {
+        sendUsageEvent(favoriteSearches.includes(targetTag) ? "profile_unsave" : "profile_save");
+      }
     },
     [favoriteSearches, tag],
   );

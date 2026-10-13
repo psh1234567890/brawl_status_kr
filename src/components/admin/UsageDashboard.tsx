@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { countryShare, searchSuccessRate } from "../../utils/adminUsageMetrics";
+import { browserReturnShare, countryShare, searchSuccessRate } from "../../utils/adminUsageMetrics";
+import type { EngagementCounts } from "../../utils/usageEvents";
+import { BROWSER_ACTIVITY_KEY } from "../../utils/usageEvents";
+import MonthlyFinancePanel from "./MonthlyFinancePanel";
 import { summarizeApiPerformance, type ApiPerformanceCounts } from "../../utils/apiPerformanceMetrics";
 
 type Counts = { visits: number; searches: number; successfulSearches: number; gameEnds: number };
@@ -14,6 +17,7 @@ type SearchTagSummary = {
   countries?: Array<{ countryCode: string; searchCount: string }>;
 };
 type Summary = {
+  engagement?: { today: EngagementCounts; last7Days: EngagementCounts; allTime: EngagementCounts; trackingStartedAt: string | null };
   recentSearchTags: SearchTagSummary[];
   apiPerformance24h?: ApiPerformanceCounts[];
   apiPerformance7d?: ApiPerformanceCounts[];
@@ -39,6 +43,9 @@ const games: Record<string, string> = {
   ability_quiz: "능력 맞추기",
 };
 const activities: Record<string, string> = {
+  page_view: "페이지 조회 (PV)", browser_session: "브라우저 세션 (30분)", browser_return_7d: "7일 내 재방문 세션",
+  profile_save: "플레이어 저장", profile_unsave: "저장 해제", profile_compare: "비교 화면 진입",
+  comparison_run: "두 플레이어 비교 완료", profile_share: "공유·링크 복사 완료", profile_reopen: "저장·최근 플레이어 다시 조회",
   visit_session: "방문 세션",
   player_search_success: "성공한 플레이어 검색",
   player_search_error: "실패한 플레이어 검색",
@@ -132,6 +139,7 @@ export default function UsageDashboard() {
       ? "brawl_analytics_opt_out=1; Path=/; Max-Age=31536000; SameSite=Lax" + secure
       : "brawl_analytics_opt_out=; Path=/; Max-Age=0; SameSite=Lax" + secure;
     setOptOut(next);
+    if (next) { try { localStorage.removeItem(BROWSER_ACTIVITY_KEY); } catch { /* Optional storage. */ } }
   }
 
   const max = Math.max(1, ...((data?.daily ?? []).map(item => item.visits)));
@@ -159,6 +167,9 @@ export default function UsageDashboard() {
   const classifiedFailures = failureKinds.reduce((total, reason) => total + (failureCounts[reason.key] ?? 0), 0);
   const unknownFailures = Math.max(0, failedSearches - classifiedFailures);
   const periodLabel = periods.find(item => item.key === period)?.label ?? "오늘";
+  const engagement = data?.engagement;
+  const engagementCounts = period === "today" ? engagement?.today : period === "week" ? engagement?.last7Days : engagement?.allTime;
+  const returnShare = engagementCounts ? browserReturnShare(engagementCounts.returningBrowserSessions, engagementCounts.browserSessions) : null;
   const apiPerformance = (performancePeriod === "24h" ? data?.apiPerformance24h : data?.apiPerformance7d) ?? [];
   const totalMeasured = apiPerformance.reduce((sum, item) => sum + summarizeApiPerformance(item).requests, 0);
   return (
@@ -307,6 +318,24 @@ export default function UsageDashboard() {
                 </article>
               ))}
             </div>
+            {engagement ? <section className="rounded-xl border bg-white p-5 shadow-sm" aria-labelledby="engagement-title">
+              <h2 id="engagement-title" className="text-lg font-black">{periodLabel} 재방문·주요 기능 이용</h2>
+              <p className="mt-1 text-sm text-slate-600">{engagement.trackingStartedAt ? `추가 계측 시작: ${new Date(engagement.trackingStartedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}` : "배포 이후 새 데이터 수집 대기 중"} · 과거 데이터는 소급하지 않습니다.</p>
+              <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {([
+                  ["페이지 조회 (PV)", "pageViews"], ["브라우저 세션 (30분)", "browserSessions"],
+                  ["7일 내 재방문 세션", "returningBrowserSessions"], ["플레이어 저장", "saves"],
+                  ["저장 해제", "unsaves"], ["비교 화면 진입", "compareOpens"],
+                  ["두 플레이어 비교 완료", "comparisonRuns"], ["공유·링크 복사 완료", "shares"],
+                  ["저장·최근 플레이어 다시 조회", "reopens"],
+                ] as const).map(([label, key]) => <div key={key} className="rounded-lg bg-slate-50 p-3">
+                  <dt className="text-xs font-bold text-slate-600">{label}</dt><dd className="mt-1 text-2xl font-black tabular-nums">{engagement.trackingStartedAt ? n(engagementCounts?.[key] ?? 0) : "—"}</dd>
+                </div>)}
+              </dl>
+              <p className="mt-4 text-sm font-bold">7일 내 재방문 세션 비중: {returnShare === null ? "—" : `${returnShare.toFixed(1)}%`}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">이전 페이지 조회와 30분 이상 간격이 있으면 새 브라우저 세션으로, 그 간격이 7일 이내이면 재방문으로 집계합니다. 브라우저에 마지막 조회 시각만 보관하며 서버에 식별자를 보내지 않습니다. 저장소 차단·초기화·여러 기기 및 탭에 영향을 받는 근삿값으로 순 방문자 수나 코호트 재방문율이 아닙니다. PV는 경로 이동·새로고침 기준이며 검색어·태그·URL은 저장하지 않습니다. 기능 수치는 실행 횟수이며 사용자 전환율이 아닙니다.</p>
+            </section> : null}
+            <MonthlyFinancePanel />
             <section className="rounded-xl border bg-white p-5 shadow-sm">
               <h2 className="text-lg font-black">{periodLabel} 플레이어 검색 실패 원인</h2>
               <p className="mt-1 text-sm text-slate-600">조회에 실패한 검색 {n(failedSearches)}회 · 오류 유형은 집계 기능 도입 이후부터 구분됩니다.</p>

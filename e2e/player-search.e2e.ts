@@ -40,6 +40,41 @@ test("player summaries wait for persistence without delaying the profile", async
   expect(readBeforeSave).toBe(false);
 });
 
+test("saved player reopens with a real trophy delta and anonymous action counts", async ({ page }) => {
+  const runtimeErrors: string[] = [];
+  page.on("pageerror", error => runtimeErrors.push(error.message));
+  let trophies = 12345;
+  const events: string[] = [];
+  await page.route("**/api/usage/event", route => {
+    const body = route.request().postDataJSON();
+    events.push(...(body.events ?? [body.event]));
+    return route.fulfill({ status: 204 });
+  });
+  await page.unroute(/\/api\/player\?tag=/);
+  await page.route(/\/api\/player\?tag=/, route => route.fulfill({ json: {
+    tag: "#" + tag, name: "Return Player", trophies, highestTrophies: 13000,
+    expLevel: 50, "3vs3Victories": 100, soloVictories: 20, duoVictories: 30, brawlers: [],
+  } }));
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+  await page.getByRole("button", { name: "검색", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Return Player" })).toBeVisible();
+  await page.getByRole("button", { name: "저장", exact: true }).click();
+  await expect.poll(() => events.includes("profile_save")).toBe(true);
+  trophies = 12400;
+  await page.reload();
+  await page.getByRole("button", { name: /Return Player.*12345|Return Player.*12,345/ }).first().click();
+  await expect(page.getByText(/지난 조회 대비.*\+55/)).toBeVisible();
+  await expect.poll(() => events.includes("profile_reopen")).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await page.getByText(/지난 조회 대비.*\+55/).scrollIntoViewIfNeeded();
+  const trophyValue = page.locator("strong").filter({ hasText: /^12,400$/ });
+  expect(await trophyValue.evaluate(element => element.getBoundingClientRect().height <= parseFloat(getComputedStyle(element).lineHeight) * 1.1)).toBe(true);
+  expect(runtimeErrors).toEqual([]);
+  await page.getByRole("heading", { name: "Return Player" }).locator("xpath=ancestor::section[1]").screenshot({ path: test.info().outputPath("saved-player-mobile.png") });
+});
+
 test("progression panel calculates remaining coins and resources for owned Brawlers", async ({ page }) => {
   await page.unroute(/\/api\/player\?tag=/);
   await page.route(/\/api\/player\?tag=/, route => route.fulfill({ json: {

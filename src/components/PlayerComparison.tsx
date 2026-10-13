@@ -10,6 +10,7 @@ import { translateBrawlerName } from "../utils/brawlTranslations";
 import { comparisonPath, higherValueSide, summarizeComparedPlayer, validatedComparisonTags } from "../utils/playerComparison";
 import BrawlImage from "./BrawlImage";
 import StatSymbol from "./StatSymbol";
+import { sendUsageEvent } from "../utils/clientUsage";
 
 type Result = { state: "idle" | "loading" } | { state: "error"; code: number | null } | { state: "ready"; player: PlayerData };
 const idle: Result = { state: "idle" };
@@ -64,11 +65,16 @@ export default function PlayerComparison({ locale = "ko", initialA = "", initial
     setRight({ state: "loading" });
     const controller = new AbortController();
     request.current = controller;
-    void fetchPlayer(tags.left, controller.signal).then(result => {
+    const leftRequest = fetchPlayer(tags.left, controller.signal);
+    const rightRequest = fetchPlayer(tags.right, controller.signal);
+    void leftRequest.then(result => {
       if (requestId.current === id && !controller.signal.aborted) setLeft(result);
     });
-    void fetchPlayer(tags.right, controller.signal).then(result => {
+    void rightRequest.then(result => {
       if (requestId.current === id && !controller.signal.aborted) setRight(result);
+    });
+    void Promise.all([leftRequest, rightRequest]).then(([a, b]) => {
+      if (requestId.current === id && !controller.signal.aborted && a.state === "ready" && b.state === "ready") sendUsageEvent("comparison_run");
     });
     if (typeof window !== "undefined") {
       window.history.replaceState(window.history.state, "", comparisonPath(window.location.pathname, tags.left, tags.right));
@@ -100,6 +106,7 @@ export default function PlayerComparison({ locale = "ko", initialA = "", initial
       const path = comparisonPath(window.location.pathname, left.player.tag, right.player.tag);
       await navigator.clipboard.writeText(new URL(path, window.location.origin).href);
       setCopied(true);
+      sendUsageEvent("profile_share");
     } catch {
       setError(copy.copyFailed);
     }

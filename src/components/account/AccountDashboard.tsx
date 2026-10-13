@@ -15,6 +15,8 @@ import BrawlImage from "../BrawlImage";
 import RankedLeagueIcon from "../RankedLeagueIcon";
 import StatSymbol from "../StatSymbol";
 import type { StatSymbolKind } from "../StatSymbol";
+import { profileReturnMessages } from "../../i18n/profileReturnMessages";
+import { sendUsageEvent } from "../../utils/clientUsage";
 
 type Overview = {
   defaultPlayerTag: string | null;
@@ -25,27 +27,30 @@ type OverviewState = { userId: string; phase: "loading" | "ready" | "error"; dat
 const RECENT_TAGS_KEY = "recentTags";
 const RECENT_TAGS_CHANGED_EVENT = "recentTagsChanged";
 
-function recentSnapshot() {
+function recentSnapshot(key = RECENT_TAGS_KEY) {
   if (typeof window === "undefined") return "[]";
-  try { return window.localStorage.getItem(RECENT_TAGS_KEY) ?? "[]"; }
+  try { return window.localStorage.getItem(key) ?? "[]"; }
   catch { return "[]"; }
 }
+function favoriteSnapshot() { return recentSnapshot("favoriteTags"); }
 function subscribeRecent(notify: () => void) {
   window.addEventListener("storage", notify);
   window.addEventListener(RECENT_TAGS_CHANGED_EVENT, notify);
+  window.addEventListener("favoriteTagsChanged", notify);
   return () => {
     window.removeEventListener("storage", notify);
     window.removeEventListener(RECENT_TAGS_CHANGED_EVENT, notify);
+    window.removeEventListener("favoriteTagsChanged", notify);
   };
 }
-export function parseLocalRecentTags(value: string): string[] {
+export function parseLocalRecentTags(value: string, limit = 5): string[] {
   try {
     const list: unknown = JSON.parse(value);
     if (!Array.isArray(list)) return [];
     return [...new Set(list
       .filter((item): item is string => typeof item === "string")
       .map(normalizePlayerTag)
-      .filter(isValidPlayerTag))].slice(0, 5);
+      .filter(isValidPlayerTag))].slice(0, limit);
   } catch { return []; }
 }
 
@@ -70,6 +75,8 @@ export default function AccountDashboard({ locale, accountId, revision, nickname
   const [period, setPeriod] = useState<"today" | "week" | "all">("week");
   const snapshot = useSyncExternalStore(subscribeRecent, recentSnapshot, () => "[]");
   const recents = useMemo(() => parseLocalRecentTags(snapshot), [snapshot]);
+  const favoritesRaw = useSyncExternalStore(subscribeRecent, favoriteSnapshot, () => "[]");
+  const favorites = useMemo(() => parseLocalRecentTags(favoritesRaw, 12), [favoritesRaw]);
   const active = overview.userId === accountId && overview.phase === "ready" ? overview.data : null;
   const dataError = overview.userId === accountId && overview.phase === "error";
   const loading = overview.userId !== accountId || overview.phase === "loading";
@@ -104,7 +111,7 @@ export default function AccountDashboard({ locale, accountId, revision, nickname
       <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{copy.title}</h2>
       <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-blue-100">{copy.subtitle}</p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Link href={localizedHref(locale, "/")} className="inline-flex min-h-11 items-center rounded-lg bg-white px-4 py-2 text-sm font-black text-blue-800 hover:bg-blue-50">{copy.openSearch}</Link>
+        <Link href={validTag ? `${localizedHref(locale, "/")}?tag=${encodeURIComponent(tag)}` : localizedHref(locale, "/")} onClick={() => { if (validTag) sendUsageEvent("profile_reopen"); }} className="inline-flex min-h-11 items-center rounded-lg bg-white px-4 py-2 text-sm font-black text-blue-800 hover:bg-blue-50">{copy.openSearch}</Link>
         <a href="#account-profile-settings" className="inline-flex min-h-11 items-center rounded-lg border border-blue-200/70 px-4 py-2 text-sm font-black text-white hover:bg-white/10">{copy.edit}</a>
       </div>
     </div>
@@ -154,7 +161,7 @@ export default function AccountDashboard({ locale, accountId, revision, nickname
               </div>
             ) : null}
           </> : <p role={dataError ? "alert" : "status"} className="mt-4 text-sm text-slate-600">{copy.unavailable}</p>}
-        {validTag ? <Link href={localizedHref(locale, "/")} className="mt-4 inline-flex min-h-11 items-center text-sm font-black text-blue-700 underline">{copy.openSearch} →</Link> : null}
+        {validTag ? <Link href={`${localizedHref(locale, "/")}?tag=${encodeURIComponent(tag)}`} onClick={() => sendUsageEvent("profile_reopen")} className="mt-4 inline-flex min-h-11 items-center text-sm font-black text-blue-700 underline">{copy.openSearch} →</Link> : null}
       </article>
 
       <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm" aria-label={copy.rankings}>
@@ -195,8 +202,14 @@ export default function AccountDashboard({ locale, accountId, revision, nickname
         <h3 className="text-lg font-black">{copy.recent}</h3>
         <p className="mt-2 text-xs leading-5 text-slate-500">{copy.browserOnly}</p>
         {recents.length ? <ul className="mt-3 flex flex-wrap gap-2">{recents.map(value =>
-          <li key={value} className="rounded-lg bg-slate-50 px-3 py-2 text-sm font-black text-blue-800">#{value}</li>)}</ul>
+          <li key={value}><Link href={`${localizedHref(locale, "/")}?tag=${encodeURIComponent(value)}`} onClick={() => sendUsageEvent("profile_reopen")} className="inline-flex min-h-11 items-center rounded-lg bg-slate-50 px-3 py-2 text-sm font-black text-blue-800 underline">#{value}</Link></li>)}</ul>
           : <p className="mt-3 text-sm text-slate-500">{copy.noRecent}</p>}
+        {favorites.length ? <>
+          <h4 className="mt-5 text-sm font-black">{profileReturnMessages[locale].saved}</h4>
+          <ul className="mt-2 flex flex-wrap gap-2">{favorites.map(value => <li key={value}>
+            <Link href={`${localizedHref(locale, "/")}?tag=${encodeURIComponent(value)}`} onClick={() => sendUsageEvent("profile_reopen")} className="inline-flex min-h-11 items-center rounded-lg bg-blue-50 px-3 py-2 text-sm font-black text-blue-800 underline">#{value}</Link>
+          </li>)}</ul>
+        </> : null}
         <h4 className="mt-5 text-sm font-black">{copy.recentBests}</h4>
         {latestBests.length ? <ul className="mt-2 space-y-2">{latestBests.map(best =>
           <li key={`${best.gameId}:${best.mode}`} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 p-3 text-xs">

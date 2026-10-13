@@ -6,6 +6,7 @@ import { localeAlternates, localizedHref, type Locale } from "../../i18n/config"
 import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
 import { getBrawlifyBrawlers } from "../../server/brawlify";
 import { selectIndexableBrawlers } from "../../utils/seoIndexing";
+import { brawlerGuideMessages } from "../../i18n/brawlerGuideMessages";
 
 const koCopy = getCatalogPageMessages("ko").brawlers;
 
@@ -21,6 +22,7 @@ export default async function BrawlersPage() {
 
 export async function BrawlersPageContent({ locale }: { locale: Locale }) {
   const copy = getCatalogPageMessages(locale).brawlers;
+  const guide = brawlerGuideMessages[locale];
   const brawlers = (await getBrawlifyBrawlers().catch(() => ({ list: [] }))).list;
   const released = selectIndexableBrawlers(brawlers);
   const rarities = new Set(brawlers.map((brawler) => brawler.rarity?.name).filter(Boolean));
@@ -50,6 +52,19 @@ export async function BrawlersPageContent({ locale }: { locale: Locale }) {
           className: brawler.class?.name,
         }))}
       />
+      <section className="rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="brawler-guide-title">
+        <h2 id="brawler-guide-title" className="text-lg font-black">{guide.title}</h2>
+        <div className="mt-3 divide-y divide-slate-100">
+          {guide.questions.map(([question, answer]) => <details key={question} className="py-3">
+            <summary className="cursor-pointer text-sm font-bold text-slate-800">{question}</summary>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{answer}</p>
+          </details>)}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-4 text-sm font-bold text-blue-700">
+          <Link href={localizedHref(locale, "/")} className="inline-flex min-h-11 items-center underline">{guide.search}</Link>
+          <Link href={localizedHref(locale, "/meta")} className="inline-flex min-h-11 items-center underline">{guide.meta}</Link>
+        </div>
+      </section>
     </PortalLayout>
   );
 }

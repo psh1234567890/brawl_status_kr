@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedAccount } from "../../../../server/account";
-import { hasUsageAdminAccess, readUsageHours, readUsageLifetime, summarizeLifetime, summarizeUsage } from "../../../../server/usageAnalytics";
+import { hasUsageAdminAccess, readUsageHours, readUsageLifetime, summarizeLifetime, summarizeUsage, summarizeEngagement } from "../../../../server/usageAnalytics";
 import { readRecentSearchTags, readSearchCountries7Days } from "../../../../server/searchTagAnalytics";
 import { readApiPerformanceHours } from "../../../../server/apiPerformance";
 
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ...summarizeUsage(rows),
       ...summarizeLifetime(lifetimeRows),
+      engagement: summarizeEngagement(rows, lifetimeRows),
       recentSearchTags,
       searchCountries7Days,
       apiPerformance24h,

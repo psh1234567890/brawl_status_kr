@@ -22,9 +22,10 @@ export async function requireCommunityAdmin(request: Request) {
   } catch { /* Hide administrator identity and allowlist failures. */ }
   throw new CommunityError(404, "NOT_FOUND");
 }
-export async function communityMutation(request: Request, options: {
+export async function communityMutation<T = Record<string, unknown>>(request: Request, options: {
   keys: string[]; action: "post" | "comment" | "withdraw" | "moderate";
-}, handler: (userId: string, body: Record<string, unknown>) => Promise<unknown>) {
+  parse?: (body: Record<string, unknown>) => T;
+}, handler: (userId: string, body: T) => Promise<unknown>) {
   if (rejectCrossSiteMutation(request)) return communityJson({ error: "CROSS_SITE_REQUEST" }, 403);
   try {
     const userId = options.action === "moderate" ? await requireCommunityAdmin(request) : (await getAuthenticatedAccount(request)).userId;
@@ -32,6 +33,8 @@ export async function communityMutation(request: Request, options: {
     assertAllowedKeys(body, ["expectedUserId", ...options.keys]);
     requireExpectedUser(body, userId);
     if (options.action === "post" || options.action === "comment") await requireOnboardedAccount(userId);
+    // Invalid submissions must never consume the member's publishing allowance.
+    const input = options.parse ? options.parse(body) : body as T;
     const rule = {
       post: { scope: "community-post-user-day", windowSeconds: 86400, maxRequests: 3 },
       comment: { scope: "community-comment-user-hour", windowSeconds: 3600, maxRequests: 20 },
@@ -40,6 +43,6 @@ export async function communityMutation(request: Request, options: {
     }[options.action];
     const limited = await enforceAccountRateLimit([{ ...rule, subject: userId }]);
     if (limited) return limited;
-    return communityJson(await handler(userId, body), options.action === "post" || options.action === "comment" ? 201 : 200);
+    return communityJson(await handler(userId, input), options.action === "post" || options.action === "comment" ? 201 : 200);
   } catch (error) { return communityError(error); }
 }

@@ -28,15 +28,28 @@ test("registered submissions and corrections stay private until administrator re
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
   const anonymous = await browser.newContext();
   try {
+    // Regression: invalid evidence previously exhausted all three daily slots.
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const invalid = await context.request.post("/api/community/posts", { headers: { Origin: origin }, data: { expectedUserId: syntheticAccount.userId, title, body: "Synthetic test evidence context, not an actual report.", locale: "en", evidenceUrls: ["https://example.invalid/evidence.png"], acceptRules: true, confirmIntent: true } });
+      expect(invalid.status()).toBe(400);
+      expect(await invalid.json()).toMatchObject({ error: "INVALID_EVIDENCE" });
+    }
     await page.goto("/en/community/new");
-    await page.getByRole("textbox", { name: "Title", exact: true }).fill(title);
+    await page.getByRole("textbox", { name: "Title", exact: true }).fill("abc");
     await page.locator('textarea[name="body"]').fill("Synthetic test evidence context; this is not an actual player report.");
     await page.locator('textarea[name="evidence"]').fill("https://youtu.be/abcdefghijk");
     await page.locator('input[name="confirmIntent"]').check();
     await page.locator('input[name="acceptRules"]').check();
     await page.getByRole("button", { name: "Submit for review", exact: true }).click();
+    await expect(page.getByRole("alert")).toHaveText("Enter a title of 4–100 characters.");
+    await expect(page.getByRole("textbox", { name: "Title", exact: true })).toBeFocused();
+    await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveAttribute("aria-invalid", "true");
+    await expect(page.locator('textarea[name="body"]')).toHaveValue("Synthetic test evidence context; this is not an actual player report.");
+    await page.getByRole("textbox", { name: "Title", exact: true }).fill(title);
+    await page.getByRole("button", { name: "Submit for review", exact: true }).click();
     await expect(page).toHaveURL(/\/en\/community\/[a-f0-9-]{36}$/);
     await expect(page.getByText("Pending review", { exact: true })).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText("Post submitted for moderator review.");
     const id = new URL(page.url()).pathname.split("/").at(-1)!;
     expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(404);
     const body = { expectedUserId: syntheticAccount.userId, kind: "post", id, revision: 0, status: "published", note: "Synthetic evidence review" };

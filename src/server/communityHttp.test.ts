@@ -60,6 +60,21 @@ describe("community mutation authorization", () => {
     expect(mocks.limit).toHaveBeenCalledWith([expect.objectContaining({ subject: userId, maxRequests: 3, windowSeconds: 86400 })]);
     expect(mocks.post).not.toHaveBeenCalled();
   });
+  it("reports invalid fields without consuming the publishing allowance", async () => {
+    for (const [change, code] of [[{ title: "abc" }, "INVALID_TITLE"], [{ body: "short" }, "INVALID_POST_BODY"], [{ evidenceUrls: ["https://example.invalid/evidence.png"] }, "INVALID_EVIDENCE"], [{ acceptRules: false }, "RULES_REQUIRED"]] as const) {
+      const response = await post(request({ ...input, ...change }));
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: code });
+    }
+    expect(mocks.limit).not.toHaveBeenCalled();
+    expect(mocks.post).not.toHaveBeenCalled();
+    const invalidComment = await comment(request({ expectedUserId: userId, body: "x", kind: "correction", acceptRules: true }), context());
+    expect(invalidComment.status).toBe(400);
+    expect(await invalidComment.json()).toEqual({ error: "INVALID_COMMENT_BODY" });
+    expect(mocks.limit).not.toHaveBeenCalled();
+    expect((await post(request(input))).status).toBe(201);
+    expect(mocks.limit).toHaveBeenCalledOnce();
+  });
   it("uses the server session identity and returns a private pending submission", async () => {
     const response = await post(request(input));
     expect(response.status).toBe(201);

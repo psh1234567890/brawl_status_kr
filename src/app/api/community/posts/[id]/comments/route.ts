@@ -4,8 +4,8 @@ import { CommunityError, isCommunityId, validateCommunityComment } from "../../.
 export const runtime = "nodejs";
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  return communityMutation(request, { action: "comment", keys: ["body", "kind", "evidenceUrls", "acceptRules"] }, (userId, body) => {
+  return communityMutation(request, { action: "comment", keys: ["body", "kind", "evidenceUrls", "acceptRules"], parse: body => {
     if (!isCommunityId(id)) throw new CommunityError(404, "NOT_FOUND");
-    return createCommunityComment(userId, id, validateCommunityComment(body));
-  });
+    return validateCommunityComment(body);
+  } }, (userId, input) => createCommunityComment(userId, id, input));
 }

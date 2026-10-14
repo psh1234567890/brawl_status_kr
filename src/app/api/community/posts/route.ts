@@ -16,6 +16,5 @@ export async function GET(request: Request) {
   } catch (error) { return communityError(error); }
 }
 export function POST(request: Request) {
-  return communityMutation(request, { action: "post", keys: ["title", "body", "evidenceUrls", "locale", "acceptRules", "confirmIntent"] },
-    (userId, body) => createCommunityPost(userId, validateCommunityPost(body)));
+  return communityMutation(request, { action: "post", keys: ["title", "body", "evidenceUrls", "locale", "acceptRules", "confirmIntent"], parse: validateCommunityPost }, createCommunityPost);
 }

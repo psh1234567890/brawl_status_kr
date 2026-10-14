@@ -19,12 +19,13 @@ export function communityPage(value: string | null) {
   if (!/^[1-9][0-9]{0,2}$/.test(value)) throw new CommunityError(400, "INVALID_BODY");
   return Number(value);
 }
-function text(value: unknown, min: number, max: number) {
-  if (typeof value !== "string") throw new CommunityError(400, "INVALID_BODY");
+function text(value: unknown, min: number, max: number, code: string) {
+  if (typeof value !== "string") throw new CommunityError(400, code);
   const normalized = value.normalize("NFKC").trim();
-  if ([...normalized].length < min || [...normalized].length > max || /[\p{Cf}\p{Cs}\u0000-\u0008\u000B-\u001F\u007F]/u.test(normalized)) {
-    throw new CommunityError(400, "INVALID_BODY");
+  if ([...normalized].length < min || [...normalized].length > max) {
+    throw new CommunityError(400, code);
   }
+  if (/[\p{Cf}\p{Cs}\u0000-\u0008\u000B-\u001F\u007F]/u.test(normalized)) throw new CommunityError(400, code + "_CHARACTERS");
   return normalized;
 }
 // A conservative display filter, not a verdict on intent or harassment.
@@ -55,11 +56,11 @@ export function communityEvidence(value: unknown, required: boolean) {
 export function validateCommunityPost(body: Record<string, unknown>) {
   if (body.acceptRules !== true || body.confirmIntent !== true) throw new CommunityError(400, "RULES_REQUIRED");
   if (typeof body.locale !== "string" || !isLocale(body.locale)) throw new CommunityError(400, "INVALID_BODY");
-  return { title: text(body.title, 4, 100), body: text(body.body, 20, 4000), locale: body.locale,
+  return { title: text(body.title, 4, 100, "INVALID_TITLE"), body: text(body.body, 20, 4000, "INVALID_POST_BODY"), locale: body.locale,
     evidenceUrls: communityEvidence(body.evidenceUrls, true) };
 }
 export function validateCommunityComment(body: Record<string, unknown>) {
   if (body.acceptRules !== true) throw new CommunityError(400, "RULES_REQUIRED");
   if (body.kind !== "opinion" && body.kind !== "correction") throw new CommunityError(400, "INVALID_BODY");
-  return { body: text(body.body, 2, 2000), kind: body.kind, evidenceUrls: communityEvidence(body.evidenceUrls ?? [], false) };
+  return { body: text(body.body, 2, 2000, "INVALID_COMMENT_BODY"), kind: body.kind, evidenceUrls: communityEvidence(body.evidenceUrls ?? [], false) };
 }

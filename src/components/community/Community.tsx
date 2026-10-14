@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent } from "react";
 import { useAccount } from "../../hooks/useAccount";
 import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { getCommunityMessages } from "../../i18n/communityMessages";
-import { isCommunityId, type CommunityEntry, type CommunityStatus } from "../../utils/community";
+import { getCommunityFormMessages } from "../../i18n/communityFormMessages";
+import { isCommunityId, validateCommunityComment, validateCommunityPost, type CommunityEntry, type CommunityStatus } from "../../utils/community";
 import styles from "./community.module.css";
 
 export async function communityRequest<T>(url: string, method = "GET", body?: unknown, signal?: AbortSignal): Promise<T> {
@@ -53,7 +54,12 @@ export function EvidenceLinks({ urls, locale }: { urls: string[]; locale: Locale
 }
 function errorMessage(error: unknown, locale: Locale) {
   const copy = getCommunityMessages(locale);
+  const hints = getCommunityFormMessages(locale);
   const code = error instanceof Error ? error.message : "";
+  if (code.endsWith("_CHARACTERS")) return hints.characters;
+  if (code === "INVALID_TITLE") return hints.titleHint;
+  if (code === "INVALID_POST_BODY") return hints.bodyHint;
+  if (code === "INVALID_COMMENT_BODY") return hints.commentHint;
   if (code === "LOGIN_REQUIRED" || code === "ACCOUNT_MISMATCH") return copy.loginNotice;
   if (code === "ONBOARDING_REQUIRED") return copy.onboarding;
   if (code === "EVIDENCE_REQUIRED" || code === "INVALID_EVIDENCE") return copy.evidenceHint;
@@ -100,31 +106,48 @@ export function CommunityNewPost({ locale }: { locale: Locale }) {
 }
 export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale: Locale; userId: string; postId?: string; onSubmitted: (id: string) => void }) {
   const copy = getCommunityMessages(locale);
+  const hints = getCommunityFormMessages(locale);
+  const formId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [invalidField, setInvalidField] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    setBusy(true); setError("");
+    if (busy) return;
+    setError(""); setInvalidField("");
     const body = { expectedUserId: userId, body: String(data.get("body") ?? ""),
       evidenceUrls: String(data.get("evidence") ?? "").split(/\r?\n/).map(value => value.trim()).filter(Boolean), acceptRules: data.get("acceptRules") === "on",
       ...(postId ? { kind: data.get("kind") } : { title: data.get("title"), locale, confirmIntent: data.get("confirmIntent") === "on" }) };
     try {
+      if (postId) validateCommunityComment(body); else validateCommunityPost(body);
+    } catch (cause) {
+      const code = cause instanceof Error ? cause.message : "";
+      const field = code.startsWith("INVALID_TITLE") ? "title" : code.startsWith("INVALID_POST_BODY") || code.startsWith("INVALID_COMMENT_BODY") ? "body"
+        : code.includes("EVIDENCE") ? "evidence" : code === "RULES_REQUIRED" ? (!postId && data.get("confirmIntent") !== "on" ? "confirmIntent" : "acceptRules") : "body";
+      setInvalidField(field); setError(errorMessage(cause, locale));
+      const control = form.elements.namedItem(field);
+      if (control instanceof HTMLElement) control.focus();
+      return;
+    }
+    setBusy(true);
+    try {
       const result = await communityRequest<{ id: string }>(postId ? `/api/community/posts/${postId}/comments` : "/api/community/posts", "POST", body);
+      if (!isCommunityId(result.id)) throw new Error("UNAVAILABLE");
       form.reset(); onSubmitted(result.id);
     } catch (cause) { setError(errorMessage(cause, locale)); }
     finally { setBusy(false); }
   }
-  return <form className={styles.form} onSubmit={event => void submit(event)}>
+  return <form className={styles.form} noValidate onSubmit={event => void submit(event)}>
     {postId ? <label className={styles.field}>{copy.comments}<select name="kind" defaultValue="opinion"><option value="opinion">{copy.opinion}</option><option value="correction">{copy.correction}</option></select></label>
-      : <label className={styles.field}>{copy.titleLabel}<input name="title" required minLength={4} maxLength={100} /></label>}
-    <label className={styles.field}>{postId ? copy.commentLabel : copy.bodyLabel}<textarea name="body" required minLength={postId ? 2 : 20} maxLength={postId ? 2000 : 4000} /></label>
-    <label className={styles.field}>{copy.evidenceLabel}<textarea className={styles.linksInput} name="evidence" required={!postId} maxLength={3002} spellCheck={false} autoCapitalize="off" placeholder="https://…" /><small>{copy.evidenceHint}</small></label>
+      : <><label className={styles.field}>{copy.titleLabel}<input name="title" required minLength={4} maxLength={100} aria-describedby={`${formId}-title-hint${invalidField === "title" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "title"} /></label><small id={`${formId}-title-hint`}>{hints.titleHint}</small></>}
+    <label className={styles.field}>{postId ? copy.commentLabel : copy.bodyLabel}<textarea name="body" required minLength={postId ? 2 : 20} maxLength={postId ? 2000 : 4000} aria-describedby={`${formId}-body-hint${invalidField === "body" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "body"} /></label><small id={`${formId}-body-hint`}>{postId ? hints.commentHint : hints.bodyHint}</small>
+    <label className={styles.field}>{copy.evidenceLabel}<textarea className={styles.linksInput} name="evidence" required={!postId} maxLength={3002} spellCheck={false} autoCapitalize="off" placeholder="https://…" aria-invalid={invalidField === "evidence"} aria-describedby={`${formId}-evidence-hint${invalidField === "evidence" ? ` ${formId}-error` : ""}`} /><small id={`${formId}-evidence-hint`}>{copy.evidenceHint}</small></label>
     <p className={styles.notice}>{copy.publicNotice}</p>
     {!postId && <label className={styles.check}><input type="checkbox" name="confirmIntent" required />{copy.confirmIntent}</label>}
     <label className={styles.check}><input type="checkbox" name="acceptRules" required />{copy.acceptRules}</label>
-    {error && <p role="alert" className={styles.error}>{error}</p>}
+    {error && <p id={`${formId}-error`} role="alert" className={styles.error}>{error}</p>}
     <button className={styles.primary} type="submit" disabled={busy}>{busy ? copy.loading : postId ? copy.submitComment : copy.submitPost}</button>
     <p className={styles.notice}>{copy.reviewNotice} {copy.postingLimit}</p>
   </form>;
@@ -156,6 +179,7 @@ export function CommunityPost({ id, locale }: { id: string; locale: Locale }) {
     {result.loading && <p role="status" className={styles.notice}>{copy.loading}</p>}
     {result.error && <p role="alert" className={styles.error}>{copy.unavailable}</p>}
     {post && <><article className={styles.row}><EntryMeta entry={post} locale={locale} /><h2>{post.title}</h2>
+      {post.isOwner && post.status === "pending" && <p role="status" className={styles.success}>{copy.postSent}</p>}
       <p className={styles.notice}>{copy.reviewNotice}</p><div className={styles.body}>{post.body}</div><EvidenceLinks urls={post.evidenceUrls} locale={locale} />
       {post.filtered && <p className={styles.notice}>{copy.filtered}</p>}
       {post.moderationNote && <p className={styles.notice}>{post.moderationNote}</p>}

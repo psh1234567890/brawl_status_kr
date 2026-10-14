@@ -136,24 +136,24 @@ export default function PlayerComparison({ locale = "ko", initialA = "", initial
     [copy.rankedHighest, ranked(left.player.highestAllTimeRankedRankName, left.player.highestAllTimeRankedElo), ranked(right.player.highestAllTimeRankedRankName, right.player.highestAllTimeRankedElo)],
   ] : [];
   const busy = left.state === "loading" || right.state === "loading";
-  return <div className="space-y-4">
-    <form onSubmit={submit} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+  return <div className="space-y-6">
+    <form onSubmit={submit} className="rounded-2xl border border-amber-200 bg-[#fff5ce] p-4 sm:p-6">
       <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         {([[copy.first, tagA, setTagA], [copy.second, tagB, setTagB]] as const).map(([label, value, setter]) =>
           <label key={label} className="block min-w-0">
-            <span className="mb-1 block text-xs font-black text-slate-600">{label}</span>
+            <span className="mb-2 block text-sm font-bold text-slate-700">{label}</span>
             <input aria-label={label} value={value} onChange={e => setter(e.target.value)}
               placeholder="#9C82J8YPP" maxLength={16} autoCapitalize="characters" autoComplete="off" spellCheck={false}
-              className="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm font-bold focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+              className="min-h-12 w-full rounded-lg border border-[#d5cba4] bg-white px-3 text-base font-semibold focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200" />
           </label>)}
         <button type="submit" disabled={busy}
-          className="min-h-11 rounded-lg bg-blue-700 px-5 text-sm font-black text-white hover:bg-blue-800 disabled:opacity-60">
+          className="min-h-12 rounded-lg bg-blue-600 px-6 text-sm font-bold text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60">
           {busy ? copy.busy : copy.action}
         </button>
       </div>
       {error ? <p role="alert" className="mt-3 text-sm font-bold text-rose-700">{error}</p> : null}
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="max-w-3xl text-xs leading-5 text-slate-500">{copy.caveat}</p>
+        <p className="max-w-3xl text-xs leading-5 text-[#6e6240]">{copy.caveat}</p>
         {a && b ? <button type="button" onClick={() => void share()}
           className="min-h-11 rounded-lg border border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-800 hover:bg-blue-100">
           {copied ? copy.copied : copy.share}
@@ -161,15 +161,20 @@ export default function PlayerComparison({ locale = "ko", initialA = "", initial
       </div>
     </form>
     {left.state === "idle" && right.state === "idle" ?
-      <p className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-600">{copy.intro}</p> :
+      <p className="py-5 text-center text-sm text-slate-500">{copy.intro}</p> :
       <div className="grid grid-cols-2 gap-2 sm:gap-4">
         <ProfileCard result={left} tag={tagA} label="A" locale={locale} error={copy.failed} stale={copy.freshnessStale}/>
         <ProfileCard result={right} tag={tagB} label="B" locale={locale} error={copy.failed} stale={copy.freshnessStale}/>
       </div>}
     {a && b ? <>
-      <section aria-label={copy.stats} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <h2 className="px-4 pt-4 text-lg font-black">{copy.stats}</h2>
-        <div className="mt-3 divide-y divide-slate-100">
+      <section aria-label={copy.stats} className="overflow-hidden border-y border-slate-200 bg-white py-5">
+        <h2 className="text-xl font-extrabold">{copy.stats}</h2>
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)_minmax(70px,0.9fr)_minmax(70px,0.9fr)] gap-2 rounded-lg bg-slate-50 px-3 py-3 text-center text-xs font-bold sm:grid-cols-3 sm:px-5">
+          <span aria-hidden="true" />
+          <span className="text-blue-700">A</span>
+          <span className="text-rose-700">B</span>
+        </div>
+        <div className="divide-y divide-slate-100">
           {fields.map(([label, leftVal, rightVal]) => {
             const win = label === copy.coins ? null : higherValueSide(leftVal, rightVal);
             const display = (value: number | null) =>
@@ -188,12 +193,12 @@ export default function PlayerComparison({ locale = "ko", initialA = "", initial
           </div>)}
         </div>
       </section>
-      <section aria-label={copy.top} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-black">{copy.top}</h2>
+      <section aria-label={copy.top} className="bg-white pb-4">
+        <h2 className="text-xl font-extrabold">{copy.top}</h2>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:gap-4">
           {[a, b].map((summary, index) => <ol key={index} className="min-w-0 space-y-2">
             {summary.topBrawlers.map((br, i) => <li key={br.id}
-              className="flex min-w-0 items-center gap-2 rounded-lg bg-slate-50 p-2 text-xs">
+              className="flex min-w-0 items-center gap-2 border-b border-slate-100 px-1 py-3 text-xs">
               <span className="shrink-0 font-black text-slate-500">{i + 1}.</span>
               <span className="min-w-0 flex-1 truncate font-bold">{translateBrawlerName(br.name, locale)}</span>
               <span className="shrink-0 font-black text-blue-800">{fmt(br.trophies)}</span>
@@ -208,8 +213,8 @@ export default function PlayerComparison({ locale = "ko", initialA = "", initial
 function ProfileCard({ result, tag, label, locale, error, stale }: {
   result: Result; tag: string; label: string; locale: Locale; error: string; stale: string;
 }) {
-  return <section aria-label={"Player " + label} className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
-    <p className="mb-3 text-xs font-black text-slate-500">PLAYER {label}</p>
+  return <section aria-label={"Player " + label} className={`min-w-0 rounded-xl border-t-4 p-3 sm:p-5 ${label === "A" ? "border-blue-600 bg-blue-50" : "border-rose-500 bg-rose-50"}`}>
+    <p className={`mb-3 text-xs font-bold ${label === "A" ? "text-blue-700" : "text-rose-700"}`}>PLAYER {label}</p>
     {result.state === "loading" ? <div role="status" className="h-20 animate-pulse rounded-lg bg-slate-100"/> : null}
     {result.state === "error" ? <p role="alert" className="text-sm font-bold text-rose-700">
       {error} {result.code ? "(" + result.code + ")" : ""}

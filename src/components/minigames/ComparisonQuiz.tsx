@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import BrawlImage from "../BrawlImage";
+import GameSetup from "./GameSetup";
+import gameStyles from "./game.module.css";
 import type { Locale } from "../../i18n/config";
 import { numberLocales } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
@@ -92,7 +94,7 @@ export default function ComparisonQuiz({ kind, locale, entries }: { kind: Kind; 
   return (
     <section className="space-y-4" aria-label={copy.title}>
       {phase === "ready" ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <GameSetup character={kind === "higher-lower" ? 16000002 : 16000000} tone={kind === "higher-lower" ? "green" : "blue"}>
           <p className="text-sm leading-7 text-slate-700">{kind === "higher-lower" ? labels.higherRules : labels.releaseRules}</p>
           <p className="mt-3 text-sm font-bold text-blue-700">{labels.pool.replace("{count}", count)}</p>
           <p className="mt-2 text-xs text-slate-600">{kind === "higher-lower" ? labels.hpSource : labels.releaseSource}</p>
@@ -100,13 +102,13 @@ export default function ComparisonQuiz({ kind, locale, entries }: { kind: Kind; 
           <p className="mt-2 text-xs text-slate-500">{labels.localBest}</p>
           {entries.length < COMPARISON_QUESTION_COUNT * 2 || poolError ?
             <p role="status" className="mt-3 text-sm font-bold text-amber-800">{round.insufficient}</p> : null}
-          <button type="button" onClick={start} disabled={entries.length < COMPARISON_QUESTION_COUNT * 2 || poolError} className="mt-5 min-h-11 rounded-lg bg-blue-600 px-6 py-2 font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300">{round.start}</button>
-        </div>
+          <button type="button" onClick={start} disabled={entries.length < COMPARISON_QUESTION_COUNT * 2 || poolError} className={gameStyles.start}>{round.start}</button>
+        </GameSetup>
       ) : null}
       {phase === "playing" && question ? (
         <div className="space-y-4">
           <RoundProgress current={recap.length + (selected === null ? 1 : 0)} completed={recap.length} score={score} copy={round} />
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className={gameStyles.stage}>
             <h2 ref={questionRef} tabIndex={-1} className="text-lg font-black text-slate-900 focus:outline-none">
               {kind === "higher-lower" ? labels.higher : labels.earlier}
             </h2>

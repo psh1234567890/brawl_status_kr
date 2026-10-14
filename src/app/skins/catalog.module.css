@@ -1,0 +1,38 @@
+.filters { padding: 20px; border: 1px solid #e5e5e9; border-radius: 12px; background: #f7f6fb; }
+.control { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid #d9d6e3; border-radius: 7px; background: white; color: #232238; font-size: 14px; }
+.control:focus-visible { outline: 2px solid #5842ce; outline-offset: 2px; }
+.summary { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); padding: 20px 0; border-block: 1px solid #e5e5e9; }
+.summary > div { padding: 0 24px; border-left: 1px solid #e5e5e9; }
+.summary > div:first-child { padding-left: 0; border-left: 0; }
+.summary p { color: #686875; font-size: 12px; overflow-wrap: anywhere; }
+.summary strong { display: block; margin-top: 4px; font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.summary > div:first-child strong { color: #5842ce; }
+.listHeading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; color: #686875; font-size: 12px; }
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 28px 22px; }
+.skin { min-width: 0; }
+.art { position: relative; display: flex; height: 160px; align-items: center; justify-content: center; border-radius: 12px; background: #f3f0fc; }
+.skin:nth-child(4n + 2) .art { background: #fff1c4; }
+.skin:nth-child(4n + 3) .art { background: #e5f3eb; }
+.skin:nth-child(4n + 4) .art { background: #ffe7df; }
+.skinId { position: absolute; top: 10px; left: 12px; color: #78727f; font-size: 10px; }
+.info { padding: 14px 2px 16px; border-bottom: 1px solid #e5e5e9; overflow-wrap: anywhere; }
+.info > div { column-gap: 10px; }
+@media (max-width: 1023px) {
+  .grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .summary > div { padding: 0 16px; }
+}
+@media (max-width: 760px) {
+  .filters { padding: 16px; }
+  .filters > div { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  .filters input[type="search"] { grid-column: 1 / -1; font-size: 16px; }
+  .control { font-size: 12px; padding-inline: 8px; }
+  .summary { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px 8px; padding-block: 14px; }
+  .summary > div { padding: 0; border: 0; }
+  .summary > div:first-child { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
+  .summary > div:first-child strong { margin: 0; font-size: 30px; }
+  .summary p { font-size: 11px; }
+  .summary strong { font-size: 18px; }
+  .grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 24px 14px; }
+  .art { height: 140px; }
+  .skinId { top: 8px; left: 8px; font-size: 9px; }
+}

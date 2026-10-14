@@ -79,8 +79,15 @@
 .searchForm input:focus-visible { outline-offset: 2px; border-radius: 2px; }
 .page .searchForm button { border-radius: 6px; background: var(--ink); color: white; display: inline-flex; align-items: center; justify-content: center; gap: 14px; white-space: nowrap; padding: 13px 19px; font-size: 14px; font-weight: 700; min-height: 46px; }
 .page .searchForm button:hover { background: var(--purple); }
-.tagHelp { margin-top: 13px; font-size: 12px; color: #645329; width: fit-content; max-width: 480px; }
-.tagHelp summary { padding: 3px 0; text-decoration: underline; text-underline-offset: 3px; }
+.tagHelp { margin-top: 10px; font-size: 13px; color: #51421f; width: fit-content; max-width: 480px; }
+.tagHelp summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid #d1af48; border-radius: 8px; background: #ffe994; font-weight: 750; list-style: none; cursor: pointer; }
+.tagHelp summary::-webkit-details-marker { display: none; }
+.tagHelp summary::before { content: "?"; display: grid; place-items: center; width: 18px; height: 18px; border: 1.5px solid currentColor; border-radius: 50%; font-size: 12px; }
+.tagHelp summary::after { content: "⌄"; margin-left: 8px; }
+.tagHelp[open] summary::after { transform: rotate(180deg); }
+.tagHelp summary:hover { background: #fff0b1; }
+.tagHelp summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.page[lang="ko"] .portalHeading h1 { word-break: keep-all; text-wrap: balance; }
 .tagHelp p { margin-top: 9px; font-size: 13px; padding: 12px 15px; background: #fff4cf; border-radius: 7px; }
 .formError { margin-top: 10px !important; font-size: 13px; font-weight: 650; color: #822a26; }
 .previewSearchNote { text-align: right; color: #76727d; font-size: 11px; margin: 8px 4px 0 !important; }
@@ -269,22 +276,22 @@
   .mobileMenu { display: grid; grid-template-columns: 1fr 1fr; margin: 0 20px 18px; padding: 8px; border: 1px solid var(--line); border-radius: 9px; }
   .mobileMenu > :is(a, button) { display: flex; padding: 12px; align-items: center; gap: 10px; min-height: 48px; font-size: 14px; }
   .main { padding: 0 20px; }
-  .searchHero { border-radius: 15px; min-height: 320px; padding: 24px; }
+  .searchHero { border-radius: 15px; min-height: 0; padding: 20px 22px 16px; }
   .heroContent { max-width: none; }
-  .heroContent h1 { font-size: 43px; line-height: 1.08; max-width: 58%; letter-spacing: -1.4px; }
+  .heroContent h1 { font-size: 38px; line-height: 1.05; max-width: 58%; letter-spacing: -1.4px; }
   .page[lang="en"] .heroContent h1 { font-size: 34px; max-width: 68%; }
-  .heroIntro { max-width: 60%; font-size: 13px; line-height: 1.6; margin-top: 13px !important; }
-  .heroArt { width: 40%; height: 182px; top: 10px; bottom: auto; right: 0; border-radius: 0; }
+  .heroIntro { max-width: 62%; font-size: 12px; line-height: 1.5; margin-top: 10px !important; }
+  .heroArt { width: 38%; height: 160px; top: 4px; bottom: auto; right: 0; border-radius: 0; }
   .heroDisc { height: auto; aspect-ratio: 1; width: 100%; top: 33px; right: 0; }
-  .heroSpike { width: 100%; height: 185px; bottom: -15px; right: 0; }
+  .heroSpike { width: 100%; height: 165px; bottom: -10px; right: 0; }
   .heroLeon { display: none; }
   .heroLabel { top: 4px; right: 10px; font-size: 17px; }
-  .searchForm { margin-top: 26px; padding: 5px 5px 5px 13px; gap: 8px; border-radius: 8px; }
+  .searchForm { margin-top: 16px; padding: 5px 5px 5px 13px; gap: 8px; border-radius: 8px; }
   .searchForm > svg { width: 19px; }
   .searchForm input { font-size: 16px; }
   .page .searchForm button { padding: 11px 12px; font-size: 12px; min-height: 44px; gap: 6px; }
   .searchForm button svg { display: none; }
-  .tagHelp { margin-top: 10px; font-size: 11px; }
+  .tagHelp { margin-top: 6px; font-size: 12px; }
   .previewSearchNote { text-align: left; margin: 8px 0 0 !important; font-size: 10px; }
   .playSection { margin-top: 25px; }
   .sectionHeader { margin-bottom: 13px; gap: 10px; }
@@ -376,11 +383,11 @@
   .page .wordmark { font-size: 32px; }
   .headerActions { gap: 3px; }
   .main { padding: 0 15px; }
-  .searchHero { padding: 22px 17px 19px; min-height: 305px; }
-  .heroContent h1 { font-size: 38px; }
+  .searchHero { padding: 18px 17px 14px; min-height: 0; }
+  .heroContent h1 { font-size: 34px; }
   .page[lang="en"] .heroContent h1 { font-size: 29px; }
   .heroIntro { max-width: 58%; font-size: 12px; }
-  .heroArt { top: 15px; }
+  .heroArt { top: 4px; }
   .heroLabel { right: 18px; }
   .searchForm { gap: 5px; padding-left: 10px; }
   .page .searchForm button { padding: 10px; font-size: 11px; }

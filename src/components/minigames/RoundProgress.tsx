@@ -1,4 +1,5 @@
 import type { RoundMessages } from "../../i18n/minigames/roundMessages";
+import styles from "./game.module.css";
 
 export default function RoundProgress({ current, completed, score, copy, modeLabel }: {
   current: number;
@@ -8,7 +9,7 @@ export default function RoundProgress({ current, completed, score, copy, modeLab
   modeLabel?: string;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-label={copy.tenQuestions}>
+    <section className={styles.progress} aria-label={copy.tenQuestions}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-black text-slate-700">{copy.question} {Math.min(current, 10)} / 10</p>
         <p className="text-sm font-black text-blue-700">{copy.score}: {score} / 10</p>

@@ -442,7 +442,7 @@ test("skin filters hydrate from and write back to the shareable URL", async ({ p
   await page.goto("/skins?q=Shelly&sort=NAME&defaults=show");
 
   await expect(page.getByRole("searchbox", { name: "스킨 또는 브롤러 검색" })).toHaveValue("Shelly");
-  await expect(page.locator("select").nth(4)).toHaveValue("NAME");
+  await expect(page.getByRole("combobox", { name: "스킨 정렬", exact: true })).toHaveValue("NAME");
   await expect(page.locator('input[type="checkbox"]')).not.toBeChecked();
 
   await page.getByRole("searchbox", { name: "스킨 또는 브롤러 검색" }).fill("Colt");

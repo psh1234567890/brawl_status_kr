@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import BrawlImage from "../BrawlImage";
+import GameSetup from "./GameSetup";
+import gameStyles from "./game.module.css";
 import { sendUsageEvent } from "../UsageSessionTracker";
 import { numberLocales, type Locale } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
@@ -126,7 +128,7 @@ export default function AbilityOwnerQuiz({ locale, abilities, owners }: {
   return (
     <section className="space-y-4" aria-label={gameCopy.title}>
       {phase === "ready" ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <GameSetup character={16000006} tone="lilac">
           <p className="text-sm font-medium leading-6 text-slate-600">{gameCopy.rules}</p>
           <fieldset className="mt-5">
             <legend className="mb-2 text-sm font-black text-slate-700">{copy.round.chooseMode}</legend>
@@ -140,14 +142,14 @@ export default function AbilityOwnerQuiz({ locale, abilities, owners }: {
           <p className="mt-3 text-xs font-bold text-slate-500">{copy.round.tenQuestions}</p>
           <p className="mt-4 text-sm font-bold text-slate-600">{bestText}</p>
           {!canPlay || poolError ? <p role="status" className="mt-3 text-sm font-bold text-amber-800">{abilities.length ? gameCopy.noAbilities : copy.round.dataUnavailable}</p> : null}
-          <button type="button" disabled={!canPlay || poolError} onClick={startGame} className="mt-5 min-h-11 rounded-lg bg-blue-600 px-5 py-2 text-sm font-black text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:bg-slate-300">{copy.round.start}</button>
-        </div>
+          <button type="button" disabled={!canPlay || poolError} onClick={startGame} className={gameStyles.start}>{copy.round.start}</button>
+        </GameSetup>
       ) : null}
 
       {phase === "playing" && question ? (
         <div className="space-y-4">
           <RoundProgress current={recap.length + 1} completed={recap.length} score={score} copy={copy.round} modeLabel={modeLabels[mode]} />
-          <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="ability-question-title">
+          <section className={gameStyles.stage} aria-labelledby="ability-question-title">
             <div className="flex items-center gap-4">
               {question.imageUrl ? <BrawlImage key={question.id} src={question.imageUrl} alt={gameCopy.imageAlt} fallbackText="?" width={64} height={64} sizes="64px" className="h-16 w-16 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-contain" /> : <span aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-2xl font-black text-slate-300">?</span>}
               <div>

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import BrawlImage from "../BrawlImage";
+import GameSetup from "./GameSetup";
+import gameStyles from "./game.module.css";
 import { sendUsageEvent } from "../UsageSessionTracker";
 import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { getMinigameMessages } from "../../i18n/minigameMessages";
@@ -208,7 +210,7 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
       ) : null}
 
       {phase === "ready" && brawlers.length > 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <GameSetup character={16000005}>
           <p className="text-lg font-black text-slate-950">{copy.totalBrawlers.replace("{count}", numberFormatter.format(brawlers.length))}</p>
           <fieldset className="mt-5">
             <legend className="mb-2 text-sm font-black text-slate-700">{copy.timeLimit}</legend>
@@ -222,14 +224,14 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
             </div>
           </fieldset>
           {best ? <p className="mt-4 text-sm font-bold text-slate-600">{copy.best.replace("{found}", String(best.found)).replace("{total}", String(best.total)).replace("{percent}", String(best.percentage))}</p> : null}
-          <button type="button" onClick={startGame} className="mt-5 min-h-11 rounded-lg bg-blue-600 px-6 py-2 text-sm font-black text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+          <button type="button" onClick={startGame} className={gameStyles.start}>
             {copy.startGame}
           </button>
-        </div>
+        </GameSetup>
       ) : null}
 
       {phase === "playing" ? (
-        <div className="sticky top-0 z-20 rounded-xl border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur sm:static sm:p-5">
+        <div className={`${gameStyles.stage} sticky top-0 z-20 sm:static`}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold text-slate-500">{remaining === null ? copy.elapsedTime : copy.remainingTime}</p>
@@ -260,7 +262,7 @@ export default function BrawlerNameQuiz({ locale, brawlers }: { locale: Locale; 
       ) : null}
 
       {phase === "finished" ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className={gameStyles.result}>
           <h2 className="text-xl font-black text-slate-950">{copy.resultTitle}</h2>
           <p className="mt-2 text-3xl font-black text-blue-700">{foundIds.length} / {brawlers.length} <span className="text-xl text-slate-600">({percent}%)</span></p>
           <p className="mt-1 text-sm font-bold text-slate-600">{copy.timeUsed.replace("{time}", formatTime(elapsed))} · {modeLabels[mode]}</p>

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import type { Locale } from "../../i18n/config";
 import { localizedHref } from "../../i18n/config";
 import type { RoundMessages } from "../../i18n/minigames/roundMessages";
+import styles from "./game.module.css";
 
 export type RoundRecap = { prompt: string; answer: string; wasCorrect: boolean };
 
@@ -20,7 +21,7 @@ export default function RoundResults({ locale, copy, score, completed, best, rec
   useEffect(() => { titleRef.current?.focus(); }, []);
   const bestText = best ? copy.best.replace("{score}", String(best.score)).replace("{percentage}", String(best.percentage)) : copy.noBest;
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="round-results-title">
+    <section className={styles.result} aria-labelledby="round-results-title">
       <h2 ref={titleRef} id="round-results-title" tabIndex={-1} className="text-xl font-black text-slate-950 focus:outline-none">{copy.results}</h2>
       <p className="mt-2 text-3xl font-black text-blue-700">{score} / 10 <span className="text-xl text-slate-600">({score * 10}%)</span></p>
       <p className="mt-2 text-sm font-bold text-slate-600">{copy.completed.replace("{completed}", String(completed))}</p>
@@ -31,7 +32,7 @@ export default function RoundResults({ locale, copy, score, completed, best, rec
           <h3 className="mb-2 text-base font-black text-slate-900">{copy.recap}</h3>
           <ol className="space-y-2">
             {recap.map((item, index) => (
-              <li key={index} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+              <li key={index} className={styles.recap}>
                 <p className="text-xs font-bold text-slate-500">{item.prompt}</p>
                 <p className="text-sm font-black text-slate-900">{item.answer}{item.wasCorrect ? " ✓" : ""}</p>
               </li>

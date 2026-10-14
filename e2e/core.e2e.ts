@@ -36,8 +36,9 @@ test("home header exposes localized account entry without mobile overflow", asyn
 
   for (const locale of locales) {
     await page.goto(localizedHref(locale, "/"));
-    const siteHome = page.locator("header").getByRole("link", { name: getMessages(locale).home.homeAria, exact: true });
-    await expect(siteHome.locator('img[src="/icon.svg"]')).toBeVisible();
+    const siteHome = page.locator("header").getByRole("link", { name: `Brawloop · ${getMessages(locale).common.home}`, exact: true });
+    await expect(siteHome).toHaveText("brawloop");
+    await expect(siteHome).toHaveAttribute("href", localizedHref(locale, "/"));
     const login = page.locator("header").getByRole("link", { name: getAccountMessages(locale).navLogin, exact: true });
     await expect(login).toBeVisible();
     await expect(login).toHaveAttribute("href", localizedHref(locale, "/account"));
@@ -51,7 +52,7 @@ test("home header exposes localized account entry without mobile overflow", asyn
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/en");
   await page.goto("/en/events");
-  await expect(page.locator("header").getByRole("link", { name: /Brawl Status KR/ }).locator('img[src="/icon.svg"]')).toBeVisible();
+  await expect(page.locator("header").getByRole("link", { name: /Brawloop/ })).toBeVisible();
   await page.goto("/en");
   await page.locator("header").getByRole("link", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(/\/en\/account$/);
@@ -122,7 +123,7 @@ test("subpage mobile menu highlights the active section and keeps all destinatio
     const eventsLink = navigation.getByRole("link", { name: copy.events, exact: true });
     await expect(eventsLink).toHaveAttribute("aria-current", "page");
     await expect(navigation.getByRole("link", { name: copy.home, exact: true })).not.toHaveAttribute("aria-current", "page");
-    await expect(page.locator("header").getByRole("link", { name: /Brawl Status KR/ }).locator('img[src="/icon.svg"]')).toBeVisible();
+    await expect(page.locator("header").getByRole("link", { name: /Brawloop/ })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
 
@@ -680,19 +681,26 @@ test("counter API failures are announced as alerts", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("mobile quick navigation is visible on a phone-sized viewport", async ({ context, page }) => {
+test("mobile menu keeps search, recommendations, skins and rankings reachable", async ({ context, page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await context.addCookies([
     { name: "brawl-locale", value: "ko", url: "http://localhost:3020" },
   ]);
 
   await page.goto("/");
-  const navigation = page.getByRole("navigation", { name: "모바일 빠른 이동" });
+  const trigger = page.locator('header summary[aria-label="전체 메뉴"]');
+  await trigger.click();
+  const copy = getMessages("ko").common;
+  const navigation = page.getByRole("navigation", { name: copy.mainNavigation });
   await expect(navigation).toBeVisible();
-  await expect(navigation.getByRole("link", { name: "홈" })).toBeVisible();
-  await expect(navigation.getByRole("link", { name: "추천" })).toBeVisible();
-  await expect(navigation.getByRole("link", { name: "스킨" })).toBeVisible();
-  await expect(navigation.getByRole("link", { name: "랭킹" })).toBeVisible();
+  for (const [path, label] of [["/", copy.home], ["/meta", copy.meta], ["/skins", copy.skins], ["/rankings", copy.rankings]]) {
+    const link = navigation.getByRole("link", { name: label, exact: true });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", path);
+  }
+  await page.keyboard.press("Escape");
+  await expect(navigation).toBeHidden();
+  await expect(trigger).toBeFocused();
 });
 
 test("core document routes render their main heading", async ({ page }) => {

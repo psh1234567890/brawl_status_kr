@@ -7,6 +7,14 @@ import { loadHubCounts } from "../../server/minigames";
 import { miniGames } from "../../utils/minigames/registry";
 import { getBlockedCopy } from "../../i18n/minigames/blockedGameMessages";
 import AccountBestPreview from "../../components/minigames/AccountBestPreview";
+import { BrandArrow, BrandCharacter } from "../../components/brand/BrandArt";
+import styles from "../../components/brand/brand.module.css";
+
+const gameArt = {
+  "brawler-quiz": [16000005, "purple"], "silhouette-quiz": [16000023, "yellow"],
+  "higher-lower": [16000002, "green"], "map-quiz": [16000008, "coral"],
+  "ability-quiz": [16000006, "lilac"], "release-order": [16000000, "blue"],
+} as const;
 
 export const revalidate = 3600;
 
@@ -28,9 +36,10 @@ export async function MiniGamesContent({ locale }: { locale: Locale }) {
   return (
     <PortalLayout locale={locale} eyebrow={copy.nav} title={copy.hubTitle} description={copy.hubDescription}>
       <AccountBestPreview locale={locale} />
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label={copy.hubTitle}>
+      <section className={styles.allGames} aria-label={copy.hubTitle}>
         {miniGames.map((game) => {
           const cardCopy = copy.games[game.id];
+          const [model, color] = gameArt[game.id];
           const blockedCopy = !game.enabled && (game.id === "higher-lower" || game.id === "release-order")
             ? getBlockedCopy(locale, game.id)
             : null;
@@ -42,15 +51,16 @@ export async function MiniGamesContent({ locale }: { locale: Locale }) {
                 ? copy.round.tenQuestions
                 : null;
           return (
-            <article key={game.id} aria-labelledby={`mini-game-${game.id}-title`} className="flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div>
-                <h2 id={`mini-game-${game.id}-title`} className="text-xl font-black text-slate-950">{cardCopy.title}</h2>
-                <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{cardCopy.description}</p>
+            <article key={game.id} aria-labelledby={`mini-game-${game.id}-title`} className={styles.gameCard}>
+              <div className={`${styles.gameArt} ${styles[color]}`}><BrandCharacter id={model} silhouette={game.id === "silhouette-quiz"} />{game.id === "silhouette-quiz" && <span className={styles.questionArt} aria-hidden="true">?</span>}{game.id === "higher-lower" && <span className={styles.vsArt} aria-hidden="true">VS</span>}</div>
+              <div className={styles.liveGameInfo}>
+                <h2 id={`mini-game-${game.id}-title`}>{cardCopy.title}</h2>
+                <p>{cardCopy.description}</p>
                 {countText ? <p className="mt-3 text-xs font-bold text-blue-700">{countText}</p> : null}
                 {blockedCopy ? <p className="mt-3 text-xs font-medium leading-5 text-slate-500">{blockedCopy.reason}</p> : null}
               </div>
               {game.enabled ? (
-                <Link href={localizedHref(locale, game.href)} className="mt-5 inline-flex min-h-11 w-fit items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white transition-colors hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">{copy.startGame}</Link>
+                <Link href={localizedHref(locale, game.href)} className={styles.liveGameStart} aria-label={`${cardCopy.title} · ${copy.startGame}`}>{copy.startGame}<BrandArrow /></Link>
               ) : (
                 <span className="mt-5 inline-flex min-h-8 w-fit items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black text-slate-600">{copy.blocked.pending}</span>
               )}

@@ -15,7 +15,7 @@ const menuLabels: Record<Locale, string> = {
 };
 
 /** Keep the mobile header one row high; secondary destinations live here. */
-export default function MobileHeaderMenu({ locale }: { locale: Locale }) {
+export default function MobileHeaderMenu({ locale, allSizes = false }: { locale: Locale; allSizes?: boolean }) {
   const details = useRef<HTMLDetailsElement>(null);
   const pathname = usePathname();
   const copy = getMessages(locale).common;
@@ -37,10 +37,15 @@ export default function MobileHeaderMenu({ locale }: { locale: Locale }) {
   ] as const;
 
   return (
-    <details ref={details} className="group relative md:hidden">
+    <details ref={details} className={`group relative ${allSizes ? "" : "md:hidden"}`} onKeyDown={(event) => {
+      if (event.key === "Escape" && details.current?.open) {
+        details.current.open = false;
+        details.current.querySelector("summary")?.focus();
+      }
+    }}>
       <summary
         aria-label={menuLabels[locale]}
-        className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-800 shadow-sm focus-visible:outline-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden"
+        className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-lg text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-[#5842ce] [&::-webkit-details-marker]:hidden"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
           <path d="M4 6h16M4 12h16M4 18h16" />

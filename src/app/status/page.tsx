@@ -8,7 +8,7 @@ import { translateBrawlerName, translateMapName } from "../../utils/brawlTransla
 
 export const metadata: Metadata = {
   title: "데이터 수집 현황",
-  description: "Brawl Status KR에 저장된 전투 기록 표본과 수집 현황을 확인합니다.",
+  description: "Brawloop에 저장된 전투 기록 표본과 수집 현황을 확인합니다.",
   alternates: { canonical: "/status" },
 };
 

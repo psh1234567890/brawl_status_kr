@@ -210,7 +210,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
           <div className="flex items-center justify-between gap-3">
             <Link href={localizedHref(locale, "/")} className="min-w-0">
               <span className="block text-lg font-black text-slate-950 sm:text-2xl">
-                Brawl Status KR
+                Brawloop
               </span>
               <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
                 {copy.home.brandSubtitle}

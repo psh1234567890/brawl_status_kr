@@ -22,16 +22,16 @@ export function detailSocialMetadata(
   return {
     description,
     openGraph: {
-      title: `${title} | Brawl Status KR`,
+      title: `${title} | Brawloop`,
       description,
       url: localizedHref(locale, pathname),
-      siteName: "Brawl Status KR",
+      siteName: "Brawloop",
       locale: locale === "ko" ? "ko_KR" : getLocalizedSiteSeo(locale).openGraphLocale,
       type: "website",
     },
     twitter: {
       card: "summary",
-      title: `${title} | Brawl Status KR`,
+      title: `${title} | Brawloop`,
       description,
     },
   };

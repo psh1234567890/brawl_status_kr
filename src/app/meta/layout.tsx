@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     languages: localeAlternates("/meta"),
   },
   openGraph: {
-    title: "브롤스타즈 맵별 추천 브롤러 | 승률·메타 | Brawl Status KR",
+    title: "브롤스타즈 맵별 추천 브롤러 | 승률·메타 | Brawloop",
     description:
       "저장된 전투 기록으로 맵별 브롤러 승률, 표본 수, 추천 점수와 신뢰도를 비교합니다.",
     url: "/meta",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "브롤스타즈 맵별 추천 브롤러 | 승률·메타 | Brawl Status KR",
+    title: "브롤스타즈 맵별 추천 브롤러 | 승률·메타 | Brawloop",
     description:
       "저장된 전투 기록으로 맵별 브롤러 승률, 표본 수, 추천 점수와 신뢰도를 비교합니다.",
   },

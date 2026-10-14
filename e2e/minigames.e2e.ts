@@ -62,7 +62,7 @@ test("homepage shortcut opens a six-card hub with six playable games", async ({ 
   await expect(page.getByRole("link", { name: getMinigameMessages("ko").quizTitle })).toHaveAttribute("href", "/minigames/brawler-quiz");
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-  await page.getByRole("complementary").getByRole("link", { name: /미니게임/ }).click();
+  await page.getByRole("region", { name: "잠깐, 한 판만!" }).getByRole("link", { name: "미니게임", exact: true }).click();
   await expect(page).toHaveURL(/\/minigames$/);
   await expect(page.getByRole("heading", { level: 1, name: "브롤스타즈 미니게임" })).toBeVisible();
   const cards = page.getByRole("article");
@@ -112,11 +112,11 @@ test("name quiz is readable by crawlers without JavaScript in all ten languages"
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(copy.quizTitle);
-      await expect(page).toHaveTitle(copy.quizTitle + " | " + guide.searchLabel + " | Brawl Status KR");
+      await expect(page).toHaveTitle(copy.quizTitle + " | " + guide.searchLabel + " | Brawloop");
       await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", copy.quizMetaDescription);
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", canonical);
       await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(10);
-      await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", copy.quizTitle + " | " + guide.searchLabel + " | Brawl Status KR");
+      await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", copy.quizTitle + " | " + guide.searchLabel + " | Brawloop");
       await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
       await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", "https://www.brawl-o1.site/images/minigames/brawler-quiz-100.png");
       await expect(page.getByRole("heading", { level: 2, name: guide.title, exact: true })).toBeVisible();

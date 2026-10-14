@@ -42,12 +42,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "서비스 소개",
         description:
-          "Brawl Status KR의 전적 검색, 최근 전투 분석, 맵별 추천 브롤러, 스킨 카탈로그 기능을 소개합니다.",
+          "Brawloop의 전적 검색, 최근 전투 분석, 맵별 추천 브롤러, 스킨 카탈로그 기능을 소개합니다.",
       },
       back: "전적 검색으로 돌아가기",
-      title: "Brawl Status KR 소개",
+      title: "Brawloop 소개",
       intro:
-        "Brawl Status KR은 브롤스타즈 플레이어가 자신의 전적과 보유 브롤러 상태를 한국어로 빠르게 확인할 수 있도록 만든 팬 제작 분석 도구입니다.",
+        "Brawloop은 브롤스타즈 플레이어가 자신의 전적과 보유 브롤러 상태를 여러 언어로 빠르게 확인할 수 있도록 만든 팬 제작 분석 도구입니다.",
       sections: [
         {
           title: "주요 기능",
@@ -88,7 +88,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "데이터 산정 방식",
         description:
-          "Brawl Status KR의 검색 표본, 전투 중복 방지, 팀전과 쇼다운 집계, 추천 점수의 한계를 설명합니다.",
+          "Brawloop의 검색 표본, 전투 중복 방지, 팀전과 쇼다운 집계, 추천 점수의 한계를 설명합니다.",
       },
       title: "데이터 산정 방식",
       eyebrow: "데이터 산정 방식",
@@ -155,13 +155,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "개인정보처리방침",
         description:
-          "Brawl Status KR의 개인정보 수집, 이용, 쿠키, 광고, 외부 API 사용에 관한 안내입니다.",
+          "Brawloop의 개인정보 수집, 이용, 쿠키, 광고, 외부 API 사용에 관한 안내입니다.",
       },
       back: "전적 검색으로 돌아가기",
       title: "개인정보처리방침",
       effectiveDate: "시행일: 2026년 9월 22일",
       intro:
-        "Brawl Status KR은 이용자의 개인정보를 불필요하게 수집하지 않으며, 서비스 제공과 품질 개선에 필요한 최소한의 정보만 처리합니다.",
+        "Brawloop은 이용자의 개인정보를 불필요하게 수집하지 않으며, 서비스 제공과 품질 개선에 필요한 최소한의 정보만 처리합니다.",
       sections: [
         {
           title: "수집하는 정보",
@@ -245,7 +245,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "이용 안내",
         description:
-          "Brawl Status KR 이용 시 알아야 할 데이터 기준, 비공식 서비스 고지, 책임 범위 안내입니다.",
+          "Brawloop 이용 시 알아야 할 데이터 기준, 비공식 서비스 고지, 책임 범위 안내입니다.",
       },
       back: "전적 검색으로 돌아가기",
       title: "이용 안내",
@@ -255,7 +255,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KR은 브롤스타즈 유저를 위한 비공식 팬 제작 분석 도구입니다. Supercell과 제휴, 후원, 승인 관계가 없으며 공식 서비스가 아닙니다.",
+              text: "Brawloop은 브롤스타즈 유저를 위한 비공식 팬 제작 분석 도구입니다. Supercell과 제휴, 후원, 승인 관계가 없으며 공식 서비스가 아닙니다.",
             },
           ],
         },
@@ -301,7 +301,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "문의",
         description:
-          "Brawl Status KR의 버그 제보, 기능 건의, 운영 문의를 위한 연락처 안내입니다.",
+          "Brawloop의 버그 제보, 기능 건의, 운영 문의를 위한 연락처 안내입니다.",
       },
       back: "전적 검색으로 돌아가기",
       title: "문의",
@@ -334,12 +334,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "About the Service",
         description:
-          "Learn about Brawl Status KR's player search, recent battle analysis, map-based brawler recommendations, and skin catalog.",
+          "Learn about Brawloop's player search, recent battle analysis, map-based brawler recommendations, and skin catalog.",
       },
       back: "Back to player search",
-      title: "About Brawl Status KR",
+      title: "About Brawloop",
       intro:
-        "Brawl Status KR is a fan-made analytics tool that helps Brawl Stars players quickly check their battle history and owned brawlers.",
+        "Brawloop is a fan-made analytics tool that helps Brawl Stars players quickly check their battle history and owned brawlers.",
       sections: [
         {
           title: "Key features",
@@ -380,7 +380,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Methodology",
         description:
-          "How Brawl Status KR handles search-based samples, battle deduplication, team battles and Showdown aggregation, and the limits of recommendation scores.",
+          "How Brawloop handles search-based samples, battle deduplication, team battles and Showdown aggregation, and the limits of recommendation scores.",
       },
       title: "Methodology",
       eyebrow: "Methodology",
@@ -447,13 +447,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Privacy Policy",
         description:
-          "Information about Brawl Status KR's data collection and use, cookies, advertising, and external APIs.",
+          "Information about Brawloop's data collection and use, cookies, advertising, and external APIs.",
       },
       back: "Back to player search",
       title: "Privacy Policy",
       effectiveDate: "Effective date: September 22, 2026",
       intro:
-        "Brawl Status KR does not collect personal information unnecessarily and processes only the minimum information needed to provide and improve the service.",
+        "Brawloop does not collect personal information unnecessarily and processes only the minimum information needed to provide and improve the service.",
       sections: [
         {
           title: "Information we collect",
@@ -537,7 +537,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Terms of Use",
         description:
-          "Data standards, unofficial-service notice, and scope of responsibility for using Brawl Status KR.",
+          "Data standards, unofficial-service notice, and scope of responsibility for using Brawloop.",
       },
       back: "Back to player search",
       title: "Terms of Use",
@@ -547,7 +547,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KR is an unofficial fan-made analytics tool for Brawl Stars players. It is not affiliated with, sponsored by, or approved by Supercell and is not an official service.",
+              text: "Brawloop is an unofficial fan-made analytics tool for Brawl Stars players. It is not affiliated with, sponsored by, or approved by Supercell and is not an official service.",
             },
           ],
         },
@@ -593,7 +593,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Contact",
         description:
-          "Contact information for Brawl Status KR bug reports, feature suggestions, and service inquiries.",
+          "Contact information for Brawloop bug reports, feature suggestions, and service inquiries.",
       },
       back: "Back to player search",
       title: "Contact",
@@ -626,12 +626,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "サービス紹介",
         description:
-          "Brawl Status KRの戦績検索、最近のバトル分析、マップ別おすすめブロウラー、スキンカタログ機能を紹介します。",
+          "Brawloopの戦績検索、最近のバトル分析、マップ別おすすめブロウラー、スキンカタログ機能を紹介します。",
       },
       back: "戦績検索に戻る",
-      title: "Brawl Status KRについて",
+      title: "Brawloopについて",
       intro:
-        "Brawl Status KRは、Brawl Starsプレイヤーが自分の戦績や所持ブロウラーの状況をすばやく確認できるファン制作の分析ツールです。",
+        "Brawloopは、Brawl Starsプレイヤーが自分の戦績や所持ブロウラーの状況をすばやく確認できるファン制作の分析ツールです。",
       sections: [
         {
           title: "主な機能",
@@ -672,7 +672,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "データ算定方法",
         description:
-          "Brawl Status KRの検索サンプル、バトル重複防止、チーム戦とショーダウンの集計、推薦スコアの限界を説明します。",
+          "Brawloopの検索サンプル、バトル重複防止、チーム戦とショーダウンの集計、推薦スコアの限界を説明します。",
       },
       title: "データ算定方法",
       eyebrow: "算定方法",
@@ -739,13 +739,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "プライバシーポリシー",
         description:
-          "Brawl Status KRの個人情報の収集・利用、Cookie、広告、外部APIの利用について案内します。",
+          "Brawloopの個人情報の収集・利用、Cookie、広告、外部APIの利用について案内します。",
       },
       back: "戦績検索に戻る",
       title: "プライバシーポリシー",
       effectiveDate: "施行日: 2026年9月22日",
       intro:
-        "Brawl Status KRは利用者の個人情報を不必要に収集せず、サービス提供と品質改善に必要な最小限の情報のみを処理します。",
+        "Brawloopは利用者の個人情報を不必要に収集せず、サービス提供と品質改善に必要な最小限の情報のみを処理します。",
       sections: [
         {
           title: "収集する情報",
@@ -829,7 +829,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "利用案内",
         description:
-          "Brawl Status KRを利用する際に知っておくべきデータ基準、非公式サービスの告知、責任範囲について案内します。",
+          "Brawloopを利用する際に知っておくべきデータ基準、非公式サービスの告知、責任範囲について案内します。",
       },
       back: "戦績検索に戻る",
       title: "利用案内",
@@ -839,7 +839,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KRはBrawl Starsプレイヤー向けの非公式ファン制作分析ツールです。Supercellとの提携、スポンサー、承認関係はなく、公式サービスではありません。",
+              text: "BrawloopはBrawl Starsプレイヤー向けの非公式ファン制作分析ツールです。Supercellとの提携、スポンサー、承認関係はなく、公式サービスではありません。",
             },
           ],
         },
@@ -885,7 +885,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "お問い合わせ",
         description:
-          "Brawl Status KRの不具合報告、機能提案、運営に関するお問い合わせ先です。",
+          "Brawloopの不具合報告、機能提案、運営に関するお問い合わせ先です。",
       },
       back: "戦績検索に戻る",
       title: "お問い合わせ",
@@ -918,12 +918,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Sobre o serviço",
         description:
-          "Conheça a busca de histórico, a análise de batalhas recentes, as recomendações de brawlers por mapa e o catálogo de skins do Brawl Status KR.",
+          "Conheça a busca de histórico, a análise de batalhas recentes, as recomendações de brawlers por mapa e o catálogo de skins do Brawloop.",
       },
       back: "Voltar à busca de jogador",
-      title: "Sobre o Brawl Status KR",
+      title: "Sobre o Brawloop",
       intro:
-        "O Brawl Status KR é uma ferramenta de análise feita por fãs para ajudar jogadores de Brawl Stars a consultar rapidamente seu histórico e o estado dos brawlers que possuem.",
+        "O Brawloop é uma ferramenta de análise feita por fãs para ajudar jogadores de Brawl Stars a consultar rapidamente seu histórico e o estado dos brawlers que possuem.",
       sections: [
         {
           title: "Principais recursos",
@@ -964,7 +964,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Metodologia",
         description:
-          "Explica as amostras baseadas em buscas, a deduplicação de batalhas, a agregação de partidas em equipe e Showdown e os limites da pontuação de recomendação do Brawl Status KR.",
+          "Explica as amostras baseadas em buscas, a deduplicação de batalhas, a agregação de partidas em equipe e Showdown e os limites da pontuação de recomendação do Brawloop.",
       },
       title: "Metodologia",
       eyebrow: "Metodologia",
@@ -1031,13 +1031,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Política de Privacidade",
         description:
-          "Informações sobre coleta e uso de dados, cookies, publicidade e APIs externas no Brawl Status KR.",
+          "Informações sobre coleta e uso de dados, cookies, publicidade e APIs externas no Brawloop.",
       },
       back: "Voltar à busca de jogador",
       title: "Política de Privacidade",
       effectiveDate: "Data de vigência: 22 de setembro de 2026",
       intro:
-        "O Brawl Status KR não coleta informações pessoais desnecessariamente e processa apenas o mínimo necessário para prestar e melhorar o serviço.",
+        "O Brawloop não coleta informações pessoais desnecessariamente e processa apenas o mínimo necessário para prestar e melhorar o serviço.",
       sections: [
         {
           title: "Informações coletadas",
@@ -1121,7 +1121,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Termos de Uso",
         description:
-          "Critérios de dados, aviso de serviço não oficial e escopo de responsabilidade ao usar o Brawl Status KR.",
+          "Critérios de dados, aviso de serviço não oficial e escopo de responsabilidade ao usar o Brawloop.",
       },
       back: "Voltar à busca de jogador",
       title: "Termos de Uso",
@@ -1131,7 +1131,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "O Brawl Status KR é uma ferramenta de análise não oficial feita por fãs para jogadores de Brawl Stars. Não possui vínculo, patrocínio ou aprovação da Supercell e não é um serviço oficial.",
+              text: "O Brawloop é uma ferramenta de análise não oficial feita por fãs para jogadores de Brawl Stars. Não possui vínculo, patrocínio ou aprovação da Supercell e não é um serviço oficial.",
             },
           ],
         },
@@ -1177,7 +1177,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Contato",
         description:
-          "Contato para relatar erros, sugerir recursos e tratar de questões operacionais do Brawl Status KR.",
+          "Contato para relatar erros, sugerir recursos e tratar de questões operacionais do Brawloop.",
       },
       back: "Voltar à busca de jogador",
       title: "Contato",
@@ -1210,12 +1210,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Acerca del servicio",
         description:
-          "Conoce la búsqueda de historial, el análisis de batallas recientes, las recomendaciones de brawlers por mapa y el catálogo de aspectos de Brawl Status KR.",
+          "Conoce la búsqueda de historial, el análisis de batallas recientes, las recomendaciones de brawlers por mapa y el catálogo de aspectos de Brawloop.",
       },
       back: "Volver a la búsqueda de jugador",
-      title: "Acerca de Brawl Status KR",
+      title: "Acerca de Brawloop",
       intro:
-        "Brawl Status KR es una herramienta de análisis creada por fans para que los jugadores de Brawl Stars consulten rápidamente su historial y el estado de los brawlers que poseen.",
+        "Brawloop es una herramienta de análisis creada por fans para que los jugadores de Brawl Stars consulten rápidamente su historial y el estado de los brawlers que poseen.",
       sections: [
         {
           title: "Funciones principales",
@@ -1256,7 +1256,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Metodología",
         description:
-          "Explica las muestras basadas en búsquedas, la deduplicación de batallas, el cálculo de partidas por equipos y Showdown y los límites de la puntuación de recomendación de Brawl Status KR.",
+          "Explica las muestras basadas en búsquedas, la deduplicación de batallas, el cálculo de partidas por equipos y Showdown y los límites de la puntuación de recomendación de Brawloop.",
       },
       title: "Metodología",
       eyebrow: "Metodología",
@@ -1323,13 +1323,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Política de Privacidad",
         description:
-          "Información sobre la recopilación y el uso de datos, cookies, publicidad y APIs externas en Brawl Status KR.",
+          "Información sobre la recopilación y el uso de datos, cookies, publicidad y APIs externas en Brawloop.",
       },
       back: "Volver a la búsqueda de jugador",
       title: "Política de Privacidad",
       effectiveDate: "Fecha de entrada en vigor: 22 de septiembre de 2026",
       intro:
-        "Brawl Status KR no recopila información personal de forma innecesaria y solo procesa la información mínima necesaria para prestar y mejorar el servicio.",
+        "Brawloop no recopila información personal de forma innecesaria y solo procesa la información mínima necesaria para prestar y mejorar el servicio.",
       sections: [
         {
           title: "Información que recopilamos",
@@ -1413,7 +1413,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Condiciones de Uso",
         description:
-          "Criterios de datos, aviso de servicio no oficial y alcance de responsabilidad al usar Brawl Status KR.",
+          "Criterios de datos, aviso de servicio no oficial y alcance de responsabilidad al usar Brawloop.",
       },
       back: "Volver a la búsqueda de jugador",
       title: "Condiciones de Uso",
@@ -1423,7 +1423,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KR es una herramienta de análisis no oficial creada por fans para jugadores de Brawl Stars. No está afiliada, patrocinada ni aprobada por Supercell y no es un servicio oficial.",
+              text: "Brawloop es una herramienta de análisis no oficial creada por fans para jugadores de Brawl Stars. No está afiliada, patrocinada ni aprobada por Supercell y no es un servicio oficial.",
             },
           ],
         },
@@ -1469,7 +1469,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Contacto",
         description:
-          "Información de contacto para reportar errores, proponer funciones y realizar consultas sobre Brawl Status KR.",
+          "Información de contacto para reportar errores, proponer funciones y realizar consultas sobre Brawloop.",
       },
       back: "Volver a la búsqueda de jugador",
       title: "Contacto",
@@ -1502,12 +1502,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Hizmet Hakkında",
         description:
-          "Brawl Status KR'nin oyuncu arama, son savaş analizi, haritaya göre brawler önerileri ve kostüm kataloğu özelliklerini tanıyın.",
+          "Brawloop'nin oyuncu arama, son savaş analizi, haritaya göre brawler önerileri ve kostüm kataloğu özelliklerini tanıyın.",
       },
       back: "Oyuncu aramasına dön",
-      title: "Brawl Status KR Hakkında",
+      title: "Brawloop Hakkında",
       intro:
-        "Brawl Status KR, Brawl Stars oyuncularının savaş geçmişlerini ve sahip oldukları brawler durumunu hızlıca kontrol etmesine yardımcı olan hayran yapımı bir analiz aracıdır.",
+        "Brawloop, Brawl Stars oyuncularının savaş geçmişlerini ve sahip oldukları brawler durumunu hızlıca kontrol etmesine yardımcı olan hayran yapımı bir analiz aracıdır.",
       sections: [
         {
           title: "Başlıca özellikler",
@@ -1548,7 +1548,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Hesaplama Yöntemi",
         description:
-          "Brawl Status KR'nin arama temelli örneklemini, savaş tekilleştirmesini, takım savaşları ve Showdown hesaplamasını ve öneri puanının sınırlarını açıklar.",
+          "Brawloop'nin arama temelli örneklemini, savaş tekilleştirmesini, takım savaşları ve Showdown hesaplamasını ve öneri puanının sınırlarını açıklar.",
       },
       title: "Hesaplama Yöntemi",
       eyebrow: "Metodoloji",
@@ -1615,13 +1615,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Gizlilik Politikası",
         description:
-          "Brawl Status KR'de veri toplama ve kullanma, çerezler, reklamlar ve harici API kullanımı hakkında bilgi.",
+          "Brawloop'de veri toplama ve kullanma, çerezler, reklamlar ve harici API kullanımı hakkında bilgi.",
       },
       back: "Oyuncu aramasına dön",
       title: "Gizlilik Politikası",
       effectiveDate: "Yürürlük tarihi: 22 Eylül 2026",
       intro:
-        "Brawl Status KR gereksiz kişisel bilgi toplamaz ve yalnızca hizmeti sunmak ve iyileştirmek için gereken asgari bilgileri işler.",
+        "Brawloop gereksiz kişisel bilgi toplamaz ve yalnızca hizmeti sunmak ve iyileştirmek için gereken asgari bilgileri işler.",
       sections: [
         {
           title: "Topladığımız bilgiler",
@@ -1705,7 +1705,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Kullanım Koşulları",
         description:
-          "Brawl Status KR kullanımı için veri ölçütleri, resmî olmayan hizmet bildirimi ve sorumluluk kapsamı.",
+          "Brawloop kullanımı için veri ölçütleri, resmî olmayan hizmet bildirimi ve sorumluluk kapsamı.",
       },
       back: "Oyuncu aramasına dön",
       title: "Kullanım Koşulları",
@@ -1715,7 +1715,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KR, Brawl Stars oyuncuları için resmî olmayan, hayran yapımı bir analiz aracıdır. Supercell ile bağlantısı, sponsorluğu veya onayı yoktur ve resmî bir hizmet değildir.",
+              text: "Brawloop, Brawl Stars oyuncuları için resmî olmayan, hayran yapımı bir analiz aracıdır. Supercell ile bağlantısı, sponsorluğu veya onayı yoktur ve resmî bir hizmet değildir.",
             },
           ],
         },
@@ -1761,7 +1761,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "İletişim",
         description:
-          "Brawl Status KR hata bildirimleri, özellik önerileri ve işletimle ilgili sorular için iletişim bilgileri.",
+          "Brawloop hata bildirimleri, özellik önerileri ve işletimle ilgili sorular için iletişim bilgileri.",
       },
       back: "Oyuncu aramasına dön",
       title: "İletişim",
@@ -1794,12 +1794,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Über den Dienst",
         description:
-          "Informationen zur Spielersuche, Analyse der letzten Kämpfe, kartenbezogenen Brawler-Empfehlungen und zum Skin-Katalog von Brawl Status KR.",
+          "Informationen zur Spielersuche, Analyse der letzten Kämpfe, kartenbezogenen Brawler-Empfehlungen und zum Skin-Katalog von Brawloop.",
       },
       back: "Zurück zur Spielersuche",
-      title: "Über Brawl Status KR",
+      title: "Über Brawloop",
       intro:
-        "Brawl Status KR ist ein von Fans erstelltes Analysewerkzeug, mit dem Brawl-Stars-Spieler schnell ihren Kampfverlauf und den Status ihrer Brawler prüfen können.",
+        "Brawloop ist ein von Fans erstelltes Analysewerkzeug, mit dem Brawl-Stars-Spieler schnell ihren Kampfverlauf und den Status ihrer Brawler prüfen können.",
       sections: [
         {
           title: "Hauptfunktionen",
@@ -1840,7 +1840,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Berechnungsmethode",
         description:
-          "Erläutert Suchstichproben, Kampf-Deduplizierung, Auswertung von Teamkämpfen und Showdown sowie die Grenzen der Empfehlungswerte von Brawl Status KR.",
+          "Erläutert Suchstichproben, Kampf-Deduplizierung, Auswertung von Teamkämpfen und Showdown sowie die Grenzen der Empfehlungswerte von Brawloop.",
       },
       title: "Berechnungsmethode",
       eyebrow: "Methodik",
@@ -1907,13 +1907,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Datenschutzerklärung",
         description:
-          "Informationen zur Erhebung und Nutzung von Daten, zu Cookies, Werbung und externen APIs bei Brawl Status KR.",
+          "Informationen zur Erhebung und Nutzung von Daten, zu Cookies, Werbung und externen APIs bei Brawloop.",
       },
       back: "Zurück zur Spielersuche",
       title: "Datenschutzerklärung",
       effectiveDate: "Gültig ab: 22. September 2026",
       intro:
-        "Brawl Status KR erhebt personenbezogene Daten nicht unnötig und verarbeitet nur die Mindestinformationen, die für die Bereitstellung und Verbesserung des Dienstes erforderlich sind.",
+        "Brawloop erhebt personenbezogene Daten nicht unnötig und verarbeitet nur die Mindestinformationen, die für die Bereitstellung und Verbesserung des Dienstes erforderlich sind.",
       sections: [
         {
           title: "Erhobene Informationen",
@@ -1997,7 +1997,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Nutzungshinweise",
         description:
-          "Datengrundlagen, Hinweis zum inoffiziellen Dienst und Verantwortungsumfang bei der Nutzung von Brawl Status KR.",
+          "Datengrundlagen, Hinweis zum inoffiziellen Dienst und Verantwortungsumfang bei der Nutzung von Brawloop.",
       },
       back: "Zurück zur Spielersuche",
       title: "Nutzungshinweise",
@@ -2007,7 +2007,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KR ist ein inoffizielles, von Fans erstelltes Analysewerkzeug für Brawl-Stars-Spieler. Es besteht keine Verbindung zu, kein Sponsoring durch und keine Genehmigung von Supercell; der Dienst ist nicht offiziell.",
+              text: "Brawloop ist ein inoffizielles, von Fans erstelltes Analysewerkzeug für Brawl-Stars-Spieler. Es besteht keine Verbindung zu, kein Sponsoring durch und keine Genehmigung von Supercell; der Dienst ist nicht offiziell.",
             },
           ],
         },
@@ -2053,7 +2053,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Kontakt",
         description:
-          "Kontaktinformationen für Fehlermeldungen, Funktionsvorschläge und betriebliche Fragen zu Brawl Status KR.",
+          "Kontaktinformationen für Fehlermeldungen, Funktionsvorschläge und betriebliche Fragen zu Brawloop.",
       },
       back: "Zurück zur Spielersuche",
       title: "Kontakt",
@@ -2086,12 +2086,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "À propos du service",
         description:
-          "Découvrez la recherche de profil, l'analyse des combats récents, les recommandations de brawlers par carte et le catalogue de skins de Brawl Status KR.",
+          "Découvrez la recherche de profil, l'analyse des combats récents, les recommandations de brawlers par carte et le catalogue de skins de Brawloop.",
       },
       back: "Retour à la recherche de joueur",
-      title: "À propos de Brawl Status KR",
+      title: "À propos de Brawloop",
       intro:
-        "Brawl Status KR est un outil d'analyse créé par des fans qui permet aux joueurs de Brawl Stars de consulter rapidement leur historique et l'état des brawlers qu'ils possèdent.",
+        "Brawloop est un outil d'analyse créé par des fans qui permet aux joueurs de Brawl Stars de consulter rapidement leur historique et l'état des brawlers qu'ils possèdent.",
       sections: [
         {
           title: "Fonctionnalités principales",
@@ -2132,7 +2132,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Méthodologie",
         description:
-          "Explique l'échantillonnage lié aux recherches, la déduplication des combats, l'agrégation des combats en équipe et du Showdown ainsi que les limites du score de recommandation de Brawl Status KR.",
+          "Explique l'échantillonnage lié aux recherches, la déduplication des combats, l'agrégation des combats en équipe et du Showdown ainsi que les limites du score de recommandation de Brawloop.",
       },
       title: "Méthodologie",
       eyebrow: "Méthodologie",
@@ -2199,13 +2199,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Politique de confidentialité",
         description:
-          "Informations sur la collecte et l'utilisation des données, les cookies, la publicité et les API externes de Brawl Status KR.",
+          "Informations sur la collecte et l'utilisation des données, les cookies, la publicité et les API externes de Brawloop.",
       },
       back: "Retour à la recherche de joueur",
       title: "Politique de confidentialité",
       effectiveDate: "Date d'entrée en vigueur : 22 septembre 2026",
       intro:
-        "Brawl Status KR ne collecte pas inutilement de données personnelles et ne traite que les informations minimales nécessaires au fonctionnement et à l'amélioration du service.",
+        "Brawloop ne collecte pas inutilement de données personnelles et ne traite que les informations minimales nécessaires au fonctionnement et à l'amélioration du service.",
       sections: [
         {
           title: "Informations collectées",
@@ -2289,7 +2289,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Conditions d'utilisation",
         description:
-          "Référentiel des données, avis de service non officiel et étendue de responsabilité lors de l'utilisation de Brawl Status KR.",
+          "Référentiel des données, avis de service non officiel et étendue de responsabilité lors de l'utilisation de Brawloop.",
       },
       back: "Retour à la recherche de joueur",
       title: "Conditions d'utilisation",
@@ -2299,7 +2299,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KR est un outil d'analyse non officiel créé par des fans pour les joueurs de Brawl Stars. Il n'est ni affilié, ni sponsorisé, ni approuvé par Supercell et ne constitue pas un service officiel.",
+              text: "Brawloop est un outil d'analyse non officiel créé par des fans pour les joueurs de Brawl Stars. Il n'est ni affilié, ni sponsorisé, ni approuvé par Supercell et ne constitue pas un service officiel.",
             },
           ],
         },
@@ -2345,7 +2345,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Contact",
         description:
-          "Coordonnées pour signaler des bugs, proposer des fonctionnalités et poser des questions sur le fonctionnement de Brawl Status KR.",
+          "Coordonnées pour signaler des bugs, proposer des fonctionnalités et poser des questions sur le fonctionnement de Brawloop.",
       },
       back: "Retour à la recherche de joueur",
       title: "Contact",
@@ -2378,12 +2378,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Informazioni sul servizio",
         description:
-          "Scopri la ricerca dei profili, l'analisi delle battaglie recenti, i consigli dei brawler per mappa e il catalogo skin di Brawl Status KR.",
+          "Scopri la ricerca dei profili, l'analisi delle battaglie recenti, i consigli dei brawler per mappa e il catalogo skin di Brawloop.",
       },
       back: "Torna alla ricerca giocatore",
-      title: "Informazioni su Brawl Status KR",
+      title: "Informazioni su Brawloop",
       intro:
-        "Brawl Status KR è uno strumento di analisi creato dai fan che aiuta i giocatori di Brawl Stars a controllare rapidamente la cronologia delle battaglie e lo stato dei brawler posseduti.",
+        "Brawloop è uno strumento di analisi creato dai fan che aiuta i giocatori di Brawl Stars a controllare rapidamente la cronologia delle battaglie e lo stato dei brawler posseduti.",
       sections: [
         {
           title: "Funzioni principali",
@@ -2424,7 +2424,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Metodologia",
         description:
-          "Spiega i campioni basati sulle ricerche, la deduplicazione delle battaglie, il calcolo delle battaglie a squadre e Showdown e i limiti del punteggio di consiglio di Brawl Status KR.",
+          "Spiega i campioni basati sulle ricerche, la deduplicazione delle battaglie, il calcolo delle battaglie a squadre e Showdown e i limiti del punteggio di consiglio di Brawloop.",
       },
       title: "Metodologia",
       eyebrow: "Metodologia",
@@ -2491,13 +2491,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Informativa sulla privacy",
         description:
-          "Informazioni sulla raccolta e l'uso dei dati, sui cookie, sulla pubblicità e sulle API esterne di Brawl Status KR.",
+          "Informazioni sulla raccolta e l'uso dei dati, sui cookie, sulla pubblicità e sulle API esterne di Brawloop.",
       },
       back: "Torna alla ricerca giocatore",
       title: "Informativa sulla privacy",
       effectiveDate: "Data di entrata in vigore: 22 settembre 2026",
       intro:
-        "Brawl Status KR non raccoglie dati personali inutilmente e tratta solo le informazioni minime necessarie per fornire e migliorare il servizio.",
+        "Brawloop non raccoglie dati personali inutilmente e tratta solo le informazioni minime necessarie per fornire e migliorare il servizio.",
       sections: [
         {
           title: "Informazioni raccolte",
@@ -2581,7 +2581,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Condizioni d'uso",
         description:
-          "Criteri dei dati, avviso di servizio non ufficiale e ambito di responsabilità nell'uso di Brawl Status KR.",
+          "Criteri dei dati, avviso di servizio non ufficiale e ambito di responsabilità nell'uso di Brawloop.",
       },
       back: "Torna alla ricerca giocatore",
       title: "Condizioni d'uso",
@@ -2591,7 +2591,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KR è uno strumento di analisi non ufficiale creato dai fan per i giocatori di Brawl Stars. Non è affiliato, sponsorizzato o approvato da Supercell e non è un servizio ufficiale.",
+              text: "Brawloop è uno strumento di analisi non ufficiale creato dai fan per i giocatori di Brawl Stars. Non è affiliato, sponsorizzato o approvato da Supercell e non è un servizio ufficiale.",
             },
           ],
         },
@@ -2637,7 +2637,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Contatti",
         description:
-          "Recapiti per segnalare bug, proporre funzioni e inviare richieste operative su Brawl Status KR.",
+          "Recapiti per segnalare bug, proporre funzioni e inviare richieste operative su Brawloop.",
       },
       back: "Torna alla ricerca giocatore",
       title: "Contatti",
@@ -2670,12 +2670,12 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "О сервисе",
         description:
-          "Описание поиска статистики, анализа недавних боёв, рекомендаций бойцов по картам и каталога скинов Brawl Status KR.",
+          "Описание поиска статистики, анализа недавних боёв, рекомендаций бойцов по картам и каталога скинов Brawloop.",
       },
       back: "Вернуться к поиску игрока",
-      title: "О Brawl Status KR",
+      title: "О Brawloop",
       intro:
-        "Brawl Status KR — созданный фанатами аналитический инструмент, который помогает игрокам Brawl Stars быстро проверять историю боёв и состояние имеющихся бойцов.",
+        "Brawloop — созданный фанатами аналитический инструмент, который помогает игрокам Brawl Stars быстро проверять историю боёв и состояние имеющихся бойцов.",
       sections: [
         {
           title: "Основные возможности",
@@ -2716,7 +2716,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Методика расчёта",
         description:
-          "Описание поисковой выборки Brawl Status KR, устранения дублей боёв, учёта командных боёв и Showdown и ограничений рекомендательного рейтинга.",
+          "Описание поисковой выборки Brawloop, устранения дублей боёв, учёта командных боёв и Showdown и ограничений рекомендательного рейтинга.",
       },
       title: "Методика расчёта",
       eyebrow: "Методология",
@@ -2783,13 +2783,13 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Политика конфиденциальности",
         description:
-          "Информация о сборе и использовании данных, cookie, рекламе и внешних API в Brawl Status KR.",
+          "Информация о сборе и использовании данных, cookie, рекламе и внешних API в Brawloop.",
       },
       back: "Вернуться к поиску игрока",
       title: "Политика конфиденциальности",
       effectiveDate: "Дата вступления в силу: 22 сентября 2026 г.",
       intro:
-        "Brawl Status KR не собирает лишние персональные данные и обрабатывает только минимальный объём информации, необходимый для работы и улучшения сервиса.",
+        "Brawloop не собирает лишние персональные данные и обрабатывает только минимальный объём информации, необходимый для работы и улучшения сервиса.",
       sections: [
         {
           title: "Какие данные мы собираем",
@@ -2873,7 +2873,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Условия использования",
         description:
-          "Правила данных, уведомление о неофициальном сервисе и пределы ответственности при использовании Brawl Status KR.",
+          "Правила данных, уведомление о неофициальном сервисе и пределы ответственности при использовании Brawloop.",
       },
       back: "Вернуться к поиску игрока",
       title: "Условия использования",
@@ -2883,7 +2883,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
           blocks: [
             {
               type: "paragraph",
-              text: "Brawl Status KR — неофициальный аналитический инструмент, созданный фанатами для игроков Brawl Stars. Он не связан с Supercell, не спонсируется и не одобрен ею и не является официальным сервисом.",
+              text: "Brawloop — неофициальный аналитический инструмент, созданный фанатами для игроков Brawl Stars. Он не связан с Supercell, не спонсируется и не одобрен ею и не является официальным сервисом.",
             },
           ],
         },
@@ -2929,7 +2929,7 @@ export const documentPageMessages: Record<Locale, DocumentPageMessages> = {
       metadata: {
         title: "Контакты",
         description:
-          "Контактная информация для сообщений об ошибках, предложений функций и вопросов по работе Brawl Status KR.",
+          "Контактная информация для сообщений об ошибках, предложений функций и вопросов по работе Brawloop.",
       },
       back: "Вернуться к поиску игрока",
       title: "Контакты",

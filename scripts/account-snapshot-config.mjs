@@ -15,6 +15,7 @@ export const ACCOUNT_SNAPSHOT_TABLES = Object.freeze([
   "account_deletion_tombstones", "account_schema_migrations",
   "competitive_aliases", "competitive_rounds", "competitive_results",
   "community_profiles", "community_posts", "community_comments", "community_moderation_log",
+  "community_image_objects", "community_images",
 ]);
 
 export function readAccountSnapshotConfig(env, repoRoot = process.cwd()) {

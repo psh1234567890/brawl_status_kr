@@ -4,6 +4,7 @@ import {
   accountJson,
 } from "../../../../server/accountHttp";
 import { cleanupExpiredAccountData } from "../../../../server/accountMaintenance";
+import { cleanupCommunityImages } from "../../../../server/communityImages";
 
 export const runtime = "nodejs";
 
@@ -24,7 +25,9 @@ async function handle(request: Request) {
     return accountJson({ error: "UNAUTHORIZED" }, 401);
   }
   try {
-    return accountJson(await cleanupExpiredAccountData());
+    const accounts = await cleanupExpiredAccountData();
+    const images = await cleanupCommunityImages();
+    return accountJson({ ...accounts, images });
   } catch (error) {
     return accountErrorResponse(error);
   }

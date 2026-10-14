@@ -92,7 +92,7 @@ describe("account snapshot boundaries", () => {
   });
   it("accepts explicit 7/14 retention and only account-owned tables including community data", () => {
     expect(readAccountSnapshotConfig(configEnv()).policy).toMatchObject({ backupRetentionDays: 7, deletionManifestRetentionDays: 14 });
-    expect(ACCOUNT_SNAPSHOT_TABLES).toHaveLength(16);
+    expect(ACCOUNT_SNAPSHOT_TABLES).toHaveLength(18);
     expect(ACCOUNT_SNAPSHOT_TABLES).toEqual(expect.arrayContaining(["community_profiles", "community_posts", "community_comments", "community_moderation_log"]));
     expect(ACCOUNT_SNAPSHOT_TABLES).not.toContain("students");
     expect(ACCOUNT_SNAPSHOT_TABLES).not.toContain("battle_logs");

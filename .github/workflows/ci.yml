@@ -103,6 +103,7 @@ jobs:
         env:
           CI: "1"
           MINIGAMES_E2E_FIXTURES: "1"
+          COMMUNITY_IMAGE_TEST_STORAGE: "1"
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
           BETTER_AUTH_URL: http://localhost:3020
           BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-for-any-deployment

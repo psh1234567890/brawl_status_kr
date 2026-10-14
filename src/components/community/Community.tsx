@@ -7,7 +7,9 @@ import { useAccount } from "../../hooks/useAccount";
 import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { getCommunityMessages } from "../../i18n/communityMessages";
 import { getCommunityFormMessages } from "../../i18n/communityFormMessages";
-import { isCommunityId, validateCommunityComment, validateCommunityPost, type CommunityEntry, type CommunityStatus } from "../../utils/community";
+import { communityImageError, getCommunityImageMessages } from "../../i18n/communityImageMessages";
+import { CommunityPhotoPicker, EvidencePhotos } from "./CommunityPhotos";
+import { isCommunityId, validateCommunityComment, validateCommunityPost, type CommunityEntry, type CommunityImage, type CommunityStatus } from "../../utils/community";
 import styles from "./community.module.css";
 
 export async function communityRequest<T>(url: string, method = "GET", body?: unknown, signal?: AbortSignal): Promise<T> {
@@ -64,6 +66,7 @@ function errorMessage(error: unknown, locale: Locale) {
   if (code === "ONBOARDING_REQUIRED") return copy.onboarding;
   if (code === "EVIDENCE_REQUIRED" || code === "INVALID_EVIDENCE") return copy.evidenceHint;
   if (code === "RULES_REQUIRED") return copy.acceptRules;
+  if (["INVALID_IMAGES", "TOO_MANY_EVIDENCE", "IMAGE_EXPIRED"].includes(code)) return communityImageError(code, locale);
   if (code === "RATE_LIMITED") return copy.postingLimit;
   return copy.error;
 }
@@ -111,14 +114,17 @@ export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [invalidField, setInvalidField] = useState("");
+  const [images, setImages] = useState<CommunityImage[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [photoReset, setPhotoReset] = useState(0);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    if (busy) return;
+    if (busy || uploading) return;
     setError(""); setInvalidField("");
     const body = { expectedUserId: userId, body: String(data.get("body") ?? ""),
-      evidenceUrls: String(data.get("evidence") ?? "").split(/\r?\n/).map(value => value.trim()).filter(Boolean), acceptRules: data.get("acceptRules") === "on",
+      imageIds: images.map(image => image.id), evidenceUrls: String(data.get("evidence") ?? "").split(/\r?\n/).map(value => value.trim()).filter(Boolean), acceptRules: data.get("acceptRules") === "on",
       ...(postId ? { kind: data.get("kind") } : { title: data.get("title"), locale, confirmIntent: data.get("confirmIntent") === "on" }) };
     try {
       if (postId) validateCommunityComment(body); else validateCommunityPost(body);
@@ -135,7 +141,7 @@ export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale:
     try {
       const result = await communityRequest<{ id: string }>(postId ? `/api/community/posts/${postId}/comments` : "/api/community/posts", "POST", body);
       if (!isCommunityId(result.id)) throw new Error("UNAVAILABLE");
-      form.reset(); onSubmitted(result.id);
+      form.reset(); setImages([]); setPhotoReset(value => value + 1); onSubmitted(result.id);
     } catch (cause) { setError(errorMessage(cause, locale)); }
     finally { setBusy(false); }
   }
@@ -143,12 +149,13 @@ export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale:
     {postId ? <label className={styles.field}>{copy.comments}<select name="kind" defaultValue="opinion"><option value="opinion">{copy.opinion}</option><option value="correction">{copy.correction}</option></select></label>
       : <><label className={styles.field}>{copy.titleLabel}<input name="title" required minLength={4} maxLength={100} aria-describedby={`${formId}-title-hint${invalidField === "title" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "title"} /></label><small id={`${formId}-title-hint`}>{hints.titleHint}</small></>}
     <label className={styles.field}>{postId ? copy.commentLabel : copy.bodyLabel}<textarea name="body" required minLength={postId ? 2 : 20} maxLength={postId ? 2000 : 4000} aria-describedby={`${formId}-body-hint${invalidField === "body" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "body"} /></label><small id={`${formId}-body-hint`}>{postId ? hints.commentHint : hints.bodyHint}</small>
-    <label className={styles.field}>{copy.evidenceLabel}<textarea className={styles.linksInput} name="evidence" required={!postId} maxLength={3002} spellCheck={false} autoCapitalize="off" placeholder="https://…" aria-invalid={invalidField === "evidence"} aria-describedby={`${formId}-evidence-hint${invalidField === "evidence" ? ` ${formId}-error` : ""}`} /><small id={`${formId}-evidence-hint`}>{copy.evidenceHint}</small></label>
+    <CommunityPhotoPicker key={photoReset} locale={locale} userId={userId} disabled={busy} onChange={setImages} onBusy={setUploading} />
+    <label className={styles.field}>{copy.evidenceLabel}<textarea className={styles.linksInput} name="evidence" maxLength={3002} spellCheck={false} autoCapitalize="off" placeholder="https://…" aria-invalid={invalidField === "evidence"} aria-describedby={`${formId}-evidence-hint${invalidField === "evidence" ? ` ${formId}-error` : ""}`} /><small id={`${formId}-evidence-hint`}>{copy.evidenceHint}</small></label>
     <p className={styles.notice}>{copy.publicNotice}</p>
     {!postId && <label className={styles.check}><input type="checkbox" name="confirmIntent" required />{copy.confirmIntent}</label>}
     <label className={styles.check}><input type="checkbox" name="acceptRules" required />{copy.acceptRules}</label>
     {error && <p id={`${formId}-error`} role="alert" className={styles.error}>{error}</p>}
-    <button className={styles.primary} type="submit" disabled={busy}>{busy ? copy.loading : postId ? copy.submitComment : copy.submitPost}</button>
+    <button className={styles.primary} type="submit" disabled={busy || uploading}>{uploading ? getCommunityImageMessages(locale).uploading : busy ? copy.loading : postId ? copy.submitComment : copy.submitPost}</button>
     <p className={styles.notice}>{copy.reviewNotice} {copy.postingLimit}</p>
   </form>;
 }
@@ -180,13 +187,13 @@ export function CommunityPost({ id, locale }: { id: string; locale: Locale }) {
     {result.error && <p role="alert" className={styles.error}>{copy.unavailable}</p>}
     {post && <><article className={styles.row}><EntryMeta entry={post} locale={locale} /><h2>{post.title}</h2>
       {post.isOwner && post.status === "pending" && <p role="status" className={styles.success}>{copy.postSent}</p>}
-      <p className={styles.notice}>{copy.reviewNotice}</p><div className={styles.body}>{post.body}</div><EvidenceLinks urls={post.evidenceUrls} locale={locale} />
+      <p className={styles.notice}>{copy.reviewNotice}</p><div className={styles.body}>{post.body}</div><EvidencePhotos images={post.images} locale={locale} /><EvidenceLinks urls={post.evidenceUrls} locale={locale} />
       {post.filtered && <p className={styles.notice}>{copy.filtered}</p>}
       {post.moderationNote && <p className={styles.notice}>{post.moderationNote}</p>}
       {post.isOwner && userId && post.status !== "withdrawn" && <WithdrawButton entry={post} kind="post" userId={userId} locale={locale} onDone={refresh} />}
     </article><section className={styles.comments} aria-label={copy.comments}><h2>{copy.comments} {post.commentCount}</h2>
       {result.data?.comments.map(comment => <article key={comment.id} className={styles.comment} data-kind={comment.kind}>
-        <EntryMeta entry={comment} locale={locale} /><div className={styles.body}>{comment.body}</div><EvidenceLinks urls={comment.evidenceUrls} locale={locale} />
+        <EntryMeta entry={comment} locale={locale} /><div className={styles.body}>{comment.body}</div><EvidencePhotos images={comment.images} locale={locale} /><EvidenceLinks urls={comment.evidenceUrls} locale={locale} />
         {comment.filtered && <p className={styles.notice}>{copy.filtered}</p>}{comment.moderationNote && <p className={styles.notice}>{comment.moderationNote}</p>}
         {comment.isOwner && userId && comment.status !== "withdrawn" && <WithdrawButton entry={comment} kind="comment" userId={userId} locale={locale} onDone={refresh} />}
       </article>)}
@@ -198,7 +205,7 @@ export function CommunityPost({ id, locale }: { id: string; locale: Locale }) {
     </section></>}
   </section>;
 }
-export type CommunityAdminEntry = CommunityEntry & { rawTitle: string; rawBody: string; parentBody?: string; parentEvidenceUrls?: string[]; parentStatus?: CommunityStatus };
+export type CommunityAdminEntry = CommunityEntry & { rawTitle: string; rawBody: string; parentBody?: string; parentEvidenceUrls?: string[]; parentImages?: CommunityImage[]; parentStatus?: CommunityStatus };
 export function CommunityModeration() {
   const account = useAccount();
   const userId = account.account?.id;
@@ -226,8 +233,8 @@ function ModerationEntry({ entry, kind, userId, onDone }: { entry: CommunityAdmi
     finally { setBusy(false); }
   }
   return <article className={styles.adminEntry}><EntryMeta entry={entry} locale="ko" /><h2>{kind === "post" ? "글" : entry.kind === "correction" ? "반론·정정 댓글" : "댓글"}: {entry.rawTitle}</h2>
-    <p className={styles.body}>{entry.rawBody}</p><EvidenceLinks urls={entry.evidenceUrls} locale="ko" />
-    {kind === "comment" && <details className={styles.rules}><summary>원글과 증거 확인</summary><p className={styles.body}>{entry.parentBody}</p><EvidenceLinks urls={entry.parentEvidenceUrls ?? []} locale="ko" /></details>}
+    <p className={styles.body}>{entry.rawBody}</p><EvidencePhotos images={entry.images} locale="ko" /><EvidenceLinks urls={entry.evidenceUrls} locale="ko" />
+    {kind === "comment" && <details className={styles.rules}><summary>원글과 증거 확인</summary><p className={styles.body}>{entry.parentBody}</p><EvidencePhotos images={entry.parentImages ?? []} locale="ko" /><EvidenceLinks urls={entry.parentEvidenceUrls ?? []} locale="ko" /></details>}
     {(kind === "post" ? entry.status : entry.parentStatus) === "published" && <Link href={`/community/${entry.postId}`} className={styles.secondary}>공개 글 열기</Link>}
     <form onSubmit={event => void submit(event)}><label className={styles.field}>처리<select name="status" defaultValue="published"><option value="published">공개 승인</option><option value="rejected">반려</option><option value="hidden">공개 중단</option></select></label>
       <label className={styles.field}>검토 사유<input name="note" required minLength={2} maxLength={1000} /></label><button className={styles.primary} disabled={busy}>처리</button></form>

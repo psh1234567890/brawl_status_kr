@@ -47,6 +47,9 @@ export const ACCOUNT_USER_RATE_LIMIT_SCOPES = [
   "community-comment-user-hour",
   "community-withdraw-user-hour",
   "community-moderate-user-hour",
+  "community-image-attempt-user-hour",
+  "community-image-user-hour",
+  "community-image-delete-user-hour",
 ] as const;
 
 export async function consumeAccountRateLimits(

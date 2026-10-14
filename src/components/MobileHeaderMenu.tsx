@@ -7,6 +7,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { localizedHref, type Locale } from "../i18n/config";
 import { getMessages } from "../i18n/messages";
 import { compareNavLabels } from "../i18n/playerComparisonMessages";
+import { getCommunityMessages } from "../i18n/communityMessages";
 import { isActiveNavigationItem } from "../utils/navigation";
 
 const menuLabels: Record<Locale, string> = {
@@ -25,6 +26,7 @@ export default function MobileHeaderMenu({ locale, allSizes = false }: { locale:
     ["/meta", copy.meta],
     ["/events", copy.events],
     ["/minigames", copy.minigames],
+    ["/community", getCommunityMessages(locale).nav],
     ["/brawlers", copy.brawlers],
     ["/maps", copy.maps],
     ["/gamemodes", copy.modes],

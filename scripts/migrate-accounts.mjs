@@ -24,6 +24,10 @@ const ACCOUNT_MIGRATIONS = [
     version: "0017_verified_comparison_rankings",
     file: fileURLToPath(new URL("../drizzle/0017_verified_comparison_rankings.sql", import.meta.url)),
   },
+  {
+    version: "0020_community_posts_comments",
+    file: fileURLToPath(new URL("../drizzle/0020_community_posts_comments.sql", import.meta.url)),
+  },
 ];
 const ACCOUNT_LOCK_NAMESPACE = 9172381;
 const ACCOUNT_LOCK_ID = 3;

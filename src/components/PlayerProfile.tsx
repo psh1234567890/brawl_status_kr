@@ -102,7 +102,7 @@ export default function PlayerProfile({
 
       <details className="group pb-3 sm:pb-6">
         <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-black text-blue-800 transition-colors hover:border-blue-400 hover:bg-blue-100 group-open:border-blue-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
-          <span className="flex items-center gap-2.5"><StatSymbol kind="trophy" size={20} />{hubCopy.details}</span>
+          <span className="flex items-center gap-2.5"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 19h16M7 15v-4m5 4V5m5 10V8" /></svg>{hubCopy.details}</span>
           <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none"><path d="m6 9 6 6 6-6" /></svg>
         </summary>
       <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4">

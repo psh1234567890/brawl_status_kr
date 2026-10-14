@@ -101,9 +101,9 @@ export default function PlayerProfile({
       </div>
 
       <details className="group pb-3 sm:pb-6">
-        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2 text-sm font-black text-blue-800 transition-colors hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
-          {hubCopy.details}
-          <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
+        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-black text-blue-800 transition-colors hover:border-blue-400 hover:bg-blue-100 group-open:border-blue-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
+          <span className="flex items-center gap-2.5"><StatSymbol kind="trophy" size={20} />{hubCopy.details}</span>
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none"><path d="m6 9 6 6 6-6" /></svg>
         </summary>
       <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4">
         <Stat label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="trophy" />} />

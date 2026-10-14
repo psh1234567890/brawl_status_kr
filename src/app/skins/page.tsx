@@ -1,16 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
 import StatSymbol from "../../components/StatSymbol";
-import LanguageSwitcher from "../../components/LanguageSwitcher";
+import PortalLayout from "../../components/PortalLayout";
+import styles from "./catalog.module.css";
 
 import {
   generatedSkinCatalog,
   type GeneratedSkinCatalogItem,
 } from "../../constants/generatedSkinCatalog";
-import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
+import { numberLocales, type Locale } from "../../i18n/config";
 import { getCatalogPageMessages } from "../../i18n/catalogPageMessages";
 import { translateBrawlerName, translateSkinName } from "../../utils/brawlTranslations";
 import { replaceBrowserSearch, useBrowserSearch } from "../../utils/urlState";
@@ -208,27 +208,9 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8 sm:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-indigo-950 sm:text-4xl">{copy.title}</h1>
-            <p className="mt-2 text-sm font-bold text-indigo-700">
-              {copy.catalogCountPrefix} {generatedSkinCatalog.length.toLocaleString(numberLocales[locale])}{copy.catalogCountUnit}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={localizedHref(locale, "/")}
-              className="rounded-full border border-indigo-200 bg-white px-5 py-2 text-sm font-black text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50"
-            >
-              {copy.back}
-            </Link>
-            <LanguageSwitcher locale={locale} />
-          </div>
-        </div>
-
-        <section className="mb-5 rounded-lg border border-indigo-100 bg-white p-4 shadow-sm">
+    <PortalLayout locale={locale} title={copy.title}
+      description={`${copy.catalogCountPrefix} ${generatedSkinCatalog.length.toLocaleString(numberLocales[locale])}${copy.catalogCountUnit}`}>
+        <section className={styles.filters}>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
             <input
               type="search"
@@ -240,7 +222,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
                 replaceBrowserSearch({ q: value || null });
               }}
               placeholder={copy.searchPlaceholder}
-              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
+              className={styles.control}
             />
             <select
               aria-label={copy.brawlerAria}
@@ -250,7 +232,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
                 resetVisibleCount();
                 replaceBrowserSearch({ brawler: value === ALL ? null : value });
               }}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
+              className={styles.control}
             >
               <option value={ALL}>{copy.allBrawlers}</option>
               {brawlers.map(([id, name]) => (
@@ -267,7 +249,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
                 resetVisibleCount();
                 replaceBrowserSearch({ rarity: value === ALL ? null : value });
               }}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
+              className={styles.control}
             >
               <option value={ALL}>{copy.rarity.ALL}</option>
               {rarities.map((value) => (
@@ -284,7 +266,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
                 resetVisibleCount();
                 replaceBrowserSearch({ sale: value === "ALL" ? null : value });
               }}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
+              className={styles.control}
             >
               {saleStatuses.map((value) => (
                 <option key={value} value={value}>
@@ -300,7 +282,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
                 resetVisibleCount();
                 replaceBrowserSearch({ sort: value === "RARITY" ? null : value });
               }}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-800 outline-none focus:border-indigo-400"
+              className={styles.control}
             >
               {sortModes.map((value) => (
                 <option key={value} value={value}>
@@ -310,7 +292,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
             </select>
           </div>
 
-          <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-sm font-black text-indigo-950">
+          <label className="mt-2 inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold text-slate-700">
             <input
               type="checkbox"
               checked={hideDefaults}
@@ -319,13 +301,13 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
                 resetVisibleCount();
                 replaceBrowserSearch({ defaults: checked ? null : "show" });
               }}
-              className="h-4 w-4 accent-indigo-600"
+              className="h-4 w-4 accent-blue-600"
             />
             {copy.hideDefaults}
           </label>
         </section>
 
-        <section className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <section className={styles.summary}>
           <StatChip label={copy.stats.results} value={summary.total} locale={locale} />
           <StatChip label={copy.stats.onSale} value={summary.catalog} locale={locale} />
           <StatChip label={copy.stats.unavailable} value={summary.unavailable} locale={locale} />
@@ -333,57 +315,59 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
           <StatChip label={copy.stats.defaults} value={summary.defaults} locale={locale} />
         </section>
 
-        <p className="mb-4 text-sm font-bold text-gray-600">
-          {visibleSkins.length.toLocaleString(numberLocales[locale])}{copy.shownUnit}
-        </p>
+        <div className={styles.listHeading}>
+          <p>{visibleSkins.length.toLocaleString(numberLocales[locale])}{copy.shownUnit}</p>
+          <p>{copy.imageFallbackTitle}</p>
+        </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className={styles.grid}>
           {visibleSkins.map((skin) => {
             const displaySkinName = translateSkinName(skin.id, skin.name, locale);
             const displayBrawlerName = translateBrawlerName(skin.brawlerName, locale);
             return (
             <article
               key={skin.id}
-              className="min-w-0 overflow-hidden rounded-lg border border-white bg-white shadow-sm"
+              className={styles.skin}
             >
-              <div className="relative flex h-32 items-center justify-center bg-indigo-50">
-                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-1 text-[11px] font-black text-indigo-700">
+              <div className={styles.art}>
+                <span className={styles.skinId}>
                   #{skin.id}
                 </span>
                 <BrawlImage
                   src={`https://cdn.brawlify.com/brawlers/borders/${skin.brawlerId}.png`}
                   alt={displayBrawlerName}
-                  width={96}
-                  height={96}
-                  className="h-24 w-24 rounded-md object-contain"
+                  width={112}
+                  height={112}
+                  sizes="112px"
+                  className="h-24 w-24 rounded-lg object-contain sm:h-28 sm:w-28"
                   title={copy.imageFallbackTitle}
                 />
               </div>
-              <div className="p-4">
+              <div className={styles.info}>
                 <div className="mb-2 flex flex-wrap gap-1.5">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-1 text-[11px] font-black text-indigo-700">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700">
                     <StatSymbol kind="star" size={12} />
                     {copy.rarity[skin.rarity as keyof typeof copy.rarity] ?? skin.rarity}
                   </span>
                   <span
-                    className={`rounded-full px-2 py-1 text-[11px] font-black ${
+                    className={`text-[11px] font-semibold ${
                       skin.isCatalogReleased
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-gray-100 text-gray-600"
+                        ? "text-emerald-700"
+                        : "text-slate-500"
                     }`}
                   >
                     {getSaleLabel(skin, locale)}
                   </span>
                 </div>
-                <h2 className="truncate text-sm font-black text-gray-900" title={displaySkinName}>
+                <h2 className="text-sm font-extrabold leading-5 text-slate-900 sm:text-base" title={displaySkinName}>
                   {displaySkinName}
                 </h2>
-                <p className="mt-1 truncate text-xs font-bold text-indigo-700">{displayBrawlerName}</p>
-                <p className="mt-3 flex items-center gap-1.5 text-sm font-black text-gray-800">
+                <p className="mt-1 text-xs font-medium text-slate-500">{displayBrawlerName}</p>
+                <p className="mt-3 flex flex-wrap items-center gap-1.5 text-xs font-bold text-slate-800 sm:text-sm">
                   {skin.gems > 0 ? <StatSymbol kind="gem" size={15} className="text-emerald-600" /> : null}
                   {skin.bling > 0 ? <StatSymbol kind="bling" size={15} className="text-amber-600" /> : null}
                   {skin.coins > 0 ? <StatSymbol kind="coin" size={15} className="text-amber-600" /> : null}
-                  {!isPaidSkin(skin) ? <StatSymbol kind="skin" size={15} className="text-indigo-600" /> : null}
+                  {!isPaidSkin(skin) ? <StatSymbol kind="skin" size={15} className="text-blue-600" /> : null}
                   {formatPrice(skin, locale)}
                 </p>
               </div>
@@ -393,7 +377,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
         </div>
 
         {filteredSkins.length === 0 ? (
-          <p className="rounded-lg border border-indigo-100 bg-white p-8 text-center text-sm font-bold text-gray-500">
+          <p role="status" className="border-y border-slate-200 py-10 text-center text-sm text-slate-500">
             {copy.empty}
           </p>
         ) : null}
@@ -403,22 +387,21 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
             <button
               type="button"
               onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-              className="rounded-full bg-indigo-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
+              className="min-h-12 rounded-lg bg-blue-600 px-8 py-3 text-sm font-bold text-white hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             >
               {copy.more}
             </button>
           </div>
         ) : null}
-      </div>
-    </main>
+    </PortalLayout>
   );
 }
 
 function StatChip({ label, value, locale }: { label: string; value: number; locale: Locale }) {
   return (
-    <div className="rounded-lg border border-indigo-100 bg-white p-4 shadow-sm">
-      <p className="text-xs font-black text-indigo-600">{label}</p>
-      <p className="mt-1 text-2xl font-black text-indigo-950">{value.toLocaleString(numberLocales[locale])}</p>
+    <div>
+      <p>{label}</p>
+      <strong>{value.toLocaleString(numberLocales[locale])}</strong>
     </div>
   );
 }

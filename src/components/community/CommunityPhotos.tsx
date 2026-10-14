@@ -75,7 +75,7 @@ export function CommunityPhotoPicker({ locale, userId, disabled, onChange, onBus
     } catch (cause) {
       if (active.current) {
         const code = cause instanceof Error ? cause.message : "";
-        setError(code === "RATE_LIMITED" ? getCommunityMessages(locale).postingLimit : code === "LOGIN_REQUIRED" || code === "ACCOUNT_MISMATCH" ? getCommunityMessages(locale).loginNotice : communityImageError(code, locale));
+        setError(code === "LOGIN_REQUIRED" || code === "ACCOUNT_MISMATCH" ? getCommunityMessages(locale).loginNotice : communityImageError(code, locale));
       }
     } finally {
       if (active.current) { setBusy(false); onBusy(false); }

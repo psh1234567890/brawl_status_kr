@@ -13,8 +13,21 @@ const messages: Record<Locale, ImageCopy> = {
   ru: { label: "Фото-доказательства", hint: "JPG, PNG или WebP, до 8 МБ каждое. До 3 фото и ссылок суммарно. Достаточно только фото. Скройте данные посторонних.", add: "Выбрать фото", remove: "Удалить фото", uploading: "Подготовка фото…", type: "Выберите JPG, PNG или WebP. Видео добавляйте ссылкой.", size: "Выберите фото до 8 МБ каждое.", limit: "До 3 фото и ссылок на доказательства суммарно.", failed: "Не удалось загрузить фото. Выберите его снова.", expired: "Фото истекло или недоступно. Удалите и прикрепите заново.", alt: "Прикреплённое фото-доказательство", privacy: "Фото уменьшаются, метаданные местоположения удаляются. До проверки их видят только автор и модераторы. После одобрения они публикуются. Неотправленные фото истекают через 24 часа и удаляются при ежедневной очистке.", links: "Публичные ссылки YouTube, Vimeo, Imgur или Postimages, по одной в строке. До 3 фото и ссылок суммарно. При наличии фото ссылки необязательны." },
 };
 export const getCommunityImageMessages = (locale: Locale) => messages[locale];
+const uploadLimits: Record<Locale, string> = {
+  ko: "사진 업로드 한도에 도달했어요. 시간당 최대 9장이며, 잠시 후 다시 시도해 주세요.",
+  en: "Photo upload limit reached (up to 9 per hour). Please try again later.",
+  ja: "写真のアップロード上限です（1時間9枚まで）。時間をおいて再試行してください。",
+  "pt-br": "Limite de fotos atingido (até 9 por hora). Tente novamente mais tarde.",
+  es: "Límite de fotos alcanzado (hasta 9 por hora). Inténtalo más tarde.",
+  tr: "Fotoğraf yükleme sınırına ulaşıldı (saatte en fazla 9). Daha sonra tekrar dene.",
+  de: "Foto-Upload-Limit erreicht (bis zu 9 pro Stunde). Bitte später erneut versuchen.",
+  fr: "Limite de photos atteinte (jusqu’à 9 par heure). Réessaie plus tard.",
+  it: "Limite foto raggiunto (fino a 9 all’ora). Riprova più tardi.",
+  ru: "Достигнут лимит фото (до 9 в час). Повторите позже.",
+};
 export function communityImageError(code: string, locale: Locale) {
   const copy = messages[locale];
+  if (code === "RATE_LIMITED") return uploadLimits[locale];
   if (code === "INVALID_IMAGE_TYPE") return copy.type;
   if (code === "IMAGE_TOO_LARGE") return copy.size;
   if (code === "INVALID_IMAGES" || code === "TOO_MANY_EVIDENCE") return copy.limit;

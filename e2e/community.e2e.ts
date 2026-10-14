@@ -41,7 +41,7 @@ test("registered submissions and corrections stay private until administrator re
     await page.locator('input[name="confirmIntent"]').check();
     await page.locator('input[name="acceptRules"]').check();
     await page.getByRole("button", { name: "Submit for review", exact: true }).click();
-    await expect(page.getByRole("alert")).toHaveText("Enter a title of 4–100 characters.");
+    await expect(page.locator("form").getByRole("alert")).toHaveText("Enter a title of 4–100 characters.");
     await expect(page.getByRole("textbox", { name: "Title", exact: true })).toBeFocused();
     await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveAttribute("aria-invalid", "true");
     await expect(page.locator('textarea[name="body"]')).toHaveValue("Synthetic test evidence context; this is not an actual player report.");

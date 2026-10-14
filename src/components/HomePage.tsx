@@ -200,7 +200,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                     type="button"
                     aria-pressed={isFavorite}
                     onClick={() => search.toggleFavorite(search.playerData?.tag)}
-                    className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:flex-none ${isFavorite ? "border-blue-300 bg-blue-100 text-blue-900" : "border-slate-200 bg-white text-slate-800 hover:border-blue-300 hover:bg-blue-50"}`}
+                    className={`inline-flex min-h-11 min-w-24 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-black transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:flex-none ${isFavorite ? "border-blue-300 bg-blue-100 text-blue-900" : "border-slate-200 bg-white text-slate-800 hover:border-blue-300 hover:bg-blue-50"}`}
                   >
                     <StatSymbol kind="star" size={18} />
                     {isFavorite ? actionCopy.saved : actionCopy.save}
@@ -208,13 +208,13 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                   <button
                     type="button"
                     onClick={() => void shareProfile()}
-                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-800 transition-colors hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:flex-none"
+                    className="inline-flex min-h-11 min-w-24 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-800 transition-colors hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:flex-none"
                   >
                     <StatSymbol kind="chart" size={18} />
                     {shareFeedback === "copied" ? actionCopy.copied : actionCopy.share}
                   </button>
                   {shareFeedback === "failed" ? <span role="status" className="self-center text-xs font-bold text-rose-700">{actionCopy.failed}</span> : null}
-                  {cachedProfile?.previousTrophies !== undefined ? <span className="self-center text-xs font-bold text-slate-600">
+                  {cachedProfile?.previousTrophies !== undefined ? <span className="w-full self-center text-xs font-bold text-slate-600 sm:w-auto">
                     {profileReturnMessages[locale].previous} · {search.playerData.trophies - cachedProfile.previousTrophies > 0 ? "+" : ""}{(search.playerData.trophies - cachedProfile.previousTrophies).toLocaleString(numberLocales[locale])}
                     <StatSymbol kind="trophy" size={14} className="ml-1 inline" />
                   </span> : null}
@@ -231,7 +231,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                       type="button"
                       key={tab.id}
                       onClick={() => setActivePanel(tab.id)}
-                      className={`flex min-h-11 items-center justify-center gap-1 rounded-lg px-2 text-sm font-black transition-colors ${
+                      className={`flex min-h-11 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-2 text-xs font-black transition-colors sm:text-sm ${
                         activePanel === tab.id
                           ? "bg-slate-950 text-white"
                           : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"
@@ -240,6 +240,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
                       <StatSymbol
                         kind={tab.id === "overview" ? "chart" : tab.id === "matches" ? "battle" : tab.id === "brawlers" ? "players" : "timer"}
                         size={15}
+                        className="hidden sm:inline-block"
                       />
                       {tab.label}
                     </button>

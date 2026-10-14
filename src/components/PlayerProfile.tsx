@@ -66,7 +66,7 @@ export default function PlayerProfile({
             </span>
           )}
           <div className="min-w-0">
-            <h1 className="truncate text-2xl font-black tracking-normal sm:text-3xl" style={{ color: nameColor }}>
+            <h1 className="truncate text-2xl font-black tracking-normal text-slate-950 sm:text-3xl" style={{ color: `color-mix(in srgb, ${nameColor} 35%, #232238)` }}>
               {playerData.name}
             </h1>
             <p className="mt-0.5 break-all text-xs font-bold text-slate-500" title={hubCopy.tag}>

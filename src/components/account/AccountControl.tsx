@@ -176,6 +176,11 @@ export default function AccountControl({ locale }: { locale: Locale }) {
           className="absolute right-0 top-full z-50 mt-2 flex min-w-48 flex-col gap-1 rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
         >
           {adminConfirmed ? (
+            <Link href="/admin/community" role="menuitem" onClick={() => setOpen(false)} className="flex min-h-11 items-center rounded-lg px-3 text-sm font-bold text-blue-800 hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-none">
+              {locale === "ko" ? "커뮤니티 검토" : "Community moderation"}
+            </Link>
+          ) : null}
+          {adminConfirmed ? (
             <Link
               href="/admin/usage"
               role="menuitem"

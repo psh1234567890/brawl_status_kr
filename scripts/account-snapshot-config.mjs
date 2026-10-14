@@ -14,6 +14,7 @@ export const ACCOUNT_SNAPSHOT_TABLES = Object.freeze([
   "minigame_personal_bests", "account_sync_receipts", "account_rate_limits",
   "account_deletion_tombstones", "account_schema_migrations",
   "competitive_aliases", "competitive_rounds", "competitive_results",
+  "community_profiles", "community_posts", "community_comments", "community_moderation_log",
 ]);
 
 export function readAccountSnapshotConfig(env, repoRoot = process.cwd()) {

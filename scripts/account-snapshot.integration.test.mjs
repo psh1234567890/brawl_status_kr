@@ -73,6 +73,14 @@ describe("account-only encrypted backup PostgreSQL integration", () => {
       await source.query("INSERT INTO public.competitive_aliases (user_id, public_alias) VALUES ($1, 'Player-0000111122')", [deletedId]);
       await source.query("INSERT INTO public.competitive_results (round_id, user_id, game_id, score) VALUES ($1, $2, 'higher-lower', 7)", [randomUUID(), survivorId]);
       await source.query("INSERT INTO public.competitive_results (round_id, user_id, game_id, score) VALUES ($1, $2, 'release-order', 8)", [randomUUID(), deletedId]);
+      for (const [index, userId] of [survivorId, deletedId].entries()) {
+        const postId = randomUUID();
+        const commentId = randomUUID();
+        await source.query("INSERT INTO public.community_profiles (user_id, alias, rules_version) VALUES ($1, $2, 'community-v1')", [userId, index ? "Loop-000000000002" : "Loop-000000000001"]);
+        await source.query("INSERT INTO public.community_posts (id, author_id, locale, title, body, evidence_urls) VALUES ($1, $2, 'en', 'Synthetic backup report', 'Synthetic backup context only, never public.', '[\"https://youtu.be/abcdefghijk\"]')", [postId, userId]);
+        await source.query("INSERT INTO public.community_comments (id, post_id, author_id, kind, body) VALUES ($1, $2, $3, 'correction', 'Synthetic correction')", [commentId, postId, userId]);
+        await source.query("INSERT INTO public.community_moderation_log (id, post_id, actor_id, decision) VALUES ($1, $2, $3, 'rejected')", [randomUUID(), postId, deletedId]);
+      }
       run(process.execPath, ["scripts/snapshot-accounts.mjs", "backup"], env);
       const initialFiles = await readdir(temporary);
       const backup = initialFiles.find((name) => name.endsWith(".dump.enc"));
@@ -101,12 +109,17 @@ describe("account-only encrypted backup PostgreSQL integration", () => {
       expect(tables.rows.map((row) => row.tablename)).toEqual([...ACCOUNT_SNAPSHOT_TABLES].sort());
       expect((await restore.query("SELECT count(*)::int AS count FROM public.auth_users")).rows[0].count).toBe(2);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_results")).rows[0].count).toBe(2);
+      expect((await restore.query("SELECT count(*)::int AS count FROM public.community_comments")).rows[0].count).toBe(2);
       run(process.execPath, ["scripts/migrate-accounts.mjs"], { ...env, ACCOUNT_MIGRATION_DATABASE_URL: restoreUrl.toString() });
       const result = await applyDeletionManifest(restore, manifest, secret, new Date(), { revokeRestoredAuthentication: true });
       expect(result).toMatchObject({ deletedUsers: 1, revokedSessions: 1, removedVerifications: 1 });
       expect((await restore.query("SELECT id FROM public.auth_users")).rows).toEqual([{ id: survivorId }]);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_results")).rows[0].count).toBe(1);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_aliases")).rows[0].count).toBe(1);
+      for (const table of ["community_profiles", "community_posts", "community_comments", "community_moderation_log"]) {
+        expect((await restore.query("SELECT count(*)::int AS count FROM public." + table)).rows[0].count).toBe(1);
+      }
+      expect((await restore.query("SELECT actor_id FROM public.community_moderation_log")).rows[0].actor_id).toBeNull();
       expect((await restore.query("SELECT count(*)::int AS count FROM account_safety.deletion_ledger")).rows[0].count).toBe(1);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.auth_sessions")).rows[0].count).toBe(0);
     } finally {

@@ -9,6 +9,7 @@ import {
 import AnalyticsOptOutControl from "./AnalyticsOptOutControl";
 import LanguageSwitcher from "./LanguageSwitcher";
 import PortalLayout from "./PortalLayout";
+import { getCommunityMessages } from "../i18n/communityMessages";
 
 const contactEmail = "seunghunbag76@gmail.com";
 
@@ -78,6 +79,14 @@ export function DocumentArticlePage({
           );
         })}
         {pageKey === "privacy" ? <AnalyticsOptOutControl locale={locale} /> : null}
+        {(pageKey === "privacy" || pageKey === "terms") ? (
+          <section className="mt-8 border-t border-gray-100 pt-6">
+            <h2 className="text-xl font-black text-indigo-900">{getCommunityMessages(locale).nav}</h2>
+            <p className="mt-3 font-semibold leading-7 text-gray-700">{pageKey === "privacy" ? getCommunityMessages(locale).privacy : getCommunityMessages(locale).rulesBody}</p>
+            <p className="mt-3 leading-7 text-gray-700">{getCommunityMessages(locale).publicNotice}</p>
+            <Link href={localizedHref(locale, "/community")} className="mt-3 inline-flex min-h-11 items-center font-bold text-blue-700 underline">{getCommunityMessages(locale).title}</Link>
+          </section>
+        ) : null}
         {pageKey === "terms" ? (
           <section className="mt-8 border-t border-gray-100 pt-6">
             <h2 className="text-xl font-black text-indigo-900">{accountPolicy.termsTitle}</h2>

@@ -80,6 +80,11 @@ jobs:
         env:
           ACCOUNT_MANIFEST_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
 
+      - name: Verify community permissions, review and account deletion
+        run: npx vitest run src/server/community.integration.test.ts
+        env:
+          COMMUNITY_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawl_status_accounts_test
+
       - name: Verify encrypted account-only backup and isolated restore
         run: npx vitest run scripts/account-snapshot.integration.test.mjs
         env:
@@ -94,7 +99,7 @@ jobs:
           MINIGAMES_E2E_FIXTURES: "1"
 
       - name: Account and auth end-to-end tests
-        run: npx playwright test e2e/account.e2e.ts e2e/auth.e2e.ts
+        run: npx playwright test e2e/account.e2e.ts e2e/auth.e2e.ts e2e/community.e2e.ts
         env:
           CI: "1"
           MINIGAMES_E2E_FIXTURES: "1"

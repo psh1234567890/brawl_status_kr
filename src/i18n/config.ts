@@ -71,6 +71,8 @@ export const localizedCorePaths = new Set([
   "/",
   "/compare",
   "/account",
+  "/community",
+  "/community/new",
   "/meta",
   "/teams",
   "/counters",
@@ -96,7 +98,7 @@ export const localizedCorePaths = new Set([
   "/contact",
 ]);
 
-const localizedDynamicPrefixes = ["/maps/", "/brawlers/", "/gamemodes/"] as const;
+const localizedDynamicPrefixes = ["/maps/", "/brawlers/", "/gamemodes/", "/community/"] as const;
 
 export function isLocale(value: string): value is Locale {
   return locales.includes(value as Locale);

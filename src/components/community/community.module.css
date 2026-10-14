@@ -50,3 +50,5 @@
   .login .primary { width: 100%; }
   .rules { padding: 12px 14px; }
 }
+.form > small { margin-top: -14px; color: #686875; font-size: 12px; line-height: 1.6; }
+.field input[aria-invalid="true"], .field textarea[aria-invalid="true"] { border-color: #bc3543; }

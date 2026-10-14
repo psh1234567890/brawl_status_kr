@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { communityEvidence, communityPage, isCommunityId, redactCommunityText, validateCommunityComment, validateCommunityPost } from "./community";
 import { communityMessagesComplete, getCommunityMessages } from "../i18n/communityMessages";
 import { locales, localizedHref } from "../i18n/config";
+import { getCommunityImageMessages } from "../i18n/communityImageMessages";
 
 const post = { title: "Synthetic match report", body: "Synthetic evidence context for an isolated test.", locale: "en", evidenceUrls: ["https://youtu.be/abcdefghijk"], acceptRules: true, confirmIntent: true };
 describe("community input and public copy", () => {
@@ -15,6 +16,12 @@ describe("community input and public copy", () => {
     expect(validateCommunityComment({ kind: "correction", body: "The clip omits the previous action.", acceptRules: true })).toMatchObject({ kind: "correction", evidenceUrls: [] });
     expect(() => validateCommunityComment({ kind: "troll", body: "test", acceptRules: true })).toThrow();
     expect(() => validateCommunityComment({ kind: "opinion", body: "test", acceptRules: false })).toThrow();
+  });
+  it("accepts photo-only evidence and bounds the combined attachment count", () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    expect(validateCommunityPost({ ...post, evidenceUrls: [], imageIds: [id] })).toMatchObject({ evidenceUrls: [], imageIds: [id] });
+    for (const imageIds of [[id, id], ["../private"], ["00000000-0000-1000-8000-000000000001"]]) expect(() => validateCommunityPost({ ...post, imageIds })).toThrow();
+    expect(() => validateCommunityPost({ ...post, imageIds: [id, id.slice(0, -1) + "2", id.slice(0, -1) + "3"] })).toThrow("TOO_MANY_EVIDENCE");
   });
   it("removes tracking parameters and deduplicates supported evidence links", () => {
     expect(communityEvidence(["https://www.youtube.com/watch?v=abcdefghijk&redirect=https://example.com#track", "https://www.youtube.com/watch?v=abcdefghijk"], true)).toEqual(["https://www.youtube.com/watch?v=abcdefghijk"]);
@@ -39,6 +46,7 @@ describe("community input and public copy", () => {
     expect(communityMessagesComplete()).toBe(true);
     for (const locale of locales) {
       expect(Object.values(getCommunityMessages(locale)).every(value => typeof value === "string" && value.length > 0)).toBe(true);
+      expect(Object.values(getCommunityImageMessages(locale)).every(value => value.length > 0)).toBe(true);
       expect(localizedHref(locale, "/community/new")).toBe(locale === "ko" ? "/community/new" : `/${locale}/community/new`);
     }
   });

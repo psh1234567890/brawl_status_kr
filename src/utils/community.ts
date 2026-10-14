@@ -4,8 +4,10 @@ export const COMMUNITY_RULES_VERSION = "community-v1";
 export type CommunityStatus = "pending" | "published" | "rejected" | "hidden" | "withdrawn";
 export type CommunityKind = "post" | "comment";
 export type CommentKind = "opinion" | "correction";
+export type CommunityImage = { id: string; width: number; height: number };
 export type CommunityEntry = {
   id: string; postId: string; title: string; body: string; evidenceUrls: string[];
+  images: CommunityImage[];
   alias: string; locale: Locale; status: CommunityStatus; createdAt: string;
   isOwner: boolean; kind: CommentKind | null; revision: number;
   moderationNote: string; commentCount: number; filtered: boolean;
@@ -56,11 +58,22 @@ export function communityEvidence(value: unknown, required: boolean) {
 export function validateCommunityPost(body: Record<string, unknown>) {
   if (body.acceptRules !== true || body.confirmIntent !== true) throw new CommunityError(400, "RULES_REQUIRED");
   if (typeof body.locale !== "string" || !isLocale(body.locale)) throw new CommunityError(400, "INVALID_BODY");
-  return { title: text(body.title, 4, 100, "INVALID_TITLE"), body: text(body.body, 20, 4000, "INVALID_POST_BODY"), locale: body.locale,
-    evidenceUrls: communityEvidence(body.evidenceUrls, true) };
+  const content = { title: text(body.title, 4, 100, "INVALID_TITLE"), body: text(body.body, 20, 4000, "INVALID_POST_BODY"), locale: body.locale };
+  const evidence = validateEvidence(body);
+  if (evidence.evidenceUrls.length + evidence.imageIds.length === 0) throw new CommunityError(400, "EVIDENCE_REQUIRED");
+  return { ...content, ...evidence };
 }
 export function validateCommunityComment(body: Record<string, unknown>) {
   if (body.acceptRules !== true) throw new CommunityError(400, "RULES_REQUIRED");
   if (body.kind !== "opinion" && body.kind !== "correction") throw new CommunityError(400, "INVALID_BODY");
-  return { body: text(body.body, 2, 2000, "INVALID_COMMENT_BODY"), kind: body.kind, evidenceUrls: communityEvidence(body.evidenceUrls ?? [], false) };
+  return { body: text(body.body, 2, 2000, "INVALID_COMMENT_BODY"), kind: body.kind, ...validateEvidence(body) };
+}
+function validateEvidence(body: Record<string, unknown>) {
+  const evidenceUrls = communityEvidence(body.evidenceUrls ?? [], false);
+  const ids = body.imageIds ?? [];
+  if (!Array.isArray(ids) || ids.length > 3 || ids.some(id => typeof id !== "string" || !isCommunityId(id)) || new Set(ids).size !== ids.length) {
+    throw new CommunityError(400, "INVALID_IMAGES");
+  }
+  if (evidenceUrls.length + ids.length > 3) throw new CommunityError(400, "TOO_MANY_EVIDENCE");
+  return { evidenceUrls, imageIds: ids as string[] };
 }

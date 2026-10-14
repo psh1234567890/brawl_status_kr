@@ -28,6 +28,10 @@ const ACCOUNT_MIGRATIONS = [
     version: "0020_community_posts_comments",
     file: fileURLToPath(new URL("../drizzle/0020_community_posts_comments.sql", import.meta.url)),
   },
+  {
+    version: "0021_community_photo_evidence",
+    file: fileURLToPath(new URL("../drizzle/0021_community_photo_evidence.sql", import.meta.url)),
+  },
 ];
 const ACCOUNT_LOCK_NAMESPACE = 9172381;
 const ACCOUNT_LOCK_ID = 3;

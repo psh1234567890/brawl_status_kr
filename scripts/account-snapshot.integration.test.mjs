@@ -80,6 +80,10 @@ describe("account-only encrypted backup PostgreSQL integration", () => {
         await source.query("INSERT INTO public.community_posts (id, author_id, locale, title, body, evidence_urls) VALUES ($1, $2, 'en', 'Synthetic backup report', 'Synthetic backup context only, never public.', '[\"https://youtu.be/abcdefghijk\"]')", [postId, userId]);
         await source.query("INSERT INTO public.community_comments (id, post_id, author_id, kind, body) VALUES ($1, $2, $3, 'correction', 'Synthetic correction')", [commentId, postId, userId]);
         await source.query("INSERT INTO public.community_moderation_log (id, post_id, actor_id, decision) VALUES ($1, $2, $3, 'rejected')", [randomUUID(), postId, deletedId]);
+        const imageId = randomUUID();
+        const imagePath = "community/" + imageId + ".webp";
+        await source.query("INSERT INTO public.community_image_objects(object_path) VALUES ($1)", [imagePath]);
+        await source.query("INSERT INTO public.community_images(id, owner_id, object_path, ready, width, height, byte_size, post_id) VALUES ($1,$2,$3,true,10,10,100,$4)", [imageId, userId, imagePath, postId]);
       }
       run(process.execPath, ["scripts/snapshot-accounts.mjs", "backup"], env);
       const initialFiles = await readdir(temporary);
@@ -110,16 +114,19 @@ describe("account-only encrypted backup PostgreSQL integration", () => {
       expect((await restore.query("SELECT count(*)::int AS count FROM public.auth_users")).rows[0].count).toBe(2);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_results")).rows[0].count).toBe(2);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.community_comments")).rows[0].count).toBe(2);
+      expect((await restore.query("SELECT count(*)::int AS count FROM public.community_images")).rows[0].count).toBe(2);
       run(process.execPath, ["scripts/migrate-accounts.mjs"], { ...env, ACCOUNT_MIGRATION_DATABASE_URL: restoreUrl.toString() });
       const result = await applyDeletionManifest(restore, manifest, secret, new Date(), { revokeRestoredAuthentication: true });
       expect(result).toMatchObject({ deletedUsers: 1, revokedSessions: 1, removedVerifications: 1 });
       expect((await restore.query("SELECT id FROM public.auth_users")).rows).toEqual([{ id: survivorId }]);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_results")).rows[0].count).toBe(1);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.competitive_aliases")).rows[0].count).toBe(1);
-      for (const table of ["community_profiles", "community_posts", "community_comments", "community_moderation_log"]) {
+      for (const table of ["community_profiles", "community_posts", "community_comments", "community_moderation_log", "community_images"]) {
         expect((await restore.query("SELECT count(*)::int AS count FROM public." + table)).rows[0].count).toBe(1);
       }
       expect((await restore.query("SELECT actor_id FROM public.community_moderation_log")).rows[0].actor_id).toBeNull();
+      // The removed account's bytes remain discoverable for physical cleanup.
+      expect((await restore.query("SELECT count(*)::int AS count FROM public.community_image_objects o WHERE NOT EXISTS (SELECT 1 FROM public.community_images i WHERE i.object_path = o.object_path)")).rows[0].count).toBe(1);
       expect((await restore.query("SELECT count(*)::int AS count FROM account_safety.deletion_ledger")).rows[0].count).toBe(1);
       expect((await restore.query("SELECT count(*)::int AS count FROM public.auth_sessions")).rows[0].count).toBe(0);
     } finally {

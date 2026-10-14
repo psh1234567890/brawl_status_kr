@@ -5,6 +5,7 @@ vi.mock("./account", async importOriginal => ({ ...await importOriginal<typeof i
 vi.mock("./accountHttp", async importOriginal => ({ ...await importOriginal<typeof import("./accountHttp")>(), enforceAccountRateLimit: mocks.limit }));
 vi.mock("./usageAnalytics", () => ({ hasUsageAdminAccess: mocks.admin }));
 vi.mock("./community", () => ({ createCommunityPost: mocks.post, createCommunityComment: mocks.comment, withdrawCommunityContent: mocks.withdraw, moderateCommunityContent: mocks.moderate, readCommunityQueue: mocks.queue }));
+vi.mock("./communityImages", () => ({ checkCommunityImageDrafts: vi.fn().mockResolvedValue(undefined) }));
 import { AccountError } from "./account";
 import { POST as post } from "../app/api/community/posts/route";
 import { POST as comment } from "../app/api/community/posts/[id]/comments/route";
@@ -12,6 +13,7 @@ import { DELETE as withdrawPost } from "../app/api/community/posts/[id]/route";
 import { DELETE as withdrawComment } from "../app/api/community/comments/[id]/route";
 import { GET as queue, PATCH as moderate } from "../app/api/admin/community/route";
 import { CommunityError } from "../utils/community";
+import { checkCommunityImageDrafts } from "./communityImages";
 
 const userId = "00000000-0000-4000-8000-000000000001";
 const id = "00000000-0000-4000-8000-000000000002";
@@ -27,6 +29,7 @@ beforeEach(() => {
   mocks.limit.mockResolvedValue(null);
   mocks.admin.mockResolvedValue(false);
   mocks.post.mockResolvedValue({ id, status: "pending" });
+  vi.mocked(checkCommunityImageDrafts).mockResolvedValue(undefined);
 });
 describe("community mutation authorization", () => {
   it("requires a registered session on every post/comment mutation", async () => {
@@ -82,6 +85,12 @@ describe("community mutation authorization", () => {
     expect(mocks.post).toHaveBeenCalledWith(userId, expect.objectContaining({ title: input.title }));
     expect(response.headers.get("Cache-Control")).toContain("private, no-store");
     expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
+  });
+  it("does not consume a post allowance for expired or foreign photos", async () => {
+    vi.mocked(checkCommunityImageDrafts).mockRejectedValue(new CommunityError(400, "IMAGE_EXPIRED"));
+    expect((await post(request({ ...input, evidenceUrls: [], imageIds: [id] }))).status).toBe(400);
+    expect(mocks.limit).not.toHaveBeenCalled();
+    expect(mocks.post).not.toHaveBeenCalled();
   });
   it("hides non-administrator review access and preserves ownership failures", async () => {
     expect((await queue(new Request("http://localhost/api/admin/community"))).status).toBe(404);

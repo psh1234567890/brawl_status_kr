@@ -3,6 +3,7 @@ import { getAuthenticatedAccount } from "../../../../server/account";
 import { communityError, communityJson, communityMutation } from "../../../../server/communityHttp";
 import { createCommunityPost, listCommunityPosts } from "../../../../server/community";
 import { communityPage, validateCommunityPost } from "../../../../utils/community";
+import { checkCommunityImageDrafts } from "../../../../server/communityImages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,5 +17,5 @@ export async function GET(request: Request) {
   } catch (error) { return communityError(error); }
 }
 export function POST(request: Request) {
-  return communityMutation(request, { action: "post", keys: ["title", "body", "evidenceUrls", "locale", "acceptRules", "confirmIntent"], parse: validateCommunityPost }, createCommunityPost);
+  return communityMutation(request, { action: "post", keys: ["title", "body", "evidenceUrls", "imageIds", "locale", "acceptRules", "confirmIntent"], parse: validateCommunityPost, check: checkCommunityImageDrafts }, createCommunityPost);
 }

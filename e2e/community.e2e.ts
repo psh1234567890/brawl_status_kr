@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import sharp from "sharp";
 import { expect, test } from "./fixtures/auth";
 
 test.skip(!process.env.DATABASE_URL, "Community E2E requires the disposable account database.");
@@ -16,7 +17,7 @@ test("guests can read the community but cannot submit posts or comments", async 
   await page.getByRole("link", { name: "Write a post", exact: true }).click();
   await expect(page.getByText("Sign up and sign in to write posts or comments.", { exact: true })).toBeVisible();
   await expect(page.locator('input[name="title"]')).toHaveCount(0);
-  for (const url of ["/api/community/posts", "/api/community/posts/00000000-0000-4000-8000-000000000001/comments"]) {
+  for (const url of ["/api/community/posts", "/api/community/images", "/api/community/posts/00000000-0000-4000-8000-000000000001/comments"]) {
     const response = await context.request.post(url, { headers: { Origin: origin }, data: {} });
     expect(response.status()).toBe(401);
   }
@@ -46,12 +47,29 @@ test("registered submissions and corrections stay private until administrator re
     await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveAttribute("aria-invalid", "true");
     await expect(page.locator('textarea[name="body"]')).toHaveValue("Synthetic test evidence context; this is not an actual player report.");
     await page.getByRole("textbox", { name: "Title", exact: true }).fill(title);
+    // A real file picker, canvas normalization, server decoding and private
+    // object read. All bytes and allegations are synthetic, in the CI database.
+    const image = await sharp({ create: { width: 300, height: 150, channels: 3, background: "#5842ce" } }).png().toBuffer();
+    const upload = page.waitForResponse(response => response.url().endsWith("/api/community/images") && response.request().method() === "POST");
+    await page.getByLabel("Choose photos", { exact: true }).setInputFiles({ name: "synthetic-evidence.png", mimeType: "image/png", buffer: image });
+    const uploadResponse = await upload;
+    expect(uploadResponse.status()).toBe(201);
+    const uploaded = await uploadResponse.json();
+    await expect(page.getByRole("img", { name: "Attached evidence photo 1", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove photo 1", exact: true })).toBeVisible();
+    expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
+    // The owner can read a pending upload without a moderator allowlist table.
+    const ownImage = await context.request.get("/api/community/images/" + uploaded.id);
+    expect(ownImage.status()).toBe(200);
+    expect(ownImage.headers()["cache-control"]).toContain("private, no-store");
+    await page.locator('textarea[name="evidence"]').fill("");
     await page.getByRole("button", { name: "Submit for review", exact: true }).click();
     await expect(page).toHaveURL(/\/en\/community\/[a-f0-9-]{36}$/);
     await expect(page.getByText("Pending review", { exact: true })).toBeVisible();
     await expect(page.getByRole("status")).toHaveText("Post submitted for moderator review.");
     const id = new URL(page.url()).pathname.split("/").at(-1)!;
     expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(404);
+    expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
     const body = { expectedUserId: syntheticAccount.userId, kind: "post", id, revision: 0, status: "published", note: "Synthetic evidence review" };
     expect((await context.request.patch("/api/admin/community", { headers: { Origin: origin }, data: body })).status()).toBe(404);
 
@@ -65,6 +83,7 @@ test("registered submissions and corrections stay private until administrator re
     await review.getByRole("button", { name: "처리", exact: true }).click();
     await expect(review).toHaveCount(0);
     expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(200);
+    expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(200);
 
     await page.goto("/en/community/" + id);
     await page.locator('select[name="kind"]').selectOption("correction");
@@ -86,6 +105,8 @@ test("registered submissions and corrections stay private until administrator re
     expect(published.comments[0]).toMatchObject({ kind: "correction", body: correction, status: "published" });
     expect(JSON.stringify(published)).not.toContain(syntheticAccount.userId);
     expect(JSON.stringify(published)).not.toContain(syntheticAccount.email);
+    await context.request.delete("/api/community/posts/" + id, { headers: { Origin: origin }, data: { expectedUserId: syntheticAccount.userId } });
+    expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
   } finally {
     await anonymous.close();
     await pool.query("DELETE FROM analytics_private.usage_admin_allowlist WHERE user_id = $1", [syntheticAccount.userId]).catch(() => undefined);

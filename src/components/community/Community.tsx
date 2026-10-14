@@ -174,7 +174,7 @@ export function CommunityPost({ id, locale }: { id: string; locale: Locale }) {
     </section></>}
   </section>;
 }
-export type CommunityAdminEntry = CommunityEntry & { rawTitle: string; rawBody: string };
+export type CommunityAdminEntry = CommunityEntry & { rawTitle: string; rawBody: string; parentBody?: string; parentEvidenceUrls?: string[]; parentStatus?: CommunityStatus };
 export function CommunityModeration() {
   const account = useAccount();
   const userId = account.account?.id;
@@ -203,7 +203,8 @@ function ModerationEntry({ entry, kind, userId, onDone }: { entry: CommunityAdmi
   }
   return <article className={styles.adminEntry}><EntryMeta entry={entry} locale="ko" /><h2>{kind === "post" ? "글" : entry.kind === "correction" ? "반론·정정 댓글" : "댓글"}: {entry.rawTitle}</h2>
     <p className={styles.body}>{entry.rawBody}</p><EvidenceLinks urls={entry.evidenceUrls} locale="ko" />
-    <Link href={`/community/${entry.postId}`} className={styles.secondary}>게시물 열기</Link>
+    {kind === "comment" && <details className={styles.rules}><summary>원글과 증거 확인</summary><p className={styles.body}>{entry.parentBody}</p><EvidenceLinks urls={entry.parentEvidenceUrls ?? []} locale="ko" /></details>}
+    {(kind === "post" ? entry.status : entry.parentStatus) === "published" && <Link href={`/community/${entry.postId}`} className={styles.secondary}>공개 글 열기</Link>}
     <form onSubmit={event => void submit(event)}><label className={styles.field}>처리<select name="status" defaultValue="published"><option value="published">공개 승인</option><option value="rejected">반려</option><option value="hidden">공개 중단</option></select></label>
       <label className={styles.field}>검토 사유<input name="note" required minLength={2} maxLength={1000} /></label><button className={styles.primary} disabled={busy}>처리</button></form>
     {error && <p role="alert" className={styles.error}>{error}</p>}

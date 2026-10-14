@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const database = vi.hoisted(() => ({ pool: null as unknown as pg.Pool }));
 vi.mock("../db", () => ({ db: { get $client() { return database.pool; } } }));
-import { createCommunityComment, createCommunityPost, listCommunityPosts, moderateCommunityContent, readCommunityPost, withdrawCommunityContent } from "./community";
+import { createCommunityComment, createCommunityPost, listCommunityPosts, moderateCommunityContent, readCommunityPost, readCommunityQueue, withdrawCommunityContent } from "./community";
 
 const configuredUrl = process.env.COMMUNITY_TEST_DATABASE_URL;
 describe("community PostgreSQL visibility and deletion", () => {
@@ -46,6 +46,7 @@ describe("community PostgreSQL visibility and deletion", () => {
       expect((await readCommunityPost(post.id)).comments).toEqual([]);
       expect((await readCommunityPost(post.id, owner)).comments).toEqual([]);
       expect((await readCommunityPost(post.id, respondent)).comments[0]).toMatchObject({ status: "pending", isOwner: true, kind: "correction" });
+      expect((await readCommunityQueue("pending", 1)).comments[0]).toMatchObject({ id: comment.id, parentBody: input.body, parentStatus: "published", parentEvidenceUrls: input.evidenceUrls });
       await moderateCommunityContent(moderator, "comment", comment.id, 0, "published", "Correction reviewed");
       expect((await readCommunityPost(post.id)).post.commentCount).toBe(1);
       expect((await readCommunityPost(post.id)).comments[0].kind).toBe("correction");

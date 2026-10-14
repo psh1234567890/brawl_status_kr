@@ -10,6 +10,7 @@ type Row = {
   alias: string; locale: Locale; status: CommunityStatus; created_at: Date;
   author_id: string; kind?: "opinion" | "correction"; review_revision: number;
   moderation_note: string; comment_count?: number;
+  parent_body?: string; parent_evidence_urls?: string[]; parent_status?: CommunityStatus;
 };
 function dto(row: Row, viewer?: string): CommunityEntry {
   const title = redactCommunityText(row.title ?? "");
@@ -67,9 +68,10 @@ export async function withdrawCommunityContent(kind: CommunityKind, id: string, 
 export async function readCommunityQueue(status: "pending" | "published" | "hidden" | "rejected", page: number) {
   const [posts, comments] = await Promise.all([
     db.$client.query<Row>(`${postSelect} WHERE p.status = $1 ORDER BY p.created_at, p.id LIMIT 21 OFFSET $2`, [status, (page - 1) * 20]),
-    db.$client.query<Row>(`SELECT c.*, a.alias, p.locale, p.title FROM public.community_comments c JOIN public.community_profiles a ON a.user_id = c.author_id JOIN public.community_posts p ON p.id = c.post_id WHERE c.status = $1 ORDER BY c.created_at, c.id LIMIT 21 OFFSET $2`, [status, (page - 1) * 20]),
+    db.$client.query<Row>(`SELECT c.*, a.alias, p.locale, p.title, p.body AS parent_body, p.evidence_urls AS parent_evidence_urls, p.status AS parent_status FROM public.community_comments c JOIN public.community_profiles a ON a.user_id = c.author_id JOIN public.community_posts p ON p.id = c.post_id WHERE c.status = $1 ORDER BY c.created_at, c.id LIMIT 21 OFFSET $2`, [status, (page - 1) * 20]),
   ]);
-  const entry = (row: Row) => ({ ...dto(row), rawTitle: row.title ?? "", rawBody: row.body, moderationNote: row.moderation_note });
+  const entry = (row: Row) => ({ ...dto(row), rawTitle: row.title ?? "", rawBody: row.body, moderationNote: row.moderation_note,
+    ...(row.parent_status ? { parentBody: row.parent_body, parentEvidenceUrls: row.parent_evidence_urls, parentStatus: row.parent_status } : {}) });
   return { posts: posts.rows.slice(0, 20).map(entry), comments: comments.rows.slice(0, 20).map(entry), hasMore: posts.rows.length > 20 || comments.rows.length > 20 };
 }
 export async function moderateCommunityContent(actorId: string, kind: CommunityKind, id: string, revision: number, status: "published" | "rejected" | "hidden", note: string) {

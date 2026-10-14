@@ -112,7 +112,7 @@ npm.cmd run db:deletions:reapply -- --manifest "C:\PrivateBackups\account-deleti
 
 `npm run db:accounts:snapshot -- backup`은 명시적인
 `ACCOUNT_SNAPSHOT_DATABASE_URL`만 사용하며 `.env.local`, `DATABASE_URL`, `DIRECT_URL`을
-읽지 않는다. 9개 계정 테이블만 custom dump로 내보낸 뒤 AES-256-GCM으로 암호화한다.
+읽지 않는다. `ACCOUNT_SNAPSHOT_TABLES`에 명시된 계정 소유 테이블 16개만 custom dump로 내보낸 뒤 AES-256-GCM으로 암호화한다. 여기에는 경쟁 기록과 커뮤니티 프로필·글·댓글·검토 기록이 포함된다. 커뮤니티 공개 범위와 삭제 정책은 [커뮤니티 운영 문서](COMMUNITY.md)를 따른다.
 `students`, battle 테이블, non-public safety ledger의 원본 dump는 포함하지 않는다.
 최신 safety ledger는 HMAC 서명 manifest로 따로 내보내고 별도로 암호화한다.
 `npm run db:accounts:snapshot -- manifest`는 ledger만 내보낸다.

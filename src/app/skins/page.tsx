@@ -118,6 +118,7 @@ function compareSkins(
 
 export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) {
   const copy = getCatalogPageMessages(locale).skins;
+  const unitGap = locale === "ko" || locale === "ja" ? "" : " ";
   const search = useBrowserSearch();
   const params = useMemo(() => new URLSearchParams(search), [search]);
   const query = params.get("q") ?? "";
@@ -209,7 +210,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
 
   return (
     <PortalLayout locale={locale} title={copy.title}
-      description={`${copy.catalogCountPrefix} ${generatedSkinCatalog.length.toLocaleString(numberLocales[locale])}${copy.catalogCountUnit}`}>
+      description={`${copy.catalogCountPrefix} ${generatedSkinCatalog.length.toLocaleString(numberLocales[locale])}${unitGap}${copy.catalogCountUnit}`}>
         <section className={styles.filters}>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
             <input
@@ -316,7 +317,7 @@ export default function SkinCatalogPage({ locale = "ko" }: { locale?: Locale }) 
         </section>
 
         <div className={styles.listHeading}>
-          <p>{visibleSkins.length.toLocaleString(numberLocales[locale])}{copy.shownUnit}</p>
+          <p>{visibleSkins.length.toLocaleString(numberLocales[locale])}{unitGap}{copy.shownUnit}</p>
           <p>{copy.imageFallbackTitle}</p>
         </div>
 

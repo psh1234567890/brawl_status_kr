@@ -147,8 +147,8 @@ export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale:
   }
   return <form className={styles.form} noValidate onSubmit={event => void submit(event)}>
     {postId ? <label className={styles.field}>{copy.comments}<select name="kind" defaultValue="opinion"><option value="opinion">{copy.opinion}</option><option value="correction">{copy.correction}</option></select></label>
-      : <><label className={styles.field}>{copy.titleLabel}<input name="title" required minLength={4} maxLength={100} aria-describedby={`${formId}-title-hint${invalidField === "title" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "title"} /></label><small id={`${formId}-title-hint`}>{hints.titleHint}</small></>}
-    <label className={styles.field}>{postId ? copy.commentLabel : copy.bodyLabel}<textarea name="body" required minLength={postId ? 2 : 20} maxLength={postId ? 2000 : 4000} aria-describedby={`${formId}-body-hint${invalidField === "body" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "body"} /></label><small id={`${formId}-body-hint`}>{postId ? hints.commentHint : hints.bodyHint}</small>
+      : <><label className={styles.field}>{copy.titleLabel}<input name="title" required aria-describedby={`${formId}-title-hint${invalidField === "title" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "title"} /></label><small id={`${formId}-title-hint`}>{hints.titleHint}</small></>}
+    <label className={styles.field}>{postId ? copy.commentLabel : copy.bodyLabel}<textarea name="body" required aria-describedby={`${formId}-body-hint${invalidField === "body" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "body"} /></label><small id={`${formId}-body-hint`}>{postId ? hints.commentHint : hints.bodyHint}</small>
     <CommunityPhotoPicker key={photoReset} locale={locale} userId={userId} disabled={busy} onChange={setImages} onBusy={setUploading} />
     <label className={styles.field}>{copy.evidenceLabel}<textarea className={styles.linksInput} name="evidence" maxLength={3002} spellCheck={false} autoCapitalize="off" placeholder="https://…" aria-invalid={invalidField === "evidence"} aria-describedby={`${formId}-evidence-hint${invalidField === "evidence" ? ` ${formId}-error` : ""}`} /><small id={`${formId}-evidence-hint`}>{copy.evidenceHint}</small></label>
     <p className={styles.notice}>{copy.publicNotice}</p>
@@ -156,7 +156,7 @@ export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale:
     <label className={styles.check}><input type="checkbox" name="acceptRules" required />{copy.acceptRules}</label>
     {error && <p id={`${formId}-error`} role="alert" className={styles.error}>{error}</p>}
     <button className={styles.primary} type="submit" disabled={busy || uploading}>{uploading ? getCommunityImageMessages(locale).uploading : busy ? copy.loading : postId ? copy.submitComment : copy.submitPost}</button>
-    <p className={styles.notice}>{copy.reviewNotice} {copy.postingLimit}</p>
+    <p className={styles.notice}>{copy.reviewNotice}</p>
   </form>;
 }
 function WithdrawButton({ entry, kind, userId, locale, onDone }: { entry: CommunityEntry; kind: "post" | "comment"; userId: string; locale: Locale; onDone: () => void }) {
@@ -186,7 +186,7 @@ export function CommunityPost({ id, locale }: { id: string; locale: Locale }) {
     {result.loading && <p role="status" className={styles.notice}>{copy.loading}</p>}
     {result.error && <p role="alert" className={styles.error}>{copy.unavailable}</p>}
     {post && <><article className={styles.row}><EntryMeta entry={post} locale={locale} /><h2>{post.title}</h2>
-      {post.isOwner && post.status === "pending" && <p role="status" className={styles.success}>{copy.postSent}</p>}
+      {post.isOwner && post.status === "published" && <p role="status" className={styles.success}>{copy.postSent}</p>}
       <p className={styles.notice}>{copy.reviewNotice}</p><div className={styles.body}>{post.body}</div><EvidencePhotos images={post.images} locale={locale} /><EvidenceLinks urls={post.evidenceUrls} locale={locale} />
       {post.filtered && <p className={styles.notice}>{copy.filtered}</p>}
       {post.moderationNote && <p className={styles.notice}>{post.moderationNote}</p>}
@@ -209,7 +209,7 @@ export type CommunityAdminEntry = CommunityEntry & { rawTitle: string; rawBody: 
 export function CommunityModeration() {
   const account = useAccount();
   const userId = account.account?.id;
-  const [status, setStatus] = useState<CommunityStatus>("pending");
+  const [status, setStatus] = useState<CommunityStatus>("published");
   const [page, setPage] = useState(1);
   const result = useCommunityRead<{ posts: CommunityAdminEntry[]; comments: CommunityAdminEntry[]; hasMore: boolean }>(userId ? `/api/admin/community?status=${status}&page=${page}` : null, userId ?? account.status);
   return <section className={styles.content}><p className={styles.notice}>증거의 전후 맥락, 개인정보, 욕설·공격 유도와 반론 여부를 확인한 뒤 처리하세요. 공개 승인은 공식 제재나 계정 소유권 인증이 아닙니다.</p>
@@ -236,7 +236,7 @@ function ModerationEntry({ entry, kind, userId, onDone }: { entry: CommunityAdmi
     <p className={styles.body}>{entry.rawBody}</p><EvidencePhotos images={entry.images} locale="ko" /><EvidenceLinks urls={entry.evidenceUrls} locale="ko" />
     {kind === "comment" && <details className={styles.rules}><summary>원글과 증거 확인</summary><p className={styles.body}>{entry.parentBody}</p><EvidencePhotos images={entry.parentImages ?? []} locale="ko" /><EvidenceLinks urls={entry.parentEvidenceUrls ?? []} locale="ko" /></details>}
     {(kind === "post" ? entry.status : entry.parentStatus) === "published" && <Link href={`/community/${entry.postId}`} className={styles.secondary}>공개 글 열기</Link>}
-    <form onSubmit={event => void submit(event)}><label className={styles.field}>처리<select name="status" defaultValue="published"><option value="published">공개 승인</option><option value="rejected">반려</option><option value="hidden">공개 중단</option></select></label>
+    <form onSubmit={event => void submit(event)}><label className={styles.field}>처리<select name="status" defaultValue={entry.status === "published" ? "hidden" : "published"}><option value="published">공개 승인</option><option value="rejected">반려</option><option value="hidden">공개 중단</option></select></label>
       <label className={styles.field}>검토 사유<input name="note" required minLength={2} maxLength={1000} /></label><button className={styles.primary} disabled={busy}>처리</button></form>
     {error && <p role="alert" className={styles.error}>{error}</p>}
   </article>;

@@ -23,29 +23,34 @@ test("guests can read the community but cannot submit posts or comments", async 
   }
 });
 
-test("registered submissions and corrections stay private until administrator review", async ({ page, context, browser, syntheticAccount }, testInfo) => {
+test("posts, comments and photos publish immediately and support later moderation", async ({ page, context, browser, syntheticAccount }, testInfo) => {
+  test.setTimeout(45_000);
   const origin = String(testInfo.project.use.baseURL);
   const title = "Synthetic report " + syntheticAccount.userId.slice(0, 8);
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
   const anonymous = await browser.newContext();
   try {
-    // Regression: invalid evidence previously exhausted all three daily slots.
+    // Invalid evidence still gets a useful validation error.
     for (let attempt = 0; attempt < 4; attempt++) {
       const invalid = await context.request.post("/api/community/posts", { headers: { Origin: origin }, data: { expectedUserId: syntheticAccount.userId, title, body: "Synthetic test evidence context, not an actual report.", locale: "en", evidenceUrls: ["https://example.invalid/evidence.png"], acceptRules: true, confirmIntent: true } });
       expect(invalid.status()).toBe(400);
       expect(await invalid.json()).toMatchObject({ error: "INVALID_EVIDENCE" });
     }
     await page.goto("/en/community/new");
-    await page.getByRole("textbox", { name: "Title", exact: true }).fill("abc");
-    await page.locator('textarea[name="body"]').fill("Synthetic test evidence context; this is not an actual player report.");
+    await page.getByRole("textbox", { name: "Title", exact: true }).fill("");
+    await page.locator('textarea[name="body"]').fill("글");
     await page.locator('textarea[name="evidence"]').fill("https://youtu.be/abcdefghijk");
     await page.locator('input[name="confirmIntent"]').check();
     await page.locator('input[name="acceptRules"]').check();
-    await page.getByRole("button", { name: "Submit for review", exact: true }).click();
-    await expect(page.locator("form").getByRole("alert")).toHaveText("Enter a title of 4–100 characters.");
+    await page.getByRole("button", { name: "Publish post", exact: true }).click();
+    await expect(page.locator("form").getByRole("alert")).toHaveText("Enter a title.");
     await expect(page.getByRole("textbox", { name: "Title", exact: true })).toBeFocused();
     await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveAttribute("aria-invalid", "true");
-    await expect(page.locator('textarea[name="body"]')).toHaveValue("Synthetic test evidence context; this is not an actual player report.");
+    await expect(page.locator('textarea[name="body"]')).toHaveValue("글");
+    for (const control of await page.locator('input[name="title"], textarea[name="body"]').all()) {
+      await expect(control).not.toHaveAttribute("minlength");
+      await expect(control).not.toHaveAttribute("maxlength");
+    }
     await page.getByRole("textbox", { name: "Title", exact: true }).fill(title);
     // A real file picker, canvas normalization, server decoding and private
     // object read. All bytes and allegations are synthetic, in the CI database.
@@ -58,18 +63,18 @@ test("registered submissions and corrections stay private until administrator re
     await expect(page.getByRole("img", { name: "Attached evidence photo 1", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Remove photo 1", exact: true })).toBeVisible();
     expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
-    // The owner can read a pending upload without a moderator allowlist table.
+    // Draft photos stay private until they are attached to a published post.
     const ownImage = await context.request.get("/api/community/images/" + uploaded.id);
     expect(ownImage.status()).toBe(200);
     expect(ownImage.headers()["cache-control"]).toContain("private, no-store");
     await page.locator('textarea[name="evidence"]').fill("");
-    await page.getByRole("button", { name: "Submit for review", exact: true }).click();
+    await page.getByRole("button", { name: "Publish post", exact: true }).click();
     await expect(page).toHaveURL(/\/en\/community\/[a-f0-9-]{36}$/);
-    await expect(page.getByText("Pending review", { exact: true })).toBeVisible();
-    await expect(page.getByRole("status")).toHaveText("Post submitted for moderator review.");
+    await expect(page.getByText("Published", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText("Post published.");
     const id = new URL(page.url()).pathname.split("/").at(-1)!;
-    expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(404);
-    expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
+    expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(200);
+    expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(200);
     const body = { expectedUserId: syntheticAccount.userId, kind: "post", id, revision: 0, status: "published", note: "Synthetic evidence review" };
     expect((await context.request.patch("/api/admin/community", { headers: { Origin: origin }, data: body })).status()).toBe(404);
 
@@ -82,24 +87,23 @@ test("registered submissions and corrections stay private until administrator re
     await review.getByLabel("검토 사유", { exact: true }).fill("Synthetic evidence reviewed for the test");
     await review.getByRole("button", { name: "처리", exact: true }).click();
     await expect(review).toHaveCount(0);
+    expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(404);
+    expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
+    await page.getByLabel("검토 상태").selectOption("hidden");
+    await review.getByLabel("검토 사유", { exact: true }).fill("Synthetic post restored after a moderation check");
+    await review.getByRole("button", { name: "처리", exact: true }).click();
+    await expect(review).toHaveCount(0);
     expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(200);
     expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(200);
 
     await page.goto("/en/community/" + id);
     await page.locator('select[name="kind"]').selectOption("correction");
-    const correction = "Synthetic correction: the previous action is missing from the clip.";
+    const correction = "x";
     await page.locator('textarea[name="body"]').fill(correction);
     await page.locator('input[name="acceptRules"]').check();
-    await page.getByRole("button", { name: "Submit comment for review", exact: true }).click();
-    await expect(page.getByText("Comment submitted for moderator review.", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Post comment", exact: true }).click();
+    await expect(page.getByText("Comment published.", { exact: true })).toBeVisible();
     await expect(page.getByText(correction, { exact: true })).toBeVisible();
-    const beforeReview = await (await anonymous.request.get(origin + "/api/community/posts/" + id)).json();
-    expect(beforeReview.comments).toEqual([]);
-    await page.goto("/admin/community");
-    const correctionReview = page.locator("article").filter({ hasText: correction });
-    await correctionReview.getByLabel("검토 사유", { exact: true }).fill("Synthetic correction reviewed for the test");
-    await correctionReview.getByRole("button", { name: "처리", exact: true }).click();
-    await expect(correctionReview).toHaveCount(0);
     const published = await (await anonymous.request.get(origin + "/api/community/posts/" + id)).json();
     expect(published.comments).toHaveLength(1);
     expect(published.comments[0]).toMatchObject({ kind: "correction", body: correction, status: "published" });
@@ -108,10 +112,37 @@ test("registered submissions and corrections stay private until administrator re
     await context.request.delete("/api/community/posts/" + id, { headers: { Origin: origin }, data: { expectedUserId: syntheticAccount.userId } });
     expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
   } finally {
-    await anonymous.close();
+    await anonymous.close().catch(() => undefined);
     await pool.query("DELETE FROM analytics_private.usage_admin_allowlist WHERE user_id = $1", [syntheticAccount.userId]).catch(() => undefined);
     await pool.end();
   }
+});
+
+test("members can exceed former quotas and publish text beyond former length boundaries", async ({ context, request, syntheticAccount }, testInfo) => {
+  test.setTimeout(45_000);
+  const headers = { Origin: String(testInfo.project.use.baseURL) };
+  let postId = "";
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const response = await context.request.post("/api/community/posts", { headers, data: {
+      expectedUserId: syntheticAccount.userId, title: attempt ? "한" : "t".repeat(120),
+      body: attempt ? "글" : "글".repeat(4500), locale: "en", evidenceUrls: ["https://youtu.be/abcdefghijk"], acceptRules: true, confirmIntent: true,
+    } });
+    expect(response.status()).toBe(201);
+    const post = await response.json();
+    expect(post.status).toBe("published");
+    if (!attempt) postId = post.id;
+  }
+  for (let attempt = 0; attempt < 21; attempt++) {
+    const response = await context.request.post("/api/community/posts/" + postId + "/comments", { headers, data: {
+      expectedUserId: syntheticAccount.userId, body: attempt ? "네" : "c".repeat(2500), kind: "opinion", acceptRules: true,
+    } });
+    expect(response.status()).toBe(201);
+  }
+  const published = await (await request.get("/api/community/posts/" + postId)).json();
+  expect(published.post).toMatchObject({ title: "t".repeat(120), body: "글".repeat(4500), status: "published" });
+  expect(published.comments).toHaveLength(21);
+  expect(published.comments.every((entry: { status: string }) => entry.status === "published")).toBe(true);
+  expect(published.comments.some((entry: { body: string }) => entry.body === "c".repeat(2500))).toBe(true);
 });
 
 test("an unfinished signup cannot write through the API", async ({ context, syntheticAccount }, testInfo) => {

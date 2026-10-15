@@ -416,6 +416,38 @@ test("brawler catalog filters by name, rarity, and class", async ({ page }) => {
   }).toBe(true);
 });
 
+for (const allImagesFail of [false, true]) {
+  test(`brawler catalog recovers missing portraits with ${allImagesFail ? "an accessible graphic" : "the supplied game avatar"}`, async ({ page, context }) => {
+    await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+    await page.route("https://cdn.brawlify.com/brawlers/**", route => route.fulfill({ status: 404 }));
+    await page.route("https://cdn.brawlify.com/profile-icons/regular/**", route => allImagesFail
+      ? route.fulfill({ status: 404 })
+      : route.fulfill({ contentType: "image/png", body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64") }));
+    await page.goto("/brawlers");
+    await page.getByRole("searchbox", { name: "브롤러 이름 검색" }).fill("shelly");
+    const card = page.locator("article").filter({ has: page.getByRole("heading", { name: "쉘리", exact: true }) });
+    const portrait = card.getByRole("img", { name: "쉘리", exact: true });
+    await expect(portrait).toBeVisible();
+    if (allImagesFail) {
+      await expect(portrait.locator("svg")).toHaveCount(1);
+      await expect(portrait).toHaveText("");
+    } else {
+      await expect(portrait).toHaveAttribute("src", /\/profile-icons\/regular\/\d+\.png$/);
+      await expect.poll(() => portrait.evaluate(element => element instanceof HTMLImageElement && element.complete && element.naturalWidth > 0)).toBe(true);
+    }
+  });
+}
+
+test("desktop shortcuts avoid header duplicates while mobile keeps every destination", async ({ page, context }) => {
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await page.goto("/");
+  const shortcuts = page.getByRole("navigation", { name: "바로가기", exact: true });
+  for (const [width, count] of [[1280, 5], [900, 6], [390, 8]]) {
+    await page.setViewportSize({ width, height: 844 });
+    await expect(shortcuts.locator("a:visible")).toHaveCount(count);
+  }
+});
+
 test("language switcher preserves the current localized route", async ({ page }) => {
   await page.goto("/skins?q=colt&sort=NAME");
   await page.getByRole("combobox", { name: "언어" }).selectOption("en");

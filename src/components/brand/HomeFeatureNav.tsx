@@ -8,18 +8,18 @@ import styles from "./brand.module.css";
 
 export default function HomeFeatureNav({ locale }: { locale: Locale }) {
   const copy = getMessages(locale);
-  const links: { href: string; label: string; icon: StatSymbolKind }[] = [
-    { href: "/minigames", label: copy.common.minigames, icon: "battle" },
-    { href: "/community", label: getCommunityMessages(locale).nav, icon: "shield" },
+  const links: { href: string; label: string; icon: StatSymbolKind; className?: string }[] = [
+    { href: "/minigames", label: copy.common.minigames, icon: "battle", className: styles.featureInHeader },
+    { href: "/community", label: getCommunityMessages(locale).nav, icon: "shield", className: styles.featureCommunity },
     { href: "/compare", label: compareNavLabels[locale], icon: "players" },
     { href: "/rankings", label: copy.common.rankings, icon: "trophy" },
-    { href: "/brawlers", label: copy.common.brawlers, icon: "star" },
+    { href: "/brawlers", label: copy.common.brawlers, icon: "star", className: styles.featureInHeader },
     { href: "/skins", label: copy.common.skins, icon: "skin" },
     { href: "/meta", label: copy.common.meta, icon: "map" },
     { href: "/events", label: copy.common.events, icon: "timer" },
   ];
   return <nav className={styles.featureNav} aria-label={copy.home.shortcuts}>
-    {links.map(({ href, label, icon }) => <Link key={href} href={localizedHref(locale, href)}>
+    {links.map(({ href, label, icon, className }) => <Link key={href} href={localizedHref(locale, href)} className={className}>
       <span className={styles.featureIcon}><StatSymbol kind={icon} size={24} /></span>
       <span>{label}</span>
     </Link>)}

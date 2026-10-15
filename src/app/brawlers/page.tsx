@@ -46,7 +46,9 @@ export async function BrawlersPageContent({ locale }: { locale: Locale }) {
         brawlers={released.map((brawler) => ({
           id: brawler.id,
           name: brawler.name,
-          imageUrl: brawler.imageUrl2 ?? brawler.imageUrl,
+          imageUrl: brawler.imageUrl,
+          imageUrl2: brawler.imageUrl2,
+          avatarId: brawler.avatarId,
           description: brawler.description,
           rarityName: brawler.rarity?.name,
           className: brawler.class?.name,

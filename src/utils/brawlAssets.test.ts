@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { getRankedLeagueIconUrl } from "./brawlAssets";
+import { getBrawlerPortraitSources, getRankedLeagueIconUrl } from "./brawlAssets";
 import { rankDict } from "../constants/brawl";
+
+describe("catalog portrait recovery", () => {
+  it("uses the supplied avatar ID after the preferred artwork fails", () => {
+    expect(getBrawlerPortraitSources({ id: 16000110, avatarId: 28001338,
+      imageUrl2: "https://cdn.brawlify.com/brawlers/borderless/16000110.png",
+      imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000110.png" })).toEqual([
+      "https://cdn.brawlify.com/brawlers/borderless/16000110.png",
+      "https://cdn.brawlify.com/brawlers/borders/16000110.png",
+      "https://cdn.brawlify.com/profile-icons/regular/28001338.png",
+    ]);
+  });
+  it("never guesses an avatar ID or retries duplicate URLs", () => {
+    expect(getBrawlerPortraitSources({ id: 16000000, imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000000.png" })).toEqual(["https://cdn.brawlify.com/brawlers/borders/16000000.png"]);
+    expect(getBrawlerPortraitSources({ id: 16000000, avatarId: -1 })).toEqual(["https://cdn.brawlify.com/brawlers/borders/16000000.png"]);
+  });
+});
 
 describe("verified in-game ranked league image paths", () => {
   it("maps every translated game rank to the correct official artwork league", () => {

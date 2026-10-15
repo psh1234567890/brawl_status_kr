@@ -44,6 +44,15 @@ test("home header exposes localized account entry without mobile overflow", asyn
     await expect(login).toHaveAttribute("href", localizedHref(locale, "/account"));
     expect((await login.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     await expect(page.locator("header summary")).toBeVisible();
+    const shortcuts = page.getByRole("navigation", { name: getMessages(locale).home.shortcuts, exact: true });
+    await expect(shortcuts.getByRole("link")).toHaveCount(8);
+    for (const path of ["/minigames", "/community", "/compare", "/rankings", "/brawlers", "/skins", "/meta", "/events"]) {
+      const link = shortcuts.locator(`a[href="${localizedHref(locale, path)}"]`);
+      await expect(link).toBeVisible();
+      const box = await link.boundingBox();
+      expect(box?.height).toBeGreaterThanOrEqual(44);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(740);
+    }
     const header = await page.locator("header").boundingBox();
     expect(header?.height).toBeLessThanOrEqual(76);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -681,7 +690,7 @@ test("counter API failures are announced as alerts", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("mobile menu keeps search, recommendations, skins and rankings reachable", async ({ context, page }) => {
+test("mobile home exposes other features before opening the full menu", async ({ context, page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await context.addCookies([
     { name: "brawl-locale", value: "ko", url: "http://localhost:3020" },
@@ -689,6 +698,11 @@ test("mobile menu keeps search, recommendations, skins and rankings reachable", 
 
   await page.goto("/");
   const trigger = page.locator('header summary[aria-label="전체 메뉴"]');
+  const shortcuts = page.getByRole("navigation", { name: "바로가기", exact: true });
+  await expect(shortcuts.getByRole("link", { name: "트롤 박제", exact: true })).toBeVisible();
+  await shortcuts.getByRole("link", { name: "트롤 박제", exact: true }).click();
+  await expect(page).toHaveURL(/\/community$/);
+  await page.goto("/");
   await trigger.click();
   const copy = getMessages("ko").common;
   const navigation = page.getByRole("navigation", { name: copy.mainNavigation });

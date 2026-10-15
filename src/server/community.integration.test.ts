@@ -26,6 +26,7 @@ describe("community PostgreSQL visibility and deletion", () => {
     const target = new URL(base); target.pathname = "/" + name;
     let created = false;
     let roleCreated = false;
+    const closedClients: Promise<void>[] = [];
     try {
       await admin.connect();
       await admin.query(`CREATE DATABASE "${name}"`); created = true;
@@ -34,6 +35,9 @@ describe("community PostgreSQL visibility and deletion", () => {
       const migration = spawnSync(process.execPath, ["scripts/migrate-accounts.mjs"], { env, encoding: "utf8", windowsHide: true, timeout: 60_000 });
       if (migration.status !== 0) throw new Error("Disposable community migration failed: " + migration.stderr);
       database.pool = new pg.Pool({ connectionString: target.toString(), max: 2 });
+      database.pool.on("connect", client => {
+        closedClients.push(new Promise<void>(resolve => client.once("end", resolve)));
+      });
       const [owner, respondent, moderator] = [randomUUID(), randomUUID(), randomUUID()];
       for (const id of [owner, respondent, moderator]) await database.pool.query("INSERT INTO public.auth_users (id, name, email) VALUES ($1, 'Private test nickname', $2)", [id, id + "@example.invalid"]);
 
@@ -120,6 +124,9 @@ describe("community PostgreSQL visibility and deletion", () => {
       expect((await database.pool.query("SELECT count(*)::int AS n FROM public.community_image_objects")).rows[0].n).toBe(0);
     } finally {
       await database.pool?.end().catch(() => undefined);
+      // Pool.end can resolve before its client sockets have finished closing.
+      // Do not let DROP DATABASE terminate those connections mid-shutdown.
+      await Promise.all(closedClients);
       if (created) await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);
       if (roleCreated) await admin.query(`DROP ROLE "${reader}"`);
       await admin.end();

@@ -35,16 +35,16 @@ export default function PlayerProfile({
 }: PlayerProfileProps) {
   const copy = getComponentMessages(locale).profile;
   const hubCopy = {
-    ko: { recent: "최근 전투 승률", missing: "최근 전투 없음", details: "전체 프로필 통계 보기", tag: "플레이어 태그", recentCount: "전투 표본" },
-    en: { recent: "Recent win rate", missing: "No recent battles", details: "View all profile stats", tag: "Player tag", recentCount: "Battles sampled" },
-    ja: { recent: "最近の勝率", missing: "最近のバトルなし", details: "全プロフィール統計", tag: "プレイヤータグ", recentCount: "集計バトル" },
-    "pt-br": { recent: "Vitórias recentes", missing: "Sem batalhas recentes", details: "Ver todas as estatísticas", tag: "Tag do jogador", recentCount: "Batalhas analisadas" },
-    es: { recent: "Victorias recientes", missing: "Sin batallas recientes", details: "Ver todas las estadísticas", tag: "Etiqueta del jugador", recentCount: "Batallas analizadas" },
-    tr: { recent: "Son galibiyet oranı", missing: "Son savaş yok", details: "Tüm profil istatistikleri", tag: "Oyuncu etiketi", recentCount: "İncelenen savaşlar" },
-    de: { recent: "Letzte Siegquote", missing: "Keine letzten Kämpfe", details: "Alle Profilstatistiken", tag: "Spielertag", recentCount: "Ausgewertete Kämpfe" },
-    fr: { recent: "Victoires récentes", missing: "Aucun combat récent", details: "Toutes les statistiques", tag: "Tag du joueur", recentCount: "Combats analysés" },
-    it: { recent: "Vittorie recenti", missing: "Nessuna battaglia recente", details: "Tutte le statistiche", tag: "Tag giocatore", recentCount: "Battaglie analizzate" },
-    ru: { recent: "Победы за последние бои", missing: "Нет недавних боёв", details: "Все показатели профиля", tag: "Тег игрока", recentCount: "Учтено боёв" },
+    ko: { recent: "최근 전투 승률", missing: "최근 전투 없음", stats: "프로필 통계", tag: "플레이어 태그", recentCount: "전투 표본" },
+    en: { recent: "Recent win rate", missing: "No recent battles", stats: "Profile stats", tag: "Player tag", recentCount: "Battles sampled" },
+    ja: { recent: "最近の勝率", missing: "最近のバトルなし", stats: "プロフィール統計", tag: "プレイヤータグ", recentCount: "集計バトル" },
+    "pt-br": { recent: "Vitórias recentes", missing: "Sem batalhas recentes", stats: "Estatísticas do perfil", tag: "Tag do jogador", recentCount: "Batalhas analisadas" },
+    es: { recent: "Victorias recientes", missing: "Sin batallas recientes", stats: "Estadísticas del perfil", tag: "Etiqueta del jugador", recentCount: "Batallas analizadas" },
+    tr: { recent: "Son galibiyet oranı", missing: "Son savaş yok", stats: "Profil istatistikleri", tag: "Oyuncu etiketi", recentCount: "İncelenen savaşlar" },
+    de: { recent: "Letzte Siegquote", missing: "Keine letzten Kämpfe", stats: "Profilstatistiken", tag: "Spielertag", recentCount: "Ausgewertete Kämpfe" },
+    fr: { recent: "Victoires récentes", missing: "Aucun combat récent", stats: "Statistiques du profil", tag: "Tag du joueur", recentCount: "Combats analysés" },
+    it: { recent: "Vittorie recenti", missing: "Nessuna battaglia recente", stats: "Statistiche del profilo", tag: "Tag giocatore", recentCount: "Battaglie analizzate" },
+    ru: { recent: "Победы за последние бои", missing: "Нет недавних боёв", stats: "Показатели профиля", tag: "Тег игрока", recentCount: "Учтено боёв" },
   }[locale];
   return (
     <section className="w-full overflow-hidden border-b border-slate-200 bg-white" aria-label={copy.profileIcon}>
@@ -100,11 +100,8 @@ export default function PlayerProfile({
       {actions ? <div className="mt-4 flex flex-wrap gap-2 border-t border-blue-100 pt-4" role="group" aria-label={actionsLabel ?? copy.profileIcon}>{actions}</div> : null}
       </div>
 
-      <details className="group pb-3 sm:pb-6">
-        <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-black text-blue-800 transition-colors hover:border-blue-400 hover:bg-blue-100 group-open:border-blue-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
-          <span className="flex items-center gap-2.5"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 19h16M7 15v-4m5 4V5m5 10V8" /></svg>{hubCopy.details}</span>
-          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none"><path d="m6 9 6 6 6-6" /></svg>
-        </summary>
+      <div className="pb-3 sm:pb-6">
+        <h2 className="text-sm font-bold text-slate-600">{hubCopy.stats}</h2>
       <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4">
         <Stat label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="trophy" />} />
         {streakCount > 0 ? <Stat label={copy.streak} value={formatDays(locale, streakCount)} icon={<StatSymbol kind="win" />} /> : null}
@@ -139,7 +136,7 @@ export default function PlayerProfile({
           icon={<StatSymbol kind="shield" className="text-blue-600" />}
         />
       </div>
-      </details>
+      </div>
     </section>
   );
 }

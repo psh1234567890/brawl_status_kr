@@ -440,12 +440,19 @@ for (const allImagesFail of [false, true]) {
 
 test("desktop shortcuts avoid header duplicates while mobile keeps every destination", async ({ page, context }) => {
   await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await page.route("**/api/meta", route => route.fulfill({ json: [] }));
   await page.goto("/");
   const shortcuts = page.getByRole("navigation", { name: "바로가기", exact: true });
-  for (const [width, count] of [[1280, 5], [900, 6], [390, 8]]) {
+  for (const [width, count] of [[1280, 4], [900, 5], [390, 8]]) {
     await page.setViewportSize({ width, height: 844 });
     await expect(shortcuts.locator("a:visible")).toHaveCount(count);
   }
+  await page.setViewportSize({ width: 1280, height: 844 });
+  const headerLinks = page.locator("header").getByRole("navigation", { name: "주요 기능", exact: true }).getByRole("link");
+  await expect(headerLinks).toHaveText(["전적", "브롤러 추천", "미니게임", "도감", "트롤 박제"]);
+  await headerLinks.filter({ hasText: "브롤러 추천" }).click();
+  await expect(page).toHaveURL(/\/meta$/);
+  await expect(page.locator("header").getByRole("link", { name: "브롤러 추천", exact: true })).toHaveAttribute("aria-current", "page");
 });
 
 test("language switcher preserves the current localized route", async ({ page }) => {

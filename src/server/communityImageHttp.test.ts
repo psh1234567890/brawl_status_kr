@@ -18,7 +18,7 @@ beforeEach(() => {
   mocks.normalize.mockResolvedValue({ bytes: Buffer.from("webp"), width: 10, height: 10 });
   mocks.save.mockResolvedValue({ id: userId, width: 10, height: 10 });
 });
-describe("photo upload authorization and limits", () => {
+describe("photo upload authorization and validation", () => {
   it("blocks cross-site uploads before reading a session or image bytes", async () => {
     expect((await POST(request("https://elsewhere.example"))).status).toBe(403);
     expect(mocks.auth).not.toHaveBeenCalled(); expect(mocks.body).not.toHaveBeenCalled();
@@ -31,11 +31,10 @@ describe("photo upload authorization and limits", () => {
     expect((await POST(request())).status).toBe(428);
     expect(mocks.body).not.toHaveBeenCalled(); expect(mocks.save).not.toHaveBeenCalled();
   });
-  it("charges the generous attempt guard, but not the valid-photo allowance, for malformed files", async () => {
+  it("rejects malformed files without applying an upload quota", async () => {
     mocks.normalize.mockRejectedValue(new CommunityError(415, "INVALID_IMAGE_TYPE"));
     expect((await POST(request())).status).toBe(415);
-    expect(mocks.limit).toHaveBeenCalledOnce();
-    expect(mocks.limit).toHaveBeenCalledWith([expect.objectContaining({ maxRequests: 60 })]);
+    expect(mocks.limit).not.toHaveBeenCalled();
     expect(mocks.save).not.toHaveBeenCalled();
   });
   it("stores normalized bytes under the server identity without exposing storage URLs", async () => {
@@ -44,5 +43,6 @@ describe("photo upload authorization and limits", () => {
     expect(await response.json()).toEqual({ id: userId, width: 10, height: 10 });
     expect(response.headers.get("Cache-Control")).toContain("private, no-store");
     expect(mocks.save).toHaveBeenCalledWith(userId, expect.objectContaining({ width: 10 }));
+    expect(mocks.limit).not.toHaveBeenCalled();
   });
 });

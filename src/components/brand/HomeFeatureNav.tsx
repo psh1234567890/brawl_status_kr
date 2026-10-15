@@ -15,7 +15,7 @@ export default function HomeFeatureNav({ locale }: { locale: Locale }) {
     { href: "/rankings", label: copy.common.rankings, icon: "trophy" },
     { href: "/brawlers", label: copy.common.brawlers, icon: "star", className: styles.featureInHeader },
     { href: "/skins", label: copy.common.skins, icon: "skin" },
-    { href: "/meta", label: copy.common.meta, icon: "map" },
+    { href: "/meta", label: copy.common.meta, icon: "map", className: styles.featureInHeader },
     { href: "/events", label: copy.common.events, icon: "timer" },
   ];
   return <nav className={styles.featureNav} aria-label={copy.home.shortcuts}>

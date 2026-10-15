@@ -30,10 +30,13 @@ describe("community input and public copy", () => {
   it.each(["javascript:alert(1)", "http://youtu.be/abcdefghijk", "https://youtu.be.evil.example/abcdefghijk", "https://user:pass@youtu.be/abcdefghijk", "https://youtu.be:444/abcdefghijk", "https://youtube.com/redirect?q=https://example.com", "https://127.0.0.1/a.png", "https://youtu.be/short"]) ("rejects unsafe or unsupported link %s", link => {
     expect(() => communityEvidence([link], true)).toThrow();
   });
-  it("bounds text and rejects invisible controls after normalization", () => {
+  it("accepts short and long text while rejecting blank fields and invisible controls", () => {
     expect(validateCommunityPost({ ...post, title: "  Ｔｅｓｔ title  " }).title).toBe("Test title");
-    for (const title of ["abc", "a".repeat(101), "Title\u200b", "Title\u0001"]) expect(() => validateCommunityPost({ ...post, title })).toThrow();
-    expect(() => validateCommunityComment({ kind: "opinion", body: "x".repeat(2001), acceptRules: true })).toThrow();
+    for (const title of ["한", "a".repeat(101)]) expect(validateCommunityPost({ ...post, title }).title).toBe(title);
+    for (const body of ["글", "글".repeat(5000)]) expect(validateCommunityPost({ ...post, body }).body).toBe(body);
+    for (const body of ["네", "x".repeat(3000)]) expect(validateCommunityComment({ kind: "opinion", body, acceptRules: true }).body).toBe(body);
+    for (const title of ["", "   ", "Title\u200b", "Title\u0001"]) expect(() => validateCommunityPost({ ...post, title })).toThrow();
+    expect(() => validateCommunityComment({ kind: "opinion", body: " ", acceptRules: true })).toThrow();
   });
   it("masks common profanity while preserving benign Korean words", () => {
     expect(redactCommunityText("씨.발 fuck 시발점 출발")).toBe("••• ••• 시발점 출발");

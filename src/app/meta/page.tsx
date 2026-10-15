@@ -1,14 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BrawlImage from "../../components/BrawlImage";
 import GameModeIcon from "../../components/GameModeIcon";
-import LanguageSwitcher from "../../components/LanguageSwitcher";
+import BrandHeader from "../../components/brand/BrandHeader";
+import BrandFooter from "../../components/brand/BrandFooter";
+import brandStyles from "../../components/brand/brand.module.css";
 import OwnedBrawlerRecommendations from "../../components/OwnedBrawlerRecommendations";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
 import { META_WINDOW_DAYS } from "../../constants/meta";
-import { localizedHref, type Locale } from "../../i18n/config";
+import type { Locale } from "../../i18n/config";
 import {
   formatConfidenceOnly,
   formatMetaAllCandidates,
@@ -204,29 +205,11 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   }
 
   return (
+    <div className={brandStyles.page} lang={locale}>
+    <BrandHeader locale={locale} />
     <main className="min-h-screen bg-[#f6f7fb] pb-12 text-slate-950">
       <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
         <header className="flex flex-col gap-4 lg:py-2">
-          <div className="flex items-center justify-between gap-3">
-            <Link href={localizedHref(locale, "/")} className="min-w-0">
-              <span className="block text-lg font-black text-slate-950 sm:text-2xl">
-                Brawloop
-              </span>
-              <span className="block truncate text-xs font-bold text-slate-500 sm:text-sm">
-                {copy.home.brandSubtitle}
-              </span>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Link
-                href={localizedHref(locale, "/")}
-                className="hidden rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm transition-colors hover:border-blue-300 hover:text-blue-700 sm:inline-flex"
-              >
-                {copy.meta.back}
-              </Link>
-              <LanguageSwitcher locale={locale} />
-            </div>
-          </div>
-
           <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <p className="text-xs font-black uppercase tracking-[0.08em] text-blue-600">
               {copy.common.meta}
@@ -456,6 +439,8 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
       )}
       </div>
     </main>
+    <BrandFooter locale={locale} />
+    </div>
   );
 }
 

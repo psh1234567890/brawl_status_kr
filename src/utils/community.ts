@@ -1,6 +1,6 @@
 import { isLocale, type Locale } from "../i18n/config";
 
-export const COMMUNITY_RULES_VERSION = "community-v1";
+export const COMMUNITY_RULES_VERSION = "community-v2";
 export type CommunityStatus = "pending" | "published" | "rejected" | "hidden" | "withdrawn";
 export type CommunityKind = "post" | "comment";
 export type CommentKind = "opinion" | "correction";
@@ -21,10 +21,10 @@ export function communityPage(value: string | null) {
   if (!/^[1-9][0-9]{0,2}$/.test(value)) throw new CommunityError(400, "INVALID_BODY");
   return Number(value);
 }
-function text(value: unknown, min: number, max: number, code: string) {
+function text(value: unknown, code: string) {
   if (typeof value !== "string") throw new CommunityError(400, code);
   const normalized = value.normalize("NFKC").trim();
-  if ([...normalized].length < min || [...normalized].length > max) {
+  if (!normalized) {
     throw new CommunityError(400, code);
   }
   if (/[\p{Cf}\p{Cs}\u0000-\u0008\u000B-\u001F\u007F]/u.test(normalized)) throw new CommunityError(400, code + "_CHARACTERS");
@@ -58,7 +58,7 @@ export function communityEvidence(value: unknown, required: boolean) {
 export function validateCommunityPost(body: Record<string, unknown>) {
   if (body.acceptRules !== true || body.confirmIntent !== true) throw new CommunityError(400, "RULES_REQUIRED");
   if (typeof body.locale !== "string" || !isLocale(body.locale)) throw new CommunityError(400, "INVALID_BODY");
-  const content = { title: text(body.title, 4, 100, "INVALID_TITLE"), body: text(body.body, 20, 4000, "INVALID_POST_BODY"), locale: body.locale };
+  const content = { title: text(body.title, "INVALID_TITLE"), body: text(body.body, "INVALID_POST_BODY"), locale: body.locale };
   const evidence = validateEvidence(body);
   if (evidence.evidenceUrls.length + evidence.imageIds.length === 0) throw new CommunityError(400, "EVIDENCE_REQUIRED");
   return { ...content, ...evidence };
@@ -66,7 +66,7 @@ export function validateCommunityPost(body: Record<string, unknown>) {
 export function validateCommunityComment(body: Record<string, unknown>) {
   if (body.acceptRules !== true) throw new CommunityError(400, "RULES_REQUIRED");
   if (body.kind !== "opinion" && body.kind !== "correction") throw new CommunityError(400, "INVALID_BODY");
-  return { body: text(body.body, 2, 2000, "INVALID_COMMENT_BODY"), kind: body.kind, ...validateEvidence(body) };
+  return { body: text(body.body, "INVALID_COMMENT_BODY"), kind: body.kind, ...validateEvidence(body) };
 }
 function validateEvidence(body: Record<string, unknown>) {
   const evidenceUrls = communityEvidence(body.evidenceUrls ?? [], false);

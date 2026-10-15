@@ -19,7 +19,7 @@ export default function BrandHeader({ locale }: { locale: Locale }) {
   return <header className={`${styles.header} ${styles.liveHeader}`}>
     <Link href={localizedHref(locale, "/")} aria-label={`Brawloop · ${copy.common.home}`} className={styles.wordmark}>brawloop<span className={styles.logoDot} /></Link>
     <nav aria-label={copy.common.mainNavigation} className={styles.desktopNav}>
-      {[["/", brand.stats], ["/minigames", copy.common.minigames], ["/brawlers", brand.catalog]].map(([path, label]) => <Link key={path} href={localizedHref(locale, path)} className={isActiveNavigationItem(pathname, path) ? styles.activeNav : undefined} aria-current={isActiveNavigationItem(pathname, path) ? "page" : undefined}>{label}</Link>)}
+      {[["/", brand.stats], ["/meta", locale === "ko" ? "브롤러 추천" : copy.common.meta], ["/minigames", copy.common.minigames], ["/brawlers", brand.catalog]].map(([path, label]) => <Link key={path} href={localizedHref(locale, path)} className={isActiveNavigationItem(pathname, path) ? styles.activeNav : undefined} aria-current={isActiveNavigationItem(pathname, path) ? "page" : undefined}>{label}</Link>)}
       <Link href={localizedHref(locale, "/community")} className={`${styles.communityNav} ${isActiveNavigationItem(pathname, "/community") ? styles.activeNav : ""}`} aria-current={isActiveNavigationItem(pathname, "/community") ? "page" : undefined}>{getCommunityMessages(locale).nav}</Link>
     </nav>
     <div className={styles.liveHeaderActions}>

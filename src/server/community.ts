@@ -44,10 +44,10 @@ export async function createCommunityPost(userId: string, input: ReturnType<type
     await client.query("BEGIN");
     await client.query("INSERT INTO public.community_profiles (user_id, alias, rules_version) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET rules_version = EXCLUDED.rules_version, accepted_at = now()", [userId, "Loop-" + randomBytes(6).toString("hex").toUpperCase(), COMMUNITY_RULES_VERSION]);
     const id = randomUUID();
-    await client.query("INSERT INTO public.community_posts (id, author_id, locale, title, body, evidence_urls) VALUES ($1, $2, $3, $4, $5, $6::jsonb)", [id, userId, input.locale, input.title, input.body, JSON.stringify(input.evidenceUrls)]);
+    await client.query("INSERT INTO public.community_posts (id, author_id, locale, title, body, evidence_urls, status) VALUES ($1, $2, $3, $4, $5, $6::jsonb, 'published')", [id, userId, input.locale, input.title, input.body, JSON.stringify(input.evidenceUrls)]);
     await attachCommunityImages(client, userId, input.imageIds, "post", id);
     await client.query("COMMIT");
-    return { id, status: "pending" as const };
+    return { id, status: "published" as const };
   } catch (error) { await client.query("ROLLBACK").catch(() => undefined); throw error; }
   finally { client.release(); }
 }
@@ -60,10 +60,10 @@ export async function createCommunityComment(userId: string, postId: string, inp
     if (!parent.rowCount) throw new CommunityError(404, "NOT_FOUND");
     await client.query("INSERT INTO public.community_profiles (user_id, alias, rules_version) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET rules_version = EXCLUDED.rules_version, accepted_at = now()", [userId, "Loop-" + randomBytes(6).toString("hex").toUpperCase(), COMMUNITY_RULES_VERSION]);
     const id = randomUUID();
-    await client.query("INSERT INTO public.community_comments (id, post_id, author_id, kind, body, evidence_urls) VALUES ($1, $2, $3, $4, $5, $6::jsonb)", [id, postId, userId, input.kind, input.body, JSON.stringify(input.evidenceUrls)]);
+    await client.query("INSERT INTO public.community_comments (id, post_id, author_id, kind, body, evidence_urls, status) VALUES ($1, $2, $3, $4, $5, $6::jsonb, 'published')", [id, postId, userId, input.kind, input.body, JSON.stringify(input.evidenceUrls)]);
     await attachCommunityImages(client, userId, input.imageIds, "comment", id);
     await client.query("COMMIT");
-    return { id, status: "pending" as const };
+    return { id, status: "published" as const };
   } catch (error) { await client.query("ROLLBACK").catch(() => undefined); throw error; }
   finally { client.release(); }
 }

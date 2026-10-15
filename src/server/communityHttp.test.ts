@@ -28,7 +28,8 @@ beforeEach(() => {
   mocks.onboard.mockResolvedValue(undefined);
   mocks.limit.mockResolvedValue(null);
   mocks.admin.mockResolvedValue(false);
-  mocks.post.mockResolvedValue({ id, status: "pending" });
+  mocks.post.mockResolvedValue({ id, status: "published" });
+  mocks.comment.mockResolvedValue({ id, status: "published" });
   vi.mocked(checkCommunityImageDrafts).mockResolvedValue(undefined);
 });
 describe("community mutation authorization", () => {
@@ -54,34 +55,36 @@ describe("community mutation authorization", () => {
     mocks.onboard.mockRejectedValue(new AccountError(428, "ONBOARDING_REQUIRED"));
     expect((await post(request(input))).status).toBe(428);
     expect(mocks.limit).not.toHaveBeenCalled();
-    expect((await post(request({ ...input, body: "x".repeat(30_000) }))).status).toBe(413);
+    expect((await post(request({ ...input, body: "x".repeat(1024 * 1024) }))).status).toBe(413);
     expect(mocks.post).not.toHaveBeenCalled();
   });
-  it("applies the shared account limit before inserting", async () => {
+  it("publishes beyond the former daily and hourly quotas without charging a limiter", async () => {
     mocks.limit.mockResolvedValue(new Response(JSON.stringify({ error: "RATE_LIMITED" }), { status: 429 }));
-    expect((await post(request(input))).status).toBe(429);
-    expect(mocks.limit).toHaveBeenCalledWith([expect.objectContaining({ subject: userId, maxRequests: 3, windowSeconds: 86400 })]);
-    expect(mocks.post).not.toHaveBeenCalled();
+    for (let attempt = 0; attempt < 4; attempt++) expect((await post(request({ ...input, title: "한", body: "글" }))).status).toBe(201);
+    for (let attempt = 0; attempt < 21; attempt++) expect((await comment(request({ expectedUserId: userId, body: "네", kind: "opinion", acceptRules: true }), context())).status).toBe(201);
+    expect(mocks.limit).not.toHaveBeenCalled();
+    expect(mocks.post).toHaveBeenCalledTimes(4);
+    expect(mocks.comment).toHaveBeenCalledTimes(21);
   });
-  it("reports invalid fields without consuming the publishing allowance", async () => {
-    for (const [change, code] of [[{ title: "abc" }, "INVALID_TITLE"], [{ body: "short" }, "INVALID_POST_BODY"], [{ evidenceUrls: ["https://example.invalid/evidence.png"] }, "INVALID_EVIDENCE"], [{ acceptRules: false }, "RULES_REQUIRED"]] as const) {
+  it("rejects empty fields, invalid evidence and missing rules consent", async () => {
+    for (const [change, code] of [[{ title: " " }, "INVALID_TITLE"], [{ body: " " }, "INVALID_POST_BODY"], [{ evidenceUrls: ["https://example.invalid/evidence.png"] }, "INVALID_EVIDENCE"], [{ acceptRules: false }, "RULES_REQUIRED"]] as const) {
       const response = await post(request({ ...input, ...change }));
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ error: code });
     }
     expect(mocks.limit).not.toHaveBeenCalled();
     expect(mocks.post).not.toHaveBeenCalled();
-    const invalidComment = await comment(request({ expectedUserId: userId, body: "x", kind: "correction", acceptRules: true }), context());
+    const invalidComment = await comment(request({ expectedUserId: userId, body: " ", kind: "correction", acceptRules: true }), context());
     expect(invalidComment.status).toBe(400);
     expect(await invalidComment.json()).toEqual({ error: "INVALID_COMMENT_BODY" });
     expect(mocks.limit).not.toHaveBeenCalled();
     expect((await post(request(input))).status).toBe(201);
-    expect(mocks.limit).toHaveBeenCalledOnce();
+    expect(mocks.limit).not.toHaveBeenCalled();
   });
-  it("uses the server session identity and returns a private pending submission", async () => {
+  it("uses the server session identity and returns a published submission", async () => {
     const response = await post(request(input));
     expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({ id, status: "pending" });
+    expect(await response.json()).toEqual({ id, status: "published" });
     expect(mocks.post).toHaveBeenCalledWith(userId, expect.objectContaining({ title: input.title }));
     expect(response.headers.get("Cache-Control")).toContain("private, no-store");
     expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");

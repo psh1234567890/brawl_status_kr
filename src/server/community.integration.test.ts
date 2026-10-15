@@ -16,7 +16,7 @@ import { deleteCommunityImageObject } from "./communityImageStore";
 
 const configuredUrl = process.env.COMMUNITY_TEST_DATABASE_URL;
 describe("community PostgreSQL visibility and deletion", () => {
-  (configuredUrl ? it : it.skip)("keeps review private, prevents stale approvals and cascades account deletion", async () => {
+  (configuredUrl ? it : it.skip)("publishes immediately, preserves moderation privacy and cascades account deletion", async () => {
     const base = new URL(configuredUrl!);
     if (!["localhost", "127.0.0.1", "[::1]"].includes(base.hostname) || !base.pathname.endsWith("_test")) throw new Error("Community integration requires an isolated loopback test database.");
     const suffix = randomUUID().replace(/-/g, "");
@@ -49,6 +49,12 @@ describe("community PostgreSQL visibility and deletion", () => {
       await expect(createCommunityPost(respondent, input)).rejects.toMatchObject({ code: "IMAGE_EXPIRED" });
       expect((await database.pool.query("SELECT count(*)::int AS n FROM public.community_posts")).rows[0].n).toBe(0);
       const post = await createCommunityPost(owner, input);
+      expect(post.status).toBe("published");
+      expect((await listCommunityPosts("en", 1)).posts[0].id).toBe(post.id);
+      expect((await readCommunityPost(post.id)).post.status).toBe("published");
+      expect((await readCommunityImage(photo.id)).width).toBe(10);
+      // Older pending submissions keep their visibility and can still be reviewed.
+      await database.pool.query("UPDATE public.community_posts SET status = 'pending' WHERE id = $1", [post.id]);
       await expect(createCommunityPost(owner, input)).rejects.toMatchObject({ code: "IMAGE_EXPIRED" });
       await expect(removeCommunityImage(photo.id, owner)).rejects.toMatchObject({ status: 404 });
       await expect(readCommunityImage(photo.id)).rejects.toMatchObject({ status: 404 });
@@ -67,6 +73,10 @@ describe("community PostgreSQL visibility and deletion", () => {
 
       const correctionPhoto = await saveCommunityImage(respondent, { bytes: Buffer.from([1]), width: 12, height: 12 });
       const comment = await createCommunityComment(respondent, post.id, { kind: "correction", body: "The synthetic clip omits the preceding action.", evidenceUrls: [], imageIds: [correctionPhoto.id] });
+      expect(comment.status).toBe("published");
+      expect((await readCommunityPost(post.id)).comments[0].id).toBe(comment.id);
+      expect((await readCommunityImage(correctionPhoto.id)).width).toBe(12);
+      await database.pool.query("UPDATE public.community_comments SET status = 'pending' WHERE id = $1", [comment.id]);
       await expect(readCommunityImage(correctionPhoto.id, owner)).rejects.toMatchObject({ status: 404 });
       expect((await readCommunityPost(post.id)).comments).toEqual([]);
       expect((await readCommunityPost(post.id, owner)).comments).toEqual([]);
@@ -92,6 +102,15 @@ describe("community PostgreSQL visibility and deletion", () => {
       await withdrawCommunityContent("post", post.id, owner);
       await expect(readCommunityImage(photo.id)).rejects.toMatchObject({ status: 404 });
       await expect(moderateCommunityContent(moderator, "post", post.id, 3, "published", "Stale approval")).rejects.toMatchObject({ code: "REVIEW_CONFLICT" });
+
+      // Exercise the actual PostgreSQL constraints at both former length boundaries.
+      const short = await createCommunityPost(owner, { title: "한", body: "글", locale: "en", evidenceUrls: ["https://youtu.be/abcdefghijk"], imageIds: [] });
+      expect((await readCommunityPost(short.id)).post).toMatchObject({ title: "한", body: "글", status: "published" });
+      const long = await createCommunityPost(owner, { title: "t".repeat(120), body: "글".repeat(4500), locale: "en", evidenceUrls: ["https://youtu.be/abcdefghijk"], imageIds: [] });
+      await createCommunityComment(respondent, long.id, { kind: "opinion", body: "네", evidenceUrls: [], imageIds: [] });
+      await createCommunityComment(respondent, long.id, { kind: "correction", body: "c".repeat(2500), evidenceUrls: [], imageIds: [] });
+      expect((await readCommunityPost(long.id)).post.body).toHaveLength(4500);
+      expect((await readCommunityPost(long.id)).comments).toHaveLength(2);
 
       const rls = await database.pool.query("SELECT relname, relrowsecurity FROM pg_class WHERE relnamespace = 'public'::regnamespace AND relname LIKE 'community_%' AND relkind = 'r'");
       expect(rls.rows).toHaveLength(6);

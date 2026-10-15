@@ -30,22 +30,21 @@ export async function communityMutation<T = Record<string, unknown>>(request: Re
   if (rejectCrossSiteMutation(request)) return communityJson({ error: "CROSS_SITE_REQUEST" }, 403);
   try {
     const userId = options.action === "moderate" ? await requireCommunityAdmin(request) : (await getAuthenticatedAccount(request)).userId;
-    const body = await readBoundedJson(request, 24 * 1024);
+    const body = await readBoundedJson(request, options.action === "post" || options.action === "comment" ? 1024 * 1024 : 24 * 1024);
     assertAllowedKeys(body, ["expectedUserId", ...options.keys]);
     requireExpectedUser(body, userId);
     if (options.action === "post" || options.action === "comment") await requireOnboardedAccount(userId);
-    // Invalid submissions must never consume the member's publishing allowance.
     const input = options.parse ? options.parse(body) : body as T;
     await options.check?.(userId, input);
-    const rule = {
-      post: { scope: "community-post-user-day", windowSeconds: 86400, maxRequests: 3 },
-      comment: { scope: "community-comment-user-hour", windowSeconds: 3600, maxRequests: 20 },
-      withdraw: { scope: "community-withdraw-user-hour", windowSeconds: 3600, maxRequests: 30 },
-      moderate: { scope: "community-moderate-user-hour", windowSeconds: 3600, maxRequests: 120 },
-      "image-delete": { scope: "community-image-delete-user-hour", windowSeconds: 3600, maxRequests: 60 },
-    }[options.action];
-    const limited = await enforceAccountRateLimit([{ ...rule, subject: userId }]);
-    if (limited) return limited;
+    if (options.action !== "post" && options.action !== "comment") {
+      const rule = {
+        withdraw: { scope: "community-withdraw-user-hour", windowSeconds: 3600, maxRequests: 30 },
+        moderate: { scope: "community-moderate-user-hour", windowSeconds: 3600, maxRequests: 120 },
+        "image-delete": { scope: "community-image-delete-user-hour", windowSeconds: 3600, maxRequests: 60 },
+      }[options.action];
+      const limited = await enforceAccountRateLimit([{ ...rule, subject: userId }]);
+      if (limited) return limited;
+    }
     return communityJson(await handler(userId, input), options.action === "post" || options.action === "comment" ? 201 : 200);
   } catch (error) { return communityError(error); }
 }

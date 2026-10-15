@@ -23,7 +23,7 @@ test("guests can read the community but cannot submit posts or comments", async 
   }
 });
 
-test("registered posts and comments publish immediately without writing quotas or length rules", async ({ page, context, browser, syntheticAccount }, testInfo) => {
+test("posts, comments and photos publish immediately and support later moderation", async ({ page, context, browser, syntheticAccount }, testInfo) => {
   test.setTimeout(45_000);
   const origin = String(testInfo.project.use.baseURL);
   const title = "Synthetic report " + syntheticAccount.userId.slice(0, 8);
@@ -89,7 +89,7 @@ test("registered posts and comments publish immediately without writing quotas o
     await expect(review).toHaveCount(0);
     expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(404);
     expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
-    await page.getByLabel("검토 상태", { exact: true }).selectOption("hidden");
+    await page.getByLabel("검토 상태").selectOption("hidden");
     await review.getByLabel("검토 사유", { exact: true }).fill("Synthetic post restored after a moderation check");
     await review.getByRole("button", { name: "처리", exact: true }).click();
     await expect(review).toHaveCount(0);

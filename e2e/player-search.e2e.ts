@@ -60,6 +60,11 @@ test("saved player reopens with a real trophy delta and anonymous action counts"
   await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
   await page.getByRole("button", { name: "검색", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Return Player" })).toBeVisible();
+  const profile = page.getByRole("region", { name: "프로필 아이콘", exact: true });
+  await expect(profile.getByRole("heading", { name: "프로필 통계", exact: true })).toBeVisible();
+  await expect(profile.getByText("경험치 레벨", { exact: true })).toBeVisible();
+  await expect(profile.getByText("3v3 승리", { exact: true })).toBeVisible();
+  await expect(profile.locator("details, summary")).toHaveCount(0);
   await page.getByRole("button", { name: "저장", exact: true }).click();
   await expect.poll(() => events.includes("profile_save")).toBe(true);
   trophies = 12400;
@@ -120,7 +125,10 @@ test("player search renders a profile and stores the recent tag", async ({ page 
   await expect(profile.getByRole("link", { name: "친구와 비교" })).toHaveAttribute("href", "/compare?a=" + tag);
   await expect(profile.getByRole("button", { name: "저장" })).toBeVisible();
   await expect(profile.getByRole("button", { name: "공유" })).toBeVisible();
-  await profile.locator("summary").click();
+  await expect(profile.locator("details, summary")).toHaveCount(0);
+  await expect(profile.getByRole("heading", { name: "프로필 통계", exact: true })).toBeVisible();
+  await expect(profile.getByText("경험치 레벨", { exact: true })).toBeVisible();
+  await expect(profile.getByText("3v3 승리", { exact: true })).toBeVisible();
   await expect(profile.locator('img[src*="/ranked/regular/Mythic.png"]').first()).toBeVisible();
   await expect(profile.locator('img[src*="/ranked/regular/Legendary.png"]')).toBeVisible();
   await expect(profile).toContainText("신화 II");

@@ -64,6 +64,11 @@
 .compactSearch .heroContent { max-width: none; }
 .compactSearch .searchForm { max-width: none; margin-top: 0; border: 1px solid var(--line); box-shadow: none; }
 .savedSearches { display: flex; flex-wrap: wrap; gap: 18px 30px; padding: 20px 0 4px; }
+.featureNav { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.featureNav a { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; min-width: 0; min-height: 74px; padding: 6px 2px; text-align: center; font-size: 13px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; border-radius: 8px; }
+.featureNav a:hover { color: var(--purple); background: #f5f3ff; }
+.featureIcon { display: grid; place-items: center; width: 42px; height: 38px; color: var(--purple); }
+.featureNav a:nth-child(2) .featureIcon { color: #b34d36; }
 .portalMain { display: flex; flex-direction: column; gap: 24px; max-width: 1232px; margin: auto; padding: 10px 24px 45px; }
 .portalHeading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding: 5px 0 8px; }
 .portalHeading h1 { font-size: clamp(30px, 3.2vw, 42px); line-height: 1.2; font-weight: 820; letter-spacing: -1.2px; }
@@ -256,6 +261,8 @@
   .profileStats > div { padding-left: 20px; }
 }
 @media (max-width: 760px) {
+  .featureNav { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; padding: 14px 0; }
+  .featureNav a { min-height: 78px; gap: 5px; font-size: 12px; }
   .liveHeader { gap: 10px; }
   .liveHeaderActions { gap: 5px; }
   .desktopLanguage { display: none; }

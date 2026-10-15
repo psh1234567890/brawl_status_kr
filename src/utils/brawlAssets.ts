@@ -4,6 +4,17 @@ export function getPlayerIconUrl(iconId: number) {
   return `${BRAWLIFY_CDN_BASE_URL}/profile-icons/regular/${iconId}.png`;
 }
 
+/** Use the catalog's actual avatar ID; it is not derived from the brawler ID. */
+export function getBrawlerPortraitSources(brawler: { id: number; imageUrl?: string; imageUrl2?: string; avatarId?: number }) {
+  const avatarId = brawler.avatarId;
+  return [...new Set([
+    brawler.imageUrl2,
+    brawler.imageUrl,
+    typeof avatarId === "number" && Number.isSafeInteger(avatarId) && avatarId > 0 ? getPlayerIconUrl(avatarId) : undefined,
+    `${BRAWLIFY_CDN_BASE_URL}/brawlers/borders/${brawler.id}.png`,
+  ].filter((source): source is string => Boolean(source)))];
+}
+
 export function getClubBadgeUrl(badgeId: number) {
   return `${BRAWLIFY_CDN_BASE_URL}/club-badges/regular/${badgeId}.png`;
 }

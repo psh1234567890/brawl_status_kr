@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BrawlImage from "../../../components/BrawlImage";
+import BrawlerPortrait from "../../../components/BrawlerPortrait";
 import PortalLayout, { StatPill } from "../../../components/PortalLayout";
 import { localeAlternates, localizedHref, type Locale } from "../../../i18n/config";
 import { getCatalogPageMessages } from "../../../i18n/catalogPageMessages";
@@ -74,13 +75,12 @@ export async function BrawlerDetailPageContent({ id, locale }: { id: string; loc
       actions={<LinkButton href={localizedHref(locale, "/")}>{copy.detail.action}</LinkButton>}
     >
       <section className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <BrawlImage
-          src={brawler.imageUrl2 ?? brawler.imageUrl ?? `https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`}
+        <BrawlerPortrait
+          brawler={brawler}
           alt={displayName}
           width={320}
           height={320}
           className="h-80 w-full rounded-lg border border-slate-200 bg-white object-contain p-6 shadow-sm"
-          fallbackText={displayName.slice(0, 1)}
         />
         <div className="grid content-start gap-3 sm:grid-cols-2">
           <StatPill label={copy.detail.brawlerId} value={brawler.id} />

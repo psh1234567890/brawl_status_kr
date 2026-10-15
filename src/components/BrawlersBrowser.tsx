@@ -14,13 +14,15 @@ import {
   translateBrawlerName,
   translateRarityName,
 } from "../utils/brawlTranslations";
-import BrawlImage from "./BrawlImage";
+import BrawlerPortrait from "./BrawlerPortrait";
 import StatSymbol from "./StatSymbol";
 
 export type BrawlerBrowserItem = {
   id: number;
   name: string;
   imageUrl?: string;
+  imageUrl2?: string;
+  avatarId?: number;
   description?: string;
   rarityName?: string;
   className?: string;
@@ -149,18 +151,14 @@ export default function BrawlersBrowser({
                 className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex items-center gap-4">
-                  <BrawlImage
-                    src={
-                      brawler.imageUrl ??
-                      "https://cdn.brawlify.com/brawlers/borders/" + brawler.id + ".png"
-                    }
+                  <BrawlerPortrait
+                    brawler={brawler}
                     alt={displayName}
                     width={72}
                     height={72}
                     loading={index < 4 ? "eager" : "lazy"}
                     sizes="64px"
                     className="h-16 w-16 shrink-0 rounded-md bg-blue-50 object-contain"
-                    fallbackText={displayName.slice(0, 1)}
                   />
                   <div className="min-w-0">
                     <h2 className="truncate text-lg font-black text-slate-900">

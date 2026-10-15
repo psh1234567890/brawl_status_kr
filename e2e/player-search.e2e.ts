@@ -65,6 +65,12 @@ test("saved player reopens with a real trophy delta and anonymous action counts"
   await expect(profile.getByText("경험치 레벨", { exact: true })).toBeVisible();
   await expect(profile.getByText("3v3 승리", { exact: true })).toBeVisible();
   await expect(profile.locator("details, summary")).toHaveCount(0);
+  const experience = await profile.getByText("경험치 레벨", { exact: true }).locator("..").boundingBox();
+  const victories = await profile.getByText("3v3 승리", { exact: true }).locator("..").boundingBox();
+  expect(experience).not.toBeNull();
+  expect(victories).not.toBeNull();
+  expect(Math.abs(experience!.y - victories!.y)).toBeLessThan(2);
+  expect(victories!.x).toBeGreaterThan(experience!.x + experience!.width);
   await page.getByRole("button", { name: "저장", exact: true }).click();
   await expect.poll(() => events.includes("profile_save")).toBe(true);
   trophies = 12400;

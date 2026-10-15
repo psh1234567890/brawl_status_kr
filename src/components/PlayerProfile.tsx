@@ -102,8 +102,8 @@ export default function PlayerProfile({
 
       <div className="pb-3 sm:pb-6">
         <h2 className="text-sm font-bold text-slate-600">{hubCopy.stats}</h2>
-      <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2 lg:grid-cols-4">
-        <Stat label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="trophy" />} />
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <Stat label={copy.highest} value={playerData.highestTrophies.toLocaleString(numberLocales[locale])} icon={<StatSymbol kind="trophy" />} wide={streakCount <= 0} />
         {streakCount > 0 ? <Stat label={copy.streak} value={formatDays(locale, streakCount)} icon={<StatSymbol kind="win" />} /> : null}
         <Stat
           label={copy.playEstimate}
@@ -119,13 +119,13 @@ export default function PlayerProfile({
         <Stat
           label={copy.allTimeRanked}
           value={formatRank(playerData.highestAllTimeRankedRankName, playerData.highestAllTimeRankedElo, locale)}
-          icon={<RankedLeagueIcon rankName={playerData.highestAllTimeRankedRankName} />}
+          icon={<RankedLeagueIcon rankName={playerData.highestAllTimeRankedRankName} className="h-8 w-8 sm:h-10 sm:w-10" />}
           wide
         />
         <Stat
           label={copy.currentRanked}
           value={formatRank(playerData.rankedRankName, playerData.rankedElo, locale)}
-          icon={<RankedLeagueIcon rankName={playerData.rankedRankName} />}
+          icon={<RankedLeagueIcon rankName={playerData.rankedRankName} className="h-8 w-8 sm:h-10 sm:w-10" />}
           wide
         />
         <Stat label={copy.roboRumble} value={playerData.bestRoboRumbleTime ?? "-"} icon={<GameModeIcon modeId={48000008} size={32} />} />
@@ -134,6 +134,7 @@ export default function PlayerProfile({
           label={copy.championship}
           value={playerData.isQualifiedFromChampionshipChallenge ? copy.qualified : copy.notQualified}
           icon={<StatSymbol kind="shield" className="text-blue-600" />}
+          wide
         />
       </div>
       </div>
@@ -205,13 +206,13 @@ function Stat({
 }) {
   return (
     <div
-      className={`flex min-w-0 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 sm:block sm:p-3 ${wide ? "sm:col-span-2" : ""}`}
+      className={`min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 sm:p-3 ${wide ? "col-span-2 flex items-center justify-between gap-3 sm:block" : ""}`}
       title={title}
     >
-      <p className="min-w-0 flex-1 text-xs font-bold leading-5 text-slate-500 sm:truncate sm:font-black">{label}</p>
-      <div className="flex min-w-0 shrink-0 items-center gap-2 sm:mt-1 sm:shrink">
+      <p className="text-xs font-bold leading-5 text-slate-500 sm:font-black">{label}</p>
+      <div className={`flex min-w-0 flex-wrap items-center gap-2 ${wide ? "sm:mt-1" : "mt-1"}`}>
         {icon}
-        <p className="min-w-0 break-words text-sm font-black tabular-nums text-slate-950 sm:truncate sm:text-base">{value}</p>
+        <p className="min-w-0 break-words text-sm font-black tabular-nums text-slate-950 sm:text-base">{value}</p>
       </div>
     </div>
   );

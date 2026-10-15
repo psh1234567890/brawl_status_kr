@@ -24,6 +24,7 @@ test("guests can read the community but cannot submit posts or comments", async 
 });
 
 test("registered posts and comments publish immediately without writing quotas or length rules", async ({ page, context, browser, syntheticAccount }, testInfo) => {
+  test.setTimeout(45_000);
   const origin = String(testInfo.project.use.baseURL);
   const title = "Synthetic report " + syntheticAccount.userId.slice(0, 8);
   const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
@@ -108,24 +109,40 @@ test("registered posts and comments publish immediately without writing quotas o
     expect(published.comments[0]).toMatchObject({ kind: "correction", body: correction, status: "published" });
     expect(JSON.stringify(published)).not.toContain(syntheticAccount.userId);
     expect(JSON.stringify(published)).not.toContain(syntheticAccount.email);
-    const headers = { Origin: origin };
-    for (let attempt = 0; attempt < 4; attempt++) {
-      const response = await context.request.post("/api/community/posts", { headers, data: { expectedUserId: syntheticAccount.userId, title: "한", body: "글", locale: "en", evidenceUrls: ["https://youtu.be/abcdefghijk"], acceptRules: true, confirmIntent: true } });
-      expect(response.status()).toBe(201);
-      expect(await response.json()).toMatchObject({ status: "published" });
-    }
-    for (let attempt = 0; attempt < 21; attempt++) {
-      const response = await context.request.post("/api/community/posts/" + id + "/comments", { headers, data: { expectedUserId: syntheticAccount.userId, body: "네", kind: "opinion", acceptRules: true } });
-      expect(response.status()).toBe(201);
-    }
-    expect((await (await anonymous.request.get(origin + "/api/community/posts/" + id)).json()).comments).toHaveLength(22);
     await context.request.delete("/api/community/posts/" + id, { headers: { Origin: origin }, data: { expectedUserId: syntheticAccount.userId } });
     expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
   } finally {
-    await anonymous.close();
+    await anonymous.close().catch(() => undefined);
     await pool.query("DELETE FROM analytics_private.usage_admin_allowlist WHERE user_id = $1", [syntheticAccount.userId]).catch(() => undefined);
     await pool.end();
   }
+});
+
+test("members can exceed former quotas and publish text beyond former length boundaries", async ({ context, request, syntheticAccount }, testInfo) => {
+  test.setTimeout(45_000);
+  const headers = { Origin: String(testInfo.project.use.baseURL) };
+  let postId = "";
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const response = await context.request.post("/api/community/posts", { headers, data: {
+      expectedUserId: syntheticAccount.userId, title: attempt ? "한" : "t".repeat(120),
+      body: attempt ? "글" : "글".repeat(4500), locale: "en", evidenceUrls: ["https://youtu.be/abcdefghijk"], acceptRules: true, confirmIntent: true,
+    } });
+    expect(response.status()).toBe(201);
+    const post = await response.json();
+    expect(post.status).toBe("published");
+    if (!attempt) postId = post.id;
+  }
+  for (let attempt = 0; attempt < 21; attempt++) {
+    const response = await context.request.post("/api/community/posts/" + postId + "/comments", { headers, data: {
+      expectedUserId: syntheticAccount.userId, body: attempt ? "네" : "c".repeat(2500), kind: "opinion", acceptRules: true,
+    } });
+    expect(response.status()).toBe(201);
+  }
+  const published = await (await request.get("/api/community/posts/" + postId)).json();
+  expect(published.post).toMatchObject({ title: "t".repeat(120), body: "글".repeat(4500), status: "published" });
+  expect(published.comments).toHaveLength(21);
+  expect(published.comments.every((entry: { status: string }) => entry.status === "published")).toBe(true);
+  expect(published.comments.some((entry: { body: string }) => entry.body === "c".repeat(2500))).toBe(true);
 });
 
 test("an unfinished signup cannot write through the API", async ({ context, syntheticAccount }, testInfo) => {

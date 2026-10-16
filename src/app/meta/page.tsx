@@ -207,20 +207,20 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   return (
     <div className={brandStyles.page} lang={locale}>
     <BrandHeader locale={locale} />
-    <main className="min-h-screen bg-[#f6f7fb] pb-12 text-slate-950">
-      <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-white pb-12 text-slate-950">
+      <div className="mx-auto w-full max-w-[1232px] px-4 pb-8 pt-3 sm:px-6 lg:px-6">
         <header className="flex flex-col gap-4 lg:py-2">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <p className="text-xs font-black uppercase tracking-[0.08em] text-blue-600">
+          <div className="relative overflow-hidden rounded-[20px] border border-[#e7c75f] bg-[#ffdf6b] px-5 py-7 sm:px-8 sm:py-9">
+            <p className="text-xs font-black uppercase tracking-[0.08em] text-[#5842ce]">
               {copy.common.meta}
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            <h1 className={`mt-2 max-w-3xl text-3xl font-black tracking-tight text-[#232238] sm:text-[42px] sm:leading-tight ${locale === "ko" ? "break-keep" : ""}`}>
               {copy.meta.title}
             </h1>
-            <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-slate-500 sm:text-base">
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-[#514729] sm:text-base">
               {copy.meta.subtitle}
             </p>
-            <p className="mt-2 text-xs font-bold text-blue-600">
+            <p className="mt-2 text-xs font-bold text-[#5842ce]">
               {formatMetaWindow(locale, META_WINDOW_DAYS)}
             </p>
           </div>
@@ -242,18 +242,18 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
           {error}
         </div>
       ) : (
-        <div className="mt-5 flex w-full flex-col items-center">
-          <div className="mb-4 flex w-full flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+        <div className="mt-5 flex w-full flex-col items-stretch">
+          <div className="mb-5 flex w-full flex-wrap gap-2 rounded-xl border border-[#e5dff7] bg-[#f8f6ff] p-2">
             {MODE_LIST.map((modeName) => (
               <button
                 type="button"
                 key={modeName}
                 onClick={() => selectMode(modeName)}
                 aria-pressed={modeName === selectedMode}
-                className={`whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-black transition-colors ${
+                className={`min-h-11 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-black transition-colors ${
                   modeName === selectedMode
-                    ? "bg-slate-950 text-white"
-                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+                    ? "bg-[#5842ce] text-white shadow-sm"
+                    : "text-[#514979] hover:bg-white hover:text-[#5842ce]"
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
@@ -272,10 +272,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                   key={`${entry.mode}:${entry.map}`}
                   onClick={() => selectMap(entry)}
                   aria-pressed={entry === selectedEntry}
-                  className={`rounded-lg border px-4 py-2.5 text-sm font-black transition-colors ${
+                  className={`min-h-11 rounded-lg border px-4 py-2.5 text-sm font-black transition-colors ${
                     entry === selectedEntry
-                      ? "border-blue-600 bg-blue-50 text-blue-700"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700"
+                      ? "border-[#5842ce] bg-[#f2edff] text-[#4732b0]"
+                      : "border-[#e5dff7] bg-white text-[#56516b] hover:border-[#b8a9ed] hover:text-[#5842ce]"
                   }`}
                 >
                   {translateMapName(entry.map, locale)}
@@ -295,8 +295,8 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
           </div>
 
           {currentData.length ? (
-            <section className="w-full rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <h2 className="mb-6 flex flex-col gap-2 border-b border-slate-200 pb-4 text-2xl font-black text-slate-950 sm:flex-row sm:items-end sm:justify-between">
+            <section className="w-full rounded-2xl border border-[#e9e5f1] bg-white p-4 shadow-sm sm:p-6">
+              <h2 className="mb-6 flex flex-col gap-2 border-b border-[#e9e5f1] pb-4 text-xl font-black text-[#232238] sm:flex-row sm:items-end sm:justify-between sm:text-2xl">
                 <span>{translateMapName(selectedMap, locale)} {copy.meta.recommendation}</span>
                 <span className="text-sm font-bold text-slate-400">{formatMetaMinimumSample(locale, minPlays)}</span>
               </h2>
@@ -309,7 +309,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                       const value = Number(event.target.value);
                       syncMetaUrl({ minPlays: value, showAll: false });
                     }}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-black text-slate-950 outline-none transition-colors focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    className="min-h-11 w-full rounded-lg border border-[#d8d0ec] bg-white px-3 py-2.5 text-sm font-bold text-[#232238] outline-none focus:border-[#5842ce] focus:ring-4 focus:ring-[#eee9ff]"
                   >
                     {MIN_PLAY_OPTIONS.map((value) => (
                       <option key={value} value={value}>{formatMetaMinimumOption(locale, value)}</option>
@@ -323,7 +323,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                       const value = event.target.value as ConfidenceFilter;
                       syncMetaUrl({ confidenceFilter: value, showAll: false });
                     }}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-black text-slate-950 outline-none transition-colors focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    className="min-h-11 w-full rounded-lg border border-[#d8d0ec] bg-white px-3 py-2.5 text-sm font-bold text-[#232238] outline-none focus:border-[#5842ce] focus:ring-4 focus:ring-[#eee9ff]"
                   >
                     {(Object.keys(confidenceFilterLabels) as ConfidenceFilter[]).map((value) => (
                       <option key={value} value={value}>{confidenceFilterLabels[value]}</option>
@@ -337,7 +337,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                       const value = event.target.value as MetaSortMode;
                       syncMetaUrl({ sortMode: value, showAll: false });
                     }}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-black text-slate-950 outline-none transition-colors focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    className="min-h-11 w-full rounded-lg border border-[#d8d0ec] bg-white px-3 py-2.5 text-sm font-bold text-[#232238] outline-none focus:border-[#5842ce] focus:ring-4 focus:ring-[#eee9ff]"
                   >
                     {(Object.keys(sortModeLabels) as MetaSortMode[]).map((value) => (
                       <option key={value} value={value}>{sortModeLabels[value]}</option>
@@ -374,9 +374,9 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                     generatedBrawlerImageIdByName[brawler.name] ??
                     generatedBrawlerImageIdByName[brawler.name.toUpperCase()];
                   return (
-                    <article key={brawler.name} className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                    <article key={brawler.name} className="flex flex-col gap-4 rounded-xl border border-[#e7e3ee] bg-[#faf9ff] p-4 transition-colors hover:border-[#c8baf2] sm:flex-row sm:items-center sm:justify-between sm:p-5">
                       <div className="flex items-center gap-4">
-                        <span className="w-10 text-center text-3xl font-black text-blue-200">#{index + 1}</span>
+                        <span className="w-8 shrink-0 text-center text-2xl font-black text-[#b1a2e8] sm:w-10 sm:text-3xl">#{index + 1}</span>
                         {brawlerId ? (
                           <BrawlImage
                             src={`https://cdn.brawlify.com/brawlers/borders/${brawlerId}.png`}
@@ -390,10 +390,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                             {displayName.slice(0, 1)}
                           </span>
                         )}
-                        <span className="text-2xl font-black text-slate-900">{displayName}</span>
+                        <span className="min-w-0 break-words text-lg font-black text-[#232238] sm:text-xl">{displayName}</span>
                       </div>
                       <div className="flex w-full flex-col gap-3 border-t border-slate-100 pt-3 sm:w-[300px] sm:border-0 sm:pt-0">
-                        <div className="flex justify-between gap-4 text-left sm:text-right">
+                        <div className="grid grid-cols-2 gap-2 text-left sm:gap-4 sm:text-right">
                           <Stat label={copy.common.recommendationScore} value={formatScore(locale, brawler.score)} />
                           <Stat label={copy.common.winRate} value={formatMetaWinRateSample(locale, brawler.winRate, brawler.plays)} />
                         </div>
@@ -420,7 +420,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                       const next = !showAll;
                       syncMetaUrl({ showAll: next });
                     }}
-                    className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-blue-700"
+                    className="min-h-11 rounded-lg bg-[#5842ce] px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-[#4732b0]"
                   >
                     {formatMetaShowAll(locale, showAll, filteredCurrentData.length)}
                   </button>
@@ -450,10 +450,10 @@ function getMetaMode(gameMode: string) {
 
 function SummaryStat({ label, value, subValue }: { label: string; value: string; subValue?: string }) {
   return (
-    <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-      <span className="text-xs font-black text-blue-600">{label}</span>
-      <strong className="mt-1 block text-xl font-black text-blue-950">{value}</strong>
-      {subValue ? <span className="mt-1 block text-xs font-bold text-blue-500">{subValue}</span> : null}
+    <div className="rounded-lg border border-[#e9e2ff] bg-[#f7f4ff] px-4 py-3">
+      <span className="text-xs font-black text-[#5842ce]">{label}</span>
+      <strong className="mt-1 block text-xl font-black text-[#302260]">{value}</strong>
+      {subValue ? <span className="mt-1 block text-xs font-bold text-[#6a55ba]">{subValue}</span> : null}
     </div>
   );
 }
@@ -471,7 +471,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col">
       <span className="mb-1 text-xs font-bold text-slate-500">{label}</span>
-      <span className="whitespace-nowrap text-base font-black text-blue-700 sm:text-lg">{value}</span>
+      <span className="break-words text-base font-black tabular-nums text-[#5842ce] sm:text-lg">{value}</span>
     </div>
   );
 }

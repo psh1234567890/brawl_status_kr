@@ -93,7 +93,7 @@ jobs:
           ACCOUNT_PG_RESTORE_BINARY: /usr/lib/postgresql/16/bin/pg_restore
 
       - name: Core end-to-end tests
-        run: npx playwright test e2e/core.e2e.ts e2e/minigames.e2e.ts e2e/player-search.e2e.ts e2e/usage-dashboard.e2e.ts
+        run: npx playwright test e2e/core.e2e.ts e2e/minigames.e2e.ts e2e/player-search.e2e.ts e2e/meta-brand.e2e.ts e2e/usage-dashboard.e2e.ts
         env:
           CI: "1"
           MINIGAMES_E2E_FIXTURES: "1"

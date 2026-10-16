@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import AccountControl from "../account/AccountControl";
 import LanguageSwitcher from "../LanguageSwitcher";
 import MobileHeaderMenu from "../MobileHeaderMenu";
+import ServiceNotice from "./ServiceNotice";
 import { localizedHref, type Locale } from "../../i18n/config";
 import { getMessages } from "../../i18n/messages";
 import { getBrandMessages } from "../../i18n/brandMessages";
@@ -16,7 +17,7 @@ export default function BrandHeader({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   const copy = getMessages(locale);
   const brand = getBrandMessages(locale);
-  return <header className={`${styles.header} ${styles.liveHeader}`}>
+  return <><header className={`${styles.header} ${styles.liveHeader}`}>
     <Link href={localizedHref(locale, "/")} aria-label={`Brawloop · ${copy.common.home}`} className={styles.wordmark}>brawloop<span className={styles.logoDot} /></Link>
     <nav aria-label={copy.common.mainNavigation} className={styles.desktopNav}>
       {[["/", brand.stats], ["/meta", locale === "ko" ? "브롤러 추천" : copy.common.meta], ["/minigames", copy.common.minigames], ["/brawlers", brand.catalog]].map(([path, label]) => <Link key={path} href={localizedHref(locale, path)} className={isActiveNavigationItem(pathname, path) ? styles.activeNav : undefined} aria-current={isActiveNavigationItem(pathname, path) ? "page" : undefined}>{label}</Link>)}
@@ -27,5 +28,5 @@ export default function BrandHeader({ locale }: { locale: Locale }) {
       <AccountControl locale={locale} />
       <MobileHeaderMenu locale={locale} allSizes />
     </div>
-  </header>;
+  </header><ServiceNotice locale={locale} /></>;
 }

@@ -94,6 +94,41 @@ describe("Brawl API outage handling", () => {
     expect(String(vi.mocked(console.warn).mock.calls)).not.toContain("2PYLQ");
   });
 
+  it("explains confirmed API maintenance and recovers on the next lookup without caching the error", async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({
+      reason: "inMaintenance", message: "API is currently in maintenance, please come back later",
+    }, { status: 503 }));
+    await expect(client.fetchSnapshot(path, 30_000, 300_000,
+      { retryOnNetworkError: true })).rejects.toMatchObject({
+      status: 503,
+      message: "브롤스타즈 API가 점검 중입니다. 점검이 끝나면 다시 검색해 주세요.",
+    });
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(console.warn).toHaveBeenCalledWith(JSON.stringify({ event: "brawl_api_maintenance", status: 503 }));
+    fetchMock.mockResolvedValueOnce(Response.json(data));
+    expect((await client.fetchSnapshot(path, 30_000, 300_000)).data).toEqual(data);
+  });
+
+  it.each([null, "<html>gateway unavailable</html>", { message: "private provider detail" }, { reason: "otherFailure" }])(
+    "does not label an unrelated 503 as maintenance or expose its response body: %j", async (body) => {
+      fetchMock.mockResolvedValueOnce(typeof body === "string"
+        ? new Response(body, { status: 503 }) : Response.json(body, { status: 503 }));
+      await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({
+        status: 503, message: "브롤스타즈 데이터를 불러오지 못했습니다.",
+      });
+      expect(console.warn).not.toHaveBeenCalled();
+    },
+  );
+
+  it("keeps the original stale-data age during confirmed maintenance", async () => {
+    const original = await seed();
+    vi.advanceTimersByTime(31_000);
+    fetchMock.mockResolvedValueOnce(Response.json({ reason: "inMaintenance" }, { status: 503 }));
+    const stale = await client.fetchSnapshot(path, 30_000, 300_000);
+    expect(stale.data).toEqual(data);
+    expect(stale.freshness).toEqual({ ...original.freshness, status: "stale" });
+  });
+
   it.each([400, 401, 403, 404])("does not hide HTTP %i with stale data and invalidates the old entry", async (status) => {
     await seed();
     vi.advanceTimersByTime(31_000);

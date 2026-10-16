@@ -6,6 +6,8 @@
 
 Fallback applies to network errors, timeouts, HTTP 408/429 and 5xx (including proxy 520/525), and malformed successful JSON. HTTP 400/401/403/404 invalidate the old entry and remain errors. Missing credentials or invalid configuration never use cached data. Failure does not extend data age; a five-second cooldown reduces repeated failing refreshes. Only one transport-only retry is allowed on cold player lookups without stale data; there are no alternate authenticated providers.
 
+An HTTP 503 with the provider reason `inMaintenance` displays an explicit Brawl Stars API maintenance message and emits the safe `brawl_api_maintenance` event. Other 503 responses keep the generic error; provider response bodies and credentials are never sent to visitors or logged. Maintenance follows the same bounded stale-data policy and does not cache the error, so a new search can succeed once the provider recovers.
+
 Successful responses expose `dataFreshness.status` (`live`, `cached`, `stale`) and the original `fetchedAt`. The search UI labels stale data in all ten languages. Browser/API responses are `no-store`, so client or CDN caches cannot silently relabel an old response as live. A cold instance has no fallback: this is not a durable, cross-instance cache or an upstream outage guarantee.
 
 GET battle lookup remains read-only. POST retains origin checks and rate limits. A failed database save returns authentic upstream battles with `storageStatus: unavailable`; the UI explains that accumulation failed. Stale responses are not rewritten to the database (`skipped-stale`). Read failures still return errors rather than invented player/battle data. Logs contain static route IDs, status and timing, not raw provider errors, request URLs, credentials or player tags.

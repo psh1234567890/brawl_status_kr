@@ -60,6 +60,10 @@
 .liveHeader { gap: 24px; }
 .liveHeader .desktopNav { margin-left: 10px; gap: 20px; }
 .liveHeaderActions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.serviceNotice { margin-bottom: 12px; border-block: 1px solid #eddbad; background: #fff9e9; color: #674716; font-size: 13px; line-height: 1.6; }
+.serviceNoticeInner { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 16px; max-width: 1232px; margin: auto; padding: 9px 24px; }
+.serviceNoticeTitle { flex-shrink: 0; font-weight: 800; }
+.serviceNoticeInner > div { flex: 1 1 280px; min-width: 0; overflow-wrap: anywhere; }
 .compactSearch { padding: 4px 0 10px; }
 .compactSearch .heroContent { max-width: none; }
 .compactSearch .searchForm { max-width: none; margin-top: 0; border: 1px solid var(--line); box-shadow: none; }

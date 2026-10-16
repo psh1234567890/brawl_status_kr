@@ -40,6 +40,16 @@ export function resolveBrawlApiBaseUrl(value: string | undefined) {
 
 async function readJsonResponse(response: Response) {
   if (!response.ok) {
+    if (response.status === 503) {
+      const body: unknown = await response.json().catch(() => null);
+      if (body && typeof body === "object" && "reason" in body && body.reason === "inMaintenance") {
+        console.warn(JSON.stringify({ event: "brawl_api_maintenance", status: 503 }));
+        throw new UpstreamApiError(
+          503,
+          "브롤스타즈 API가 점검 중입니다. 점검이 끝나면 다시 검색해 주세요.",
+        );
+      }
+    }
     throw new UpstreamApiError(response.status, "브롤스타즈 데이터를 불러오지 못했습니다.");
   }
   try {

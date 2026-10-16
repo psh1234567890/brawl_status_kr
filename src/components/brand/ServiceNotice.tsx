@@ -2,7 +2,7 @@ import type { Locale } from "../../i18n/config";
 import styles from "./brand.module.css";
 
 // Disable after live player lookups have been verified to recover.
-const API_OUTAGE_NOTICE_ACTIVE = true;
+const API_OUTAGE_NOTICE_ACTIVE = false;
 
 const messages: Record<Locale, { title: string; body: string; available: string }> = {
   ko: {

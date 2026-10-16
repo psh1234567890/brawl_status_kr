@@ -32,7 +32,7 @@ test("meta dashboard keeps branded controls usable across phone and desktop widt
     expect((await selectedMode.boundingBox())?.height).toBeGreaterThanOrEqual(44);
 
     for (const name of ["최소 표본", "신뢰도", "정렬"]) {
-      const control = page.getByLabel(name, { exact: true });
+      const control = page.getByRole("combobox", { name, exact: true });
       await expect(control).toBeVisible();
       expect((await control.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     }

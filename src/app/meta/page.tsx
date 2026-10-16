@@ -214,7 +214,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
             <p className="text-xs font-black uppercase tracking-[0.08em] text-[#5842ce]">
               {copy.common.meta}
             </p>
-            <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-tight text-[#232238] sm:text-[42px] sm:leading-tight">
+            <h1 className={`mt-2 max-w-3xl text-3xl font-black tracking-tight text-[#232238] sm:text-[42px] sm:leading-tight ${locale === "ko" ? "break-keep" : ""}`}>
               {copy.meta.title}
             </h1>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-[#514729] sm:text-base">

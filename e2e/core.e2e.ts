@@ -26,7 +26,7 @@ test("home exposes current maps above the fold and removes expired rotations", a
   await page.setViewportSize({ width: 390, height: 780 });
   await page.goto("/");
   const rotation = page.getByTestId("current-maps");
-  const first = rotation.getByRole("link", { name: "브롤 볼 · 트리플 드리블 · 이 맵 추천 보기", exact: true });
+  const first = rotation.getByRole("link", { name: "브롤 볼 · 트리플 드리블 · 이 맵 추천 브롤러 보기", exact: true });
   await expect(first).toBeVisible();
   expect((await first.boundingBox())!.y + (await first.boundingBox())!.height).toBeLessThan(780);
   await expect(first).toHaveAttribute("href", "/meta?map=Triple+Dribble&gameMode=brawlBall");
@@ -39,13 +39,13 @@ test("home exposes current maps above the fold and removes expired rotations", a
 
   await page.clock.setFixedTime(new Date(now + 10_000));
   await expect(first).toHaveCount(0);
-  const next = rotation.getByRole("link", { name: "브롤 볼 · 뒷마당 월드컵 · 이 맵 추천 보기", exact: true });
+  const next = rotation.getByRole("link", { name: "브롤 볼 · 뒷마당 월드컵 · 이 맵 추천 브롤러 보기", exact: true });
   await expect(next).toBeVisible();
   await next.click();
   await expect(page).toHaveURL(/\/meta\?map=Backyard\+Bowl&gameMode=brawlBall$/);
 
   await page.goto("/events");
-  await expect(page.getByTestId("current-maps").getByRole("link", { name: "젬 그랩 · 수정 오락실 · 이 맵 추천 보기", exact: true })).toBeVisible();
+  await expect(page.getByTestId("current-maps").getByRole("link", { name: "젬 그랩 · 수정 오락실 · 이 맵 추천 브롤러 보기", exact: true })).toBeVisible();
 });
 
 test("rotation failures can retry without blocking player search", async ({ context, page }) => {

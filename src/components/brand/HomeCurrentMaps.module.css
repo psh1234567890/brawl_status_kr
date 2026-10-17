@@ -13,7 +13,8 @@
 .mode > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card strong { margin-top: 4px; color: #232238; font-size: 14px; font-weight: 800; line-height: 1.35; overflow-wrap: anywhere; }
 .bottom { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-top: auto; padding-top: 7px; color: #686875; font-size: 10px; line-height: 1.4; font-variant-numeric: tabular-nums; }
-.bottom svg { flex: 0 0 auto; color: #5842ce; }
+.recommendation { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 7px; color: #5842ce; font-size: 11px; font-weight: 750; line-height: 1.4; }
+.recommendation svg { flex: 0 0 auto; }
 .message { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 103px; padding: 12px; border: 1px solid #e5e5e9; border-radius: 10px; color: #686875; font-size: 12px; }
 .message button { min-height: 44px; padding: 0 8px; color: #5842ce; font-weight: 700; }
 .hint { margin: 4px 0 0; color: #686875; text-align: right; font-size: 10px; }

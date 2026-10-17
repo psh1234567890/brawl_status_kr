@@ -78,8 +78,9 @@ export default function HomeCurrentMaps({ locale, expanded = false }: { locale: 
           <span className={styles.bottom}>
             <time dateTime={future ? event.startTime : event.endTime}>
               {future ? new Intl.DateTimeFormat(numberLocales[locale], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(event.startTime)) : copy.endsIn.replace("{time}", time)}
-            </time><BrandArrow size={14} />
+            </time>
           </span>
+          <span className={styles.recommendation}><span>{copy.recommendation}</span><BrandArrow size={14} /></span>
         </Link>;
       })}
     </div>;

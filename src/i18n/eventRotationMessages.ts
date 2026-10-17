@@ -26,7 +26,7 @@ export const eventRotationMessages = {
     retry: "다시 시도",
     endsIn: "교체까지 {time}",
     refreshing: "맵을 갱신하는 중…",
-    recommendation: "이 맵 추천 보기",
+    recommendation: "이 맵 추천 브롤러 보기",
     scrollHint: "옆으로 넘겨 더 보기",
     upcoming: "예정",
   },

@@ -18,6 +18,8 @@ test("home exposes current maps above the fold and removes expired rotations", a
       event(1, "brawlBall", "Triple Dribble", now - 60_000, now + 5_000),
       event(2, "gemGrab", "Crystal Arcade", now - 60_000, now + 3_600_000),
       event(3, "heist", "Expired Map", now - 60_000, now - 1_000),
+      event(5, "brawlArena", "Silver Highlands", now - 60_000, now + 3_600_000),
+      event(6, "knockout5V5", "Crescendo", now - 60_000, now + 3_600_000),
     ],
     upcoming: [event(4, "brawlBall", "Backyard Bowl", now + 6_000, now + 3_600_000)],
   } }));
@@ -29,6 +31,8 @@ test("home exposes current maps above the fold and removes expired rotations", a
   expect((await first.boundingBox())!.y + (await first.boundingBox())!.height).toBeLessThan(780);
   await expect(first).toHaveAttribute("href", "/meta?map=Triple+Dribble&gameMode=brawlBall");
   await expect(first.locator("time")).toContainText("교체까지");
+  await expect(rotation.getByRole("link", { name: /브롤 아레나 ·/ })).toHaveCount(1);
+  await expect(rotation.getByRole("link", { name: /5대5 녹아웃 ·/ })).toHaveCount(1);
   await expect(rotation.getByText("Expired Map", { exact: true })).toHaveCount(0);
   await expect(rotation.getByText("뒷마당 월드컵", { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

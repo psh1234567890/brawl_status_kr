@@ -20,6 +20,7 @@ function subscribeClock(notify: () => void) {
 }
 const clockSnapshot = () => Math.floor(Date.now() / 1_000) * 1_000;
 const serverClockSnapshot = () => 0;
+const MODE_DISPLAY_KEYS: Record<string, string> = { brawlArena: "arena", knockout5V5: "knockout5v5" };
 
 export default function HomeCurrentMaps({ locale, expanded = false }: { locale: Locale; expanded?: boolean }) {
   const copy = eventRotationMessages[locale];
@@ -66,12 +67,13 @@ export default function HomeCurrentMaps({ locale, expanded = false }: { locale: 
   function cards(events: RotationEvent[], future = false) {
     return <div className={expanded ? styles.grid : styles.rail}>
       {events.map(event => {
-        const mode = translateModeName(event.mode, locale);
+        const modeKey = MODE_DISPLAY_KEYS[event.mode] ?? event.mode;
+        const mode = translateModeName(modeKey, locale);
         const map = translateMapName(event.map, locale);
         const time = remainingTime(Date.parse(event.endTime) - now, locale);
         const href = `${localizedHref(locale, "/meta")}?${new URLSearchParams({ map: event.map, gameMode: event.mode })}`;
         return <Link key={`${event.slotId}-${event.mapId}-${event.startTime}`} href={href} className={styles.card} aria-label={`${mode} · ${map} · ${copy.recommendation}`}>
-          <span className={styles.mode}><GameModeIcon mode={event.mode} size={20} /><span>{mode}</span></span>
+          <span className={styles.mode}><GameModeIcon mode={translateModeName(modeKey, "en")} size={20} /><span>{mode}</span></span>
           <strong>{map}</strong>
           <span className={styles.bottom}>
             <time dateTime={future ? event.startTime : event.endTime}>

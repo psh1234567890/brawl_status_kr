@@ -138,14 +138,18 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
         (!requestedGameMode || entry.mode === requestedGameMode),
       )
     : undefined;
-  const selectedMode = requestedMode ?? (requestedEntry ? getMetaMode(requestedEntry.mode) : "젬 그랩");
+  const selectedMode = requestedMode ?? (
+    requestedGameMode
+      ? getMetaMode(requestedGameMode)
+      : requestedEntry ? getMetaMode(requestedEntry.mode) : "젬 그랩"
+  );
 
   const filteredMaps = useMemo(
     () => data.filter((entry) => getMetaMode(entry.mode) === selectedMode),
     [data, selectedMode],
   );
-  const selectedEntry = requestedEntry ?? filteredMaps[0];
-  const selectedMap = selectedEntry?.map ?? "";
+  const selectedEntry = requestedMap ? requestedEntry : filteredMaps[0];
+  const selectedMap = selectedEntry?.map ?? requestedMap ?? "";
   const currentData = useMemo(
     () => selectedEntry?.brawlers ?? [],
     [selectedEntry],
@@ -432,7 +436,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
               role="status"
               className="w-full rounded-xl border border-slate-200 bg-white px-8 py-8 text-center text-lg font-bold text-slate-500 shadow-sm"
             >
-              {copy.meta.insufficient}
+              {selectedMap ? (
+                <p className="mb-2 font-black text-[#232238]">{translateMapName(selectedMap, locale)}</p>
+              ) : null}
+              <p>{copy.meta.insufficient}</p>
             </div>
           )}
         </div>

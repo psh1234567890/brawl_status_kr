@@ -46,6 +46,7 @@ import BrandHeader from "./brand/BrandHeader";
 import BrandFooter from "./brand/BrandFooter";
 import HomeDiscovery from "./brand/HomeDiscovery";
 import HomeFeatureNav from "./brand/HomeFeatureNav";
+import HomeCurrentMaps from "./brand/HomeCurrentMaps";
 import { BrandCharacter, BrandArrow, SearchIcon } from "./brand/BrandArt";
 import { getBrandMessages } from "../i18n/brandMessages";
 import brandStyles from "./brand/brand.module.css";
@@ -168,7 +169,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
           </div>
           {!search.playerData && <div className={brandStyles.heroArt} aria-hidden="true"><span className={brandStyles.heroDisc} /><BrandCharacter id={16000005} className={brandStyles.heroSpike} eager /><BrandCharacter id={16000023} className={brandStyles.heroLeon} eager /><span className={brandStyles.heroLabel}>LET’S<br />BRAWL!</span></div>}
         </section>
-        {!search.playerData && <HomeFeatureNav locale={locale} />}
+        {!search.playerData && <><HomeCurrentMaps locale={locale} /><HomeFeatureNav locale={locale} /></>}
         {(search.favoriteSearches.length > 0 || search.recentSearches.length > 0) && <div className={`${brandStyles.savedSearches} ${search.playerData ? brandStyles.hideSavedOnMobile : ""}`}>
           <SearchChipGroup label={copy.home.favorites} tags={search.favoriteSearches} profiles={savedProfiles} onSearch={runSearch} locale={locale} strong />
           <SearchChipGroup label={copy.home.recentSearches} tags={search.recentSearches} profiles={savedProfiles} onSearch={runSearch} locale={locale} />

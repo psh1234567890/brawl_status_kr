@@ -3,6 +3,63 @@ import { getAccountMessages } from "../src/i18n/accountMessages";
 import { locales, localizedHref } from "../src/i18n/config";
 import { getMessages } from "../src/i18n/messages";
 
+test("home exposes current maps above the fold and removes expired rotations", async ({ context, page }) => {
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await page.route("**/api/account", route => route.fulfill({ json: { state: "guest", syncEnabled: false } }));
+  const now = Date.now();
+  await page.clock.setFixedTime(new Date(now));
+  const event = (slotId: number, mode: string, map: string, start: number, end: number) => ({
+    slotId, mapId: 15000000 + slotId, mode, map,
+    startTime: new Date(start).toISOString(), endTime: new Date(end).toISOString(),
+  });
+  await page.route("**/api/events", route => route.fulfill({ json: {
+    fetchedAt: new Date(now).toISOString(),
+    active: [
+      event(1, "brawlBall", "Triple Dribble", now - 60_000, now + 5_000),
+      event(2, "gemGrab", "Crystal Arcade", now - 60_000, now + 3_600_000),
+      event(3, "heist", "Expired Map", now - 60_000, now - 1_000),
+    ],
+    upcoming: [event(4, "brawlBall", "Backyard Bowl", now + 6_000, now + 3_600_000)],
+  } }));
+  await page.setViewportSize({ width: 390, height: 780 });
+  await page.goto("/");
+  const rotation = page.getByTestId("current-maps");
+  const first = rotation.getByRole("link", { name: "브롤 볼 · 트리플 드리블 · 이 맵 추천 보기", exact: true });
+  await expect(first).toBeVisible();
+  expect((await first.boundingBox())!.y + (await first.boundingBox())!.height).toBeLessThan(780);
+  await expect(first).toHaveAttribute("href", "/meta?map=Triple+Dribble&gameMode=brawlBall");
+  await expect(first.locator("time")).toContainText("교체까지");
+  await expect(rotation.getByText("Expired Map", { exact: true })).toHaveCount(0);
+  await expect(rotation.getByText("뒷마당 월드컵", { exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+  await page.clock.setFixedTime(new Date(now + 10_000));
+  await expect(first).toHaveCount(0);
+  const next = rotation.getByRole("link", { name: "브롤 볼 · 뒷마당 월드컵 · 이 맵 추천 보기", exact: true });
+  await expect(next).toBeVisible();
+  await next.click();
+  await expect(page).toHaveURL(/\/meta\?map=Backyard\+Bowl&gameMode=brawlBall$/);
+
+  await page.goto("/events");
+  await expect(page.getByTestId("current-maps").getByRole("link", { name: "젬 그랩 · 수정 오락실 · 이 맵 추천 보기", exact: true })).toBeVisible();
+});
+
+test("rotation failures can retry without blocking player search", async ({ context, page }) => {
+  await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await page.route("**/api/account", route => route.fulfill({ json: { state: "guest", syncEnabled: false } }));
+  let failed = true;
+  await page.route("**/api/events", route => failed
+    ? route.fulfill({ status: 503, json: { error: "unavailable" } })
+    : route.fulfill({ json: { active: [], upcoming: [], fetchedAt: new Date().toISOString() } }));
+  await page.goto("/");
+  const rotation = page.getByTestId("current-maps");
+  await expect(rotation.getByText("현재 맵을 불러오지 못했어요.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "플레이어 태그", exact: true })).toBeEnabled();
+  failed = false;
+  await rotation.getByRole("button", { name: "다시 시도", exact: true }).click();
+  await expect(rotation.getByText("현재 공개된 맵이 없어요.", { exact: true })).toBeVisible();
+});
+
 test("page views are batched anonymously and analytics opt-out stops all client counters", async ({ context, page }) => {
   const batches: unknown[] = [];
   const events: string[] = [];

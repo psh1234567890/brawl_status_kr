@@ -18,6 +18,8 @@ test("home exposes current maps above the fold and removes expired rotations", a
       event(1, "brawlBall", "Triple Dribble", now - 60_000, now + 5_000),
       event(2, "gemGrab", "Crystal Arcade", now - 60_000, now + 3_600_000),
       event(3, "heist", "Expired Map", now - 60_000, now - 1_000),
+      event(5, "brawlArena", "Silver Highlands", now - 60_000, now + 3_600_000),
+      event(6, "knockout5V5", "Crescendo", now - 60_000, now + 3_600_000),
     ],
     upcoming: [event(4, "brawlBall", "Backyard Bowl", now + 6_000, now + 3_600_000)],
   } }));
@@ -29,6 +31,8 @@ test("home exposes current maps above the fold and removes expired rotations", a
   expect((await first.boundingBox())!.y + (await first.boundingBox())!.height).toBeLessThan(780);
   await expect(first).toHaveAttribute("href", "/meta?map=Triple+Dribble&gameMode=brawlBall");
   await expect(first.locator("time")).toContainText("교체까지");
+  await expect(rotation.getByRole("link", { name: /브롤 아레나 ·/ })).toHaveCount(1);
+  await expect(rotation.getByRole("link", { name: /5대5 녹아웃 ·/ })).toHaveCount(1);
   await expect(rotation.getByText("Expired Map", { exact: true })).toHaveCount(0);
   await expect(rotation.getByText("뒷마당 월드컵", { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -64,6 +68,9 @@ test("page views are batched anonymously and analytics opt-out stops all client 
   const batches: unknown[] = [];
   const events: string[] = [];
   await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await context.route("**/api/events", route => route.fulfill({ json: {
+    active: [], upcoming: [], fetchedAt: new Date().toISOString(),
+  } }));
   await context.route("**/api/usage/event", route => {
     const body = route.request().postDataJSON();
     batches.push(body); events.push(...(body.events ?? [body.event]));
@@ -79,7 +86,7 @@ test("page views are batched anonymously and analytics opt-out stops all client 
   await page.getByRole("checkbox", { name: "방문·검색·미니게임 통계 및 검색 태그 기록 제외" }).check();
   const before = batches.length;
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("current-maps").getByText("현재 공개된 맵이 없어요.", { exact: true })).toBeVisible();
   expect(batches).toHaveLength(before);
   expect(await page.evaluate(() => localStorage.getItem("brawl_usage_last_activity_v1"))).toBeNull();
 });

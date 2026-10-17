@@ -68,6 +68,9 @@ test("page views are batched anonymously and analytics opt-out stops all client 
   const batches: unknown[] = [];
   const events: string[] = [];
   await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
+  await context.route("**/api/events", route => route.fulfill({ json: {
+    active: [], upcoming: [], fetchedAt: new Date().toISOString(),
+  } }));
   await context.route("**/api/usage/event", route => {
     const body = route.request().postDataJSON();
     batches.push(body); events.push(...(body.events ?? [body.event]));
@@ -83,7 +86,7 @@ test("page views are batched anonymously and analytics opt-out stops all client 
   await page.getByRole("checkbox", { name: "방문·검색·미니게임 통계 및 검색 태그 기록 제외" }).check();
   const before = batches.length;
   await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await expect(page.getByTestId("current-maps").getByText("현재 공개된 맵이 없어요.", { exact: true })).toBeVisible();
   expect(batches).toHaveLength(before);
   expect(await page.evaluate(() => localStorage.getItem("brawl_usage_last_activity_v1"))).toBeNull();
 });

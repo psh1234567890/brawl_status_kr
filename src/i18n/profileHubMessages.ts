@@ -1,5 +1,11 @@
 import type { Locale } from "./config";
 
+export const profileMapPicksLabels: Record<Locale, string> = {
+  ko: "지금 맵 추천", en: "Live map picks", ja: "今のマップのおすすめ",
+  "pt-br": "Dicas para os mapas", es: "Mapas actuales", tr: "Güncel harita önerileri",
+  de: "Karten-Tipps", fr: "Conseils des cartes", it: "Consigli per le mappe", ru: "Карты сейчас",
+};
+
 /** Primary profile actions; keep labels short on 320px-wide screens. */
 export const profileHubMessages: Record<Locale, {
   compare: string;

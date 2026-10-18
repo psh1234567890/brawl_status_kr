@@ -34,6 +34,44 @@ pooler를, 추천만 실패하면 snapshot/cron/cache를, 검색·전투·랭킹
 분리 진단한다. 복구가 어렵다면 마지막 정상 deployment로 rollback한 뒤 같은 smoke를
 다시 실행한다. DB 데이터 복원으로 앱 rollback을 대신하지 않는다.
 
+## 실패 알림과 전달 시험
+
+`Production alerts`는 main의 CI 실패, 운영 smoke 실패, Vercel Production의
+error/failure를 저장소 소유자에게 배정한 GitHub 이슈로 남긴다. PR·fork·취소된
+검사는 제외하고 같은 commit·같은 실패는 중복 생성하지 않는다. GitHub의 알림함과
+개인 알림 설정을 사용하며, 메일·휴대폰 푸시 전달은 별도 확인이 필요하다.
+원본 로그·플레이어 태그·계정 정보·비밀키를 이슈에 복사하지 않는다.
+
+Actions → Production alerts → Run workflow → main에서 `drill: alert`를 실행하면
+`[TEST] drill` 이슈가 소유자에게 배정된다. GitHub 알림함에서 도착을 확인한 뒤
+`drill: recover`를 실행해 이슈 종료를 확인한다. 실제 서비스를 고장 내지 않는다.
+workflow 자체가 실패하면 GitHub Actions 실패 알림도 확인한다. 별도의 외부
+알림 서비스나 자동 rollback 권한은 추가하지 않는다.
+
+같은 SHA의 CI 재실행 성공은 CI 이슈를 종료한다. 같은 SHA의 운영 smoke 성공과
+canonical `/api/health`의 SHA 확인이 함께 통과하면 해당 smoke/deploy 이슈를
+종료한다. 다른 SHA로 수정했으면 이전 이슈를 운영자가 확인하고 종료한다.
+
+## 앱 복구 절차
+
+1. 실패 이슈의 SHA·검사 기록과 현재 canonical `/api/health`의 SHA를 확인한다.
+   이전 정상 배포의 CI·Production smoke 성공 기록과 Vercel READY를 확인한다.
+2. 앱 변경으로 발생한 오류라면 Vercel 프로젝트 `brawl-status-kr`의 Deployments에서
+   마지막 정상 Production의 **Instant Rollback**을 실행한다. upstream/DB 자체의
+   장애라면 앱 rollback으로 해결되는지 먼저 구분한다. DB 복원은 실행하지 않는다.
+3. 되돌아온 SHA를 `SMOKE_EXPECTED_SHA`로 지정해 `npm run smoke:production`을 실행하고
+   실제 폰에서 검색 → 현재 맵 → 추천 → 뒤로가기를 확인한다. 실패하면 복구 완료로
+   처리하지 않고 이슈를 열어 둔다.
+4. Instant Rollback 이후에는 운영 도메인의 자동 배정이 꺼진다. 수정한 main의 CI와
+   staged Production을 검증한 뒤 **Promote**하여 정상 배포 흐름을 재개한다.
+   Force Promote로 실패한 필수 검사를 우회하지 않는다.
+
+`node scripts/production-recovery-drill.mjs`는 loopback의 격리한 모의 API에서
+정상 → 추천 장애 감지 → 이전 정상 버전 복구 → SHA 불일치 거절을 실행한다.
+실제 Vercel 도메인을 이동하거나 운영 DB를 복원하는 시험이 아니다. 실제 플랫폼의
+rollback 실행·권한과 메일/푸시 수신은 이 격리 시험으로 검증됐다고 부르지 않는다.
+플랫폼 참고: https://vercel.com/docs/instant-rollback
+
 ## API 구조화 로그
 
 다음 API는 요청마다 query string, 플레이어 태그, 맵 이름, 브롤러 이름, IP를 기록하지 않고 정적 route 식별자와 상태만 JSON 한 줄로 남긴다.

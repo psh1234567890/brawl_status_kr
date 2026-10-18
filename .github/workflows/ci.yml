@@ -56,6 +56,9 @@ jobs:
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
+      - name: Rehearse failure detection and isolated app recovery
+        run: node scripts/production-recovery-drill.mjs
+
       - name: Build without production secrets
         run: npm run build
         env:

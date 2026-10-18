@@ -1,5 +1,39 @@
 # 운영 모니터링
 
+## 배포 검증과 운영 API smoke
+
+Vercel 프로젝트의 Deployment Checks에서 GitHub의 `verify` 검사를 Production
+필수 조건으로 연결한다. 이 검사가 실패하거나 진행 중이면 새 빌드가 READY여도
+운영 도메인에 공개하지 않는다. Force Promote로 실패를 우회하지 않는다.
+
+공개 후에는 `.github/workflows/production-smoke.yml`이 Vercel의 성공한 Production
+deployment에 반응해 실제 운영 API를 검사한다. `npm run smoke:production`으로도
+실행할 수 있다. DB health, 추천, 실시간 맵, 상태 페이지, 랭킹, 정상 플레이어 검색,
+최근 전투의 HTTP 상태와 응답 구조를 검사한다. 플레이어 태그는 공개 랭킹에서
+일시적으로 선택하며 결과 로그에 남기지 않는다. POST 저장, 계정·커뮤니티 변경은
+수행하지 않고 application/Vercel 비밀키도 사용하지 않는다.
+
+`/api/health`는 Vercel의 전체 commit SHA가 있을 때 `X-Deployment-Sha`를 반환한다.
+자동 검사는 이를 deployment event의 SHA와 시작·종료 때 비교해 이전 배포나
+검사 도중 바뀐 버전을 정상으로 잘못 판정하지 않는다. 검사 결과는 GitHub Actions의
+`Production smoke` 실행에서 확인한다. 실제 오류는 재시도로 숨기지 않는다.
+
+두 검사를 구분한다. `verify`는 공개 전 CI gate이고 `Production smoke`는 공개 후
+실제 운영 검증이다. 후자는 자동 rollback이나 공개 전 runtime gate가 아니다.
+공개 전 runtime 검증까지 차단 조건에 포함하려면 staged production에 대한
+별도 인증·검사 연결이 필요하다.
+
+DB health가 정상인데 `/api/meta`만 `META_SNAPSHOT_UNAVAILABLE`이면 DB 전체 장애로
+단정하지 않는다. Next Data Cache의 오래된 값과 실제 집계의 `refreshed_at`,
+`brawl-meta-snapshot-refresh` 실행 기록을 분리해 확인한다. 메타 route는 45분이 지난
+캐시를 즉시 만료시키고 한 번 다시 읽는다. DB의 새 집계가 있으면 첫 요청부터
+제공하고, 실제 집계도 오래됐으면 기존 503과 Retry-After를 유지한다.
+
+실패 시 최근 배포 SHA와 해당 실패 항목부터 확인한다. DB health 실패는 연결·TLS·
+pooler를, 추천만 실패하면 snapshot/cron/cache를, 검색·전투·랭킹 실패는 upstream을
+분리 진단한다. 복구가 어렵다면 마지막 정상 deployment로 rollback한 뒤 같은 smoke를
+다시 실행한다. DB 데이터 복원으로 앱 rollback을 대신하지 않는다.
+
 ## API 구조화 로그
 
 다음 API는 요청마다 query string, 플레이어 태그, 맵 이름, 브롤러 이름, IP를 기록하지 않고 정적 route 식별자와 상태만 JSON 한 줄로 남긴다.

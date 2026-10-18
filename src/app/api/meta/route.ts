@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import { assertMetaSnapshotFresh, MetaSnapshotUnavailableError, queryMapMetaStats } from "../../../server/metaStats";
 import { observeServerOperation, withApiMonitoring } from "../../../server/observability";
@@ -90,10 +90,22 @@ async function getMeta(request: Request) {
   if (sharedLimited) return sharedLimited;
 
   try {
-    const snapshot = await getCachedMetaStats();
+    let snapshot = await getCachedMetaStats();
     // Revalidation can retain a previously successful cache after DB errors.
     // Enforce the age limit on cache hits as well as newly queried snapshots.
-    if (snapshot.refreshedAt !== null) assertMetaSnapshotFresh(snapshot.refreshedAt);
+    if (snapshot.refreshedAt !== null) {
+      try {
+        assertMetaSnapshotFresh(snapshot.refreshedAt);
+      } catch (error) {
+        if (!(error instanceof MetaSnapshotUnavailableError)) throw error;
+        // Next's stale-while-revalidate cache can outlive a quiet period even
+        // while pg_cron keeps the DB snapshot fresh. Block for one fresh read
+        // before reporting an outage; never serve statistics past the age limit.
+        revalidateTag("meta-stats", { expire: 0 });
+        snapshot = await getCachedMetaStats();
+        if (snapshot.refreshedAt !== null) assertMetaSnapshotFresh(snapshot.refreshedAt);
+      }
+    }
     return NextResponse.json(snapshot.maps);
   } catch (error) {
     if (error instanceof MetaSnapshotUnavailableError) {

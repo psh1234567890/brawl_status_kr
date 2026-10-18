@@ -1,0 +1,38 @@
+name: Production smoke
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: true
+
+jobs:
+  production-smoke:
+    if: >-
+      github.repository == 'psh1234567890/brawl_status_kr' &&
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' ||
+       github.event_name == 'deployment_status' &&
+       github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production' &&
+       github.event.deployment.creator.login == 'vercel[bot]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      # Always execute the reviewed default-branch harness, never an event URL
+      # or a ref supplied by a deployment. No application or Vercel secrets.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+      - name: Check production API contracts
+        run: node scripts/production-smoke.mjs
+        env:
+          SMOKE_EXPECTED_SHA: ${{ github.event.deployment.sha || github.sha }}

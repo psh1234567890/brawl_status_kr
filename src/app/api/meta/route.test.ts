@@ -80,6 +80,7 @@ describe("meta snapshot availability", () => {
     }] });
     const response = await GET(request);
     expect(response.status).toBe(200);
+    expect(response.headers.get("x-meta-refreshed-at")).toBe(new Date(Date.now()).toISOString());
     expect(await response.json()).toMatchObject([{ brawlers: [{ plays: 20, wins: 14 }] }]);
     expect(mocks.query).toHaveBeenCalledTimes(2);
     expect((await GET(request)).status).toBe(200);

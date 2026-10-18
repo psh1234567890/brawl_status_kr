@@ -51,7 +51,8 @@ for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 128
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole("heading", { level: 1, name: "E2E Player" }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: join(shots, `profile-${locale}-${width}.png`) });
-    await actions.getByRole("link", { name: profileMapPicksLabels[locale], exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${localizedHref(locale, "/")}\\?tag=${tag}$`));
+    await actions.getByRole("button", { name: profileMapPicksLabels[locale], exact: true }).click();
     const rotation = page.getByTestId("current-maps");
     await expect(rotation).toBeFocused();
     const mapBox = (await rotation.boundingBox())!;
@@ -64,6 +65,12 @@ for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 128
     await expect(page).toHaveURL(new RegExp(`${localizedHref(locale, "/meta")}\\?map=Triple\\+Dribble&gameMode=brawlBall$`));
     await expect(page.getByRole("heading", { level: 1, name: copy.meta.title })).toBeVisible();
     await expect(page.locator("main article")).toHaveCount(1);
+    await page.goBack();
+    await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+    await expect(page.getByRole("textbox", { name: copy.home.playerTag })).toHaveValue(tag);
+    await expect(actions.getByRole("button", { name: actionsCopy.saved, exact: true })).toHaveAttribute("aria-pressed", "true");
+    await page.reload();
+    await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(errors).toEqual([]);
   });
@@ -76,7 +83,7 @@ test("profile map picker can retry an outage without losing the displayed player
     : route.fulfill({ json: { active: [], upcoming: [], fetchedAt: new Date().toISOString() } }));
   await page.goto("/?tag=" + tag);
   await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
-  await page.getByRole("link", { name: profileMapPicksLabels.ko, exact: true }).click();
+  await page.getByRole("button", { name: profileMapPicksLabels.ko, exact: true }).click();
   const picker = page.getByTestId("current-maps");
   await expect(picker.getByText(eventRotationMessages.ko.unavailable, { exact: true })).toBeVisible();
   failed = false;
@@ -187,7 +194,8 @@ test("saved player reopens with a real trophy delta and anonymous action counts"
   await page.getByRole("button", { name: "저장", exact: true }).click();
   await expect.poll(() => events.includes("profile_save")).toBe(true);
   trophies = 12400;
-  await page.reload();
+  // A profile refresh now restores that player; visit home to choose a saved player.
+  await page.goto("/");
   await page.getByRole("button", { name: /Return Player.*12345|Return Player.*12,345/ }).first().click();
   await expect(page.getByText(/지난 조회 대비.*\+55/)).toBeVisible();
   await expect.poll(() => events.includes("profile_reopen")).toBe(true);

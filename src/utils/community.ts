@@ -1,6 +1,6 @@
 import { isLocale, type Locale } from "../i18n/config";
 
-export const COMMUNITY_RULES_VERSION = "community-v2";
+export const COMMUNITY_RULES_VERSION = "community-v3";
 export type CommunityStatus = "pending" | "published" | "rejected" | "hidden" | "withdrawn";
 export type CommunityKind = "post" | "comment";
 export type CommentKind = "opinion" | "correction";
@@ -56,17 +56,17 @@ export function communityEvidence(value: unknown, required: boolean) {
   }))];
 }
 export function validateCommunityPost(body: Record<string, unknown>) {
-  if (body.acceptRules !== true || body.confirmIntent !== true) throw new CommunityError(400, "RULES_REQUIRED");
+  if (body.acceptRules !== true) throw new CommunityError(400, "RULES_REQUIRED");
   if (typeof body.locale !== "string" || !isLocale(body.locale)) throw new CommunityError(400, "INVALID_BODY");
   const content = { title: text(body.title, "INVALID_TITLE"), body: text(body.body, "INVALID_POST_BODY"), locale: body.locale };
   const evidence = validateEvidence(body);
-  if (evidence.evidenceUrls.length + evidence.imageIds.length === 0) throw new CommunityError(400, "EVIDENCE_REQUIRED");
   return { ...content, ...evidence };
 }
 export function validateCommunityComment(body: Record<string, unknown>) {
   if (body.acceptRules !== true) throw new CommunityError(400, "RULES_REQUIRED");
-  if (body.kind !== "opinion" && body.kind !== "correction") throw new CommunityError(400, "INVALID_BODY");
-  return { body: text(body.body, "INVALID_COMMENT_BODY"), kind: body.kind, ...validateEvidence(body) };
+  const kind = body.kind ?? "opinion";
+  if (kind !== "opinion" && kind !== "correction") throw new CommunityError(400, "INVALID_BODY");
+  return { body: text(body.body, "INVALID_COMMENT_BODY"), kind, ...validateEvidence(body) };
 }
 function validateEvidence(body: Record<string, unknown>) {
   const evidenceUrls = communityEvidence(body.evidenceUrls ?? [], false);

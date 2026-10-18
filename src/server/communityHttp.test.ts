@@ -89,6 +89,14 @@ describe("community mutation authorization", () => {
     expect(response.headers.get("Cache-Control")).toContain("private, no-store");
     expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
   });
+  it("publishes ordinary text without evidence and defaults to a regular comment", async () => {
+    const response = await post(request({ expectedUserId: userId, title: "질문", body: "추천해 주세요", locale: "ko", acceptRules: true }));
+    expect(response.status).toBe(201);
+    expect(mocks.post).toHaveBeenCalledWith(userId, expect.objectContaining({ evidenceUrls: [], imageIds: [] }));
+    const reply = await comment(request({ expectedUserId: userId, body: "좋아요", acceptRules: true }), context());
+    expect(reply.status).toBe(201);
+    expect(mocks.comment).toHaveBeenCalledWith(userId, id, expect.objectContaining({ kind: "opinion" }));
+  });
   it("does not consume a post allowance for expired or foreign photos", async () => {
     vi.mocked(checkCommunityImageDrafts).mockRejectedValue(new CommunityError(400, "IMAGE_EXPIRED"));
     expect((await post(request({ ...input, evidenceUrls: [], imageIds: [id] }))).status).toBe(400);

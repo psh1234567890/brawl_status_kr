@@ -26,6 +26,7 @@ import {
 import { getMessages } from "../../i18n/messages";
 import { translateBrawlerName, translateMapName, translateModeName } from "../../utils/brawlTranslations";
 import { replaceBrowserSearch, useBrowserSearch } from "../../utils/urlState";
+import { trackProductAction } from "../../utils/clientUsage";
 
 const MODE_LIST = ["젬 그랩", "브롤 볼", "하이스트", "바운티", "핫 존", "녹아웃", "쇼다운", "기타"];
 // Existing meta grouping names are not always precise game mode keys.
@@ -163,6 +164,10 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
     [confidenceFilter, currentData, minPlays, sortMode],
   );
   const visibleData = showAll ? filteredCurrentData : filteredCurrentData.slice(0, DEFAULT_VISIBLE_COUNT);
+  const hasRecommendations = !loading && !error && visibleData.length > 0;
+  useEffect(() => {
+    if (hasRecommendations) trackProductAction("meta");
+  }, [hasRecommendations, selectedMap]);
   const mapSummary = useMemo(() => {
     const totalSamples = filteredCurrentData.reduce((sum, brawler) => sum + brawler.plays, 0);
     const reliableCount = filteredCurrentData.filter((brawler) => brawler.confidence === "HIGH").length;

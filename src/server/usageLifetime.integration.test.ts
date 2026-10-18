@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Client } from "pg";
+import { productKinds } from "../utils/productFunnel";
 
 const testUrl = process.env.DATA_STATUS_TEST_DATABASE_URL;
 if (testUrl) {
@@ -67,5 +68,26 @@ describe.skipIf(!testUrl)("lifetime usage migration and hourly write trigger", (
       FROM analytics_private.usage_lifetime WHERE event_kind = 'visit_session'`);
     expect(result.rows[0].count).toBe(7);
     expect(new Date(result.rows[0].first).toISOString()).toBe("2026-10-10T00:00:00.000Z");
+  });
+  it("accepts the new fixed funnel kinds without changing old totals or accepting arbitrary values", async () => {
+    await client.query(`ALTER TABLE analytics_private.usage_hourly ADD CONSTRAINT
+      usage_hourly_event_kind_check CHECK (event_kind IN ('visit_session', 'player_search_success'))`);
+    const migration = readFileSync(resolve(process.cwd(), "drizzle/20261018021646_product_session_funnel.sql"), "utf8");
+    await client.query(migration);
+    const kinds = [...productKinds, "minigame_higher_lower", "minigame_release_order"];
+    for (const kind of kinds) {
+      await client.query(`INSERT INTO analytics_private.usage_hourly VALUES
+        ('2026-10-18T03:00:00Z', $1, 1)`, [kind]);
+    }
+    const totals = await client.query(`SELECT event_kind, event_count::int AS count
+      FROM analytics_private.usage_lifetime WHERE event_kind = ANY($1::text[]) ORDER BY event_kind`, [kinds]);
+    expect(totals.rows).toEqual([...kinds].sort().map(event_kind => ({ event_kind, count: 1 })));
+    const previous = await client.query(`SELECT event_count::int AS count
+      FROM analytics_private.usage_lifetime WHERE event_kind = 'visit_session'`);
+    expect(previous.rows[0].count).toBe(7);
+    await client.query("SAVEPOINT invalid_kind");
+    await expect(client.query(`INSERT INTO analytics_private.usage_hourly VALUES
+      ('2026-10-18T03:00:00Z', 'player_tag:PRIVATE', 1)`)).rejects.toMatchObject({ code: "23514" });
+    await client.query("ROLLBACK TO SAVEPOINT invalid_kind");
   });
 });

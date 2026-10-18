@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   summarizeUsage: vi.fn(),
   summarizeLifetime: vi.fn(),
   summarizeEngagement: vi.fn(),
+  summarizeProductFunnel: vi.fn(),
   hasUsageAdminAccess: vi.fn(),
   readRecentSearchTags: vi.fn(),
   readSearchCountries7Days: vi.fn(),
@@ -24,6 +25,7 @@ vi.mock("../../../../server/usageAnalytics", () => ({
   summarizeUsage: mocks.summarizeUsage,
   summarizeLifetime: mocks.summarizeLifetime,
   summarizeEngagement: mocks.summarizeEngagement,
+  summarizeProductFunnel: mocks.summarizeProductFunnel,
 }));
 import { GET } from "./route";
 vi.mock("../../../../server/apiPerformance", () => ({

@@ -1,5 +1,27 @@
 import { expect, test } from "@playwright/test";
 import { emptyEngagement } from "../src/utils/usageEvents";
+import { emptyProductCounts } from "../src/utils/productFunnel";
+
+test("product flow dashboard uses session denominators and remains readable on mobile", async ({ page }) => {
+  const base = { visits: 10, searches: 10, successfulSearches: 9, gameEnds: 1 };
+  const counts = { ...emptyProductCounts(), sessions: 10, active: 8, searches: 4, followups: 1, meta: 1, save: 1 };
+  await page.route("**/api/admin/usage", route => route.fulfill({ json: {
+    today: base, last7Days: base, allTime: base, daily: [], byGame: {}, byGameToday: {}, byGameAllTime: {},
+    recentHours: [], recentSearchTags: [], trackingStartedAt: "2026-09-01T00:00:00Z", sampledAt: "2026-10-18T03:00:00Z",
+    productFunnel: { today: counts, last7Days: counts, allTime: counts, trackingStartedAt: "2026-10-18T03:00:00Z" },
+  } }));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/admin/usage");
+  const panel = page.getByRole("region", { name: "오늘 유효 이용·검색 후 행동" });
+  await expect(panel).toBeVisible();
+  await expect(panel).toContainText("검색 → 다음 행동 비율: 25.0%");
+  await expect(panel).toContainText("유효 이용 세션 비중: 80.0%");
+  await expect(panel).toContainText("D7 코호트 재방문율이 아닙니다");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await panel.screenshot({ path: test.info().outputPath("product-funnel-mobile.png") });
+  await page.getByRole("button", { name: "최근 7일", exact: true }).click();
+  await expect(page.getByRole("region", { name: "최근 7일 유효 이용·검색 후 행동" })).toContainText("25.0%");
+});
 
 test("operator sees measured returns and leaves unknown monthly costs blank", async ({ page }) => {
   const counts = { visits: 10, searches: 10, successfulSearches: 9, gameEnds: 1 };

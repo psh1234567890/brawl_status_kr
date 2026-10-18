@@ -2,6 +2,35 @@ import { expect, test, type Page } from "@playwright/test";
 
 const tag = "9C82J8YPP";
 
+test("successful search to recommendations sends only anonymous flow counters once", async ({ page }) => {
+  const bodies: Array<{ event?: string; events?: string[] }> = [];
+  await page.route("**/api/usage/event", route => {
+    bodies.push(route.request().postDataJSON());
+    return route.fulfill({ status: 204 });
+  });
+  await page.route("**/api/events", route => route.fulfill({ json: { active: [], upcoming: [], fetchedAt: new Date().toISOString() } }));
+  await page.route("**/api/meta", route => route.fulfill({ json: [{ mode: "gemGrab", map: "Hard Rock Mine", brawlers: [
+    { id: 16000000, name: "SHELLY", plays: 20, wins: 12, draws: 0, winRate: 60, score: 48, confidence: "MEDIUM", confidenceScore: 40 },
+  ] }] }));
+  const events = () => bodies.flatMap(body => body.events ?? [body.event!]);
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+  await page.getByRole("button", { name: "검색", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+  await expect.poll(() => events().includes("funnel_search")).toBe(true);
+  await page.goto("/meta");
+  await expect.poll(() => events().includes("funnel_after_meta")).toBe(true);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /암석 광산 추천/ })).toBeVisible();
+  expect(events().filter(event => event === "funnel_followup")).toHaveLength(1);
+  expect(events().filter(event => event === "funnel_after_meta")).toHaveLength(1);
+  expect(bodies.every(body => Object.keys(body).length === 1)).toBe(true);
+  expect(JSON.stringify(bodies)).not.toContain(tag);
+  await page.goto("/privacy");
+  await page.getByRole("checkbox", { name: "방문·검색·미니게임 통계 및 검색 태그 기록 제외" }).check();
+  expect(await page.evaluate(() => localStorage.getItem("brawl_product_session_v1"))).toBeNull();
+});
+
 test.beforeEach(async ({ context, page }) => {
   await context.addCookies([
     { name: "brawl-locale", value: "ko", url: "http://localhost:3020" },

@@ -2,9 +2,29 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const query = vi.hoisted(() => vi.fn());
 vi.mock("../db", () => ({ db: { $client: { query } } }));
-import { classifyPlayerSearchFailure, hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, summarizeLifetime, summarizeUsage, summarizeEngagement } from "./usageAnalytics";
+import { classifyPlayerSearchFailure, hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, summarizeLifetime, summarizeUsage, summarizeEngagement, summarizeProductFunnel } from "./usageAnalytics";
 
 describe("anonymous usage analytics", () => {
+  it("keeps product flow counters out of game totals and reports only their own measurement period", () => {
+    const rows = [
+      { hour: "2026-10-18 09:00", kind: "funnel_session" as const, count: "10" },
+      { hour: "2026-10-18 09:00", kind: "funnel_search" as const, count: "4" },
+      { hour: "2026-10-18 09:00", kind: "funnel_followup" as const, count: "1" },
+      { hour: "2026-10-11 09:00", kind: "funnel_session" as const, count: "20" },
+      { hour: "2026-10-19 09:00", kind: "funnel_session" as const, count: "30" },
+    ];
+    const now = new Date("2026-10-18T00:30:00Z");
+    expect(summarizeUsage(rows, now).last7Days.gameEnds).toBe(0);
+    const summary = summarizeProductFunnel(rows, [
+      { kind: "visit_session", count: "500", firstSeenAt: "2026-09-01T00:00:00Z" },
+      { kind: "funnel_session", count: "40", firstSeenAt: "2026-10-18T00:00:00Z" },
+    ], now);
+    expect(summary.today).toMatchObject({ sessions: 10, searches: 4, followups: 1 });
+    expect(summary.last7Days.sessions).toBe(10);
+    expect(summary.allTime.sessions).toBe(40);
+    expect(summary.trackingStartedAt).toBe("2026-10-18T00:00:00Z");
+    expect(summarizeProductFunnel([], [], now).trackingStartedAt).toBeNull();
+  });
   it("keeps new PV and return counters separate from legacy visits and game endings", () => {
     const now = new Date("2026-10-13T00:00:00Z");
     const rows = [

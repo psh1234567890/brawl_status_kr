@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { browserReturnShare, countryShare, searchSuccessRate } from "../../utils/adminUsageMetrics";
 import type { EngagementCounts } from "../../utils/usageEvents";
 import { BROWSER_ACTIVITY_KEY } from "../../utils/usageEvents";
+import { PRODUCT_SESSION_KEY, type ProductSummary } from "../../utils/productFunnel";
+import ProductFunnelPanel from "./ProductFunnelPanel";
 import MonthlyFinancePanel from "./MonthlyFinancePanel";
 import { summarizeApiPerformance, type ApiPerformanceCounts } from "../../utils/apiPerformanceMetrics";
 
@@ -17,6 +19,7 @@ type SearchTagSummary = {
   countries?: Array<{ countryCode: string; searchCount: string }>;
 };
 type Summary = {
+  productFunnel?: ProductSummary;
   engagement?: { today: EngagementCounts; last7Days: EngagementCounts; allTime: EngagementCounts; trackingStartedAt: string | null };
   recentSearchTags: SearchTagSummary[];
   apiPerformance24h?: ApiPerformanceCounts[];
@@ -41,8 +44,12 @@ const games: Record<string, string> = {
   silhouette_quiz: "실루엣 맞추기",
   map_quiz: "맵 맞추기",
   ability_quiz: "능력 맞추기",
+  higher_lower: "하이어 오어 로어", release_order: "출시 순서 맞추기",
 };
 const activities: Record<string, string> = {
+  funnel_session: "측정 이용 세션", funnel_active: "유효 이용 세션", funnel_search: "검색 성공 포함 세션",
+  funnel_followup: "검색 후 다음 행동 세션", funnel_after_meta: "검색 후 추천 확인", funnel_after_compare: "검색 후 비교 완료",
+  funnel_after_game: "검색 후 게임 결과 확인", funnel_after_save: "검색 후 저장", funnel_after_share: "검색 후 공유",
   page_view: "페이지 조회 (PV)", browser_session: "브라우저 세션 (30분)", browser_return_7d: "7일 내 재방문 세션",
   profile_save: "플레이어 저장", profile_unsave: "저장 해제", profile_compare: "비교 화면 진입",
   comparison_run: "두 플레이어 비교 완료", profile_share: "공유·링크 복사 완료", profile_reopen: "저장·최근 플레이어 다시 조회",
@@ -139,7 +146,10 @@ export default function UsageDashboard() {
       ? "brawl_analytics_opt_out=1; Path=/; Max-Age=31536000; SameSite=Lax" + secure
       : "brawl_analytics_opt_out=; Path=/; Max-Age=0; SameSite=Lax" + secure;
     setOptOut(next);
-    if (next) { try { localStorage.removeItem(BROWSER_ACTIVITY_KEY); } catch { /* Optional storage. */ } }
+    if (next) { try {
+      localStorage.removeItem(BROWSER_ACTIVITY_KEY);
+      localStorage.removeItem(PRODUCT_SESSION_KEY);
+    } catch { /* Optional storage. */ } }
   }
 
   const max = Math.max(1, ...((data?.daily ?? []).map(item => item.visits)));
@@ -318,6 +328,7 @@ export default function UsageDashboard() {
                 </article>
               ))}
             </div>
+            {data.productFunnel ? <ProductFunnelPanel summary={data.productFunnel} period={period} label={periodLabel} /> : null}
             {engagement ? <section className="rounded-xl border bg-white p-5 shadow-sm" aria-labelledby="engagement-title">
               <h2 id="engagement-title" className="text-lg font-black">{periodLabel} 재방문·주요 기능 이용</h2>
               <p className="mt-1 text-sm text-slate-600">{engagement.trackingStartedAt ? `추가 계측 시작: ${new Date(engagement.trackingStartedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}` : "배포 이후 새 데이터 수집 대기 중"} · 과거 데이터는 소급하지 않습니다.</p>

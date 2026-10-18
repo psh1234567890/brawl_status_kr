@@ -10,7 +10,7 @@ import type {
   PlayerSkinInventoryStatus,
 } from "../types/brawl";
 import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
-import { sendUsageEvent } from "../utils/clientUsage";
+import { sendUsageEvent, trackProductAction } from "../utils/clientUsage";
 import {
   buildOfficialSkinInventory,
   mergeSkinInventories,
@@ -193,6 +193,7 @@ export function usePlayerSearch(locale: Locale = "ko") {
         if (!isCurrent()) return;
 
         setPlayerData(profile);
+        trackProductAction("search");
         setLoading(false);
         const updatedRecent = [
           targetTag,

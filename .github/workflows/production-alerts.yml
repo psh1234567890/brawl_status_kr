@@ -1,0 +1,52 @@
+name: Production alerts
+
+on:
+  workflow_run:
+    workflows: [CI, Production smoke]
+    types: [completed]
+    branches: [main]
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      drill:
+        description: "Test the owner notification without breaking production"
+        required: true
+        type: choice
+        options: [alert, recover]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-alerts
+  cancel-in-progress: false
+
+jobs:
+  notify-owner:
+    if: >-
+      github.repository == 'psh1234567890/brawl_status_kr' &&
+      (github.event_name == 'workflow_run' ||
+       github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' ||
+       github.event_name == 'deployment_status' &&
+       github.event.deployment.environment == 'Production' &&
+       github.event.deployment.creator.login == 'vercel[bot]' &&
+       contains(fromJSON('["error","failure"]'), github.event.deployment_status.state))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      # workflow_run has write authority. Execute reviewed main only, never a
+      # triggering PR ref/artifact/cache or dependencies from an untrusted run.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20
+      - name: Create or resolve the owner incident
+        run: node scripts/production-alerts.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

@@ -513,7 +513,7 @@ test("desktop shortcuts avoid header duplicates while mobile keeps every destina
   }
   await page.setViewportSize({ width: 1280, height: 844 });
   const headerLinks = page.locator("header").getByRole("navigation", { name: "주요 기능", exact: true }).getByRole("link");
-  await expect(headerLinks).toHaveText(["전적", "브롤러 추천", "미니게임", "도감", "트롤 박제"]);
+  await expect(headerLinks).toHaveText(["전적", "브롤러 추천", "미니게임", "도감", "커뮤니티"]);
   await headerLinks.filter({ hasText: "브롤러 추천" }).click();
   await expect(page).toHaveURL(/\/meta$/);
   await expect(page.locator("header").getByRole("link", { name: "브롤러 추천", exact: true })).toHaveAttribute("aria-current", "page");
@@ -802,8 +802,8 @@ test("mobile home exposes other features before opening the full menu", async ({
   await page.goto("/");
   const trigger = page.locator('header summary[aria-label="전체 메뉴"]');
   const shortcuts = page.getByRole("navigation", { name: "바로가기", exact: true });
-  await expect(shortcuts.getByRole("link", { name: "트롤 박제", exact: true })).toBeVisible();
-  await shortcuts.getByRole("link", { name: "트롤 박제", exact: true }).click();
+  await expect(shortcuts.getByRole("link", { name: "커뮤니티", exact: true })).toBeVisible();
+  await shortcuts.getByRole("link", { name: "커뮤니티", exact: true }).click();
   await expect(page).toHaveURL(/\/community$/);
   await page.goto("/");
   await trigger.click();

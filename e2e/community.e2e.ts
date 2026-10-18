@@ -11,7 +11,7 @@ if (process.env.DATABASE_URL) {
 test("guests can read the community but cannot submit posts or comments", async ({ page, context }, testInfo) => {
   const origin = String(testInfo.project.use.baseURL);
   await page.goto("/en/community");
-  await expect(page.getByRole("heading", { level: 1, name: "Match reports", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Community", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Published posts", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   await page.getByRole("link", { name: "Write a post", exact: true }).click();

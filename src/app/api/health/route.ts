@@ -10,6 +10,10 @@ async function getHealth(request: Request) {
   });
   if (rejected) return rejected;
 
+  const commit = process.env.VERCEL_GIT_COMMIT_SHA;
+  const headers: Record<string, string> = { "Cache-Control": "no-store" };
+  if (commit && /^[a-f0-9]{40}$/.test(commit)) headers["X-Deployment-Sha"] = commit;
+
   try {
     const latencyMs = await checkDatabaseHealth();
     return NextResponse.json(
@@ -17,7 +21,7 @@ async function getHealth(request: Request) {
         status: "ok",
         checks: { database: { ok: true, latencyMs } },
       },
-      { headers: { "Cache-Control": "no-store" } },
+      { headers },
     );
   } catch {
     return NextResponse.json(
@@ -25,7 +29,7 @@ async function getHealth(request: Request) {
         status: "degraded",
         checks: { database: { ok: false } },
       },
-      { status: 503, headers: { "Cache-Control": "no-store" } },
+      { status: 503, headers },
     );
   }
 }

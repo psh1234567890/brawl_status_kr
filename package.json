@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
+    "smoke:production": "node scripts/production-smoke.mjs",
     "db:backup": "node scripts/backup-db.mjs",
     "db:backup:prune": "node scripts/prune-account-backups.mjs",
     "db:accounts:snapshot": "node scripts/snapshot-accounts.mjs",

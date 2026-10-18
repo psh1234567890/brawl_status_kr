@@ -38,6 +38,7 @@ import {
 } from "../utils/brawlHelpers";
 import { translateModeName } from "../utils/brawlTranslations";
 import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
+import { replaceBrowserSearch } from "../utils/urlState";
 
 const BattleDetailsModal = dynamic(() => import("../components/BattleDetailsModal"));
 const BrawlerDetailsModal = dynamic(() => import("../components/BrawlerDetailsModal"));
@@ -70,7 +71,10 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
   const savedProfiles = useMemo(() => parsePublicProfiles(profileSnapshot), [profileSnapshot]);
   const cachedProfile = savedProfiles.find(item => item.tag === normalizePlayerTag(search.playerData?.tag ?? ""));
   useEffect(() => {
-    if (search.playerData && search.playerData.dataFreshness?.status !== "stale") rememberPublicProfile(search.playerData);
+    if (!search.playerData) return;
+    if (search.playerData.dataFreshness?.status !== "stale") rememberPublicProfile(search.playerData);
+    const profileTag = normalizePlayerTag(search.playerData.tag);
+    if (new URLSearchParams(window.location.search).get("tag") !== profileTag) replaceBrowserSearch({ tag: profileTag });
   }, [search.playerData]);
 
   // Shared profile URLs only initiate a normal, validated player lookup.
@@ -192,10 +196,14 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
               actions={
                 <>
                   <div className={brandStyles.profileActions}>
-                  <a href="#current-maps" className={`${brandStyles.profileAction} ${brandStyles.profileActionPrimary}`}>
+                  <button type="button" className={`${brandStyles.profileAction} ${brandStyles.profileActionPrimary}`} onClick={() => {
+                    const picker = document.getElementById("current-maps");
+                    picker?.focus({ preventScroll: true });
+                    picker?.scrollIntoView({ block: "start" });
+                  }}>
                     <StatSymbol kind="map" size={18} />
                     <span>{profileMapPicksLabels[locale]}</span>
-                  </a>
+                  </button>
                   <button
                     type="button"
                     aria-pressed={isFavorite}

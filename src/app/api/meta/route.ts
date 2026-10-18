@@ -106,7 +106,9 @@ async function getMeta(request: Request) {
         if (snapshot.refreshedAt !== null) assertMetaSnapshotFresh(snapshot.refreshedAt);
       }
     }
-    return NextResponse.json(snapshot.maps);
+    return NextResponse.json(snapshot.maps, {
+      headers: snapshot.refreshedAt ? { "X-Meta-Refreshed-At": new Date(snapshot.refreshedAt).toISOString() } : {},
+    });
   } catch (error) {
     if (error instanceof MetaSnapshotUnavailableError) {
       console.warn(JSON.stringify({ event: "meta_snapshot_unavailable" }));

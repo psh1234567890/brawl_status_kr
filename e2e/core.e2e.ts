@@ -597,7 +597,7 @@ test("meta filters hydrate from and update the shareable URL", async ({ page }) 
 
   await page.goto("/meta?map=Hard%20Rock%20Mine&min=20&confidence=HIGH&sort=WIN_RATE");
   await expect(page.getByLabel("최소 표본")).toHaveValue("20");
-  await expect(page.getByLabel("신뢰도")).toHaveValue("HIGH");
+  await expect(page.getByLabel("표본 규모")).toHaveValue("HIGH");
   await expect(page.getByLabel("정렬")).toHaveValue("WIN_RATE");
 
   await page.getByRole("button", { name: "이중 곡선" }).click();

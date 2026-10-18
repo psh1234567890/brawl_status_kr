@@ -31,7 +31,7 @@ test("meta dashboard keeps branded controls usable across phone and desktop widt
     await expect(selectedMode).toHaveAttribute("aria-pressed", "true");
     expect((await selectedMode.boundingBox())?.height).toBeGreaterThanOrEqual(44);
 
-    for (const name of ["최소 표본", "신뢰도", "정렬"]) {
+    for (const name of ["최소 표본", "표본 규모", "정렬"]) {
       const control = page.getByRole("combobox", { name, exact: true });
       await expect(control).toBeVisible();
       expect((await control.boundingBox())?.height).toBeGreaterThanOrEqual(44);
@@ -74,7 +74,7 @@ test("meta preserves an unsampled rotation map instead of recommending for anoth
   await page.getByRole("button", { name: "슈퍼 해변", exact: true }).click();
   await expect(page.getByText("쉘리", { exact: true })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "최소 표본", exact: true })).toHaveValue("5");
-  await expect(page.getByRole("combobox", { name: "신뢰도", exact: true })).toHaveValue("ALL");
+  await expect(page.getByRole("combobox", { name: "표본 규모", exact: true })).toHaveValue("ALL");
   await expect(page.getByRole("combobox", { name: "정렬", exact: true })).toHaveValue("SCORE");
 
   await page.getByRole("button", { name: "젬 그랩", exact: true }).click();

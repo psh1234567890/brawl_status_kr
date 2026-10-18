@@ -9,7 +9,9 @@ import brandStyles from "../../components/brand/brand.module.css";
 import OwnedBrawlerRecommendations from "../../components/OwnedBrawlerRecommendations";
 import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTranslations";
 import { META_WINDOW_DAYS } from "../../constants/meta";
-import type { Locale } from "../../i18n/config";
+import { numberLocales, type Locale } from "../../i18n/config";
+import { recommendationEvidenceMessages } from "../../i18n/recommendationEvidenceMessages";
+import { winRateInterval } from "../../utils/recommendationEvidence";
 import {
   formatConfidenceOnly,
   formatMetaAllCandidates,
@@ -62,7 +64,9 @@ type MapStatsResponse = { mode: string; map: string; brawlers: BrawlerMapStat[] 
 
 export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   const copy = getMessages(locale);
+  const evidenceCopy = recommendationEvidenceMessages[locale];
   const [data, setData] = useState<MapStatsResponse>([]);
+  const [refreshedAt, setRefreshedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const search = useBrowserSearch();
@@ -93,6 +97,8 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
         }
 
         setData(json as MapStatsResponse);
+        const timestamp = response.headers.get("x-meta-refreshed-at");
+        setRefreshedAt(timestamp && Number.isFinite(Date.parse(timestamp)) ? timestamp : null);
       } catch (loadError) {
         if (loadError instanceof DOMException && loadError.name === "AbortError") return;
         setError(
@@ -310,6 +316,15 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                 <span className="text-sm font-bold text-slate-400">{formatMetaMinimumSample(locale, minPlays)}</span>
               </h2>
 
+              {refreshedAt ? (
+                <p className="mb-4 break-words text-xs font-medium text-slate-500">
+                  {evidenceCopy.updated}{" · "}
+                  <time dateTime={refreshedAt}>{new Intl.DateTimeFormat(numberLocales[locale], {
+                    dateStyle: "short", timeStyle: "short", timeZone: "Asia/Seoul",
+                  }).format(new Date(refreshedAt))}</time>
+                </p>
+              ) : null}
+
               <div className="mb-6 grid gap-3 sm:grid-cols-3">
                 <FilterField label={copy.meta.minimumSample}>
                   <select
@@ -325,7 +340,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                     ))}
                   </select>
                 </FilterField>
-                <FilterField label={copy.meta.confidence}>
+                <FilterField label={evidenceCopy.sample}>
                   <select
                     value={confidenceFilter}
                     onChange={(event) => {
@@ -363,7 +378,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                 />
                 <SummaryStat label={copy.meta.aggregatedSamples} value={formatSamples(locale, mapSummary.totalSamples)} />
                 <SummaryStat
-                  label={copy.meta.highConfidence}
+                  label={`${evidenceCopy.sample} ≥ 50`}
                   value={formatMetaCandidateCount(locale, mapSummary.reliableCount)}
                   subValue={formatMetaTopWinRate(locale, mapSummary.topWinRate)}
                 />
@@ -383,8 +398,8 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                     generatedBrawlerImageIdByName[brawler.name] ??
                     generatedBrawlerImageIdByName[brawler.name.toUpperCase()];
                   return (
-                    <article key={brawler.name} className="flex flex-col gap-4 rounded-xl border border-[#e7e3ee] bg-[#faf9ff] p-4 transition-colors hover:border-[#c8baf2] sm:flex-row sm:items-center sm:justify-between sm:p-5">
-                      <div className="flex items-center gap-4">
+                    <article key={brawler.name} className="flex min-w-0 flex-col gap-4 rounded-xl border border-[#e7e3ee] bg-[#faf9ff] p-4 transition-colors hover:border-[#c8baf2] sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                      <div className="flex min-w-0 items-center gap-4">
                         <span className="w-8 shrink-0 text-center text-2xl font-black text-[#b1a2e8] sm:w-10 sm:text-3xl">#{index + 1}</span>
                         {brawlerId ? (
                           <BrawlImage
@@ -401,12 +416,12 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                         )}
                         <span className="min-w-0 break-words text-lg font-black text-[#232238] sm:text-xl">{displayName}</span>
                       </div>
-                      <div className="flex w-full flex-col gap-3 border-t border-slate-100 pt-3 sm:w-[300px] sm:border-0 sm:pt-0">
+                      <div className="flex w-full min-w-0 flex-col gap-3 border-t border-slate-100 pt-3 sm:w-[300px] sm:shrink-0 sm:border-0 sm:pt-0">
                         <div className="grid grid-cols-2 gap-2 text-left sm:gap-4 sm:text-right">
                           <Stat label={copy.common.recommendationScore} value={formatScore(locale, brawler.score)} />
                           <Stat label={copy.common.winRate} value={formatMetaWinRateSample(locale, brawler.winRate, brawler.plays)} />
                         </div>
-                        <ConfidenceMeter stat={brawler} label={copy.meta.sampleConfidence} confidenceLabels={confidenceLabels} />
+                        <RecommendationEvidence stat={brawler} locale={locale} confidenceLabels={confidenceLabels} />
                       </div>
                     </article>
                   );
@@ -488,30 +503,36 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ConfidenceMeter({
+function RecommendationEvidence({
   stat,
-  label,
+  locale,
   confidenceLabels,
 }: {
   stat: BrawlerMapStat;
-  label: string;
+  locale: Locale;
   confidenceLabels: Record<SampleConfidence, string>;
 }) {
   const confidenceLabel = confidenceLabels[stat.confidence];
+  const evidence = recommendationEvidenceMessages[locale];
+  const interval = winRateInterval(stat.wins, stat.plays);
+  const percent = new Intl.NumberFormat(numberLocales[locale], { maximumFractionDigits: 0, style: "percent" });
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-3">
-        <span className="text-xs font-bold text-slate-500">{label}</span>
+        <span className="text-xs font-bold text-slate-500">{evidence.sample}</span>
         <span className={`rounded-full px-2 py-1 text-[11px] font-black ${confidenceBadgeClasses[stat.confidence]}`}>
           {confidenceLabel}
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-        <div
-          className={`h-full rounded-full ${confidenceBarClasses[stat.confidence]}`}
-          style={{ width: `${stat.confidenceScore}%` }}
-        />
-      </div>
+      {stat.confidence === "LOW" ? <p className="mt-2 text-xs leading-relaxed text-slate-600">{evidence.low}</p> : null}
+      <details className="mt-1 text-xs leading-relaxed text-slate-600">
+        <summary className="min-h-11 cursor-pointer content-center rounded-md py-2 font-bold text-[#5842ce] underline decoration-[#c8baf2] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5842ce]">{evidence.why}</summary>
+        <div className="space-y-2 pb-2">
+          <p>{evidence.method}</p>
+          {interval ? <p className="font-semibold">{evidence.interval}: {percent.format(interval[0] / 100)}–{percent.format(interval[1] / 100)}</p> : null}
+          <p>{evidence.limits}</p>
+        </div>
+      </details>
     </div>
   );
 }
@@ -520,12 +541,6 @@ const confidenceBadgeClasses: Record<SampleConfidence, string> = {
   HIGH: "bg-emerald-100 text-emerald-700",
   MEDIUM: "bg-amber-100 text-amber-700",
   LOW: "bg-gray-100 text-gray-500",
-};
-
-const confidenceBarClasses: Record<SampleConfidence, string> = {
-  HIGH: "bg-emerald-500",
-  MEDIUM: "bg-amber-400",
-  LOW: "bg-gray-300",
 };
 
 function compareMetaStat(left: BrawlerMapStat, right: BrawlerMapStat, mode: MetaSortMode) {

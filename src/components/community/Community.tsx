@@ -48,7 +48,7 @@ export function CommunityGate({ locale }: { locale: Locale }) {
 function EntryMeta({ entry, locale }: { entry: CommunityEntry; locale: Locale }) {
   const copy = getCommunityMessages(locale);
   return <div className={styles.meta}><span>{entry.alias}</span><time dateTime={entry.createdAt}>{new Date(entry.createdAt).toLocaleString(numberLocales[locale], { dateStyle: "medium", timeStyle: "short" })}</time>
-    <span className={styles.status}>{copy[entry.status]}</span>{entry.kind === "correction" && <strong>{copy.correction}</strong>}</div>;
+    {entry.status !== "published" && <span className={styles.status}>{copy[entry.status]}</span>}{entry.kind === "correction" && <strong>{copy.correction}</strong>}</div>;
 }
 export function EvidenceLinks({ urls, locale }: { urls: string[]; locale: Locale }) {
   const copy = getCommunityMessages(locale);
@@ -79,32 +79,33 @@ export function CommunityBoard({ locale }: { locale: Locale }) {
   const activeMine = mine && account.status === "account";
   const result = useCommunityRead<{ posts: CommunityEntry[]; hasMore: boolean }>(`/api/community/posts?locale=${locale}&page=${page}${activeMine ? "&mine=1" : ""}`, userId ?? account.status);
   return <section className={styles.content}>
-    <CommunityRules locale={locale} />
     <div className={styles.toolbar}><div className={styles.tabs} role="group" aria-label={copy.title}>
       <button type="button" aria-pressed={!activeMine} onClick={() => { setMine(false); setPage(1); }}>{copy.all}</button>
       {account.status === "account" && <button type="button" aria-pressed={activeMine} onClick={() => { setMine(true); setPage(1); }}>{copy.mine}</button>}
     </div><Link className={styles.primary} href={localizedHref(locale, "/community/new")}>{copy.write}</Link></div>
-    <p className={styles.notice}>{copy.reviewNotice}</p>
     {result.loading && <p role="status">{copy.loading}</p>}
     {result.error && <p role="alert" className={styles.error}>{copy.unavailable}</p>}
     {result.data?.posts.length === 0 && <p className={styles.notice}>{copy.empty}</p>}
-    {result.data?.posts.map(entry => <Link key={entry.id} href={localizedHref(locale, `/community/${entry.id}`)} className={styles.row}>
-      <EntryMeta entry={entry} locale={locale} /><h2>{entry.title}</h2><p>{entry.body.slice(0, 130)}</p><p>{copy.comments} {entry.commentCount}</p>
-    </Link>)}
+    <div className={styles.boardHead} aria-hidden="true"><span>{copy.titleLabel}</span><span>{copy.author}</span><span>{copy.date}</span></div>
+    <div className={styles.postList}>{result.data?.posts.map(entry => <Link key={entry.id} href={localizedHref(locale, `/community/${entry.id}`)} className={styles.postRow}>
+      <div className={styles.postTitle}><h2>{entry.title}</h2>{entry.commentCount > 0 && <span className={styles.replyCount} aria-label={`${copy.comments} ${entry.commentCount}`}>[{entry.commentCount}]</span>}
+        {entry.images.length > 0 && <span className={styles.attachmentBadge} aria-label={getCommunityImageMessages(locale).label}>▧</span>}
+        {entry.status !== "published" && <span className={styles.status}>{copy[entry.status]}</span>}</div>
+      <span className={styles.postAuthor}>{entry.alias}</span><time className={styles.postDate} dateTime={entry.createdAt}>{new Date(entry.createdAt).toLocaleString(numberLocales[locale], { dateStyle: "short", timeStyle: "short" })}</time>
+    </Link>)}</div>
     <div className={styles.pager}>{page > 1 && <button className={styles.secondary} onClick={() => setPage(value => value - 1)}>{copy.previous}</button>}
       {result.data?.hasMore && <button className={styles.secondary} onClick={() => setPage(value => value + 1)}>{copy.next}</button>}</div>
     {account.status !== "account" && <CommunityGate locale={locale} />}
+    <CommunityRules locale={locale} />
   </section>;
 }
 export function CommunityNewPost({ locale }: { locale: Locale }) {
-  const copy = getCommunityMessages(locale);
   const account = useAccount();
   const router = useRouter();
-  return <section className={styles.content}><CommunityRules locale={locale} />
+  return <section className={styles.content}>
     {account.status === "account" && account.account?.onboardingComplete
       ? <CommunityForm key={account.account.id} locale={locale} userId={account.account.id} onSubmitted={id => { if (isCommunityId(id)) router.push(localizedHref(locale, `/community/${id}`)); }} />
       : <CommunityGate locale={locale} />}
-    <Link href={localizedHref(locale, "/community")} className={styles.secondary}>{copy.back}</Link>
   </section>;
 }
 export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale: Locale; userId: string; postId?: string; onSubmitted: (id: string) => void }) {
@@ -124,17 +125,21 @@ export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale:
     if (busy || uploading) return;
     setError(""); setInvalidField("");
     const body = { expectedUserId: userId, body: String(data.get("body") ?? ""),
-      imageIds: images.map(image => image.id), evidenceUrls: String(data.get("evidence") ?? "").split(/\r?\n/).map(value => value.trim()).filter(Boolean), acceptRules: data.get("acceptRules") === "on",
-      ...(postId ? { kind: data.get("kind") } : { title: data.get("title"), locale, confirmIntent: data.get("confirmIntent") === "on" }) };
+      imageIds: images.map(image => image.id), evidenceUrls: String(data.get("evidence") ?? "").split(/\r?\n/).map(value => value.trim()).filter(Boolean), acceptRules: true,
+      ...(postId ? { kind: "opinion" } : { title: data.get("title"), locale }) };
     try {
       if (postId) validateCommunityComment(body); else validateCommunityPost(body);
     } catch (cause) {
       const code = cause instanceof Error ? cause.message : "";
       const field = code.startsWith("INVALID_TITLE") ? "title" : code.startsWith("INVALID_POST_BODY") || code.startsWith("INVALID_COMMENT_BODY") ? "body"
-        : code.includes("EVIDENCE") ? "evidence" : code === "RULES_REQUIRED" ? (!postId && data.get("confirmIntent") !== "on" ? "confirmIntent" : "acceptRules") : "body";
+        : code.includes("EVIDENCE") ? "evidence" : "body";
       setInvalidField(field); setError(errorMessage(cause, locale));
       const control = form.elements.namedItem(field);
-      if (control instanceof HTMLElement) control.focus();
+      if (control instanceof HTMLElement) {
+        const disclosure = control.closest("details");
+        if (disclosure) disclosure.open = true;
+        control.focus();
+      }
       return;
     }
     setBusy(true);
@@ -145,18 +150,18 @@ export function CommunityForm({ locale, userId, postId, onSubmitted }: { locale:
     } catch (cause) { setError(errorMessage(cause, locale)); }
     finally { setBusy(false); }
   }
-  return <form className={styles.form} noValidate onSubmit={event => void submit(event)}>
-    {postId ? <label className={styles.field}>{copy.comments}<select name="kind" defaultValue="opinion"><option value="opinion">{copy.opinion}</option><option value="correction">{copy.correction}</option></select></label>
-      : <><label className={styles.field}>{copy.titleLabel}<input name="title" required aria-describedby={`${formId}-title-hint${invalidField === "title" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "title"} /></label><small id={`${formId}-title-hint`}>{hints.titleHint}</small></>}
-    <label className={styles.field}>{postId ? copy.commentLabel : copy.bodyLabel}<textarea name="body" required aria-describedby={`${formId}-body-hint${invalidField === "body" ? ` ${formId}-error` : ""}`} aria-invalid={invalidField === "body"} /></label><small id={`${formId}-body-hint`}>{postId ? hints.commentHint : hints.bodyHint}</small>
-    <CommunityPhotoPicker key={photoReset} locale={locale} userId={userId} disabled={busy} onChange={setImages} onBusy={setUploading} />
-    <label className={styles.field}>{copy.evidenceLabel}<textarea className={styles.linksInput} name="evidence" maxLength={3002} spellCheck={false} autoCapitalize="off" placeholder="https://…" aria-invalid={invalidField === "evidence"} aria-describedby={`${formId}-evidence-hint${invalidField === "evidence" ? ` ${formId}-error` : ""}`} /><small id={`${formId}-evidence-hint`}>{copy.evidenceHint}</small></label>
-    <p className={styles.notice}>{copy.publicNotice}</p>
-    {!postId && <label className={styles.check}><input type="checkbox" name="confirmIntent" required />{copy.confirmIntent}</label>}
-    <label className={styles.check}><input type="checkbox" name="acceptRules" required />{copy.acceptRules}</label>
+  const photos = <CommunityPhotoPicker key={photoReset} locale={locale} userId={userId} disabled={busy} onChange={setImages} onBusy={setUploading} />;
+  const links = <label className={styles.field}>{copy.evidenceLabel}<textarea className={styles.linksInput} name="evidence" maxLength={3002} spellCheck={false} autoCapitalize="off" placeholder="https://…" aria-invalid={invalidField === "evidence"} aria-describedby={`${formId}-evidence-hint${invalidField === "evidence" ? ` ${formId}-error` : ""}`} /><small id={`${formId}-evidence-hint`}>{copy.evidenceHint}</small></label>;
+  return <form className={`${styles.form} ${postId ? styles.commentForm : styles.postForm}`} noValidate onSubmit={event => void submit(event)}>
+    {!postId && <label className={styles.field}>{copy.titleLabel}<input name="title" required placeholder={hints.titleHint} aria-describedby={invalidField === "title" ? `${formId}-error` : undefined} aria-invalid={invalidField === "title"} /></label>}
+    {!postId && photos}
+    <label className={styles.field}>{postId ? copy.commentLabel : copy.bodyLabel}<textarea name="body" required placeholder={postId ? hints.commentHint : hints.bodyHint} rows={postId ? 3 : 10} aria-describedby={invalidField === "body" ? `${formId}-error` : undefined} aria-invalid={invalidField === "body"} /></label>
+    <details className={styles.optionalAttachments}><summary>{postId ? copy.attachments : copy.evidenceLabel}</summary>{postId && photos}{links}</details>
+    <p className={styles.agreement}>{copy.agreement}</p>
+    <CommunityRules locale={locale} />
     {error && <p id={`${formId}-error`} role="alert" className={styles.error}>{error}</p>}
-    <button className={styles.primary} type="submit" disabled={busy || uploading}>{uploading ? getCommunityImageMessages(locale).uploading : busy ? copy.loading : postId ? copy.submitComment : copy.submitPost}</button>
-    <p className={styles.notice}>{copy.reviewNotice}</p>
+    <div className={styles.formActions}>{!postId && <Link href={localizedHref(locale, "/community")} className={styles.secondary}>{copy.back}</Link>}
+      <button className={styles.primary} type="submit" disabled={busy || uploading}>{uploading ? getCommunityImageMessages(locale).uploading : busy ? copy.loading : postId ? copy.submitComment : copy.submitPost}</button></div>
   </form>;
 }
 function WithdrawButton({ entry, kind, userId, locale, onDone }: { entry: CommunityEntry; kind: "post" | "comment"; userId: string; locale: Locale; onDone: () => void }) {
@@ -185,21 +190,21 @@ export function CommunityPost({ id, locale }: { id: string; locale: Locale }) {
     <Link className={styles.secondary} href={localizedHref(locale, "/community")}>{copy.back}</Link>
     {result.loading && <p role="status" className={styles.notice}>{copy.loading}</p>}
     {result.error && <p role="alert" className={styles.error}>{copy.unavailable}</p>}
-    {post && <><article className={styles.row}><EntryMeta entry={post} locale={locale} /><h2>{post.title}</h2>
+    {post && <><article className={styles.postArticle}><h2>{post.title}</h2><EntryMeta entry={post} locale={locale} />
       {post.isOwner && post.status === "published" && <p role="status" className={styles.success}>{copy.postSent}</p>}
-      <p className={styles.notice}>{copy.reviewNotice}</p><div className={styles.body}>{post.body}</div><EvidencePhotos images={post.images} locale={locale} /><EvidenceLinks urls={post.evidenceUrls} locale={locale} />
+      <EvidencePhotos images={post.images} locale={locale} /><div className={styles.body}>{post.body}</div><EvidenceLinks urls={post.evidenceUrls} locale={locale} />
       {post.filtered && <p className={styles.notice}>{copy.filtered}</p>}
       {post.moderationNote && <p className={styles.notice}>{post.moderationNote}</p>}
       {post.isOwner && userId && post.status !== "withdrawn" && <WithdrawButton entry={post} kind="post" userId={userId} locale={locale} onDone={refresh} />}
     </article><section className={styles.comments} aria-label={copy.comments}><h2>{copy.comments} {post.commentCount}</h2>
       {result.data?.comments.map(comment => <article key={comment.id} className={styles.comment} data-kind={comment.kind}>
-        <EntryMeta entry={comment} locale={locale} /><div className={styles.body}>{comment.body}</div><EvidencePhotos images={comment.images} locale={locale} /><EvidenceLinks urls={comment.evidenceUrls} locale={locale} />
+        <EntryMeta entry={comment} locale={locale} /><EvidencePhotos images={comment.images} locale={locale} /><div className={styles.body}>{comment.body}</div><EvidenceLinks urls={comment.evidenceUrls} locale={locale} />
         {comment.filtered && <p className={styles.notice}>{copy.filtered}</p>}{comment.moderationNote && <p className={styles.notice}>{comment.moderationNote}</p>}
         {comment.isOwner && userId && comment.status !== "withdrawn" && <WithdrawButton entry={comment} kind="comment" userId={userId} locale={locale} onDone={refresh} />}
       </article>)}
       <div className={styles.pager}>{commentPage > 1 && <button className={styles.secondary} onClick={() => setCommentPage(value => value - 1)}>{copy.previous}</button>}{result.data?.hasMoreComments && <button className={styles.secondary} onClick={() => setCommentPage(value => value + 1)}>{copy.more}</button>}</div>
       {sent && <p role="status" className={styles.success}>{copy.commentSent}</p>}
-      {post.status === "published" && <><CommunityRules locale={locale} />{canWrite && userId
+      {post.status === "published" && <>{canWrite && userId
         ? <CommunityForm key={`${id}:${userId}`} locale={locale} userId={userId} postId={id} onSubmitted={() => { setSent(true); refresh(); }} />
         : <CommunityGate locale={locale} />}</>}
     </section></>}
@@ -212,7 +217,7 @@ export function CommunityModeration() {
   const [status, setStatus] = useState<CommunityStatus>("published");
   const [page, setPage] = useState(1);
   const result = useCommunityRead<{ posts: CommunityAdminEntry[]; comments: CommunityAdminEntry[]; hasMore: boolean }>(userId ? `/api/admin/community?status=${status}&page=${page}` : null, userId ?? account.status);
-  return <section className={styles.content}><p className={styles.notice}>증거의 전후 맥락, 개인정보, 욕설·공격 유도와 반론 여부를 확인한 뒤 처리하세요. 공개 승인은 공식 제재나 계정 소유권 인증이 아닙니다.</p>
+  return <section className={styles.content}><p className={styles.notice}>게시 기준, 개인정보 노출, 욕설·공격 유도와 정정 요청을 확인한 뒤 처리하세요. 일반 글에는 증거 자료가 필요하지 않습니다.</p>
     {!userId && <CommunityGate locale="ko" />}
     {userId && <><label className={styles.field}>검토 상태<select value={status} onChange={event => { setStatus(event.target.value as CommunityStatus); setPage(1); }}>{(["pending", "published", "rejected", "hidden"] as const).map(value => <option key={value} value={value}>{getCommunityMessages("ko")[value]}</option>)}</select></label>
       {result.error && <p role="alert">접근할 수 없거나 커뮤니티를 불러오지 못했습니다.</p>}{result.loading && <p role="status">불러오는 중…</p>}

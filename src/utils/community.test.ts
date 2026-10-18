@@ -6,13 +6,16 @@ import { getCommunityImageMessages } from "../i18n/communityImageMessages";
 
 const post = { title: "Synthetic match report", body: "Synthetic evidence context for an isolated test.", locale: "en", evidenceUrls: ["https://youtu.be/abcdefghijk"], acceptRules: true, confirmIntent: true };
 describe("community input and public copy", () => {
-  it("requires intent confirmation, rules consent and evidence for a post", () => {
+  it("accepts ordinary text posts without evidence or an intent declaration", () => {
     expect(validateCommunityPost(post).locale).toBe("en");
-    for (const change of [{ acceptRules: false }, { confirmIntent: false }, { evidenceUrls: [] }, { locale: "xx" }]) {
+    expect(validateCommunityPost({ title: "질문", body: "어떤 브롤러가 좋아요?", locale: "ko", acceptRules: true })).toMatchObject({ evidenceUrls: [], imageIds: [] });
+    expect(validateCommunityPost({ ...post, confirmIntent: false, evidenceUrls: [] }).evidenceUrls).toEqual([]);
+    for (const change of [{ acceptRules: false }, { locale: "xx" }]) {
       expect(() => validateCommunityPost({ ...post, ...change })).toThrow();
     }
   });
   it("accepts an evidence-free correction but rejects unknown comment kinds", () => {
+    expect(validateCommunityComment({ body: "좋아요", acceptRules: true })).toMatchObject({ kind: "opinion" });
     expect(validateCommunityComment({ kind: "correction", body: "The clip omits the previous action.", acceptRules: true })).toMatchObject({ kind: "correction", evidenceUrls: [] });
     expect(() => validateCommunityComment({ kind: "troll", body: "test", acceptRules: true })).toThrow();
     expect(() => validateCommunityComment({ kind: "opinion", body: "test", acceptRules: false })).toThrow();

@@ -91,7 +91,6 @@ export function CommunityPhotoPicker({ locale, userId, disabled, onChange, onBus
   }
   return <fieldset className={styles.photoField} disabled={disabled || busy}>
     <legend>{copy.label} <span>{photos.length}/3</span></legend>
-    <p className={styles.photoHint}>{copy.hint}</p>
     <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label={copy.add} className={styles.fileInput} onChange={event => {
       const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; void select(files);
     }} />
@@ -102,6 +101,6 @@ export function CommunityPhotoPicker({ locale, userId, disabled, onChange, onBus
     </figure>)}</div>}
     {busy && <p role="status" className={styles.photoHint}>{copy.uploading}</p>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
-    <p className={styles.photoHint}>{copy.privacy}</p>
+    <details className={styles.photoInfo}><summary>{getCommunityMessages(locale).photoInfo}</summary><p className={styles.photoHint}>{copy.hint}</p><p className={styles.photoHint}>{copy.privacy}</p></details>
   </fieldset>;
 }

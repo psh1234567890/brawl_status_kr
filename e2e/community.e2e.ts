@@ -12,7 +12,7 @@ test("guests can read the community but cannot submit posts or comments", async 
   const origin = String(testInfo.project.use.baseURL);
   await page.goto("/en/community");
   await expect(page.getByRole("heading", { level: 1, name: "Community", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Published posts", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: "All posts", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   await page.getByRole("link", { name: "Write a post", exact: true }).click();
   await expect(page.getByText("Sign up and sign in to write posts or comments.", { exact: true })).toBeVisible();
@@ -39,9 +39,7 @@ test("posts, comments and photos publish immediately and support later moderatio
     await page.goto("/en/community/new");
     await page.getByRole("textbox", { name: "Title", exact: true }).fill("");
     await page.locator('textarea[name="body"]').fill("글");
-    await page.locator('textarea[name="evidence"]').fill("https://youtu.be/abcdefghijk");
-    await page.locator('input[name="confirmIntent"]').check();
-    await page.locator('input[name="acceptRules"]').check();
+    await expect(page.locator('input[type="checkbox"]')).toHaveCount(0);
     await page.getByRole("button", { name: "Publish post", exact: true }).click();
     await expect(page.locator("form").getByRole("alert")).toHaveText("Enter a title.");
     await expect(page.getByRole("textbox", { name: "Title", exact: true })).toBeFocused();
@@ -60,18 +58,22 @@ test("posts, comments and photos publish immediately and support later moderatio
     const uploadResponse = await upload;
     expect(uploadResponse.status()).toBe(201);
     const uploaded = await uploadResponse.json();
-    await expect(page.getByRole("img", { name: "Attached evidence photo 1", exact: true })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Attached photo 1", exact: true })).toBeVisible();
+    const draftPhoto = await page.getByRole("img", { name: "Attached photo 1", exact: true }).boundingBox();
+    const draftBody = await page.locator('textarea[name="body"]').boundingBox();
+    expect(draftPhoto!.y + draftPhoto!.height).toBeLessThanOrEqual(draftBody!.y);
     await expect(page.getByRole("button", { name: "Remove photo 1", exact: true })).toBeVisible();
     expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(404);
     // Draft photos stay private until they are attached to a published post.
     const ownImage = await context.request.get("/api/community/images/" + uploaded.id);
     expect(ownImage.status()).toBe(200);
     expect(ownImage.headers()["cache-control"]).toContain("private, no-store");
-    await page.locator('textarea[name="evidence"]').fill("");
     await page.getByRole("button", { name: "Publish post", exact: true }).click();
     await expect(page).toHaveURL(/\/en\/community\/[a-f0-9-]{36}$/);
-    await expect(page.getByText("Published", { exact: true }).first()).toBeVisible();
     await expect(page.getByRole("status")).toHaveText("Post published.");
+    const postPhoto = await page.getByRole("img", { name: "Attached photo 1", exact: true }).boundingBox();
+    const postBody = await page.getByText("글", { exact: true }).boundingBox();
+    expect(postPhoto!.y + postPhoto!.height).toBeLessThanOrEqual(postBody!.y);
     const id = new URL(page.url()).pathname.split("/").at(-1)!;
     expect((await anonymous.request.get(origin + "/api/community/posts/" + id)).status()).toBe(200);
     expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(200);
@@ -97,16 +99,15 @@ test("posts, comments and photos publish immediately and support later moderatio
     expect((await anonymous.request.get(origin + "/api/community/images/" + uploaded.id)).status()).toBe(200);
 
     await page.goto("/en/community/" + id);
-    await page.locator('select[name="kind"]').selectOption("correction");
+    await expect(page.locator('select[name="kind"]')).toHaveCount(0);
     const correction = "x";
     await page.locator('textarea[name="body"]').fill(correction);
-    await page.locator('input[name="acceptRules"]').check();
     await page.getByRole("button", { name: "Post comment", exact: true }).click();
     await expect(page.getByText("Comment published.", { exact: true })).toBeVisible();
     await expect(page.getByText(correction, { exact: true })).toBeVisible();
     const published = await (await anonymous.request.get(origin + "/api/community/posts/" + id)).json();
     expect(published.comments).toHaveLength(1);
-    expect(published.comments[0]).toMatchObject({ kind: "correction", body: correction, status: "published" });
+    expect(published.comments[0]).toMatchObject({ kind: "opinion", body: correction, status: "published" });
     expect(JSON.stringify(published)).not.toContain(syntheticAccount.userId);
     expect(JSON.stringify(published)).not.toContain(syntheticAccount.email);
     await context.request.delete("/api/community/posts/" + id, { headers: { Origin: origin }, data: { expectedUserId: syntheticAccount.userId } });
@@ -125,7 +126,7 @@ test("members can exceed former quotas and publish text beyond former length bou
   for (let attempt = 0; attempt < 4; attempt++) {
     const response = await context.request.post("/api/community/posts", { headers, data: {
       expectedUserId: syntheticAccount.userId, title: attempt ? "한" : "t".repeat(120),
-      body: attempt ? "글" : "글".repeat(4500), locale: "en", evidenceUrls: ["https://youtu.be/abcdefghijk"], acceptRules: true, confirmIntent: true,
+      body: attempt ? "글" : "글".repeat(4500), locale: "en", acceptRules: true,
     } });
     expect(response.status()).toBe(201);
     const post = await response.json();
@@ -134,7 +135,7 @@ test("members can exceed former quotas and publish text beyond former length bou
   }
   for (let attempt = 0; attempt < 21; attempt++) {
     const response = await context.request.post("/api/community/posts/" + postId + "/comments", { headers, data: {
-      expectedUserId: syntheticAccount.userId, body: attempt ? "네" : "c".repeat(2500), kind: "opinion", acceptRules: true,
+      expectedUserId: syntheticAccount.userId, body: attempt ? "네" : "c".repeat(2500), acceptRules: true,
     } });
     expect(response.status()).toBe(201);
   }

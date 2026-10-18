@@ -1,3 +1,4 @@
+import { productKinds } from "./productFunnel";
 // Fixed event names only. Never send paths, tags, account IDs or referrers.
 export const clientUsageKinds = [
   "visit_session", "page_view", "browser_session", "browser_return_7d",
@@ -5,6 +6,8 @@ export const clientUsageKinds = [
   "profile_share", "profile_reopen",
   "minigame_brawler_quiz", "minigame_silhouette_quiz",
   "minigame_map_quiz", "minigame_ability_quiz",
+  "minigame_higher_lower", "minigame_release_order",
+  ...productKinds,
 ] as const;
 export type ClientUsageKind = (typeof clientUsageKinds)[number];
 export function isClientUsageKind(value: unknown): value is ClientUsageKind {

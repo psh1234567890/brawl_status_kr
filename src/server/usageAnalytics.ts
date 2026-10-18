@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "../db";
 import { isUsageOptedOut } from "../utils/analyticsOptOut";
 import { clientUsageKinds, engagementFields, emptyEngagement } from "../utils/usageEvents";
+import { emptyProductCounts, productFields, type ProductKind, type ProductSummary } from "../utils/productFunnel";
 export { isUsageOptedOut } from "../utils/analyticsOptOut";
 
 export const usageKinds = [
@@ -156,7 +157,7 @@ export function summarizeUsage(
   const failureReasonsLast7Days = emptyFailureBreakdown();
   const cutoff = days[0];
   for (const row of rows) {
-    if (!isUsageKind(row.kind) || Object.hasOwn(engagementFields, row.kind)) continue;
+    if (!isUsageKind(row.kind) || Object.hasOwn(engagementFields, row.kind) || Object.hasOwn(productFields, row.kind)) continue;
     const count = Number(row.count);
     if (!Number.isSafeInteger(count) || count < 0) continue;
     const day = row.hour.slice(0, 10);
@@ -218,6 +219,32 @@ export function summarizeEngagement(rows: UsageHourRow[], lifetime: UsageLifetim
         (!trackingStartedAt || Date.parse(row.firstSeenAt) < Date.parse(trackingStartedAt))) {
       trackingStartedAt = row.firstSeenAt;
     }
+  }
+  return { today, last7Days, allTime, trackingStartedAt };
+}
+
+export function summarizeProductFunnel(rows: UsageHourRow[], lifetime: UsageLifetimeRow[], now = new Date()): ProductSummary {
+  const today = emptyProductCounts();
+  const last7Days = emptyProductCounts();
+  const allTime = emptyProductCounts();
+  const day = new Date(now.getTime() + 9 * 3_600_000).toISOString().slice(0, 10);
+  const cutoff = new Date(Date.parse(day + "T00:00:00Z") - 6 * 86_400_000).toISOString().slice(0, 10);
+  let trackingStartedAt: string | null = null;
+  for (const row of rows) {
+    if (!Object.hasOwn(productFields, row.kind)) continue;
+    const count = Number(row.count);
+    if (!Number.isSafeInteger(count) || count < 0) continue;
+    const field = productFields[row.kind as ProductKind];
+    const eventDay = row.hour.slice(0, 10);
+    if (eventDay === day) today[field] += count;
+    if (eventDay >= cutoff && eventDay <= day) last7Days[field] += count;
+  }
+  for (const row of lifetime) {
+    if (!Object.hasOwn(productFields, row.kind)) continue;
+    const count = Number(row.count);
+    if (!Number.isSafeInteger(count) || count < 0 || !Number.isFinite(Date.parse(row.firstSeenAt))) continue;
+    allTime[productFields[row.kind as ProductKind]] += count;
+    if (!trackingStartedAt || Date.parse(row.firstSeenAt) < Date.parse(trackingStartedAt)) trackingStartedAt = row.firstSeenAt;
   }
   return { today, last7Days, allTime, trackingStartedAt };
 }

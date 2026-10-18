@@ -17,7 +17,21 @@ not backfill historical error reasons and cannot attribute them to visitors.
 The public anonymous event POST rejects all search counters, including the
 new reason counters, to prevent clients from inventing search statistics.
 
-Four minigame client components send one anonymous round-ending event when entering `finished`, including early endings; they do not submit scores, player IDs, prompts, or mode. Client POSTs require a same-origin Origin header, an allowlisted literal event name, a bounded JSON body and a per-process request rate limit. They remain best-effort and can be spoofed; **do not treat these counters as billing, security or fraud evidence**.
+Six minigame client components send one anonymous round-ending event when entering `finished`, including early endings; they do not submit scores, player IDs, prompts, or mode. Client POSTs require a same-origin Origin header, an allowlisted literal event name, a bounded JSON body and a per-process request rate limit. They remain best-effort and can be spoofed; **do not treat these counters as billing, security or fraud evidence**.
+
+## Product sessions and search follow-through (2026-10-18)
+
+Apply `drizzle/20261018021646_product_session_funnel.sql` before deploying the client. It extends both private aggregate tables' fixed event allowlists; it adds no identity table, grants, columns, or public access. Existing counters remain compatible. The new dashboard starts from actual new events and never backfills historical flow counts.
+
+Three product measures are shown alongside existing usage and return estimates:
+
+- **Measured sessions**: one `funnel_session` per browser-local session. `brawl_product_session_v1` stores only a timestamp, search/active flags, and a follow-up bitmask. It has no random or account identifier. A session resets after 30 minutes without a tracked action, clock rollback, or a new KST date. This day boundary keeps daily conversion numerator and denominator aligned; these counts differ from the older browser-session estimates.
+- **Active-session share**: sessions containing a successful displayed profile search, visible recommendations with samples, a completed comparison, or a minigame result after at least one answered question, divided by measured sessions. Page views and zero-answer game exits do not qualify.
+- **Search follow-through**: sessions containing a successful displayed profile search and then recommendation results, a completed comparison, a qualifying game result, a player save, or a completed share/copy, divided by sessions with successful search. Each session and each action kind count once. Action breakdowns overlap, so their sum may exceed follow-through sessions. Actions before search do not qualify.
+
+The dashboard supports today, seven KST calendar days, and cumulative periods. Its own collection start is independent of older page/search instrumentation. Undefined or inconsistent denominators display a dash. These client counters are approximate, best-effort, spoofable session counts, not unique people, MAU, or D7 cohort retention. The existing 7-day returning-browser-session share is also **not** D7 cohort retention.
+
+The client sends only fixed aggregate counter names, never the local timestamp/flags, tag, account ID, email, page URL, or content. There is no server-side visitor join with existing search-tag analytics. Storage denial suppresses inferred flow counts; ordinary page-view counting can continue. Opting out clears the local flow state and disables sending, and the API independently respects the opt-out cookie. Preview/local builds do not write production usage. Storage resets, simultaneous tabs, devices, client clocks, and failed delivery affect the estimates. No external analytics SDK is added.
 
 ## Storage and retention
 

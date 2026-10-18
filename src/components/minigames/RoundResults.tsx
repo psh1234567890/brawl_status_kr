@@ -4,6 +4,7 @@ import type { Locale } from "../../i18n/config";
 import { localizedHref } from "../../i18n/config";
 import type { RoundMessages } from "../../i18n/minigames/roundMessages";
 import styles from "./game.module.css";
+import { trackProductAction } from "../../utils/clientUsage";
 
 export type RoundRecap = { prompt: string; answer: string; wasCorrect: boolean };
 
@@ -18,7 +19,14 @@ export default function RoundResults({ locale, copy, score, completed, best, rec
   earlyEnd?: boolean;
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const tracked = useRef(false);
   useEffect(() => { titleRef.current?.focus(); }, []);
+  useEffect(() => {
+    if (completed > 0 && !tracked.current) {
+      tracked.current = true;
+      trackProductAction("game");
+    }
+  }, [completed]);
   const bestText = best ? copy.best.replace("{score}", String(best.score)).replace("{percentage}", String(best.percentage)) : copy.noBest;
   return (
     <section className={styles.result} aria-labelledby="round-results-title">

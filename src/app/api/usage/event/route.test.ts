@@ -7,6 +7,7 @@ vi.mock("../../../../server/usageAnalytics", () => ({
   recordUsageEvents: mocks.recordUsageEvents,
 }));
 import { POST } from "./route";
+import { clientUsageKinds } from "../../../../utils/usageEvents";
 
 function event(body: unknown, origin = "https://www.brawl-o1.site") {
   return new Request("https://www.brawl-o1.site/api/usage/event", {
@@ -48,7 +49,7 @@ describe("anonymous usage event endpoint", () => {
   });
   it("rejects duplicate, oversized and server-owned event batches", async () => {
     for (const events of [[], ["page_view", "page_view"], ["player_search_success"],
-      ["page_view", "profile_save", "profile_share", "profile_compare", "comparison_run"]]) {
+      clientUsageKinds.slice(0, 13)]) {
       expect((await POST(event({ events }))).status).toBe(400);
     }
     expect(mocks.recordUsageEvents).not.toHaveBeenCalled();

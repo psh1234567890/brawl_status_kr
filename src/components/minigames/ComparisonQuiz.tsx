@@ -13,6 +13,7 @@ import { buildComparisonDeck, COMPARISON_QUESTION_COUNT, type ComparisonEntry, t
 import { useRoundBest } from "./useRoundBest";
 import RoundProgress from "./RoundProgress";
 import RoundResults, { type RoundRecap } from "./RoundResults";
+import { sendUsageEvent } from "../../utils/clientUsage";
 
 type Kind = "higher-lower" | "release-order";
 type Phase = "ready" | "playing" | "finished";
@@ -30,6 +31,7 @@ export default function ComparisonQuiz({ kind, locale, entries }: { kind: Kind; 
   const [poolError, setPoolError] = useState(false);
   const answeredRef = useRef(false);
   const recordedRef = useRef(false);
+  const usageRecordedRef = useRef(false);
   const nextRef = useRef<HTMLButtonElement>(null);
   const questionRef = useRef<HTMLHeadingElement>(null);
   const { best, beginRound, record } = useRoundBest(kind, "standard");
@@ -43,6 +45,11 @@ export default function ComparisonQuiz({ kind, locale, entries }: { kind: Kind; 
     else if (phase === "playing") questionRef.current?.focus();
   }, [phase, selected, index]);
   useEffect(() => {
+    if (phase !== "finished" || usageRecordedRef.current) return;
+    usageRecordedRef.current = true;
+    sendUsageEvent(kind === "higher-lower" ? "minigame_higher_lower" : "minigame_release_order");
+  }, [phase, kind]);
+  useEffect(() => {
     if (phase !== "finished" || recordedRef.current || recap.length !== COMPARISON_QUESTION_COUNT) return;
     recordedRef.current = true;
     record(score, recap.length);
@@ -52,6 +59,7 @@ export default function ComparisonQuiz({ kind, locale, entries }: { kind: Kind; 
     const questions = buildComparisonDeck(entries, prefer);
     if (questions.length !== COMPARISON_QUESTION_COUNT) { setPoolError(true); return; }
     recordedRef.current = false;
+    usageRecordedRef.current = false;
     beginRound();
     answeredRef.current = false;
     setPoolError(false);

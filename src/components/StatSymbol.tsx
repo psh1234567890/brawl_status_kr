@@ -5,7 +5,7 @@ export type StatSymbolKind =
   | "trophy" | "star" | "shield" | "battle" | "timer"
   | "players" | "level" | "win" | "skin" | "gadget"
   | "super" | "hyper" | "gear" | "map" | "chart"
-  | "gem" | "coin" | "bling";
+  | "gem" | "coin" | "bling" | "share";
 
 /** In-game trophy/coin artwork; all remaining symbols are generic UI icons. */
 export default function StatSymbol({
@@ -45,6 +45,7 @@ export default function StatSymbol({
     gear: <><circle cx="12" cy="12" r="3" /><path d="M10 2h4l1 3 2 1 3-1 2 4-2 2v2l2 2-2 4-3-1-2 1-1 3h-4l-1-3-2-1-3 1-2-4 2-2v-2L2 9l2-4 3 1 2-1 1-3Z" /></>,
     map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6ZM9 3v15m6-12v15" /></>,
     chart: <><path d="M4 20V11m6 9V5m6 15v-8m5 8H2" /></>,
+    share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" /></>,
     gem: <><path d="M6 3h12l5 6-11 13L1 9l5-6ZM1 9h22M6 3l6 6 6-6m-6 6v13" /></>,
     coin: null,
     bling: <><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5L12 2Z" /></>,

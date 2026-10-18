@@ -1,6 +1,89 @@
 import { expect, test, type Page } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { localizedHref } from "../src/i18n/config";
+import { getMessages } from "../src/i18n/messages";
+import { profileHubMessages, profileMapPicksLabels } from "../src/i18n/profileHubMessages";
+import { eventRotationMessages } from "../src/i18n/eventRotationMessages";
 
 const tag = "9C82J8YPP";
+
+for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 1280]] as const) {
+  test(`profile next actions keep live map recommendations accessible at ${width}px in ${locale}`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", error => errors.push(error.message));
+    await page.setViewportSize({ width, height: 844 });
+    await page.route("**/api/events", route => route.fulfill({ json: {
+      active: [{ slotId: 2, mapId: 15000010, mode: "brawlBall", map: "Triple Dribble",
+        startTime: new Date(Date.now() - 60_000).toISOString(), endTime: new Date(Date.now() + 600_000).toISOString() }],
+      upcoming: [], fetchedAt: new Date().toISOString(),
+    } }));
+    await page.route("**/api/meta", route => route.fulfill({ json: [{ mode: "brawlBall", map: "Triple Dribble", brawlers: [
+      { id: 16000000, name: "SHELLY", plays: 20, wins: 12, draws: 0, winRate: 60, score: 48, confidence: "MEDIUM", confidenceScore: 40 },
+    ] }] }));
+    const copy = getMessages(locale);
+    const actionsCopy = profileHubMessages[locale];
+    const shots = join(tmpdir(), "brawloop-search-actions-20261018");
+    await mkdir(shots, { recursive: true });
+    await page.goto(localizedHref(locale, "/"));
+    const shortcuts = page.getByRole("navigation", { name: copy.home.shortcuts, exact: true });
+    await expect(shortcuts.locator("a")).toHaveCount(8);
+    const leading = shortcuts.locator("a");
+    for (const [index, path] of ["/meta", "/minigames", "/compare"].entries()) {
+      await expect(leading.nth(index)).toHaveAttribute("href", localizedHref(locale, path));
+      if (width < 761) await expect(leading.nth(index)).toBeVisible();
+    }
+    await shortcuts.screenshot({ path: join(shots, `home-shortcuts-${locale}-${width}.png`) });
+    await page.getByRole("textbox", { name: copy.home.playerTag }).fill(tag);
+    await page.getByRole("button", { name: copy.home.search, exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+    const actions = page.getByRole("group", { name: actionsCopy.actionLabel, exact: true });
+    await actions.getByRole("button", { name: actionsCopy.save, exact: true }).click();
+    await expect(actions.getByRole("button", { name: actionsCopy.saved, exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(actions.getByRole("link", { name: actionsCopy.compare, exact: true })).toHaveAttribute("href", `${localizedHref(locale, "/compare")}?a=${tag}`);
+    for (const control of await actions.locator("a,button").all()) {
+      const box = await control.boundingBox();
+      expect(box?.height).toBeGreaterThanOrEqual(44);
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.getByRole("heading", { level: 1, name: "E2E Player" }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(shots, `profile-${locale}-${width}.png`) });
+    await actions.getByRole("link", { name: profileMapPicksLabels[locale], exact: true }).click();
+    const rotation = page.getByTestId("current-maps");
+    await expect(rotation).toBeFocused();
+    const mapBox = (await rotation.boundingBox())!;
+    expect(mapBox.y).toBeGreaterThanOrEqual(0);
+    expect(mapBox.y + mapBox.height).toBeLessThanOrEqual(844);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toHaveCount(1);
+    await page.screenshot({ path: join(shots, `map-picker-${locale}-${width}.png`) });
+    await rotation.getByRole("link", { name: new RegExp(eventRotationMessages[locale].recommendation) }).click();
+    await expect(page).toHaveURL(new RegExp(`${localizedHref(locale, "/meta")}\\?map=Triple\\+Dribble&gameMode=brawlBall$`));
+    await expect(page.getByRole("heading", { level: 1, name: copy.meta.title })).toBeVisible();
+    await expect(page.locator("main article")).toHaveCount(1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}
+
+test("profile map picker can retry an outage without losing the displayed player", async ({ page }) => {
+  let failed = true;
+  await page.route("**/api/events", route => failed
+    ? route.fulfill({ status: 503, json: { error: "unavailable" } })
+    : route.fulfill({ json: { active: [], upcoming: [], fetchedAt: new Date().toISOString() } }));
+  await page.goto("/?tag=" + tag);
+  await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+  await page.getByRole("link", { name: profileMapPicksLabels.ko, exact: true }).click();
+  const picker = page.getByTestId("current-maps");
+  await expect(picker.getByText(eventRotationMessages.ko.unavailable, { exact: true })).toBeVisible();
+  failed = false;
+  await picker.getByRole("button", { name: eventRotationMessages.ko.retry, exact: true }).click();
+  await expect(picker.getByText(eventRotationMessages.ko.empty, { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toHaveCount(1);
+});
 
 test("successful search to recommendations sends only anonymous flow counters once", async ({ page }) => {
   const bodies: Array<{ event?: string; events?: string[] }> = [];
@@ -36,6 +119,7 @@ test.beforeEach(async ({ context, page }) => {
     { name: "brawl-locale", value: "ko", url: "http://localhost:3020" },
   ]);
   await mockPlayerApis(page);
+  await page.route("**/api/events", route => route.fulfill({ json: { active: [], upcoming: [], fetchedAt: new Date().toISOString() } }));
 });
 
 test("player summaries wait for persistence without delaying the profile", async ({ page }) => {

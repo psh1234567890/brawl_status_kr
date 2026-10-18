@@ -86,7 +86,7 @@ export default function HomeCurrentMaps({ locale, expanded = false }: { locale: 
     </div>;
   }
 
-  return <section className={styles.rotation} aria-label={copy.title} data-testid="current-maps">
+  return <section id="current-maps" tabIndex={-1} className={styles.rotation} aria-label={copy.title} data-testid="current-maps">
     <div className={styles.heading}>
       <h2><span aria-hidden="true" className={styles.liveDot} />{copy.title}</h2>
       {!expanded && <Link href={localizedHref(locale, "/events")}>{copy.allEvents}<BrandArrow size={14} /></Link>}

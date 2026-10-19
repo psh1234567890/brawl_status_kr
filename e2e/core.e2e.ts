@@ -109,13 +109,14 @@ test("home header exposes localized account entry without mobile overflow", asyn
     expect((await login.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     await expect(page.locator("header summary")).toBeVisible();
     const shortcuts = page.getByRole("navigation", { name: getMessages(locale).home.shortcuts, exact: true });
-    await expect(shortcuts.getByRole("link")).toHaveCount(8);
-    for (const path of ["/minigames", "/community", "/compare", "/rankings", "/brawlers", "/skins", "/meta", "/events"]) {
+    await expect(shortcuts.getByRole("link")).toHaveCount(15);
+    for (const path of ["/", "/minigames", "/community", "/compare", "/rankings", "/brawlers", "/skins", "/meta", "/events", "/maps", "/gamemodes", "/clubs", "/teams", "/counters", "/status"]) {
       const link = shortcuts.locator(`a[href="${localizedHref(locale, path)}"]`);
       await expect(link).toBeVisible();
       const box = await link.boundingBox();
       expect(box?.height).toBeGreaterThanOrEqual(44);
-      expect(box!.y + box!.height).toBeLessThanOrEqual(740);
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(320);
     }
     const header = await page.locator("header").boundingBox();
     expect(header?.height).toBeLessThanOrEqual(76);
@@ -502,15 +503,23 @@ for (const allImagesFail of [false, true]) {
   });
 }
 
-test("desktop shortcuts avoid header duplicates while mobile keeps every destination", async ({ page, context }) => {
+test("all hamburger destinations stay visible below live maps on mobile and desktop", async ({ page, context }) => {
   await context.addCookies([{ name: "brawl-locale", value: "ko", url: "http://localhost:3020" }]);
   await page.route("**/api/meta", route => route.fulfill({ json: [] }));
   await page.goto("/");
   const shortcuts = page.getByRole("navigation", { name: "바로가기", exact: true });
-  for (const [width, count] of [[1280, 4], [900, 5], [390, 8]]) {
+  for (const width of [1280, 900, 390]) {
     await page.setViewportSize({ width, height: 844 });
-    await expect(shortcuts.locator("a:visible")).toHaveCount(count);
+    await expect(shortcuts.locator("a:visible")).toHaveCount(15);
+    const mapBox = (await page.getByTestId("current-maps").boundingBox())!;
+    expect((await shortcuts.boundingBox())!.y).toBeGreaterThanOrEqual(mapBox.y + mapBox.height);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
+  await page.locator("header summary").click();
+  const menuLinks = page.locator("header details nav a");
+  expect((await menuLinks.evaluateAll(links => links.map(link => link.getAttribute("href")))).sort())
+    .toEqual((await shortcuts.locator("a").evaluateAll(links => links.map(link => link.getAttribute("href")))).sort());
+  await page.locator("header summary").click();
   await page.setViewportSize({ width: 1280, height: 844 });
   const headerLinks = page.locator("header").getByRole("navigation", { name: "주요 기능", exact: true }).getByRole("link");
   await expect(headerLinks).toHaveText(["전적", "브롤러 추천", "미니게임", "도감", "커뮤니티"]);

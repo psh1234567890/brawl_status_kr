@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useEffectEvent, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { sendUsageEvent } from "../utils/clientUsage";
 import { parsePublicProfiles, publicProfileSnapshot, rememberPublicProfile, subscribePublicProfiles, type CachedPublicProfile } from "../utils/publicProfileCache";
 import { profileReturnMessages } from "../i18n/profileReturnMessages";
@@ -38,7 +39,7 @@ import {
 } from "../utils/brawlHelpers";
 import { translateModeName } from "../utils/brawlTranslations";
 import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
-import { replaceBrowserSearch } from "../utils/urlState";
+import { pushBrowserSearch } from "../utils/urlState";
 
 const BattleDetailsModal = dynamic(() => import("../components/BattleDetailsModal"));
 const BrawlerDetailsModal = dynamic(() => import("../components/BrawlerDetailsModal"));
@@ -56,37 +57,32 @@ type ResultPanel = "overview" | "matches" | "brawlers" | "history";
 
 const RESULT_TAB_IDS: ResultPanel[] = ["overview", "matches", "brawlers", "history"];
 
+// Only the URL observer suspends during prerendering; the home content stays in HTML.
+function HomeSearchNavigation({ onTagChange }: { onTagChange: (tag: string) => void }) {
+  const searchParams = useSearchParams();
+  const tag = searchParams.get("tag") ?? "";
+  const handleTagChange = useEffectEvent(onTagChange);
+  useEffect(() => { handleTagChange(tag); }, [tag]);
+  return null;
+}
+
 export default function Home({ locale = "ko" }: { locale?: Locale }) {
   const copy = getMessages(locale);
   const brand = getBrandMessages(locale);
   const actionCopy = profileHubMessages[locale];
   const search = usePlayerSearch(locale);
-  const handlePlayerSearch = search.handleSearch;
   const [activePanel, setActivePanel] = useState<ResultPanel>("overview");
   const [selectedBrawler, setSelectedBrawler] = useState<Brawler | null>(null);
   const [selectedBattle, setSelectedBattle] = useState<BattleLogItem | null>(null);
   const [shareFeedback, setShareFeedback] = useState<"idle" | "copied" | "failed">("idle");
-  const initialTagHandled = useRef(false);
+  const activeTag = useRef("");
   const profileSnapshot = useSyncExternalStore(subscribePublicProfiles, publicProfileSnapshot, () => "[]");
   const savedProfiles = useMemo(() => parsePublicProfiles(profileSnapshot), [profileSnapshot]);
   const cachedProfile = savedProfiles.find(item => item.tag === normalizePlayerTag(search.playerData?.tag ?? ""));
   useEffect(() => {
     if (!search.playerData) return;
     if (search.playerData.dataFreshness?.status !== "stale") rememberPublicProfile(search.playerData);
-    const profileTag = normalizePlayerTag(search.playerData.tag);
-    if (new URLSearchParams(window.location.search).get("tag") !== profileTag) replaceBrowserSearch({ tag: profileTag });
   }, [search.playerData]);
-
-  // Shared profile URLs only initiate a normal, validated player lookup.
-  // A ref prevents duplicated requests when search state updates.
-  useEffect(() => {
-    if (initialTagHandled.current) return;
-    initialTagHandled.current = true;
-    const fromUrl = new URLSearchParams(window.location.search).get("tag");
-    if (fromUrl && isValidPlayerTag(fromUrl)) {
-      void handlePlayerSearch(normalizePlayerTag(fromUrl));
-    }
-  }, [handlePlayerSearch]);
 
   const summary = useMemo(
     () => calculateRecentBattleSummary(search.battleLog),
@@ -131,10 +127,33 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
     : false;
   const resultTabs = RESULT_TAB_IDS.map((id) => ({ id, label: copy.home.tabs[id] }));
 
-  function runSearch(targetTag?: string) {
+  function resetResultPanels() {
     setActivePanel("overview");
+    setSelectedBrawler(null);
+    setSelectedBattle(null);
     setShareFeedback("idle");
-    void search.handleSearch(targetTag);
+  }
+
+  function syncSearchFromUrl(fromUrl: string) {
+    const nextTag = isValidPlayerTag(fromUrl) ? normalizePlayerTag(fromUrl) : "";
+    if (activeTag.current === nextTag) return;
+    activeTag.current = nextTag;
+    resetResultPanels();
+    if (nextTag) void search.handleSearch(nextTag);
+    else search.resetSearch();
+  }
+
+  function runSearch(targetTag?: string) {
+    const nextTag = normalizePlayerTag(targetTag ?? search.tag);
+    resetResultPanels();
+    // Keep the home entry so Back also works while a lookup is still pending.
+    if (isValidPlayerTag(nextTag)) {
+      activeTag.current = nextTag;
+      if (new URLSearchParams(window.location.search).get("tag") !== nextTag) {
+        pushBrowserSearch({ tag: nextTag });
+      }
+    }
+    void search.handleSearch(nextTag);
   }
 
   async function shareProfile() {
@@ -158,6 +177,7 @@ export default function Home({ locale = "ko" }: { locale?: Locale }) {
 
   return (
     <div className={brandStyles.page} lang={locale}>
+      <Suspense fallback={null}><HomeSearchNavigation onTagChange={syncSearchFromUrl} /></Suspense>
       <BrandHeader locale={locale} />
       <main className={brandStyles.main}>
         <section className={search.playerData ? brandStyles.compactSearch : brandStyles.searchHero} aria-label={copy.home.playerSearchAria}>

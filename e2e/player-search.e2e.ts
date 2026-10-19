@@ -28,7 +28,7 @@ for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 128
     await mkdir(shots, { recursive: true });
     await page.goto(localizedHref(locale, "/"));
     const shortcuts = page.getByRole("navigation", { name: copy.home.shortcuts, exact: true });
-    await expect(shortcuts.locator("a")).toHaveCount(8);
+    await expect(shortcuts.locator("a")).toHaveCount(15);
     const leading = shortcuts.locator("a");
     for (const [index, path] of ["/meta", "/minigames", "/compare"].entries()) {
       await expect(leading.nth(index)).toHaveAttribute("href", localizedHref(locale, path));
@@ -71,8 +71,53 @@ for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 128
     await expect(actions.getByRole("button", { name: actionsCopy.saved, exact: true })).toHaveAttribute("aria-pressed", "true");
     await page.reload();
     await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
+    await page.locator("header").getByRole("link", { name: `Brawloop · ${copy.common.home}`, exact: true }).click();
+    await expect(page).toHaveURL(localizedHref(locale, "/"));
+    await expect(page.getByRole("heading", { name: "E2E Player", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: copy.home.playerTag })).toHaveValue("");
+    await expect(shortcuts.locator("a:visible")).toHaveCount(15);
+    await page.goBack();
+    await expect(page.getByRole("heading", { name: "E2E Player", exact: true })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL(localizedHref(locale, "/"));
+    await expect(page.getByRole("heading", { name: "E2E Player", exact: true })).toHaveCount(0);
+    await page.goForward();
+    await expect(page.getByRole("heading", { name: "E2E Player", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(errors).toEqual([]);
+  });
+}
+
+for (const navigation of ["back", "logo"] as const) {
+  test(`returning home by ${navigation} cancels a pending player lookup`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    let releaseResponse!: () => void;
+    let requestStarted!: () => void;
+    let responseFinished!: () => void;
+    const pending = new Promise<void>(resolve => { releaseResponse = resolve; });
+    const started = new Promise<void>(resolve => { requestStarted = resolve; });
+    const finished = new Promise<void>(resolve => { responseFinished = resolve; });
+    await page.unroute(/\/api\/player\?tag=/);
+    await page.route(/\/api\/player\?tag=/, async route => {
+      requestStarted();
+      await pending;
+      await route.fulfill({ json: { tag: `#${tag}`, name: "Late player", brawlers: [] } }).catch(() => {});
+      responseFinished();
+    });
+    await page.goto("/");
+    await page.getByRole("textbox", { name: "플레이어 태그" }).fill(tag);
+    await page.getByRole("button", { name: "검색", exact: true }).click();
+    await started;
+    await expect(page).toHaveURL(`/?tag=${tag}`);
+    if (navigation === "back") await page.goBack();
+    else await page.getByRole("link", { name: "Brawloop · 전적 검색", exact: true }).click();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByRole("textbox", { name: "플레이어 태그" })).toHaveValue("");
+    await expect(page.getByRole("button", { name: "검색", exact: true })).toBeEnabled();
+    releaseResponse();
+    await finished;
+    await expect(page.getByRole("heading", { name: "Late player", exact: true })).toHaveCount(0);
+    await expect(page).toHaveURL("/");
   });
 }
 

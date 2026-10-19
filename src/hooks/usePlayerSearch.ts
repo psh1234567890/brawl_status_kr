@@ -126,6 +126,30 @@ export function usePlayerSearch(locale: Locale = "ko") {
   const requestSequence = useRef(0);
   const skinRequestSequence = useRef(0);
 
+  const cancelRequests = useCallback(() => {
+    requestSequence.current += 1;
+    skinRequestSequence.current += 1;
+    activeRequest.current?.abort();
+    skinRequest.current?.abort();
+  }, []);
+
+  const resetSearch = useCallback(() => {
+    cancelRequests();
+    setTag("");
+    setPlayerData(null);
+    setBattleLog(null);
+    setDbStats(null);
+    setPlayerHistory(null);
+    setSkinInventory(null);
+    setSkinInventoryStatus("idle");
+    setSkinInventoryError("");
+    setLoading(false);
+    setBattleLoading(false);
+    setHistoryLoading(false);
+    setError("");
+    setNotice("");
+  }, [cancelRequests]);
+
   const recentSnapshot = useSyncExternalStore(
     (onStoreChange) => subscribeStoredTags(RECENT_TAGS_CHANGED_EVENT, onStoreChange),
     () => getStoredTagsSnapshot(RECENT_TAGS_KEY),
@@ -349,6 +373,7 @@ export function usePlayerSearch(locale: Locale = "ko") {
     recentSearches,
     favoriteSearches,
     handleSearch,
+    resetSearch,
     loadSkinInventory,
     toggleFavorite,
   };

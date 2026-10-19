@@ -5,7 +5,8 @@ export type StatSymbolKind =
   | "trophy" | "star" | "shield" | "battle" | "timer"
   | "players" | "level" | "win" | "skin" | "gadget"
   | "super" | "hyper" | "gear" | "map" | "chart"
-  | "gem" | "coin" | "bling" | "share";
+  | "gem" | "coin" | "bling" | "share"
+  | "community" | "gamepad" | "search" | "modes" | "team" | "target";
 
 /** In-game trophy/coin artwork; all remaining symbols are generic UI icons. */
 export default function StatSymbol({
@@ -33,6 +34,12 @@ export default function StatSymbol({
     trophy: null,
     star: <path d="m12 2 3.1 6.4 7.1 1-5.1 5 1.2 7.1L12 18.1l-6.3 3.4 1.2-7.1-5.1-5 7.1-1L12 2Z" />,
     shield: <path d="m12 2 8 3v6c0 5.5-3 9-8 11-5-2-8-5.5-8-11V5l8-3Z" />,
+    community: <><path d="M14 15H7l-4 4V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v6a4 4 0 0 1-4 4Z" /><path d="M9 18h8l4 3V10a2 2 0 0 0-2-2M7 7h7M7 11h4" /></>,
+    gamepad: <><path d="M7 6h10a4 4 0 0 1 4 3l1 8a2 2 0 0 1-3 2l-4-3H9l-4 3a2 2 0 0 1-3-2l1-8a4 4 0 0 1 4-3Z" /><path d="M6 11h4M8 9v4M16 10h.01M18 13h.01" /></>,
+    search: <><circle cx="10" cy="10" r="7" /><path d="m15 15 6 6" /></>,
+    modes: <><path d="M5 22V3m0 1c5-5 9 5 15 0v11c-6 5-10-5-15 0" /></>,
+    team: <><circle cx="12" cy="5" r="3" /><circle cx="5" cy="19" r="3" /><circle cx="19" cy="19" r="3" /><path d="m10.5 8-4 8m7-8 4 8M8 19h8" /></>,
+    target: <><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3" /></>,
     battle: <><path d="m5 4 15 15M19 4 4 19M3 6l3-3 3 3M15 6l3-3 3 3M3 18l3 3 3-3M15 18l3 3 3-3" /></>,
     timer: <><circle cx="12" cy="13" r="9" /><path d="M12 7v6l4 2M9 2h6" /></>,
     players: <><circle cx="9" cy="8" r="3" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5v1" /></>,

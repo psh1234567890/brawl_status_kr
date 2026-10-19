@@ -20,7 +20,7 @@ export function updateRelativeUrl(
   return `${pathname}${nextSearch ? `?${nextSearch}` : ""}${hash}`;
 }
 
-export function replaceBrowserSearch(updates: SearchParamUpdate) {
+function writeBrowserSearch(updates: SearchParamUpdate, mode: "push" | "replace") {
   if (typeof window === "undefined") return;
   const nextUrl = updateRelativeUrl(
     window.location.pathname,
@@ -28,8 +28,17 @@ export function replaceBrowserSearch(updates: SearchParamUpdate) {
     window.location.hash,
     updates,
   );
-  window.history.replaceState(window.history.state, "", nextUrl);
+  if (mode === "push") window.history.pushState(null, "", nextUrl);
+  else window.history.replaceState(window.history.state, "", nextUrl);
   window.dispatchEvent(new Event(URL_STATE_CHANGED_EVENT));
+}
+
+export function replaceBrowserSearch(updates: SearchParamUpdate) {
+  writeBrowserSearch(updates, "replace");
+}
+
+export function pushBrowserSearch(updates: SearchParamUpdate) {
+  writeBrowserSearch(updates, "push");
 }
 
 export function useBrowserSearch() {

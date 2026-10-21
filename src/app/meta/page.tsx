@@ -11,6 +11,7 @@ import { generatedBrawlerImageIdByName } from "../../constants/generatedBrawlTra
 import { META_WINDOW_DAYS } from "../../constants/meta";
 import { numberLocales, type Locale } from "../../i18n/config";
 import { recommendationEvidenceMessages } from "../../i18n/recommendationEvidenceMessages";
+import { recommendationFreshnessMessages } from "../../i18n/recommendationFreshnessMessages";
 import { winRateInterval } from "../../utils/recommendationEvidence";
 import {
   formatConfidenceOnly,
@@ -58,6 +59,8 @@ type BrawlerMapStat = {
   score: number;
   confidence: SampleConfidence;
   confidenceScore: number;
+  recentPlays?: number;
+  lastBattleAt?: string;
 };
 
 type MapStatsResponse = { mode: string; map: string; brawlers: BrawlerMapStat[] }[];
@@ -514,21 +517,30 @@ function RecommendationEvidence({
 }) {
   const confidenceLabel = confidenceLabels[stat.confidence];
   const evidence = recommendationEvidenceMessages[locale];
+  const freshness = recommendationFreshnessMessages[locale];
+  const recentPlays = typeof stat.recentPlays === "number" && Number.isSafeInteger(stat.recentPlays) && stat.recentPlays >= 0 && stat.recentPlays <= stat.plays ? stat.recentPlays : null;
+  const lastBattle = stat.lastBattleAt && Number.isFinite(Date.parse(stat.lastBattleAt)) ? new Date(stat.lastBattleAt) : null;
+  const recentLow = recentPlays !== null && recentPlays < 5;
   const interval = winRateInterval(stat.wins, stat.plays);
   const percent = new Intl.NumberFormat(numberLocales[locale], { maximumFractionDigits: 0, style: "percent" });
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-3">
-        <span className="text-xs font-bold text-slate-500">{evidence.sample}</span>
+        <span className="text-xs font-bold text-slate-500">{freshness.sample}</span>
         <span className={`rounded-full px-2 py-1 text-[11px] font-black ${confidenceBadgeClasses[stat.confidence]}`}>
           {confidenceLabel}
         </span>
       </div>
-      {stat.confidence === "LOW" ? <p className="mt-2 text-xs leading-relaxed text-slate-600">{evidence.low}</p> : null}
+      {recentPlays !== null || lastBattle ? <dl className="mt-3 grid grid-cols-2 gap-3 text-xs leading-relaxed">
+        {recentPlays !== null ? <div className="min-w-0"><dt className="text-slate-500">{freshness.recent}</dt><dd className="font-bold">{new Intl.NumberFormat(numberLocales[locale]).format(recentPlays)}</dd></div> : null}
+        {lastBattle ? <div className="min-w-0"><dt className="text-slate-500">{freshness.lastBattle}</dt><dd className="font-bold"><time dateTime={lastBattle.toISOString()}>{new Intl.DateTimeFormat(numberLocales[locale], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Asia/Seoul" }).format(lastBattle)}</time></dd></div> : null}
+      </dl> : null}
+      {recentLow || stat.confidence === "LOW" ? <p className="mt-2 text-xs leading-relaxed text-slate-600">{recentLow ? freshness.low : evidence.low}</p> : null}
       <details className="mt-1 text-xs leading-relaxed text-slate-600">
         <summary className="min-h-11 cursor-pointer content-center rounded-md py-2 font-bold text-[#5842ce] underline decoration-[#c8baf2] underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5842ce]">{evidence.why}</summary>
         <div className="space-y-2 pb-2">
           <p>{evidence.method}</p>
+          {recentPlays !== null || lastBattle ? <p>{freshness.explanation}</p> : null}
           {interval ? <p className="font-semibold">{evidence.interval}: {percent.format(interval[0] / 100)}–{percent.format(interval[1] / 100)}</p> : null}
           <p>{evidence.limits}</p>
         </div>

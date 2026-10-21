@@ -21,6 +21,8 @@ type BrawlerMapStat = {
   score: number;
   confidence: SampleConfidence;
   confidenceScore: number;
+  recentPlays?: number;
+  lastBattleAt?: string;
 };
 
 type MapStatsResponse = { mode: string; map: string; brawlers: BrawlerMapStat[] }[];
@@ -57,6 +59,8 @@ const getCachedMetaStats = unstable_cache(
         score,
         confidence: getSampleConfidence(plays),
         confidenceScore: getConfidenceScore(plays),
+        recentPlays: row.recentPlays == null ? undefined : Number(row.recentPlays),
+        lastBattleAt: row.lastBattleAt ? new Date(row.lastBattleAt).toISOString() : undefined,
       });
     }
 
@@ -66,7 +70,7 @@ const getCachedMetaStats = unstable_cache(
     }
     return { maps: result, refreshedAt: queryResult.rows[0]?.refreshedAt ?? null };
   },
-  ["meta-stats-v12-checked-snapshot"],
+  ["meta-stats-v13-observed-recency"],
   { revalidate: 300, tags: ["meta-stats"] },
 );
 
@@ -107,7 +111,10 @@ async function getMeta(request: Request) {
       }
     }
     return NextResponse.json(snapshot.maps, {
-      headers: snapshot.refreshedAt ? { "X-Meta-Refreshed-At": new Date(snapshot.refreshedAt).toISOString() } : {},
+      headers: {
+        "X-Meta-Scoring-Version": "legacy-v1",
+        ...(snapshot.refreshedAt ? { "X-Meta-Refreshed-At": new Date(snapshot.refreshedAt).toISOString() } : {}),
+      },
     });
   } catch (error) {
     if (error instanceof MetaSnapshotUnavailableError) {

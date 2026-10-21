@@ -49,6 +49,22 @@ describe("meta snapshot availability", () => {
     expect(await response.json()).toEqual([]);
   });
 
+  it("returns match recency separately from snapshot freshness without changing ranking scores", async () => {
+    const refreshedAt = new Date().toISOString();
+    const lastBattleAt = new Date(Date.now() - 9 * 86_400_000).toISOString();
+    mocks.query.mockResolvedValue({ rows: [{
+      mode: "gemGrab", map: "Hard Rock Mine", brawlerName: "SHELLY",
+      brawlerId: 1, plays: "10", wins: "6", draws: "0", recentPlays: "0", lastBattleAt, refreshedAt,
+    }] });
+    const response = await GET(new Request("https://example.test/api/meta"));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-meta-scoring-version")).toBe("legacy-v1");
+    expect(response.headers.get("x-meta-refreshed-at")).toBe(refreshedAt);
+    expect((await response.json())[0].brawlers[0]).toMatchObject({
+      plays: 10, wins: 6, winRate: 60, score: 40, recentPlays: 0, lastBattleAt,
+    });
+  });
+
   it("still rejects overdue data after refreshing an expired cache", async () => {
     mocks.query.mockResolvedValue({ rows: [{
       mode: "gemGrab", map: "Hard Rock Mine", brawlerName: "SHELLY",

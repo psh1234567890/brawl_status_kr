@@ -25,7 +25,6 @@ export async function fetchPlayerSkinInventory(
   // using the same bounded profile snapshot used by player search.
   const player = await fetchBrawlApiSnapshot<PlayerData>(
     `/players/%23${cleanTag}`, 30_000, 5 * 60_000,
-    { retryOnNetworkError: true },
   );
   const official = buildOfficialSkinInventory(player.data, cleanTag);
 

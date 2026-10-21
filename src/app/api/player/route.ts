@@ -30,7 +30,6 @@ async function getPlayer(request: Request) {
     const cleanTag = normalizePlayerTag(playerTag);
     const { data, freshness } = await fetchBrawlApiSnapshot<PlayerData>(
       `/players/%23${cleanTag}`, 30_000, 5 * 60_000,
-      { retryOnNetworkError: true },
     );
     // Optional analytics run after the response, even when their DB is slow.
     after(async () => {

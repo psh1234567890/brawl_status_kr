@@ -19,7 +19,7 @@ describe("player skin availability resilience", () => {
     const result = await fetchPlayerSkinInventory("#2PYLQ");
     expect(result.coverage).toBe("equipped");
     expect(result.skins[0].name).toBe("STAR SHELLY");
-    expect(mocks.profile).toHaveBeenCalledWith("/players/%232PYLQ", 30_000, 300_000, { retryOnNetworkError: true });
+    expect(mocks.profile).toHaveBeenCalledWith("/players/%232PYLQ", 30_000, 300_000);
     expect(mocks.supplemental).not.toHaveBeenCalled();
   });
   it("does not call a disabled optional skin provider", async () => {

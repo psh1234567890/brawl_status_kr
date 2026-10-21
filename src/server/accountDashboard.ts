@@ -31,7 +31,6 @@ export async function readDashboardPlayer(defaultTag: string | null): Promise<Da
   if (!isValidPlayerTag(tag)) return null;
   const { data } = await fetchBrawlApiSnapshot<PlayerData>(
     `/players/%23${tag}`, 30_000, 5 * 60_000,
-    { retryOnNetworkError: true },
   );
   return {
     tag,

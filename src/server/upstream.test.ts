@@ -56,6 +56,14 @@ describe("Brawl API outage handling", () => {
     return client.fetchSnapshot(path, 30_000, 300_000);
   }
 
+  async function settle<T>(request: Promise<T>): Promise<T> {
+    const result = request.then((value) => ({ value }), (error: unknown) => ({ error }));
+    await vi.runAllTimersAsync();
+    const outcome = await result;
+    if ("error" in outcome) throw outcome.error;
+    return outcome.value;
+  }
+
   it("coalesces parallel refreshes and serves the original fresh timestamp", async () => {
     fetchMock.mockResolvedValueOnce(Response.json(data));
     const [a, b] = await Promise.all([
@@ -68,17 +76,97 @@ describe("Brawl API outage handling", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
-  it("retries one cold transport error without retrying a provider HTTP failure", async () => {
+  it("retries one cold transport error without retrying a provider access failure", async () => {
     fetchMock.mockRejectedValueOnce(new TypeError("connection reset"));
     fetchMock.mockResolvedValueOnce(Response.json(data));
-    expect((await client.fetchSnapshot(path, 30_000, 300_000,
-      { retryOnNetworkError: true })).data).toEqual(data);
+    expect((await settle(client.fetchSnapshot(path, 30_000, 300_000))).data).toEqual(data);
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
     fetchMock.mockResolvedValueOnce(new Response("blocked", { status: 403 }));
-    await expect(client.fetchSnapshot("/players/%238PQL", 30_000, 300_000,
-      { retryOnNetworkError: true })).rejects.toMatchObject({ status: 403 });
+    await expect(client.fetchSnapshot("/players/%238PQL", 30_000, 300_000)).rejects.toMatchObject({ status: 403 });
     expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it.each([408, 500, 502, 503, 504, 520, 521, 522, 523, 524, 525, 526])(
+    "recovers a cold HTTP %i once and coalesces concurrent readers", async (status) => {
+      fetchMock.mockResolvedValueOnce(new Response("private gateway detail", { status }));
+      fetchMock.mockResolvedValueOnce(Response.json(data));
+      const results = await settle(Promise.all([
+        client.fetchSnapshot(path, 30_000, 300_000),
+        client.fetchSnapshot(path, 30_000, 300_000),
+      ]));
+      expect(results[0].data).toEqual(data);
+      expect(results[0].freshness.status).toBe("live");
+      expect(results[1]).toEqual(results[0]);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(console.warn).toHaveBeenCalledWith(JSON.stringify({
+        event: "upstream_request_failed", resource: "player", status,
+        reason: "http", attempt: 1, willRetry: true,
+      }));
+      const logs = String(vi.mocked(console.warn).mock.calls);
+      for (const secret of ["private gateway detail", "unit-test-key", "2PYLQ", "proxy.example"]) {
+        expect(logs).not.toContain(secret);
+      }
+    },
+  );
+
+  it("also retries a cold battle-log timeout within the original eight-second budget", async () => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    fetchMock.mockImplementationOnce(() => new Promise((_, reject) => {
+      setTimeout(() => reject(new DOMException("private timeout detail", "TimeoutError")), 4_000);
+    }));
+    fetchMock.mockResolvedValueOnce(Response.json({ items: [] }));
+    const result = await settle(client.fetchSnapshot(`${path}/battlelog`, 15_000, 120_000));
+    expect(result.data).toEqual({ items: [] });
+    expect(timeout.mock.calls[0][0]).toBe(4_000);
+    expect(timeout.mock.calls[1][0]).toBeGreaterThanOrEqual(3_751);
+    expect(timeout.mock.calls[1][0]).toBeLessThanOrEqual(3_850);
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('"resource":"battlelog"'));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("limits a persistent gateway failure to two attempts, preserves its status, and does not cache it", async () => {
+    fetchMock.mockImplementation(() => Promise.resolve(new Response("gateway failed", { status: 525 })));
+    await expect(settle(client.fetchSnapshot(path, 30_000, 300_000))).rejects.toMatchObject({ status: 525 });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenLastCalledWith(JSON.stringify({
+      event: "upstream_request_failed", resource: "player", status: 525,
+      reason: "http", attempt: 2, willRetry: false,
+    }));
+    fetchMock.mockResolvedValueOnce(Response.json(data));
+    expect((await client.fetchSnapshot(path, 30_000, 300_000)).data).toEqual(data);
+  });
+
+  it("retries a transport failure while reading a successful response body", async () => {
+    const interrupted = Response.json(data);
+    vi.spyOn(interrupted, "json").mockRejectedValueOnce(new TypeError("private body connection reset"));
+    fetchMock.mockResolvedValueOnce(interrupted);
+    fetchMock.mockResolvedValueOnce(Response.json(data));
+    expect((await settle(client.fetchSnapshot(path, 30_000, 300_000))).data).toEqual(data);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(vi.mocked(console.warn).mock.calls)).toContain('"reason":"network"');
+    expect(String(vi.mocked(console.warn).mock.calls)).not.toContain("private body connection reset");
+  });
+
+  it("does not start another request after the total deadline has elapsed", async () => {
+    fetchMock.mockImplementationOnce(async () => {
+      vi.advanceTimersByTime(8_000);
+      throw new DOMException("timeout", "TimeoutError");
+    });
+    await expect(settle(client.fetchSnapshot(path, 30_000, 300_000))).rejects.toMatchObject({ status: 504 });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it.each([400, 401, 403, 404, 429, 501, 505])("does not retry HTTP %i", async (status) => {
+    fetchMock.mockResolvedValueOnce(new Response("provider failure", { status }));
+    await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({ status });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("does not retry a provider's Retry-After response early", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("busy", { status: 503, headers: { "Retry-After": "30" } }));
+    await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({ status: 503 });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 
   it.each([429, 503, 520, 525])("uses explicitly labeled stale data on temporary HTTP %i", async (status) => {
@@ -98,8 +186,7 @@ describe("Brawl API outage handling", () => {
     fetchMock.mockResolvedValueOnce(Response.json({
       reason: "inMaintenance", message: "API is currently in maintenance, please come back later",
     }, { status: 503 }));
-    await expect(client.fetchSnapshot(path, 30_000, 300_000,
-      { retryOnNetworkError: true })).rejects.toMatchObject({
+    await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({
       status: 503,
       message: "브롤스타즈 API가 점검 중입니다. 점검이 끝나면 다시 검색해 주세요.",
     });
@@ -111,12 +198,15 @@ describe("Brawl API outage handling", () => {
 
   it.each([null, "<html>gateway unavailable</html>", { message: "private provider detail" }, { reason: "otherFailure" }])(
     "does not label an unrelated 503 as maintenance or expose its response body: %j", async (body) => {
-      fetchMock.mockResolvedValueOnce(typeof body === "string"
-        ? new Response(body, { status: 503 }) : Response.json(body, { status: 503 }));
-      await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({
+      fetchMock.mockImplementation(() => Promise.resolve(typeof body === "string"
+        ? new Response(body, { status: 503 }) : Response.json(body, { status: 503 })));
+      await expect(settle(client.fetchSnapshot(path, 30_000, 300_000))).rejects.toMatchObject({
         status: 503, message: "브롤스타즈 데이터를 불러오지 못했습니다.",
       });
-      expect(console.warn).not.toHaveBeenCalled();
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      const logs = String(vi.mocked(console.warn).mock.calls);
+      expect(logs).not.toContain("brawl_api_maintenance");
+      expect(logs).not.toContain("private provider detail");
     },
   );
 
@@ -134,18 +224,18 @@ describe("Brawl API outage handling", () => {
     vi.advanceTimersByTime(31_000);
     fetchMock.mockResolvedValueOnce(new Response("error", { status }));
     await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({ status });
-    fetchMock.mockResolvedValueOnce(new Response("error", { status: 503 }));
-    await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({ status: 503 });
+    fetchMock.mockImplementation(() => Promise.resolve(new Response("error", { status: 503 })));
+    await expect(settle(client.fetchSnapshot(path, 30_000, 300_000))).rejects.toMatchObject({ status: 503 });
   });
 
   it("does not allow stale fallback implicitly or past its original maximum age", async () => {
     await seed();
     vi.advanceTimersByTime(31_000);
-    fetchMock.mockRejectedValueOnce(new TypeError("sensitive network error"));
-    await expect(client.fetchSnapshot(path, 30_000)).rejects.toMatchObject({ status: 503 });
+    fetchMock.mockRejectedValue(new TypeError("sensitive network error"));
+    await expect(settle(client.fetchSnapshot(path, 30_000))).rejects.toMatchObject({ status: 503 });
     vi.advanceTimersByTime(270_000);
-    fetchMock.mockRejectedValueOnce(new DOMException("timeout", "TimeoutError"));
-    await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({ status: 504 });
+    fetchMock.mockRejectedValue(new DOMException("timeout", "TimeoutError"));
+    await expect(settle(client.fetchSnapshot(path, 30_000, 300_000))).rejects.toMatchObject({ status: 504 });
   });
 
   it("replaces stale data after recovery and keeps configuration and tags isolated", async () => {

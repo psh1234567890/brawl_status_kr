@@ -6,6 +6,8 @@ import { localizedHref, numberLocales, type Locale } from "../../i18n/config";
 import { eventRotationMessages } from "../../i18n/eventRotationMessages";
 import type { EventRotationResponse, RotationEvent } from "../../types/events";
 import { translateMapName, translateModeName } from "../../utils/brawlTranslations";
+import { isValidPlayerTag, normalizePlayerTag } from "../../utils/playerTag";
+import { useBrowserSearch } from "../../utils/urlState";
 import GameModeIcon from "../GameModeIcon";
 import { BrandArrow } from "./BrandArt";
 import styles from "./HomeCurrentMaps.module.css";
@@ -24,6 +26,11 @@ const MODE_DISPLAY_KEYS: Record<string, string> = { brawlArena: "arena", knockou
 
 export default function HomeCurrentMaps({ locale, expanded = false }: { locale: Locale; expanded?: boolean }) {
   const copy = eventRotationMessages[locale];
+  const search = useBrowserSearch();
+  const requestedTag = normalizePlayerTag(new URLSearchParams(search).get("tag") ?? "");
+  const selectedTag = isValidPlayerTag(requestedTag) ? requestedTag : "";
+  const eventsHref = localizedHref(locale, "/events") +
+    (selectedTag ? `?${new URLSearchParams({ tag: selectedTag })}` : "");
   const now = useSyncExternalStore(subscribeClock, clockSnapshot, serverClockSnapshot);
   const [state, setState] = useState<{ data: EventRotationResponse | null; failed: boolean }>({ data: null, failed: false });
   const [attempt, setAttempt] = useState(0);
@@ -71,7 +78,9 @@ export default function HomeCurrentMaps({ locale, expanded = false }: { locale: 
         const mode = translateModeName(modeKey, locale);
         const map = translateMapName(event.map, locale);
         const time = remainingTime(Date.parse(event.endTime) - now, locale);
-        const href = `${localizedHref(locale, "/meta")}?${new URLSearchParams({ map: event.map, gameMode: event.mode })}`;
+        const params = new URLSearchParams({ map: event.map, gameMode: event.mode });
+        if (selectedTag) params.set("tag", selectedTag);
+        const href = `${localizedHref(locale, "/meta")}?${params}`;
         return <Link key={`${event.slotId}-${event.mapId}-${event.startTime}`} href={href} className={styles.card} aria-label={`${mode} · ${map} · ${copy.recommendation}`}>
           <span className={styles.mode}><GameModeIcon mode={translateModeName(modeKey, "en")} size={20} /><span>{mode}</span></span>
           <strong>{map}</strong>
@@ -89,7 +98,7 @@ export default function HomeCurrentMaps({ locale, expanded = false }: { locale: 
   return <section id="current-maps" tabIndex={-1} className={styles.rotation} aria-label={copy.title} data-testid="current-maps">
     <div className={styles.heading}>
       <h2><span aria-hidden="true" className={styles.liveDot} />{copy.title}</h2>
-      {!expanded && <Link href={localizedHref(locale, "/events")}>{copy.allEvents}<BrandArrow size={14} /></Link>}
+      {!expanded && <Link href={eventsHref}>{copy.allEvents}<BrandArrow size={14} /></Link>}
     </div>
     {active.length ? cards(active) : <div className={styles.message} role="status">
       <span>{failed ? copy.unavailable : loading ? copy.loading : justExpired ? copy.refreshing : copy.empty}</span>

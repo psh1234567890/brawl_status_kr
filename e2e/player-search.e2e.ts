@@ -6,13 +6,20 @@ import { localizedHref } from "../src/i18n/config";
 import { getMessages } from "../src/i18n/messages";
 import { profileHubMessages, profileMapPicksLabels } from "../src/i18n/profileHubMessages";
 import { eventRotationMessages } from "../src/i18n/eventRotationMessages";
+import { getPersonalizedMetaMessages } from "../src/i18n/personalizedMetaMessages";
 
 const tag = "9C82J8YPP";
 
 for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 1280]] as const) {
   test(`profile next actions keep live map recommendations accessible at ${width}px in ${locale}`, async ({ page }) => {
     const errors: string[] = [];
+    const playerRequests: string[] = [];
     page.on("pageerror", error => errors.push(error.message));
+    page.on("request", request => {
+      const url = new URL(request.url());
+      if (url.pathname === "/api/player") playerRequests.push(url.searchParams.get("tag") ?? "");
+    });
+    await mockRecommendationAccount(page);
     await page.setViewportSize({ width, height: 844 });
     await page.route("**/api/events", route => route.fulfill({ json: {
       active: [{ slotId: 2, mapId: 15000010, mode: "brawlBall", map: "Triple Dribble",
@@ -27,6 +34,7 @@ for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 128
     const shots = join(tmpdir(), "brawloop-search-actions-20261018");
     await mkdir(shots, { recursive: true });
     await page.goto(localizedHref(locale, "/"));
+    await expect(page.getByRole("button", { name: /Recommendation QA/ })).toBeVisible();
     const shortcuts = page.getByRole("navigation", { name: copy.home.shortcuts, exact: true });
     await expect(shortcuts.locator("a")).toHaveCount(15);
     const leading = shortcuts.locator("a");
@@ -62,9 +70,15 @@ for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 128
     await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toHaveCount(1);
     await page.screenshot({ path: join(shots, `map-picker-${locale}-${width}.png`) });
     await rotation.getByRole("link", { name: new RegExp(eventRotationMessages[locale].recommendation) }).click();
-    await expect(page).toHaveURL(new RegExp(`${localizedHref(locale, "/meta")}\\?map=Triple\\+Dribble&gameMode=brawlBall$`));
+    await expect(page).toHaveURL(new RegExp(`${localizedHref(locale, "/meta")}\\?map=Triple\\+Dribble&gameMode=brawlBall&tag=${tag}$`));
     await expect(page.getByRole("heading", { level: 1, name: copy.meta.title })).toBeVisible();
     await expect(page.locator("main article")).toHaveCount(1);
+    const personalizedCopy = getPersonalizedMetaMessages(locale);
+    const owned = page.getByRole("heading", { name: personalizedCopy.title, exact: true }).locator("xpath=ancestor::section[1]");
+    await expect(owned).toContainText(`#${tag}`);
+    await expect(owned.getByText(personalizedCopy.sourceLabels.selected, { exact: true })).toBeVisible();
+    await expect(owned).toContainText("E2E Player");
+    expect(playerRequests.every(requested => requested === tag)).toBe(true);
     await page.goBack();
     await expect(page.getByRole("heading", { level: 1, name: "E2E Player" })).toBeVisible();
     await expect(page.getByRole("textbox", { name: copy.home.playerTag })).toHaveValue(tag);
@@ -87,6 +101,83 @@ for (const [locale, width] of [["ko", 320], ["de", 320], ["en", 390], ["ko", 128
     expect(errors).toEqual([]);
   });
 }
+
+test("selected player survives full rotation, recommendation filters, reload, and back on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockRecommendationAccount(page);
+  await page.addInitScript(() => localStorage.setItem("recentTags", JSON.stringify(["8PQL"])));
+  const playerRequests: string[] = [];
+  page.on("request", request => {
+    const url = new URL(request.url());
+    if (url.pathname === "/api/player") playerRequests.push(url.searchParams.get("tag") ?? "");
+  });
+  await page.route("**/api/events", route => route.fulfill({ json: {
+    active: [{ slotId: 2, mapId: 15000010, mode: "brawlBall", map: "Triple Dribble",
+      startTime: new Date(Date.now() - 60_000).toISOString(), endTime: new Date(Date.now() + 600_000).toISOString() }],
+    upcoming: [], fetchedAt: new Date().toISOString(),
+  } }));
+  const brawlers = [{ id: 16000000, name: "SHELLY", plays: 100, wins: 60, draws: 0,
+    winRate: 60, score: 57, confidence: "HIGH", confidenceScore: 100 }];
+  await page.route("**/api/meta", route => route.fulfill({ json: [
+    { mode: "brawlBall", map: "Triple Dribble", brawlers },
+    { mode: "gemGrab", map: "Hard Rock Mine", brawlers },
+  ] }));
+  await page.goto("/?tag=" + tag);
+  await expect(page.getByRole("heading", { name: "E2E Player", exact: true })).toBeVisible();
+  const rotation = page.getByTestId("current-maps");
+  const allEvents = rotation.getByRole("link", { name: eventRotationMessages.ko.allEvents, exact: true });
+  await expect(allEvents).toHaveAttribute("href", `/events?tag=${tag}`);
+  await allEvents.click();
+  await expect(page).toHaveURL(`/events?tag=${tag}`);
+  await page.getByTestId("current-maps").getByRole("link", { name: /이 맵 추천 브롤러 보기/ }).click();
+  const owned = page.getByRole("heading", { name: "플레이어 보유 브롤러 추천", exact: true }).locator("xpath=ancestor::section[1]");
+  await expect(owned).toContainText("E2E Player");
+  await expect(owned).toContainText(`#${tag}`);
+  await page.getByRole("combobox", { name: "최소 표본", exact: true }).selectOption("20");
+  await page.getByRole("combobox", { name: "표본 규모", exact: true }).selectOption("HIGH");
+  await page.getByRole("combobox", { name: "정렬", exact: true }).selectOption("WIN_RATE");
+  await page.getByRole("button", { name: "젬 그랩", exact: true }).click();
+  expect(new URL(page.url()).searchParams.get("tag")).toBe(tag);
+  await expect(owned).toContainText(`#${tag}`);
+  await page.reload();
+  await expect(owned).toContainText("E2E Player");
+  await expect(owned.getByText("선택한 플레이어", { exact: true })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "최소 표본", exact: true })).toHaveValue("20");
+  await expect(page.getByRole("combobox", { name: "표본 규모", exact: true })).toHaveValue("HIGH");
+  await expect(page.getByRole("combobox", { name: "정렬", exact: true })).toHaveValue("WIN_RATE");
+  await expect(page.getByRole("button", { name: "젬 그랩", exact: true })).toHaveAttribute("aria-pressed", "true");
+  expect(playerRequests.length).toBeGreaterThanOrEqual(3);
+  expect(playerRequests.every(requested => requested === tag)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.goBack();
+  await expect(page).toHaveURL(`/events?tag=${tag}`);
+  await page.goBack();
+  await expect(page).toHaveURL(`/?tag=${tag}`);
+  await expect(page.getByRole("heading", { name: "E2E Player", exact: true })).toBeVisible();
+});
+
+test("a shared selected-player URL overrides account and recent tags on a cold phone load", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 844 });
+  await mockRecommendationAccount(page);
+  await page.addInitScript(() => localStorage.setItem("recentTags", JSON.stringify(["8PQL"])));
+  const requestedTags: string[] = [];
+  await page.route(/\/api\/player\?tag=/, route => {
+    requestedTags.push(new URL(route.request().url()).searchParams.get("tag") ?? "");
+    return route.fulfill({ json: { tag: `#${tag}`, name: "Shared selected player", brawlers: [] } });
+  });
+  await page.route("**/api/meta", route => route.fulfill({ json: [{ mode: "gemGrab", map: "Hard Rock Mine", brawlers: [
+    { id: 16000000, name: "SHELLY", plays: 20, wins: 12, draws: 0,
+      winRate: 60, score: 48, confidence: "MEDIUM", confidenceScore: 40 },
+  ] }] }));
+  await page.goto(`/meta?map=Hard+Rock+Mine&tag=%23${tag.toLowerCase()}`);
+  const owned = page.getByRole("heading", { name: "플레이어 보유 브롤러 추천", exact: true }).locator("xpath=ancestor::section[1]");
+  await expect(owned).toContainText("Shared selected player");
+  await expect(owned).toContainText(`#${tag}`);
+  await expect(page.getByRole("button", { name: /Recommendation QA/ })).toBeVisible();
+  expect(requestedTags.length).toBeGreaterThan(0);
+  expect(requestedTags.every(requested => requested === tag)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
 
 for (const navigation of ["back", "logo"] as const) {
   test(`returning home by ${navigation} cancels a pending player lookup`, async ({ page }) => {
@@ -565,4 +656,17 @@ async function mockPlayerApis(page: Page, options: { stale?: boolean; storageUna
       },
     });
   });
+}
+
+async function mockRecommendationAccount(page: Page) {
+  await page.route("**/api/account", route => route.fulfill({ json: {
+    state: "account", syncEnabled: false,
+    account: {
+      id: "00000000-0000-4000-8000-000000000001", nickname: "Recommendation QA",
+      defaultPlayerTag: "2PYLQ", profileRevision: 1, onboardingComplete: true,
+      onboardingCompletedAt: "2026-01-01T00:00:00Z", policyReady: true,
+      eligibilityPolicyTexts: null, eligibilityRules: null, policyVersions: null,
+    },
+  } }));
+  await page.route("**/api/admin/access", route => route.fulfill({ status: 404 }));
 }

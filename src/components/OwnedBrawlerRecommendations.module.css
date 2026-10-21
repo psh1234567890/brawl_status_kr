@@ -1,0 +1,28 @@
+.section { container-type: inline-size; }
+.controls { display: grid; gap: 8px; margin-block-start: 16px; }
+.powerFilter { display: grid; min-width: 0; gap: 6px; font-size: 12px; font-weight: 800; color: #1e3a8a; }
+.powerFilter select { min-height: 44px; width: 100%; max-width: 100%; border: 1px solid #bfdbfe; border-radius: 8px; background: white; padding: 8px 12px; font: inherit; color: #172554; }
+.note { color: #475569; font-size: 12px; line-height: 1.6; }
+.list { display: grid; gap: 12px; margin-block-start: 16px; padding: 0; list-style: none; }
+.card { min-width: 0; }
+.collapsed .card:nth-child(n + 4) { display: none; }
+.cardLink { display: block; height: 100%; border: 1px solid #dbeafe; border-radius: 8px; background: white; padding: 12px; }
+.playerStats { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; margin-block-start: 12px; font-size: 12px; font-weight: 700; color: #475569; }
+.evidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-block-start: 12px; font-size: 11px; line-height: 1.5; }
+.evidence dt { color: #64748b; overflow-wrap: anywhere; }
+.evidence dd { color: #334155; font-size: 13px; font-weight: 800; }
+.lowRecent { margin-block-start: 8px; color: #92400e; font-size: 11px; font-weight: 700; }
+.toggle, .reset { min-height: 44px; border: 1px solid #bfdbfe; border-radius: 8px; background: white; padding: 8px 12px; color: #1d4ed8; font-size: 12px; font-weight: 800; line-height: 1.5; }
+.toggle { width: 100%; margin-block-start: 12px; }
+.reset { margin-block-start: 12px; }
+.powerFilter select:focus-visible, .cardLink:focus-visible, .toggle:focus-visible, .reset:focus-visible { outline: 2px solid #5842ce; outline-offset: 3px; }
+.cardLink:hover, .toggle:hover, .reset:hover { border-color: #93c5fd; }
+@container (min-width: 36rem) {
+  .controls { grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr); align-items: end; gap: 16px; }
+  .list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .collapsed .card:nth-child(n + 4) { display: block; }
+  .toggle[data-desktop-extra="false"] { display: none; }
+}
+@container (min-width: 64rem) {
+  .list { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}

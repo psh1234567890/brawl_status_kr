@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useMemo, useState, useSyncExternalStore } from "react";
 import type { PlayerData } from "../types/brawl";
 import { localizedHref, numberLocales, type Locale } from "../i18n/config";
 import { getPersonalizedMetaMessages } from "../i18n/personalizedMetaMessages";
 import { getComponentMessages } from "../i18n/componentMessages";
+import { recommendationFreshnessMessages } from "../i18n/recommendationFreshnessMessages";
 import { useAccount } from "../hooks/useAccount";
 import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
 import { translateBrawlerName } from "../utils/brawlTranslations";
+import { replaceBrowserSearch, useBrowserSearch } from "../utils/urlState";
 import BrawlImage from "./BrawlImage";
 import StatSymbol from "./StatSymbol";
+import styles from "./OwnedBrawlerRecommendations.module.css";
 
 const RECENT_TAGS_KEY = "recentTags";
 const RECENT_TAGS_CHANGED_EVENT = "recentTagsChanged";
@@ -21,6 +24,7 @@ export type OwnedRecommendationStat = {
   score: number;
   winRate: number;
   plays: number;
+  recentPlays?: number;
 };
 
 type OwnedBrawler = PlayerData["brawlers"][number];
@@ -56,6 +60,12 @@ export default function OwnedBrawlerRecommendations({
   selectedTag?: string | null;
 }) {
   const copy = getPersonalizedMetaMessages(locale);
+  const freshnessCopy = recommendationFreshnessMessages[locale];
+  const listId = useId();
+  const search = useBrowserSearch();
+  const requestedPower = new URLSearchParams(search).get("ownedPower");
+  const powerFilter = requestedPower === "9" || requestedPower === "11" ? Number(requestedPower) : 0;
+  const [expandedFor, setExpandedFor] = useState<string | null>(null);
   const account = useAccount();
   const recentTag = useSyncExternalStore(
     subscribeRecentTag,
@@ -126,13 +136,21 @@ export default function OwnedBrawlerRecommendations({
       })
       .filter(
         (value): value is { stat: OwnedRecommendationStat; owned: OwnedBrawler } =>
-          value !== null,
-      )
-      .slice(0, 5);
-  }, [player, stats]);
+          value !== null && (powerFilter === 0 ||
+            (powerFilter === 11 ? value.owned.power === 11 : value.owned.power >= 9)),
+      );
+  }, [player, stats, powerFilter]);
+  const contextKey = `${activeTag}:${search}`;
+  const expanded = expandedFor === contextKey;
+  const visibleRecommendations = expanded ? ownedRecommendations : ownedRecommendations.slice(0, 5);
+
+  function selectPower(value: string) {
+    setExpandedFor(null);
+    replaceBrowserSearch({ ownedPower: value === "0" ? null : value });
+  }
 
   return (
-    <section className="mb-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5">
+    <section aria-label={copy.title} className={`${styles.section} mb-6 rounded-xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5`}>
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-base font-black text-blue-950 sm:text-lg">{copy.title}</h3>
@@ -156,6 +174,18 @@ export default function OwnedBrawlerRecommendations({
         </p>
       ) : null}
 
+      {player ? <div className={styles.controls}>
+        <label className={styles.powerFilter}>
+          <span>{copy.powerFilter}</span>
+          <select value={powerFilter} onChange={(event) => selectPower(event.target.value)}>
+            <option value="0">{copy.powerAll}</option>
+            <option value="9">{copy.powerNine}</option>
+            <option value="11">{copy.powerEleven}</option>
+          </select>
+        </label>
+        <p className={styles.note}>{copy.powerNote}</p>
+      </div> : null}
+
       {!activeTag ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white p-4">
           <p className="text-sm font-bold text-slate-600">{copy.noPlayer}</p>
@@ -175,14 +205,17 @@ export default function OwnedBrawlerRecommendations({
           {copy.unavailable}
         </p>
       ) : ownedRecommendations.length ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          {ownedRecommendations.map(({ stat, owned }, index) => {
+        <>
+        <ol id={listId} className={`${styles.list} ${expanded ? "" : styles.collapsed}`}>
+          {visibleRecommendations.map(({ stat, owned }, index) => {
             const displayName = translateBrawlerName(stat.name, locale);
+            const recentPlays = typeof stat.recentPlays === "number" && Number.isSafeInteger(stat.recentPlays) &&
+              stat.recentPlays >= 0 && stat.recentPlays <= stat.plays ? stat.recentPlays : null;
             return (
+              <li key={stat.name} className={styles.card}>
               <Link
-                key={stat.name}
                 href={localizedHref(locale, "/brawlers/" + (stat.id ?? owned.id))}
-                className="rounded-lg border border-blue-100 bg-white p-3 shadow-sm transition-transform hover:-translate-y-0.5"
+                className={styles.cardLink}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-black text-blue-300">#{index + 1}</span>
@@ -196,24 +229,40 @@ export default function OwnedBrawlerRecommendations({
                     fallbackText={displayName.slice(0, 1)}
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-black text-slate-900">{displayName}</p>
+                    <p className="break-words text-sm font-black text-slate-900">{displayName}</p>
                     <p className="text-xs font-bold text-blue-600">
                       {copy.score} {stat.score.toLocaleString(numberLocales[locale])}
                     </p>
                   </div>
                 </div>
-                <div className="mt-3 flex justify-between gap-2 text-[11px] font-bold text-slate-500">
+                <div className={styles.playerStats}>
                   <span className="inline-flex items-center gap-1"><StatSymbol kind="trophy" size={12} />{copy.trophies} {owned.trophies.toLocaleString(numberLocales[locale])}</span>
                   <span className="inline-flex items-center gap-1"><StatSymbol kind="level" size={12} />{copy.power} {owned.power}</span>
                 </div>
+                <dl className={styles.evidence}>
+                  <div><dt>{freshnessCopy.sample}</dt><dd>{stat.plays.toLocaleString(numberLocales[locale])}</dd></div>
+                  <div><dt>{freshnessCopy.recent}</dt><dd>{recentPlays === null ? "—" : recentPlays.toLocaleString(numberLocales[locale])}</dd></div>
+                </dl>
+                {recentPlays !== null && recentPlays < 5 ? <p className={styles.lowRecent}>{copy.lowRecent}</p> : null}
               </Link>
+              </li>
             );
           })}
-        </div>
+        </ol>
+        {ownedRecommendations.length > 3 ? <button type="button" className={styles.toggle}
+          data-desktop-extra={ownedRecommendations.length > 5}
+          aria-expanded={expanded} aria-controls={listId}
+          onClick={() => setExpandedFor(expanded ? null : contextKey)}>
+          {expanded ? copy.showLess : copy.showAll.replace("{count}", ownedRecommendations.length.toLocaleString(numberLocales[locale]))}
+        </button> : null}
+        </>
       ) : player ? (
-        <p role="status" className="mt-4 rounded-lg bg-white p-4 text-sm font-bold text-slate-500">
+        <div className="mt-4 rounded-lg bg-white p-4 text-sm font-bold text-slate-500">
+        <p role="status">
           {copy.noMatches}
         </p>
+        {powerFilter ? <button type="button" className={styles.reset} onClick={() => selectPower("0")}>{copy.resetPower}</button> : null}
+        </div>
       ) : null}
     </section>
   );

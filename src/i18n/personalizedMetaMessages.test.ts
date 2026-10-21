@@ -17,6 +17,7 @@ describe("personalized recommendation messages", () => {
         }
       }
       expect(Object.keys(messages.sourceLabels).sort()).toEqual(["default", "recent", "selected"]);
+      expect(messages.showAll.match(/\{count\}/g)).toHaveLength(1);
     }
   });
 });

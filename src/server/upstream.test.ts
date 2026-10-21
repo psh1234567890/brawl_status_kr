@@ -169,6 +169,14 @@ describe("Brawl API outage handling", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  it("honors Retry-After even when the 503 response body is interrupted", async () => {
+    const interrupted = new Response(null, { status: 503, headers: { "Retry-After": "30" } });
+    vi.spyOn(interrupted, "json").mockRejectedValueOnce(new DOMException("body timeout", "TimeoutError"));
+    fetchMock.mockResolvedValueOnce(interrupted);
+    await expect(client.fetchSnapshot(path, 30_000, 300_000)).rejects.toMatchObject({ status: 503, retryable: false });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
   it.each([429, 503, 520, 525])("uses explicitly labeled stale data on temporary HTTP %i", async (status) => {
     const original = await seed();
     vi.advanceTimersByTime(31_000);

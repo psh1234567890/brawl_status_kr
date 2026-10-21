@@ -48,7 +48,7 @@ async function readJsonResponse(response: Response) {
   if (!response.ok) {
     if (response.status === 503) {
       const body: unknown = await response.json().catch((error) => {
-        if (isTransportError(error)) throw error;
+        if (isTransportError(error) && !response.headers.has("retry-after")) throw error;
         return null;
       });
       if (body && typeof body === "object" && "reason" in body && body.reason === "inMaintenance") {

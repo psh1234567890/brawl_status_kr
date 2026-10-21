@@ -102,10 +102,11 @@ export function buildMapMetaStatsQuery(minimumPlays = MINIMUM_META_PLAYS) {
 export async function queryMapMetaStats(minimumPlays = MINIMUM_META_PLAYS) {
   // Pre-aggregated 30-day snapshot refreshed by pg_cron. This avoids a full
   // participant+perspective scan on every cold function invocation.
-  const result = await db.execute<MapMetaRawRow & { refreshedAt: string }>(sql`
+  const result = await db.execute<MapMetaRawRow & { refreshedAt: string; recentPlays: number | string; lastBattleAt: string }>(sql`
     SELECT mode, map, brawler_id AS "brawlerId", brawler_name AS "brawlerName",
-           plays, wins, draws, refreshed_at::text AS "refreshedAt"
-    FROM analytics_private.meta_brawler_snapshot
+           plays, wins, draws, recent_plays AS "recentPlays",
+           last_battle_at::text AS "lastBattleAt", refreshed_at::text AS "refreshedAt"
+    FROM analytics_private.meta_brawler_quality_snapshot
     WHERE plays >= ${minimumPlays}
   `);
   // Inspect freshness instead of filtering overdue rows into a successful empty

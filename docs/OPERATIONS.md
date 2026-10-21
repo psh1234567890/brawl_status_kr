@@ -1,5 +1,18 @@
 # 운영 모니터링
 
+## 추천 최신성 집계
+
+맵 추천 API는 `analytics_private.meta_brawler_quality_snapshot`의 30일 합계,
+최근 7일 표본 수, 마지막 경기 시각을 한 번에 읽는다. 배포 전
+`drizzle/20261021054929_meta_recommendation_freshness.sql`을 적용한다.
+`brawl-meta-quality-snapshot-refresh`는 매시 3/18/33/48분에 동시 갱신한다.
+기존 추천 뷰·작업은 이전 버전으로 복귀할 때 사용할 수 있게 유지한다.
+갱신 주기마다 추가 집계가 한 번 실행되며, API 요청 시 원본 스캔은 추가하지 않는다.
+45분 만료·300초 앱 캐시와 기본 점수 계산은 유지한다.
+`X-Meta-Scoring-Version: legacy-v1`은 순위 계산이 기존과 같음을 나타낸다.
+집계 갱신 시각과 마지막 경기 시각을 혼동하지 않는다.
+[계산식 비교와 적용 판단](RECOMMENDATION_EVALUATION_20261021.md)을 참고한다.
+
 ## 배포 검증과 운영 API smoke
 
 Vercel 프로젝트의 Deployment Checks에서 GitHub의 `verify` 검사를 Production

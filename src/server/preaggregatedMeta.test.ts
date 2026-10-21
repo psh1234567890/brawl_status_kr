@@ -12,8 +12,10 @@ describe("pre-aggregated map meta", () => {
     const result = await queryMapMetaStats(10);
     expect(result.rows[0].plays).toBe("42");
     const { sql, params } = new PgDialect().sqlToQuery(mocks.execute.mock.calls[0][0]);
-    expect(sql).toContain("analytics_private.meta_brawler_snapshot");
+    expect(sql).toContain("analytics_private.meta_brawler_quality_snapshot");
     expect(sql).toContain("refreshed_at");
+    expect(sql).toContain("recent_plays");
+    expect(sql).toContain("last_battle_at");
     expect(sql).not.toContain("battle_team_participants");
     expect(params).toEqual([10]);
   });

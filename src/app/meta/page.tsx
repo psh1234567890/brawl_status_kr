@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import BrawlImage from "../../components/BrawlImage";
 import GameModeIcon from "../../components/GameModeIcon";
 import BrandHeader from "../../components/brand/BrandHeader";
@@ -64,6 +65,13 @@ type BrawlerMapStat = {
 };
 
 type MapStatsResponse = { mode: string; map: string; brawlers: BrawlerMapStat[] }[];
+
+function MapPlayerRecommendations({ locale, stats }: { locale: Locale; stats: BrawlerMapStat[] }) {
+  // Resolve the URL before mounting the lookup so hydration cannot first fetch
+  // the account default or a different recent player.
+  const params = useSearchParams();
+  return <OwnedBrawlerRecommendations locale={locale} stats={stats} selectedTag={params.get("tag")} />;
+}
 
 export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
   const copy = getMessages(locale);
@@ -387,10 +395,9 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
                 />
               </div>
 
-              <OwnedBrawlerRecommendations
-                locale={locale}
-                stats={filteredCurrentData}
-              />
+              <Suspense fallback={null}>
+                <MapPlayerRecommendations locale={locale} stats={filteredCurrentData} />
+              </Suspense>
 
               {filteredCurrentData.length ? (
                 <div className="flex flex-col gap-4">

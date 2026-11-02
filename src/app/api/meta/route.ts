@@ -4,6 +4,7 @@ import { assertMetaSnapshotFresh, MetaSnapshotUnavailableError, queryMapMetaStat
 import { observeServerOperation, withApiMonitoring } from "../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 import { rejectSharedPublicRateLimit } from "../../../server/sharedPublicRateLimit";
+import { legacyMetaScore } from "../../../utils/metaScore";
 
 const MINIMUM_PLAYS = 5;
 const MEDIUM_CONFIDENCE_PLAYS = 20;
@@ -42,8 +43,7 @@ const getCachedMetaStats = unstable_cache(
       const plays = Number(row.plays);
       const wins = Number(row.wins);
       const draws = Number(row.draws);
-      const winRate = plays > 0 ? Math.floor((wins / plays) * 100) : 0;
-      const score = Math.floor((winRate * plays) / (plays + MINIMUM_PLAYS));
+      const { winRate, score } = legacyMetaScore(wins, plays, MINIMUM_PLAYS);
 
       const key = JSON.stringify([row.mode, row.map]);
       if (!entries.has(key)) {

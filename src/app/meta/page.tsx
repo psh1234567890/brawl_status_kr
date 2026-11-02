@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import BrawlImage from "../../components/BrawlImage";
 import GameModeIcon from "../../components/GameModeIcon";
@@ -235,6 +236,7 @@ export default function MetaDashboard({ locale = "ko" }: { locale?: Locale }) {
     <BrandHeader locale={locale} />
     <main className="min-h-screen bg-white pb-12 text-slate-950">
       <div className="mx-auto w-full max-w-[1232px] px-4 pb-8 pt-3 sm:px-6 lg:px-6">
+        {locale === "ko" ? <Link href="/meta/draft" className="mb-4 inline-flex min-h-11 items-center rounded-lg border border-[#d6ccef] bg-[#f4f0ff] px-4 py-2 text-sm font-bold text-[#5842ce]">아군과 상대를 입력해 팀 조합 추천 받기</Link> : null}
         <header className="flex flex-col gap-4 lg:py-2">
           <div className="relative overflow-hidden rounded-[20px] border border-[#e7c75f] bg-[#ffdf6b] px-5 py-7 sm:px-8 sm:py-9">
             <p className="text-xs font-black uppercase tracking-[0.08em] text-[#5842ce]">

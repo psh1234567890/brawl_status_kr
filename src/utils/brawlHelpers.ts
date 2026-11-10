@@ -14,6 +14,8 @@ const SHOWDOWN_WIN_RANK: Record<string, number> = {
   soloShowdown: 4,
   duoShowdown: 2,
   trioShowdown: 2,
+  megaShowdown: 1,
+  megaDuoShowdown: 1,
 };
 
 export function checkIsRanked(match: BattleLogItem) {

@@ -33,6 +33,20 @@ describe("getNormalizedBattleResult", () => {
     expect(getNormalizedBattleResult(battle({ result: undefined, rank: 2 }, "duoShowdown"))).toBe("victory");
   });
 
+  it.each([
+    ["megaShowdown", 20],
+    ["megaDuoShowdown", 10],
+  ] as const)("counts only first place as a win in %s", (mode, lastRank) => {
+    const items = [1, 2, lastRank].map((rank) => battle({ result: undefined, rank }, mode));
+
+    expect(items.map(getNormalizedBattleResult)).toEqual(["victory", "defeat", "defeat"]);
+    expect(calculateRecentBattleSummary({ items })).toMatchObject({
+      wins: 1,
+      defeats: 2,
+      draws: 0,
+    });
+  });
+
   it("keeps the upstream result for regular modes", () => {
     expect(getNormalizedBattleResult(battle({ result: "defeat" }))).toBe("defeat");
     expect(getNormalizedBattleResult(battle({ result: undefined }))).toBe("draw");

@@ -14,8 +14,6 @@ const SHOWDOWN_WIN_RANK: Record<string, number> = {
   soloShowdown: 4,
   duoShowdown: 2,
   trioShowdown: 2,
-  megaShowdown: 1,
-  megaDuoShowdown: 1,
 };
 
 export function checkIsRanked(match: BattleLogItem) {
@@ -28,6 +26,16 @@ export function checkIsFriendly(match: BattleLogItem) {
 
 export function getNormalizedBattleResult(match: BattleLogItem): BattleOutcome {
   const mode = match.event.mode ?? "";
+  const { trophyChange } = match.battle;
+  if (
+    (mode === "megaShowdown" || mode === "megaDuoShowdown") &&
+    typeof trophyChange === "number" && Number.isFinite(trophyChange)
+  ) {
+    if (trophyChange > 0) return "victory";
+    if (trophyChange < 0) return "defeat";
+    return "draw";
+  }
+
   const showdownWinRank = SHOWDOWN_WIN_RANK[mode];
   if (showdownWinRank !== undefined && match.battle.rank !== undefined) {
     return match.battle.rank <= showdownWinRank ? "victory" : "defeat";

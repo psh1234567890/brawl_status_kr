@@ -33,18 +33,18 @@ describe("getNormalizedBattleResult", () => {
     expect(getNormalizedBattleResult(battle({ result: undefined, rank: 2 }, "duoShowdown"))).toBe("victory");
   });
 
-  it.each([
-    ["megaShowdown", 20],
-    ["megaDuoShowdown", 10],
-  ] as const)("counts only first place as a win in %s", (mode, lastRank) => {
-    const items = [1, 2, lastRank].map((rank) => battle({ result: undefined, rank }, mode));
+  it.each(["megaShowdown", "megaDuoShowdown"])("uses trophy change rather than placement in %s", (mode) => {
+    const items = [3, -2, 0].map((trophyChange) =>
+      battle({ result: undefined, rank: 5, trophyChange }, mode),
+    );
 
-    expect(items.map(getNormalizedBattleResult)).toEqual(["victory", "defeat", "defeat"]);
+    expect(items.map(getNormalizedBattleResult)).toEqual(["victory", "defeat", "draw"]);
     expect(calculateRecentBattleSummary({ items })).toMatchObject({
       wins: 1,
-      defeats: 2,
-      draws: 0,
+      defeats: 1,
+      draws: 1,
     });
+    expect(getNormalizedBattleResult(battle({ result: "defeat", rank: 1 }, mode))).toBe("defeat");
   });
 
   it("keeps the upstream result for regular modes", () => {

@@ -1,12 +1,10 @@
--- Repair results recorded before Mega Showdown placements were recognized.
+-- Repair draws recorded before Mega Showdown trophy changes were recognized.
 WITH corrected AS (
   UPDATE public.battle_logs
-  SET result = CASE WHEN rank = 1 THEN 'victory' ELSE 'defeat' END
+  SET result = CASE WHEN trophy_change > 0 THEN 'victory' ELSE 'defeat' END
   WHERE result = 'draw'
-    AND (
-      (mode = 'megaShowdown' AND rank BETWEEN 1 AND 20)
-      OR (mode = 'megaDuoShowdown' AND rank BETWEEN 1 AND 10)
-    )
+    AND mode IN ('megaShowdown', 'megaDuoShowdown')
+    AND trophy_change <> 0
   RETURNING mode, result
 )
 SELECT mode, result, count(*)::int AS corrected_rows

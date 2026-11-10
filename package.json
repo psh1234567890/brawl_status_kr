@@ -27,11 +27,11 @@
     "minigames:assets:update": "node scripts/update-minigame-assets.mjs"
   },
   "dependencies": {
-    "@better-auth/drizzle-adapter": "1.7.6",
+    "@better-auth/drizzle-adapter": "1.7.19",
     "@vercel/blob": "2.8.2",
-    "better-auth": "1.7.6",
+    "better-auth": "1.7.19",
     "drizzle-orm": "^0.45.2",
-    "next": "16.3.8",
+    "next": "16.4.6",
     "pg": "^8.21.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -41,6 +41,9 @@
   "overrides": {
     "@next/eslint-plugin-next": {
       "fast-glob": "file:../../../tools/next-lint-glob"
+    },
+    "@vercel/oidc": {
+      "@vercel/cli-config": "0.3.8"
     },
     "esbuild": "0.28.1",
     "postcss": "8.5.28"

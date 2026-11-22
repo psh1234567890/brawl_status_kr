@@ -4,6 +4,7 @@ import { META_WINDOW_DAYS } from "../constants/meta";
 
 export const MINIMUM_META_PLAYS = 5;
 export const MINIMUM_TEAM_PLAYS = 3;
+export const META_SNAPSHOT_MAX_AGE_MS = 45 * 60_000;
 export { META_WINDOW_DAYS };
 
 type CounterRow = {
@@ -46,7 +47,7 @@ export class MetaSnapshotUnavailableError extends Error {
 
 export function assertMetaSnapshotFresh(refreshedAt: string) {
   const timestamp = Date.parse(refreshedAt);
-  if (!Number.isFinite(timestamp) || timestamp < Date.now() - 45 * 60_000) {
+  if (!Number.isFinite(timestamp) || timestamp < Date.now() - META_SNAPSHOT_MAX_AGE_MS) {
     throw new MetaSnapshotUnavailableError();
   }
 }

@@ -1,11 +1,16 @@
 {
-  "regions": [
-    "sin1"
-  ],
-  "crons": [
-    {
-      "path": "/api/internal/account-maintenance",
-      "schedule": "17 4 * * *"
-    }
-  ]
+    "regions":  [
+                    "sin1"
+                ],
+    "crons":  [
+                  {
+                      "path":  "/api/internal/account-maintenance",
+                      "schedule":  "17 4 * * *"
+                  }
+              ],
+    "git":  {
+                "deploymentEnabled":  {
+                                          "codex/netlify-deploy-20261123":  false
+                                      }
+            }
 }

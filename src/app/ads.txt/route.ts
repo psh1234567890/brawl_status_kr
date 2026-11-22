@@ -1,7 +1,7 @@
-import { buildAdsTxtLine } from "../../utils/adsense";
+import { buildAdsTxtLine, getConfiguredAdsenseClientId } from "../../utils/adsense";
 
 export function GET() {
-  const line = buildAdsTxtLine(process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID);
+  const line = buildAdsTxtLine(getConfiguredAdsenseClientId());
   if (!line) {
     return new Response("AdSense is not configured.\n", {
       status: 404,

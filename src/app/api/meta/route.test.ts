@@ -38,6 +38,7 @@ describe("meta snapshot availability", () => {
     const response = await GET(new Request("https://example.test/api/meta"));
     expect(response.status).toBe(503);
     expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.has("netlify-cdn-cache-control")).toBe(false);
     expect(response.headers.get("retry-after")).toBe("60");
     expect(await response.json()).toMatchObject({ code: "META_SNAPSHOT_UNAVAILABLE" });
   });
@@ -46,6 +47,7 @@ describe("meta snapshot availability", () => {
     mocks.query.mockResolvedValue({ rows: [] });
     const response = await GET(new Request("https://example.test/api/meta"));
     expect(response.status).toBe(200);
+    expect(response.headers.get("netlify-cdn-cache-control")).toContain("max-age=30");
     expect(await response.json()).toEqual([]);
   });
 
@@ -60,6 +62,8 @@ describe("meta snapshot availability", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("x-meta-scoring-version")).toBe("legacy-v1");
     expect(response.headers.get("x-meta-refreshed-at")).toBe(refreshedAt);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("netlify-cdn-cache-control")).toContain("max-age=120");
     expect((await response.json())[0].brawlers[0]).toMatchObject({
       plays: 10, wins: 6, winRate: 60, score: 40, recentPlays: 0, lastBattleAt,
     });
@@ -77,6 +81,21 @@ describe("meta snapshot availability", () => {
     expect((await GET(request)).status).toBe(503);
     expect(mocks.query).toHaveBeenCalledTimes(2);
     expect(mocks.invalidate).toHaveBeenCalledWith("meta-stats", { expire: 0 });
+  });
+
+  it("shortens shared cache lifetime to the time left before the freshness cutoff", async () => {
+    const now = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    mocks.cached = {
+      maps: [{ map: "Sample Map" }],
+      refreshedAt: new Date(now - 45 * 60_000 + 18_500).toISOString(),
+    };
+    const request = new Request("https://example.test/api/meta");
+    const response = await GET(request);
+    expect(response.headers.get("netlify-cdn-cache-control")).toContain("max-age=18");
+
+    vi.mocked(Date.now).mockReturnValue(now + 18_000);
+    expect((await GET(request)).headers.has("netlify-cdn-cache-control")).toBe(false);
   });
 
   it("serves the fresh DB snapshot on the first request after a quiet period", async () => {

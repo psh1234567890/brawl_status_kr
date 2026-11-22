@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+// This suite exercises server code under Vitest, outside Next's server compiler.
+vi.mock("server-only", () => ({}));
 import {
   fetchBrawlaceSkinInventory,
   parseBrawlaceSkinMarkdown,

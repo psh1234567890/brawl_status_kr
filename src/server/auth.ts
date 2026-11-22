@@ -13,6 +13,7 @@ import {
   authVerifications,
 } from "../db/schema";
 import { consumeBetterAuthRateLimit } from "./accountRateLimit";
+import { getTrustedClientIpHeader } from "./rateLimit";
 import {
   hasAccountDeletionManifestSecret,
   parseAccountBackupRetentionPolicy,
@@ -193,6 +194,7 @@ function stripOAuthTokens<T extends Record<string, unknown>>(data: T) {
 function createAuthInstance(deletionOnly = false) {
   const config = requireAuthConfiguration();
   const secureCookies = config.baseURL.protocol === "https:";
+  const trustedClientIpHeader = getTrustedClientIpHeader();
 
   async function requireOAuthEligibility() {
     if (deletionOnly) return;
@@ -295,8 +297,8 @@ function createAuthInstance(deletionOnly = false) {
         sameSite: "lax",
         path: "/",
       },
-      ipAddress: process.env.VERCEL === "1"
-        ? { ipAddressHeaders: ["x-vercel-forwarded-for"] }
+      ipAddress: trustedClientIpHeader
+        ? { ipAddressHeaders: [trustedClientIpHeader] }
         : { disableIpTracking: true },
     },
     databaseHooks: {

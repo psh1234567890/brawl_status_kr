@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build && node scripts/prepare-static-cdn.mjs --netlify-build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_PUBLIC_BRAWLOOP_STAGING = "1"
+
+[context.production.environment]
+  NEXT_PUBLIC_BRAWLOOP_STAGING = "0"
+  BRAWLOOP_NETLIFY_PRODUCTION = "1"

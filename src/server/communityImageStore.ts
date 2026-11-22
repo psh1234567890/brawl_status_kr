@@ -1,6 +1,21 @@
-import "server-only";
+import { getStore } from "@netlify/blobs";
 import { del, get, put } from "@vercel/blob";
 import { CommunityError } from "../utils/community";
+
+function getNetlifyImageStore(timeoutMs: number, deadline?: AbortSignal) {
+  return getStore({
+    name: "community-images",
+    consistency: "strong",
+    fetch: (input, options) => {
+      const timeout = AbortSignal.timeout(timeoutMs);
+      const signals = [timeout];
+      if (options?.signal) signals.push(options.signal);
+      if (deadline) signals.push(deadline);
+      const signal = AbortSignal.any(signals);
+      return fetch(input, { ...options, signal });
+    },
+  });
+}
 
 // A disposable filesystem adapter for the existing CI browser suite only.
 // Neither a deployed preview nor production can activate this adapter.
@@ -29,6 +44,15 @@ export async function putCommunityImageObject(pathname: string, bytes: Buffer) {
     await writeFile(path, bytes, { flag: "wx", mode: 0o600 });
     return;
   }
+  if (process.env.COMMUNITY_IMAGE_STORAGE === "netlify") {
+    const { modified } = await getNetlifyImageStore(20_000).set(
+      pathname,
+      new Uint8Array(bytes).buffer,
+      { onlyIfNew: true },
+    );
+    if (!modified) throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
+    return;
+  }
   if (!process.env.BLOB_STORE_ID && !process.env.BLOB_READ_WRITE_TOKEN) throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
   await put(pathname, bytes, { access: "private", contentType: "image/webp", addRandomSuffix: false, abortSignal: AbortSignal.timeout(20_000) });
 }
@@ -40,14 +64,22 @@ export async function getCommunityImageObject(pathname: string): Promise<Readabl
       return new ReadableStream({ start(controller) { controller.enqueue(bytes); controller.close(); } });
     } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; }
   }
+  if (process.env.COMMUNITY_IMAGE_STORAGE === "netlify") {
+    return getNetlifyImageStore(15_000).get(pathname, { type: "stream" });
+  }
   const file = await get(pathname, { access: "private", abortSignal: AbortSignal.timeout(15_000) });
   return file?.statusCode === 200 ? file.stream : null;
 }
-export async function deleteCommunityImageObject(pathname: string) {
+export async function deleteCommunityImageObject(pathname: string, deadline?: AbortSignal) {
   if (isTestStorage()) {
     const { rm } = await import("node:fs/promises");
     await rm(await testPath(pathname), { force: true });
     return;
   }
-  await del(pathname, { abortSignal: AbortSignal.timeout(15_000) });
+  if (process.env.COMMUNITY_IMAGE_STORAGE === "netlify") {
+    await getNetlifyImageStore(15_000, deadline).delete(pathname);
+    return;
+  }
+  const timeout = AbortSignal.timeout(15_000);
+  await del(pathname, { abortSignal: deadline ? AbortSignal.any([timeout, deadline]) : timeout });
 }

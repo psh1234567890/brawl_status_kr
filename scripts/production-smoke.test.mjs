@@ -33,6 +33,20 @@ describe("production smoke", () => {
     expect(report.ok).toBe(false);
     expect(report.results).toContainEqual(expect.objectContaining({ name: "recommendations", ok: false, category: "HTTP 503" }));
   });
+  it("tries another ranked player when the first player has no battle log", async () => {
+    const fetchFixture = fixtureFetch();
+    const report = await runProductionSmoke({ fetchImpl: async (url, options) => {
+      if (url.pathname === "/api/rankings") {
+        return Response.json({ items: [{ tag: "#PYLQGR" }, { tag: "#PYLQGC" }] });
+      }
+      if (url.pathname === "/api/player/matches" && url.searchParams.get("tag") === "#PYLQGR") {
+        return Response.json({ error: "Fixture log missing" }, { status: 404 });
+      }
+      return fetchFixture(url, options);
+    } });
+    expect(report.ok).toBe(true);
+    expect(report.results).toContainEqual(expect.objectContaining({ name: "recent-battles", status: 200 }));
+  });
   it("rejects a different deployment instead of passing checks against the previous version", async () => {
     const report = await runProductionSmoke({ expectedSha: sha, fetchImpl: fixtureFetch({ commit: "b".repeat(40) }) });
     expect(report.ok).toBe(false);

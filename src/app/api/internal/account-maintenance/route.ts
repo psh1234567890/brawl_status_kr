@@ -3,8 +3,7 @@ import {
   accountErrorResponse,
   accountJson,
 } from "../../../../server/accountHttp";
-import { cleanupExpiredAccountData } from "../../../../server/accountMaintenance";
-import { cleanupCommunityImages } from "../../../../server/communityImages";
+import { runAccountMaintenance } from "../../../../server/accountMaintenance";
 
 export const runtime = "nodejs";
 
@@ -25,9 +24,7 @@ async function handle(request: Request) {
     return accountJson({ error: "UNAUTHORIZED" }, 401);
   }
   try {
-    const accounts = await cleanupExpiredAccountData();
-    const images = await cleanupCommunityImages();
-    return accountJson({ ...accounts, images });
+    return accountJson(await runAccountMaintenance());
   } catch (error) {
     return accountErrorResponse(error);
   }

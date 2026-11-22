@@ -1,6 +1,5 @@
-import "server-only";
-
 import { db } from "../db";
+import { deleteCommunityImageObject } from "./communityImageStore";
 
 export async function cleanupExpiredAccountData() {
   const available = await db.$client.query<{
@@ -49,4 +48,36 @@ export async function cleanupExpiredAccountData() {
       safetyLedger: Number(row.safety_ledger),
     },
   };
+}
+
+export async function cleanupCommunityImages(deadline?: AbortSignal) {
+  deadline?.throwIfAborted();
+  const expired = await db.$client.query(
+    "DELETE FROM public.community_images WHERE post_id IS NULL AND comment_id IS NULL AND created_at <= now() - interval '24 hours'",
+  );
+  // Wait past the bounded upload timeout before deleting. This covers an
+  // account being deleted while its upload is still in flight.
+  deadline?.throwIfAborted();
+  const queued = await db.$client.query<{ object_path: string }>(
+    "SELECT o.object_path FROM public.community_image_objects o WHERE o.created_at < now() - interval '5 minutes' AND NOT EXISTS (SELECT 1 FROM public.community_images i WHERE i.object_path = o.object_path) ORDER BY o.created_at LIMIT 100",
+  );
+  let deleted = 0;
+  for (const row of queued.rows) {
+    if (deadline?.aborted) break;
+    try {
+      await deleteCommunityImageObject(row.object_path, deadline);
+      deadline?.throwIfAborted();
+      await db.$client.query("DELETE FROM public.community_image_objects WHERE object_path = $1", [row.object_path]);
+      deleted++;
+    } catch {
+      // Keep the inventory entry for the next maintenance run.
+    }
+  }
+  return { expired: expired.rowCount ?? 0, deleted, retry: queued.rows.length - deleted };
+}
+
+export async function runAccountMaintenance(deadline?: AbortSignal) {
+  const accounts = await cleanupExpiredAccountData();
+  const images = await cleanupCommunityImages(deadline);
+  return { ...accounts, images };
 }

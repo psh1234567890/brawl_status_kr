@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.19",
+    "@netlify/blobs": "10.7.13",
     "@vercel/blob": "2.8.2",
     "better-auth": "1.7.19",
     "drizzle-orm": "^0.45.2",

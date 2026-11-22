@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearRateLimitBucketsForTest,
   consumeRateLimit,
@@ -34,6 +34,8 @@ describe("consumeRateLimit", () => {
 });
 
 describe("getClientAddress", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it("uses the platform-owned forwarded address on Vercel", () => {
     const request = new Request("https://example.com", {
       headers: {
@@ -71,5 +73,30 @@ describe("getClientAddress", () => {
       headers: { "x-vercel-forwarded-for": "203.0.113.10", "x-forwarded-for": "192.0.2.1" },
     });
     expect(getClientAddress(request, false)).toBe("local");
+  });
+
+  it("uses a single trusted connection address on Netlify", () => {
+    vi.stubEnv("SITE_ID", "netlify-test-id");
+    vi.stubEnv("SITE_NAME", "netlify-test-site");
+    const request = new Request("https://example.com", {
+      headers: {
+        "x-nf-client-connection-ip": "2001:db8::1",
+        "x-vercel-forwarded-for": "192.0.2.1",
+        "x-forwarded-for": "192.0.2.2",
+      },
+    });
+    expect(getClientAddress(request, false)).toBe("2001:db8::1");
+  });
+
+  it("falls back to one bucket without a single valid Netlify address", () => {
+    vi.stubEnv("SITE_ID", "netlify-test-id");
+    vi.stubEnv("SITE_NAME", "netlify-test-site");
+    const request = new Request("https://example.com", {
+      headers: {
+        "x-nf-client-connection-ip": "192.0.2.3, 192.0.2.4",
+        "x-forwarded-for": "192.0.2.1",
+      },
+    });
+    expect(getClientAddress(request, false)).toBe("netlify-ip-unavailable");
   });
 });

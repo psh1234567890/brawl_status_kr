@@ -23,7 +23,7 @@ function isTestStorage() {
   if (process.env.COMMUNITY_IMAGE_TEST_STORAGE !== "1") return false;
   let database: URL;
   try { database = new URL(process.env.DATABASE_URL ?? ""); } catch { throw new Error("Invalid image test database"); }
-  if (process.env.CI !== "1" || process.env.VERCEL || process.env.VERCEL_ENV ||
+  if (process.env.CI !== "1" || process.env.VERCEL || process.env.VERCEL_ENV || process.env.NETLIFY ||
     !["localhost", "127.0.0.1", "[::1]"].includes(database.hostname) || !database.pathname.endsWith("_test")) {
     throw new Error("Image test storage requires an undeployed, isolated CI database");
   }

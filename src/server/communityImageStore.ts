@@ -17,6 +17,23 @@ function getNetlifyImageStore(timeoutMs: number, deadline?: AbortSignal) {
   });
 }
 
+/**
+ * A Netlify production cutover must not create photos that the existing
+ * Vercel rollback deployment cannot read. The optional mirror is explicitly
+ * configured and never falls back to an ambient Vercel token.
+ */
+function rollbackMirrorToken(): string | null {
+  const mode = process.env.COMMUNITY_IMAGE_ROLLBACK_MIRROR;
+  if (mode && mode !== "vercel") throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
+  const production = process.env.BRAWLOOP_NETLIFY_PRODUCTION === "1" ||
+    (process.env.NETLIFY === "true" && process.env.CONTEXT === "production");
+  if (!mode && production) throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
+  if (!mode) return null;
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token?.trim()) throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
+  return token;
+}
+
 // A disposable filesystem adapter for the existing CI browser suite only.
 // Neither a deployed preview nor production can activate this adapter.
 function isTestStorage() {
@@ -45,12 +62,28 @@ export async function putCommunityImageObject(pathname: string, bytes: Buffer) {
     return;
   }
   if (process.env.COMMUNITY_IMAGE_STORAGE === "netlify") {
+    const token = rollbackMirrorToken();
     const { modified } = await getNetlifyImageStore(20_000).set(
       pathname,
       new Uint8Array(bytes).buffer,
       { onlyIfNew: true },
     );
     if (!modified) throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
+    if (token) {
+      try {
+        await put(pathname, bytes, {
+          access: "private",
+          contentType: "image/webp",
+          addRandomSuffix: false,
+          abortSignal: AbortSignal.timeout(20_000),
+          token,
+        });
+      } catch {
+        // Best effort: the DB object inventory remains for scheduled cleanup.
+        await getNetlifyImageStore(15_000).delete(pathname).catch(() => undefined);
+        throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
+      }
+    }
     return;
   }
   if (!process.env.BLOB_STORE_ID && !process.env.BLOB_READ_WRITE_TOKEN) throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
@@ -77,7 +110,17 @@ export async function deleteCommunityImageObject(pathname: string, deadline?: Ab
     return;
   }
   if (process.env.COMMUNITY_IMAGE_STORAGE === "netlify") {
+    const token = rollbackMirrorToken();
     await getNetlifyImageStore(15_000, deadline).delete(pathname);
+    // Retries are safe after a partial deletion; the inventory is removed only
+    // after both stores have acknowledged the cleanup.
+    if (token) {
+      const timeout = AbortSignal.timeout(15_000);
+      await del(pathname, {
+        token,
+        abortSignal: deadline ? AbortSignal.any([timeout, deadline]) : timeout,
+      });
+    }
     return;
   }
   const timeout = AbortSignal.timeout(15_000);

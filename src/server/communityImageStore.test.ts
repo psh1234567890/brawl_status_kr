@@ -31,6 +31,10 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.stubEnv("COMMUNITY_IMAGE_TEST_STORAGE", "0");
   vi.stubEnv("COMMUNITY_IMAGE_STORAGE", "netlify");
+  vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "");
+  vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "0");
+  vi.stubEnv("NETLIFY", undefined);
+  vi.stubEnv("CONTEXT", undefined);
   mocks.getStore.mockReturnValue({
     set: mocks.storeSet,
     get: mocks.storeGet,
@@ -69,6 +73,71 @@ describe("Netlify community image store", () => {
     } satisfies Partial<CommunityError>);
   });
 
+  it("writes both Netlify and rollback Vercel blobs before reporting success", async () => {
+    const bytes = Buffer.from([10, 20, 30]);
+    vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "vercel");
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "ci-only-vercel-blob-token");
+    mocks.vercelPut.mockResolvedValue({ pathname });
+    await putCommunityImageObject(pathname, bytes);
+    expect(mocks.storeSet).toHaveBeenCalledTimes(1);
+    expect(mocks.vercelPut).toHaveBeenCalledWith(pathname, bytes, expect.objectContaining({
+      access: "private",
+      addRandomSuffix: false,
+      token: "ci-only-vercel-blob-token",
+      contentType: "image/webp",
+    }));
+    expect(mocks.storeDelete).not.toHaveBeenCalled();
+  });
+
+  it("refuses uploads before touching Netlify when the mirror token is absent", async () => {
+    vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "vercel");
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "");
+    await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toMatchObject({
+      status: 503,
+      code: "IMAGE_UPLOAD_UNAVAILABLE",
+    } satisfies Partial<CommunityError>);
+    expect(mocks.storeSet).not.toHaveBeenCalled();
+    expect(mocks.vercelPut).not.toHaveBeenCalled();
+  });
+
+  it("does not leave a successful Netlify upload visible if rollback mirroring fails", async () => {
+    vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "vercel");
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "ci-only-vercel-blob-token");
+    mocks.vercelPut.mockRejectedValue(new Error("Synthetic remote token error: never return it"));
+    await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toMatchObject({
+      status: 503,
+      code: "IMAGE_UPLOAD_UNAVAILABLE",
+    } satisfies Partial<CommunityError>);
+    expect(mocks.storeDelete).toHaveBeenCalledWith(pathname);
+  });
+
+  it("blocks production Netlify uploads when rollback mirroring is not configured", async () => {
+    vi.stubEnv("NETLIFY", "true");
+    vi.stubEnv("CONTEXT", "production");
+    await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toMatchObject({
+      status: 503,
+      code: "IMAGE_UPLOAD_UNAVAILABLE",
+    } satisfies Partial<CommunityError>);
+    expect(mocks.storeSet).not.toHaveBeenCalled();
+    vi.stubEnv("CONTEXT", "deploy-preview");
+    await putCommunityImageObject(pathname, Buffer.from([1]));
+    expect(mocks.storeSet).toHaveBeenCalledTimes(1);
+    vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "1");
+    await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toMatchObject({
+      status: 503,
+      code: "IMAGE_UPLOAD_UNAVAILABLE",
+    } satisfies Partial<CommunityError>);
+  });
+
+  it("rejects unknown mirror modes without writing image objects", async () => {
+    vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "unchecked-service");
+    await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toMatchObject({
+      status: 503,
+      code: "IMAGE_UPLOAD_UNAVAILABLE",
+    } satisfies Partial<CommunityError>);
+    expect(mocks.storeSet).not.toHaveBeenCalled();
+  });
+
   it("reads existing images and handles missing objects without consulting Vercel", async () => {
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -87,6 +156,25 @@ describe("Netlify community image store", () => {
     await deleteCommunityImageObject(pathname);
     expect(mocks.storeDelete).toHaveBeenCalledWith(pathname);
     expect(mocks.vercelDel).not.toHaveBeenCalled();
+  });
+
+  it("deletes Netlify and mirrored Vercel objects in rollback-safe mode", async () => {
+    vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "vercel");
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "ci-only-vercel-blob-token");
+    await deleteCommunityImageObject(pathname);
+    expect(mocks.storeDelete).toHaveBeenCalledWith(pathname);
+    expect(mocks.vercelDel).toHaveBeenCalledWith(pathname, expect.objectContaining({
+      token: "ci-only-vercel-blob-token",
+      abortSignal: expect.any(AbortSignal),
+    }));
+  });
+
+  it("propagates mirror deletion failures so the database inventory can retry", async () => {
+    vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "vercel");
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "ci-only-vercel-blob-token");
+    mocks.vercelDel.mockRejectedValue(new Error("Synthetic mirror delete failure"));
+    await expect(deleteCommunityImageObject(pathname)).rejects.toThrow("Synthetic mirror delete failure");
+    expect(mocks.storeDelete).toHaveBeenCalledWith(pathname);
   });
 
   it("does not allow the disposable filesystem adapter in Netlify deployments", async () => {

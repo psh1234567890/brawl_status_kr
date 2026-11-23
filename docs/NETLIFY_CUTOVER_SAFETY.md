@@ -114,6 +114,36 @@ SQL로 확인했다. `brawl_netlify_runtime`의 직접·간접 유효 권한 수
   실제 전환 전에 별도 운영 쓰기 역할을 테스트 DB에서 검증한다.
   이 작업은 운영 Supabase 권한 변경이므로 **별도 최종 승인 이후에만** 실행한다.
 
+### 실제 권한 변경안 — 미실행, 승인 대기
+
+`scripts/netlify-preview-strict-readonly.sql`을 별도로 작성했다.
+해당 SQL은 자동 배포·마이그레이션에 연결되지 않는다.
+
+1. 실행 전에 **현재 역할의 직접 ACL 권한 목록을 별도 비밀이 아닌 감사 기록**으로
+   확보하고, 필요한 시 원상복구할 수 있도록 검토한다.
+2. 기존 로그인 가능한 `brawl_netlify_runtime`이
+   `NOINHERIT`, `NOBYPASSRLS`, `default_transaction_read_only=on`인지 점검한다.
+   전제조건이 다르면 SQL은 오류로 중단한다.
+3. `public`, `analytics_private`, `account_safety` 내 테이블의
+   `INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER` 권한과
+   시퀀스의 `USAGE/SELECT/UPDATE`를 **해당 역할에서만** 철회한다.
+   `SELECT`는 그대로 유지한다.
+4. 실효 권한 검사에서 DML·시퀀스 권한이 하나라도 남으면 트랜잭션
+   전체를 **ROLLBACK**한다. 다른 DB 역할, 사용자 데이터, RLS 정책,
+   운영 Vercel의 DB 연결은 변경하지 않는다.
+5. 실행 직후 읽기 전용 Netlify API가 정상인지 확인한다. 비정상이라면
+   최초 권한 감사 기록과 `scripts/netlify-runtime-role.sql`의
+   **정확한 기존 허용 목록**을 비교해 필요한 GRANT만 복원한다.
+   포괄적 `GRANT ALL`로 복원하지 않는다.
+6. SQL 적용만으로 모든 `SECURITY DEFINER` 함수 등 우회 경로가
+   사라진 것은 아니다. 해당 기능 및 `PUBLIC` 함수 실행 권한을
+   별도 감사한 뒤 Preview를 최종 읽기 전용으로 판단한다.
+
+일회용 PostgreSQL CI에서 `scripts/test-netlify-preview-strict-readonly.mjs`
+가 전체 권한 축소·멱등성·읽기 유지·실제 INSERT 거절·예상 밖의
+`PUBLIC INSERT` 권한이 있으면 원자적으로 중단되는지 테스트한다.
+이 CI는 **운영 DB에 접속할 수 없도록 localhost 및 `_test` DB로만 제한**한다.
+
 ## 게이트 D: 최종 운영 전환 및 되돌리기
 
 1. 최신 CI 전체 통과, Netlify 프라이빗 기능·인증·블롭 이중 저장 검증,

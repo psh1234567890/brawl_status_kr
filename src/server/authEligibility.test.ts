@@ -31,6 +31,8 @@ beforeEach(() => {
   vi.stubEnv("BETTER_AUTH_SECRET", "unit-test-only-auth-secret-123456789");
   vi.stubEnv("GOOGLE_CLIENT_ID", "unit-only");
   vi.stubEnv("GOOGLE_CLIENT_SECRET", "unit-only");
+  vi.stubEnv("SITE_ID", undefined);
+  vi.stubEnv("NEXT_PUBLIC_BRAWLOOP_STAGING", "0");
   vi.stubEnv("ACCOUNT_TERMS_VERSION", "test-terms");
   vi.stubEnv("ACCOUNT_PRIVACY_NOTICE_VERSION", "test-privacy");
   vi.stubEnv("ACCOUNT_ELIGIBILITY_POLICY_VERSION", "test-eligibility");
@@ -44,6 +46,19 @@ async function options(deletion = false) {
 }
 
 describe("pre-login Google eligibility state", () => {
+  it("never enables live account or deletion flows in Netlify staging", async () => {
+    vi.stubEnv("SITE_ID", "synthetic-netlify-site");
+    vi.stubEnv("NEXT_PUBLIC_BRAWLOOP_STAGING", "1");
+    vi.stubEnv("ACCOUNTS_MODE", "on");
+    vi.stubEnv("ACCOUNT_DELETION_ONLY", "1");
+    const auth = await import("./auth");
+    expect(auth.getAccountsMode()).toBe("off");
+    expect(auth.areAccountsEnabled()).toBe(false);
+    expect(auth.isAccountSyncEnabled()).toBe(false);
+    expect(auth.isAccountDeletionOnlyEnabled()).toBe(false);
+    vi.stubEnv("NEXT_PUBLIC_BRAWLOOP_STAGING", "0");
+    expect(auth.getAccountsMode()).toBe("on");
+  });
   it("requires the sanitized server header and attaches server-owned OAuth state", async () => {
     const auth = await options();
     await expect(auth.hooks.before({ path: "/sign-in/social" })).rejects.toThrow();

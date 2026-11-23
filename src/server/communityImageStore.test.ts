@@ -35,6 +35,7 @@ beforeEach(() => {
   vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "0");
   vi.stubEnv("NETLIFY", undefined);
   vi.stubEnv("CONTEXT", undefined);
+  vi.stubEnv("SITE_ID", undefined);
   mocks.getStore.mockReturnValue({
     set: mocks.storeSet,
     get: mocks.storeGet,
@@ -111,15 +112,17 @@ describe("Netlify community image store", () => {
     expect(mocks.storeDelete).toHaveBeenCalledWith(pathname);
   });
 
-  it("blocks production Netlify uploads when rollback mirroring is not configured", async () => {
-    vi.stubEnv("NETLIFY", "true");
-    vi.stubEnv("CONTEXT", "production");
+  it("blocks uploads on every deployed Netlify site when rollback mirroring is missing", async () => {
+    vi.stubEnv("SITE_ID", "synthetic-netlify-site");
+    // Build-only CONTEXT is not necessarily defined in Netlify Functions.
+    vi.stubEnv("CONTEXT", undefined);
+    vi.stubEnv("NETLIFY", undefined);
     await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toMatchObject({
       status: 503,
       code: "IMAGE_UPLOAD_UNAVAILABLE",
     } satisfies Partial<CommunityError>);
     expect(mocks.storeSet).not.toHaveBeenCalled();
-    vi.stubEnv("CONTEXT", "deploy-preview");
+    vi.stubEnv("SITE_ID", undefined);
     await putCommunityImageObject(pathname, Buffer.from([1]));
     expect(mocks.storeSet).toHaveBeenCalledTimes(1);
     vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "1");
@@ -182,6 +185,17 @@ describe("Netlify community image store", () => {
     vi.stubEnv("NETLIFY", "true");
     vi.stubEnv("VERCEL", undefined);
     vi.stubEnv("VERCEL_ENV", undefined);
+    vi.stubEnv("COMMUNITY_IMAGE_TEST_STORAGE", "1");
+    vi.stubEnv("DATABASE_URL", "postgresql://test:test@127.0.0.1:5432/disposable_test");
+    await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toThrow(
+      "Image test storage requires an undeployed, isolated CI database",
+    );
+    expect(mocks.getStore).not.toHaveBeenCalled();
+  });
+
+  it("prevents the disposable filesystem adapter on Netlify Functions even without build-only flags", async () => {
+    vi.stubEnv("CI", "1");
+    vi.stubEnv("SITE_ID", "synthetic-netlify-site");
     vi.stubEnv("COMMUNITY_IMAGE_TEST_STORAGE", "1");
     vi.stubEnv("DATABASE_URL", "postgresql://test:test@127.0.0.1:5432/disposable_test");
     await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toThrow(

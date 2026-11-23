@@ -25,9 +25,12 @@ function getNetlifyImageStore(timeoutMs: number, deadline?: AbortSignal) {
 function rollbackMirrorToken(): string | null {
   const mode = process.env.COMMUNITY_IMAGE_ROLLBACK_MIRROR;
   if (mode && mode !== "vercel") throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
-  const production = process.env.BRAWLOOP_NETLIFY_PRODUCTION === "1" ||
-    (process.env.NETLIFY === "true" && process.env.CONTEXT === "production");
-  if (!mode && production) throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
+  // Netlify documents SITE_ID as a read-only variable available to Functions.
+  // Build-time NETLIFY / CONTEXT from netlify.toml are NOT reliable at runtime.
+  // Fail closed for every deployed Netlify site, including Deploy Previews.
+  if (!mode && (process.env.SITE_ID || process.env.BRAWLOOP_NETLIFY_PRODUCTION === "1")) {
+    throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
+  }
   if (!mode) return null;
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token?.trim()) throw new CommunityError(503, "IMAGE_UPLOAD_UNAVAILABLE");
@@ -40,7 +43,8 @@ function isTestStorage() {
   if (process.env.COMMUNITY_IMAGE_TEST_STORAGE !== "1") return false;
   let database: URL;
   try { database = new URL(process.env.DATABASE_URL ?? ""); } catch { throw new Error("Invalid image test database"); }
-  if (process.env.CI !== "1" || process.env.VERCEL || process.env.VERCEL_ENV || process.env.NETLIFY ||
+  if (process.env.CI !== "1" || process.env.VERCEL || process.env.VERCEL_ENV ||
+    process.env.NETLIFY || process.env.SITE_ID ||
     !["localhost", "127.0.0.1", "[::1]"].includes(database.hostname) || !database.pathname.endsWith("_test")) {
     throw new Error("Image test storage requires an undeployed, isolated CI database");
   }

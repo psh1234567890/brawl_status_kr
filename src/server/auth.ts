@@ -42,6 +42,12 @@ export function generateDefaultNickname() {
 }
 
 export function getAccountsMode(): AccountsMode {
+  // SITE_ID is available to Netlify Functions; staging is frozen at build
+  // time in the Next.js public flag. An accidental dashboard override of
+  // ACCOUNTS_MODE must not enable sign-in against the live shared database.
+  if (process.env.SITE_ID && process.env.NEXT_PUBLIC_BRAWLOOP_STAGING === "1") {
+    return "off";
+  }
   const mode = process.env.ACCOUNTS_MODE;
   if (mode === "pilot" || mode === "on") return mode;
   return "off";
@@ -100,7 +106,9 @@ export function isAccountSyncEnabled() {
 }
 
 export function isAccountDeletionOnlyEnabled() {
-  return getAccountsMode() === "off" && process.env.ACCOUNT_DELETION_ONLY === "1";
+  return getAccountsMode() === "off" &&
+    !(process.env.SITE_ID && process.env.NEXT_PUBLIC_BRAWLOOP_STAGING === "1") &&
+    process.env.ACCOUNT_DELETION_ONLY === "1";
 }
 
 export function isPilotGoogleSubjectAllowed(subject: string) {

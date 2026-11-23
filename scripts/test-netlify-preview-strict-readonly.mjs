@@ -114,13 +114,19 @@ try {
   // Simulate a dangerous blanket PUBLIC grant; the postflight must reject and
   // atomically roll back rather than proclaim a falsely read-only role.
   await client.query(`GRANT INSERT ON public.${fixtureName} TO PUBLIC`);
-  await assert.rejects(
-    client.query(hardening),
-    error => /Effective table write privilege remains/.test(error.message),
-    "Unexpected PUBLIC grants must fail closed",
-  );
-  verified++;
-  await client.query(`REVOKE INSERT ON public.${fixtureName} FROM PUBLIC`);
+  try {
+    await assert.rejects(
+      client.query(hardening),
+      error => /Effective table write privilege remains/.test(error.message),
+      "Unexpected PUBLIC grants must fail closed",
+    );
+    verified++;
+  } finally {
+    // A failed multi-statement PostgreSQL batch leaves the session inside an
+    // aborted transaction. Clear it explicitly before subsequent cleanup.
+    await client.query("ROLLBACK");
+    await client.query(`REVOKE INSERT ON public.${fixtureName} FROM PUBLIC`);
+  }
 
   console.log(JSON.stringify({ passed: true, assertions: verified, disposableDb: true, livePrivilegesChanged: false }));
 } finally {

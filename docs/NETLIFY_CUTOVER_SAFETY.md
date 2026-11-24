@@ -217,3 +217,15 @@ The standalone code is an opt-in implementation, not authorization to deploy
 or an assertion that the migration, recovery or billing checks are complete.
 Check the actual Netlify plan and remaining credits before cutover; new
 credit-based free plans have a hard 300-credit monthly allowance.
+
+## Controlled build switch (review only)
+
+The Netlify build wrapper derives public staging flags from the immutable build
+context and branch plus the explicit BRAWLOOP_NETLIFY_RELEASE_APPROVED=1
+operator approval. No approval is currently set. Without it, all builds stay
+staging, even main. Preview/branch contexts reject an inherited approval.
+Do not enable this variable until CI, production runtime configuration,
+OAuth, backups, object reconciliation and cutover have been approved.
+The wrapper sets build flags only; Functions-scoped runtime values still
+require independent configuration and verification. Keep ads disabled until
+Vercel Hobby dependencies are removed and account approval is obtained.

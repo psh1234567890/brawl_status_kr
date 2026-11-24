@@ -1,5 +1,53 @@
 # Netlify 전환 안전 게이트 (2026-11-24)
 
+## 2026-11-25 - current status (supersedes older entries)
+
+- Commit 578d1af: all three CI jobs succeeded (run 45317685845);
+  protected Netlify Preview deploy 6b05003f30d5d6a34da2d851 completed.
+- Approved Supabase migration netlify_production_writer_nologin created the
+  restricted writer role. Independent catalog verification: 74 scoped RLS
+  policies, zero privilege mismatches, two permitted sequences, NOLOGIN,
+  no elevated role attributes. The preview reader remains strictly read-only.
+- Production credential automation is blocked by a tool security check.
+  Do not repeat or bypass it. The last verified state: writer NOLOGIN,
+  Production DATABASE_URL and DATABASE_SSL_CA empty, Preview values preserved.
+  The operator must handle new credentials through official secure
+  service interfaces; never paste them into chat, logs, Git or PRs.
+- Supabase project region ap-southeast-1 (Singapore); TLS handshake and
+  hostname verification succeeded on both regional session-pooler candidates.
+  This is not a successful authenticated database connection. Use the exact
+  pooler host shown in the project's Connect panel when configuring the writer.
+- Existing production account backups and deletion manifests were present;
+  fresh backup and actual isolated restore remain required at cutover.
+- Keep Netlify Production release approval unset, accounts/maintenance off,
+  and do not merge, publish or change DNS until separately approved.
+
+### Remaining credential handoff (operator only)
+
+Use the official Supabase dashboard and Netlify project Environment Variables
+page. Configure only the production context, retaining the existing
+DATABASE_URL secret status and Builds/Functions/Runtime scopes.
+Use a new, unique password for the already-created brawl_netlify_writer
+role; never reuse the postgres administrator or preview reader credential.
+Use the exact Supabase session-pooler connection information for this project
+and the verified CA. Keep the password out of chat and repository files.
+Once the operator confirms registration, verify connection identity, TLS and
+effective permissions with read-only queries before enabling accounts.
+Existing Better Auth and Google OAuth production configuration must be
+preserved to avoid invalidating the existing sessions. No real OAuth sign-in
+against the shared production DB from Preview.
+
+### Scheduled maintenance runtime safeguard
+
+The separate Netlify scheduled function requires SITE_ID, an explicit
+BRAWLOOP_NETLIFY_RELEASE_APPROVED=1, BRAWLOOP_NETLIFY_PRODUCTION=1,
+NEXT_PUBLIC_BRAWLOOP_STAGING=0 and NETLIFY_ACCOUNT_MAINTENANCE=1
+in its actual Functions-scoped runtime environment. All five conditions
+must be satisfied; merely enabling maintenance or setting build-only
+CONTEXT is insufficient. Leave these production flags disabled until the
+release is approved. Never grant the preview reader additional write access.
+
+
 ## 2026-11-24 update (supersedes older status entries below)
 
 - The protected PR #140 preview passed the synthetic WebP dual-write, read/hash and delete rehearsal in both blob stores. The temporary probe was removed in commit `914417e`. Production mirror configuration is not activated.

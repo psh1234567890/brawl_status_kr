@@ -213,6 +213,7 @@ jobs:
           MINIGAMES_E2E_FIXTURES: "1"
           COMMUNITY_IMAGE_TEST_STORAGE: "1"
           DATABASE_URL: postgresql://brawl_netlify_writer:ci-only-writer-app-password@127.0.0.1:5432/brawloop_writer_app_test
+          NETLIFY_WRITER_TEST_ADMIN_URL: postgresql://postgres:postgres@127.0.0.1:5432/brawloop_writer_app_test
           BETTER_AUTH_URL: http://localhost:3020
           BETTER_AUTH_SECRET: ci-only-better-auth-secret-not-for-any-deployment
           GOOGLE_CLIENT_ID: ci-only-client-id

@@ -33,6 +33,10 @@ beforeEach(() => {
   vi.stubEnv("COMMUNITY_IMAGE_STORAGE", "netlify");
   vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "");
   vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "0");
+  vi.stubEnv("NEXT_PUBLIC_BRAWLOOP_STAGING", "1");
+  vi.stubEnv("COMMUNITY_IMAGE_NETLIFY_ONLY_APPROVED", "0");
+  vi.stubEnv("BLOB_STORE_ID", undefined);
+  vi.stubEnv("BLOB_READ_WRITE_TOKEN", undefined);
   vi.stubEnv("NETLIFY", undefined);
   vi.stubEnv("CONTEXT", undefined);
   vi.stubEnv("SITE_ID", undefined);
@@ -130,6 +134,58 @@ describe("Netlify community image store", () => {
       status: 503,
       code: "IMAGE_UPLOAD_UNAVAILABLE",
     } satisfies Partial<CommunityError>);
+  });
+
+  function configureApprovedNetlifyOnly() {
+    vi.stubEnv("SITE_ID", "synthetic-netlify-site");
+    vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "1");
+    vi.stubEnv("NEXT_PUBLIC_BRAWLOOP_STAGING", "0");
+    vi.stubEnv("COMMUNITY_IMAGE_NETLIFY_ONLY_APPROVED", "1");
+    vi.stubEnv("COMMUNITY_IMAGE_ROLLBACK_MIRROR", "netlify-only");
+  }
+
+  it("uses only Netlify for production reads, writes and deletes after explicit cutover", async () => {
+    configureApprovedNetlifyOnly();
+    mocks.storeGet.mockResolvedValue(null);
+    await putCommunityImageObject(pathname, Buffer.from([1]));
+    expect(await getCommunityImageObject(pathname)).toBeNull();
+    await deleteCommunityImageObject(pathname);
+    expect(mocks.storeSet).toHaveBeenCalledTimes(1);
+    expect(mocks.storeGet).toHaveBeenCalledTimes(1);
+    expect(mocks.storeDelete).toHaveBeenCalledTimes(1);
+    expect(mocks.vercelPut).not.toHaveBeenCalled();
+    expect(mocks.vercelGet).not.toHaveBeenCalled();
+    expect(mocks.vercelDel).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["SITE_ID", ""],
+    ["BRAWLOOP_NETLIFY_PRODUCTION", "0"],
+    ["NEXT_PUBLIC_BRAWLOOP_STAGING", "1"],
+    ["COMMUNITY_IMAGE_NETLIFY_ONLY_APPROVED", "0"],
+    ["BLOB_READ_WRITE_TOKEN", "ci-only-stale-token"],
+    ["BLOB_STORE_ID", "ci-only-stale-store"],
+  ])("refuses standalone mutations with unsafe %s", async (key, value) => {
+    configureApprovedNetlifyOnly();
+    vi.stubEnv(key, value);
+    await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toMatchObject({ status: 503 });
+    await expect(deleteCommunityImageObject(pathname)).rejects.toMatchObject({ status: 503 });
+    expect(mocks.storeSet).not.toHaveBeenCalled();
+    expect(mocks.storeDelete).not.toHaveBeenCalled();
+    expect(mocks.vercelPut).not.toHaveBeenCalled();
+    expect(mocks.vercelDel).not.toHaveBeenCalled();
+  });
+
+  it("does not fall back to Vercel when deployed Netlify storage is misconfigured", async () => {
+    configureApprovedNetlifyOnly();
+    vi.stubEnv("COMMUNITY_IMAGE_STORAGE", "");
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "ci-only-stale-token");
+    await expect(putCommunityImageObject(pathname, Buffer.from([1]))).rejects.toMatchObject({ status: 503 });
+    await expect(getCommunityImageObject(pathname)).rejects.toMatchObject({ status: 503 });
+    await expect(deleteCommunityImageObject(pathname)).rejects.toMatchObject({ status: 503 });
+    expect(mocks.vercelPut).not.toHaveBeenCalled();
+    expect(mocks.vercelGet).not.toHaveBeenCalled();
+    expect(mocks.vercelDel).not.toHaveBeenCalled();
   });
 
   it("rejects unknown mirror modes without writing image objects", async () => {

@@ -177,3 +177,43 @@ SQL로 확인했다. `brawl_netlify_runtime`의 직접·간접 유효 권한 수
 - 현재 Supabase 사용자·회원 데이터를 수정하거나 권한을 확대하지 않는다.
 - Vercel/Netlify 비밀값을 추출·로그·채팅으로 전달하지 않는다.
 - DNS·운영 도메인·유료 플랜을 사용자 승인 없이 변경하지 않는다.
+
+## Commercial-use boundary and standalone storage gate
+
+Vercel Hobby is restricted to personal/non-commercial use across its services.
+The Vercel mirror is therefore temporary migration infrastructure, not a
+permanent dependency of a monetized site. Do not activate monetization while
+the commercial application relies on Vercel Hobby.
+
+Official references:
+- https://vercel.com/legal/terms
+- https://vercel.com/docs/plans/hobby
+- https://www.netlify.com/blog/introducing-netlify-free-plan/
+- https://docs.netlify.com/manage/accounts-and-billing/billing-for-credit-based-plans/credit-based-pricing-plans/
+
+Before authorizing standalone storage:
+1. Pause image mutations, compare the database inventory with both stores,
+   verify every retained object by size and SHA-256, and reconcile deletions.
+2. Verify a private, independently restorable backup and rehearse Netlify
+   rollback/recovery. After standalone writes begin, the old Vercel
+   deployment is not a valid rollback target without reconciliation.
+3. Obtain explicit approval for the production cutover and secret removal.
+4. In the approved production deployment only, set:
+   - COMMUNITY_IMAGE_STORAGE=netlify
+   - COMMUNITY_IMAGE_ROLLBACK_MIRROR=netlify-only
+   - COMMUNITY_IMAGE_NETLIFY_ONLY_APPROVED=1
+   - BRAWLOOP_NETLIFY_PRODUCTION=1
+   - NEXT_PUBLIC_BRAWLOOP_STAGING=0 (build-time)
+   - Remove BLOB_READ_WRITE_TOKEN and BLOB_STORE_ID from Netlify production.
+   Keep the actual Netlify SITE_ID runtime variable intact.
+5. Rehearse synthetic writes, reads, hash verification and deletion without
+   any Vercel credential. Verify account maintenance and the recovery runbook.
+6. Resolve retention/deletion obligations for legacy Vercel copies and verify
+   removal of all live Vercel Hobby dependencies before monetization.
+   Do not delete production data or cancel infrastructure automatically.
+
+The current protected preview stays in the existing mirror/read-only mode.
+The standalone code is an opt-in implementation, not authorization to deploy
+or an assertion that the migration, recovery or billing checks are complete.
+Check the actual Netlify plan and remaining credits before cutover; new
+credit-based free plans have a hard 300-credit monthly allowance.

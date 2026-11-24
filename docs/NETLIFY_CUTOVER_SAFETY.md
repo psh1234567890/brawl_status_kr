@@ -1,5 +1,14 @@
 # Netlify 전환 안전 게이트 (2026-11-24)
 
+## 2026-11-24 update (supersedes older status entries below)
+
+- The protected PR #140 preview passed the synthetic WebP dual-write, read/hash and delete rehearsal in both blob stores. The temporary probe was removed in commit `914417e`. Production mirror configuration is not activated.
+- The existing preview role was hardened; the subsequent catalog audit found 27 readable relations, zero write grants and zero accessible sequences. Do not rerun the earlier operator migration automatically.
+- `scripts/netlify-production-writer-role.sql` proposes a separate, disabled NOLOGIN writer role with explicit per-relation grants and independently named RLS policies. It never changes the existing preview role.
+- `scripts/test-netlify-production-writer-role.mjs` exercises both roles with real schema migrations, synthetic data, transaction rollback and reader privilege invariance inside an isolated PostgreSQL 17 Docker container. The new CI job must pass before approval.
+- Still required: isolated application integration using the new writer, live OAuth rehearsal with separate credentials, backup/recovery review and explicit approval for production provisioning or DNS changes.
+
+
 > 이 문서는 **준비·검증 절차**다. 작성이나 Draft PR 병합이 운영 DNS
 > 변경·계정 활성화·권한 확대를 승인하는 것은 아니다.
 

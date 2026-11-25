@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({ fetch: vi.fn() }));
 vi.mock("server-only", () => ({}));
 vi.mock("./upstream", () => ({ fetchBrawlApiSnapshot: mocks.fetch }));
 
-import { getEventRotation, InvalidEventRotationError, normalizeEventRotation } from "./eventRotation";
+import { getEventRotation, getEventRotationCacheTtl, InvalidEventRotationError, normalizeEventRotation } from "./eventRotation";
 
 const fetchedAt = "2026-10-17T08:00:00.000Z";
 const now = Date.parse(fetchedAt);
@@ -64,6 +64,20 @@ describe("live event rotation", () => {
 
   it("allows a genuine empty provider list", () => {
     expect(normalizeEventRotation([], fetchedAt, now)).toEqual({ active: [], upcoming: [], fetchedAt });
+  });
+
+  it("expires the shared response before the first start or end of a map", () => {
+    const active = event({ endTime: "20261017T080012.900Z" });
+    const upcoming = event({ slotId: 2, startTime: "20261017T080007.900Z" });
+    expect(getEventRotationCacheTtl(normalizeEventRotation([active, upcoming], fetchedAt, now))).toBe(7);
+    expect(getEventRotationCacheTtl(normalizeEventRotation([active], fetchedAt, now))).toBe(12);
+  });
+
+  it("limits shared cache residency to 30 seconds and does not extend upstream staleness", () => {
+    expect(getEventRotationCacheTtl(normalizeEventRotation([], fetchedAt, now))).toBe(30);
+    const rotation = normalizeEventRotation([event()], fetchedAt, now);
+    expect(getEventRotationCacheTtl(rotation, now + 298_500)).toBe(1);
+    expect(getEventRotationCacheTtl(rotation, now + 300_000)).toBe(0);
   });
 
   it("reclassifies a cached snapshot and drops maps once they expire", async () => {

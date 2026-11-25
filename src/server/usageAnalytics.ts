@@ -3,6 +3,7 @@ import { db } from "../db";
 import { isUsageOptedOut } from "../utils/analyticsOptOut";
 import { clientUsageKinds, engagementFields, emptyEngagement } from "../utils/usageEvents";
 import { emptyProductCounts, productFields, type ProductKind, type ProductSummary } from "../utils/productFunnel";
+import { isProductionDeployment } from "./deployment";
 export { isUsageOptedOut } from "../utils/analyticsOptOut";
 
 export const usageKinds = [
@@ -38,7 +39,7 @@ export function isUsageKind(value: unknown): value is UsageKind {
 // arbitrary client strings to the INSERT. Analytics must not break game search.
 export async function recordUsageEvent(kind: UsageKind, request?: Request): Promise<void> {
   // Preview deployments and browser E2E must not inflate production usage counts.
-  if (process.env.VERCEL_ENV !== "production") return;
+  if (!isProductionDeployment()) return;
   if (request && isUsageOptedOut(request)) return;
   try {
     await db.$client.query(
@@ -60,7 +61,7 @@ export async function recordUsageEvent(kind: UsageKind, request?: Request): Prom
  * name validated by the caller; lifetime totals remain maintained by the trigger.
  */
 export async function recordUsageEvents(kinds: UsageKind[], request?: Request): Promise<void> {
-  if (process.env.VERCEL_ENV !== "production" || (request && isUsageOptedOut(request))) return;
+  if (!isProductionDeployment() || (request && isUsageOptedOut(request))) return;
   try {
     await db.$client.query(
       `INSERT INTO analytics_private.usage_hourly (hour_bucket, event_kind, event_count)

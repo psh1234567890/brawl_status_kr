@@ -4,7 +4,7 @@ import type { PoolClient } from "pg";
 import sharp from "sharp";
 import { db } from "../db";
 import { CommunityError, type CommunityImage, type CommunityKind } from "../utils/community";
-import { deleteCommunityImageObject, getCommunityImageObject, putCommunityImageObject } from "./communityImageStore";
+import { getCommunityImageObject, putCommunityImageObject } from "./communityImageStore";
 
 export const COMMUNITY_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
 export async function readCommunityImageBody(request: Request) {
@@ -101,19 +101,4 @@ export async function readCommunityImage(id: string, viewer?: string, admin = fa
 export async function removeCommunityImage(id: string, userId: string) {
   const result = await db.$client.query("DELETE FROM public.community_images WHERE id = $1 AND owner_id = $2 AND post_id IS NULL AND comment_id IS NULL RETURNING id", [id, userId]);
   if (!result.rowCount) throw new CommunityError(404, "NOT_FOUND");
-}
-export async function cleanupCommunityImages() {
-  const expired = await db.$client.query("DELETE FROM public.community_images WHERE post_id IS NULL AND comment_id IS NULL AND created_at <= now() - interval '24 hours'");
-  // Wait past the bounded upload timeout before deleting. This covers an
-  // account being deleted while its upload is still in flight.
-  const queued = await db.$client.query<{ object_path: string }>("SELECT o.object_path FROM public.community_image_objects o WHERE o.created_at < now() - interval '5 minutes' AND NOT EXISTS (SELECT 1 FROM public.community_images i WHERE i.object_path = o.object_path) ORDER BY o.created_at LIMIT 100");
-  let deleted = 0;
-  for (const row of queued.rows) {
-    try {
-      await deleteCommunityImageObject(row.object_path);
-      await db.$client.query("DELETE FROM public.community_image_objects WHERE object_path = $1", [row.object_path]);
-      deleted++;
-    } catch { /* Keep the inventory entry for the next maintenance retry. */ }
-  }
-  return { expired: expired.rowCount ?? 0, deleted, retry: queued.rows.length - deleted };
 }

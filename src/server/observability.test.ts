@@ -42,6 +42,17 @@ describe("withApiMonitoring", () => {
     expect(warn).toHaveBeenCalledOnce();
   });
 
+  it("does not reflect a caller's request ID in a Netlify shared response", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const handler = withApiMonitoring("api.events", () => Response.json({ ok: true }, {
+      headers: { "Netlify-CDN-Cache-Control": "public, max-age=30" },
+    }));
+    const request = new Request("https://example.test/api/events", {
+      headers: { "x-request-id": "caller-only-id" },
+    });
+    expect((await handler(request)).headers.has("x-request-id")).toBe(false);
+  });
+
   it("logs 5xx responses as errors", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     const handler = withApiMonitoring(

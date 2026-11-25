@@ -3,6 +3,7 @@ import "server-only";
 import { db } from "../db";
 import { isUsageOptedOut } from "./usageAnalytics";
 import { isValidPlayerTag, normalizePlayerTag } from "../utils/playerTag";
+import { isProductionDeployment } from "./deployment";
 
 // A bounded aggregate row per hour and public player tag. Do not add IPs,
 // authenticated account IDs, cookies, or per-request rows to this table.
@@ -16,7 +17,7 @@ export function searchVisitorCountry(request?: Request): string {
 }
 
 export async function recordSearchTag(tag: string, request?: Request): Promise<void> {
-  if (process.env.VERCEL_ENV !== "production" ||
+  if (!isProductionDeployment() ||
       (request && isUsageOptedOut(request)) ||
       !isValidPlayerTag(tag)) return;
 

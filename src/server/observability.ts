@@ -40,7 +40,10 @@ export function withApiMonitoring(
       const response = await handler(request);
       const durationMs = elapsedMs(startedAt);
       response.headers.set("Server-Timing", `app;dur=${durationMs}`);
-      response.headers.set("X-Request-Id", requestId);
+      // A shared response must not replay a request header to other visitors.
+      if (!response.headers.has("Netlify-CDN-Cache-Control")) {
+        response.headers.set("X-Request-Id", requestId);
+      }
       emitApiLog({
         event: "api_request",
         route,

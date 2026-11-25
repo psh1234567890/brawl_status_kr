@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { db } from "../db";
 import { isUsageOptedOut } from "../utils/analyticsOptOut";
+import { isProductionDeployment } from "./deployment";
 
 const routeKeys = [
   "api.player",
@@ -65,7 +66,7 @@ export async function recordApiPerformance(route: RouteKey, status: number, dura
 }
 
 export function scheduleApiPerformance(request: Request, route: string, status: number, durationMs: number) {
-  if (process.env.VERCEL_ENV !== "production" || !isMeasuredRoute(route)) return;
+  if (!isProductionDeployment() || !isMeasuredRoute(route)) return;
   if (isUsageOptedOut(request) || !Number.isFinite(durationMs) || durationMs < 0) return;
   // Next.js guarantees after callbacks finish after the response is sent.
   // Do not expose database latency to player search.

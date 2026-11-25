@@ -1,6 +1,6 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
-import { assertMetaSnapshotFresh, MetaSnapshotUnavailableError, queryMapMetaStats } from "../../../server/metaStats";
+import { assertMetaSnapshotFresh, META_SNAPSHOT_MAX_AGE_MS, MetaSnapshotUnavailableError, queryMapMetaStats } from "../../../server/metaStats";
 import { observeServerOperation, withApiMonitoring } from "../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 import { rejectSharedPublicRateLimit } from "../../../server/sharedPublicRateLimit";
@@ -110,12 +110,19 @@ async function getMeta(request: Request) {
         if (snapshot.refreshedAt !== null) assertMetaSnapshotFresh(snapshot.refreshedAt);
       }
     }
-    return NextResponse.json(snapshot.maps, {
-      headers: {
-        "X-Meta-Scoring-Version": "legacy-v1",
-        ...(snapshot.refreshedAt ? { "X-Meta-Refreshed-At": new Date(snapshot.refreshedAt).toISOString() } : {}),
-      },
+    const headers = new Headers({
+      "Cache-Control": "no-store",
+      "X-Meta-Scoring-Version": "legacy-v1",
     });
+    let ttl = 30;
+    if (snapshot.refreshedAt !== null) {
+      const refreshedAt = new Date(snapshot.refreshedAt);
+      headers.set("X-Meta-Refreshed-At", refreshedAt.toISOString());
+      const secondsRemaining = Math.floor((refreshedAt.getTime() + META_SNAPSHOT_MAX_AGE_MS - Date.now()) / 1000);
+      ttl = Math.min(120, secondsRemaining);
+    }
+    if (ttl > 0) headers.set("Netlify-CDN-Cache-Control", `public, durable, max-age=${ttl}, must-revalidate`);
+    return NextResponse.json(snapshot.maps, { headers });
   } catch (error) {
     if (error instanceof MetaSnapshotUnavailableError) {
       console.warn(JSON.stringify({ event: "meta_snapshot_unavailable" }));
@@ -127,7 +134,7 @@ async function getMeta(request: Request) {
     console.error("Failed to calculate meta stats:", error);
     return NextResponse.json(
       { error: "메타 통계를 계산하지 못했습니다." },
-      { status: 500 },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }

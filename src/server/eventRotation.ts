@@ -89,3 +89,10 @@ export async function getEventRotation(): Promise<EventRotationResponse> {
   );
   return normalizeEventRotation(snapshot.data, snapshot.freshness.fetchedAt);
 }
+
+export function getEventRotationCacheTtl(rotation: EventRotationResponse, now = Date.now()) {
+  let expiresAt = Math.min(now + 30_000, Date.parse(rotation.fetchedAt) + ROTATION_MAX_AGE_MS);
+  for (const event of rotation.active) expiresAt = Math.min(expiresAt, Date.parse(event.endTime));
+  for (const event of rotation.upcoming) expiresAt = Math.min(expiresAt, Date.parse(event.startTime));
+  return Math.max(0, Math.floor((expiresAt - now) / 1000));
+}

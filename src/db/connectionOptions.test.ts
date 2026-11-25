@@ -33,6 +33,25 @@ describe("database TLS connection options", () => {
     }).ssl).toEqual({ ca, rejectUnauthorized: true });
   });
 
+  it.each([
+    ["escaped trailing LF", (ca + "\n").replace(/\n/g, "\\n")],
+    ["escaped CRLF", (ca + "\n").replace(/\n/g, "\\r\\n")],
+    ["native CRLF", (ca + "\n").replace(/\n/g, "\r\n")],
+    ["mixed whitespace and line endings", "  " + ca.replace(/\n/g, "\\n") + "\\n\r\n  "],
+  ])("normalizes %s while maintaining strict TLS verification", (_name, value) => {
+    expect(getDatabaseConnectionOptions({
+      DATABASE_URL: databaseUrl + "?sslmode=no-verify",
+      DATABASE_SSL_CA: value,
+    }).ssl).toEqual({ ca, rejectUnauthorized: true });
+  });
+
+  it("still rejects invalid certificate boundaries after normalization", () => {
+    expect(() => getDatabaseConnectionOptions({
+      DATABASE_URL: databaseUrl,
+      DATABASE_SSL_CA: ca + "\\ninvalid",
+    })).toThrow("PEM CA certificate");
+  });
+
   it("fails closed without including credential-bearing invalid input", () => {
     expect(() => getDatabaseConnectionOptions({ DATABASE_SSL_CA: "invalid" })).toThrow("PEM CA certificate");
     expect(() => getDatabaseConnectionOptions({

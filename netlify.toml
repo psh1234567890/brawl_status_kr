@@ -1,0 +1,9 @@
+[build]
+  command = "node --test scripts/netlify-build-check.mjs scripts/netlify-writer-preflight-check.mjs && node scripts/netlify-build.mjs"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # The build wrapper forces staging unless main + production + explicit approval.
+
+# Read-only database connectivity is validated using a Git pull-request Deploy Preview.

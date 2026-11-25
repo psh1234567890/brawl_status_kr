@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Locale } from "../i18n/config";
+import { getConfiguredAdsenseClientId } from "../utils/adsense";
 import AdSenseUnit from "./AdSenseUnit";
 import StatSymbol from "./StatSymbol";
 import type { StatSymbolKind } from "./StatSymbol";
@@ -53,7 +54,7 @@ export function EmptyState({ text }: { text: string }) {
 }
 
 export function AdSlot() {
-  const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+  const clientId = getConfiguredAdsenseClientId();
   const slotId = process.env.NEXT_PUBLIC_ADSENSE_SLOT_ID;
   if (clientId && slotId) {
     return (

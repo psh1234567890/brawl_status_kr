@@ -11,7 +11,8 @@ vi.mock("./communityImageStore", () => ({
   deleteCommunityImageObject: vi.fn().mockResolvedValue(undefined),
 }));
 import { createCommunityComment, createCommunityPost, listCommunityPosts, moderateCommunityContent, readCommunityPost, readCommunityQueue, withdrawCommunityContent } from "./community";
-import { cleanupCommunityImages, readCommunityImage, removeCommunityImage, saveCommunityImage } from "./communityImages";
+import { cleanupCommunityImages } from "./accountMaintenance";
+import { readCommunityImage, removeCommunityImage, saveCommunityImage } from "./communityImages";
 import { deleteCommunityImageObject } from "./communityImageStore";
 
 const configuredUrl = process.env.COMMUNITY_TEST_DATABASE_URL;

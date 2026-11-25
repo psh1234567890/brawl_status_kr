@@ -7,6 +7,7 @@ import {
   localizedLocales,
   numberLocales,
 } from "../i18n/config";
+import { getConfiguredAdsenseClientId } from "../utils/adsense";
 import "./globals.css";
 
 const siteUrl = "https://www.brawl-o1.site";
@@ -51,7 +52,10 @@ export const metadata: Metadata = {
     title: `${siteName} | Brawloop`,
     description: siteDescription,
   },
-  robots: {
+  robots: process.env.NEXT_PUBLIC_BRAWLOOP_STAGING === "1" ? {
+    index: false,
+    follow: false,
+  } : {
     index: true,
     follow: true,
     googleBot: {
@@ -67,7 +71,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+  const adsenseClientId = getConfiguredAdsenseClientId();
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",

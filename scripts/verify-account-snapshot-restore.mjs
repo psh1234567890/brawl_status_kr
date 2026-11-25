@@ -69,6 +69,9 @@ async function verifyRestore() {
     }
 
     stage = "isolated archive import";
+    // pg_dump includes policy role names even when ownership and grants are omitted.
+    run("docker", ["exec", "--user", "postgres", container, "psql", "-X", "-v", "ON_ERROR_STOP=1",
+      "--dbname=" + database, "--command", "CREATE ROLE brawl_netlify_runtime NOLOGIN; CREATE ROLE brawl_netlify_writer NOLOGIN;"], stage);
     const dump = await open(archive, "r");
     try {
       run("docker", ["exec", "--interactive", "--user", "postgres", container, "pg_restore",

@@ -1,5 +1,27 @@
 # Netlify 전환 안전 게이트 (2026-11-24)
 
+## 2026-11-25 ? credential handoff completed; release still blocked
+
+- Operator enabled the restricted writer and entered DATABASE_URL and
+  DATABASE_SSL_CA in Netlify Production. Metadata verification confirms
+  masked secret, correct scopes, matching CA, and preserved Preview settings.
+  Catalog verification confirms 74 scoped writer policies, no elevated
+  attributes or prohibited membership, and zero preview write/sequence access.
+- The production build now performs a fail-closed authenticated writer
+  preflight using its own protected environment. It verifies TLS certificate
+  and hostname, role identity, restricted attributes and a read-only
+  transaction; never prints a credential or performs application writes.
+  Local mock tests pass. Real authenticated connection has not yet run.
+- Read-only database size check: 730287251 bytes, including 425295872 bytes
+  in battle_logs and 276996096 bytes in battle_team_participants. Combined
+  indexes on these tables total 336273408 bytes. Free database quota is
+  500 MB. Review retention/aggregation, query plans, and organization usage
+  before launch. No data or indexes were deleted. Do not infer disk usage
+  or remaining organization quotas from database size alone.
+- Existing Google/Better Auth production credentials and recovery rehearsal
+  remain release blockers. No release approval or DNS change yet.
+
+
 ## 2026-11-25 - current status (supersedes older entries)
 
 - Commit 578d1af: all three CI jobs succeeded (run 45317685845);

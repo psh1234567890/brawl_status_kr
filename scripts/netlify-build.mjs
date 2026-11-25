@@ -33,6 +33,9 @@ function run(command, args, env) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const env = resolveNetlifyBuildEnvironment(process.env);
   console.log("Netlify build mode: " + (env.BRAWLOOP_NETLIFY_PRODUCTION === "1" ? "approved production" : "protected staging"));
+  if (env.BRAWLOOP_NETLIFY_PRODUCTION === "1") {
+    run(process.execPath, ["scripts/netlify-writer-preflight.mjs"], env);
+  }
   run(process.execPath, ["node_modules/next/dist/bin/next", "build"], env);
   run(process.execPath, ["scripts/prepare-static-cdn.mjs", "--netlify-build"], env);
 }

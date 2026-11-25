@@ -1,5 +1,5 @@
 [build]
-  command = "node --test scripts/netlify-build-check.mjs && node scripts/netlify-build.mjs"
+  command = "node --test scripts/netlify-build-check.mjs scripts/netlify-writer-preflight-check.mjs && node scripts/netlify-build.mjs"
   publish = ".next"
 
 [build.environment]

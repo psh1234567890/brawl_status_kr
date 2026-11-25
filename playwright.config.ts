@@ -20,6 +20,7 @@ export default defineConfig({
   webServer: {
     command: `node node_modules/next/dist/bin/next start -p ${port}`,
     url: baseURL,
+    env: { NETLIFY_WRITER_TEST_ADMIN_URL: "" },
     reuseExistingServer: !(process.env.CI || process.env.MINIGAMES_E2E_FIXTURES === "1"),
     timeout: 120_000,
   },

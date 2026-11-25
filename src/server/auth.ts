@@ -13,6 +13,7 @@ import {
   authVerifications,
 } from "../db/schema";
 import { consumeBetterAuthRateLimit } from "./accountRateLimit";
+import { canUseNetlifyAccountFlows } from "./netlifyAuthGate";
 import { getTrustedClientIpHeader } from "./rateLimit";
 import {
   hasAccountDeletionManifestSecret,
@@ -41,7 +42,18 @@ export function generateDefaultNickname() {
   return "BS-" + suffix;
 }
 
+// Read properties directly so Next.js substitutes its build-time flags.
+function canUseAccountFlows() {
+  return canUseNetlifyAccountFlows({
+    SITE_ID: process.env.SITE_ID,
+    BRAWLOOP_NETLIFY_PRODUCTION: process.env.BRAWLOOP_NETLIFY_PRODUCTION,
+    NEXT_PUBLIC_BRAWLOOP_STAGING: process.env.NEXT_PUBLIC_BRAWLOOP_STAGING,
+    BRAWLOOP_NETLIFY_RELEASE_APPROVED: process.env.BRAWLOOP_NETLIFY_RELEASE_APPROVED,
+  });
+}
+
 export function getAccountsMode(): AccountsMode {
+  if (!canUseAccountFlows()) return "off";
   const mode = process.env.ACCOUNTS_MODE;
   if (mode === "pilot" || mode === "on") return mode;
   return "off";
@@ -100,7 +112,9 @@ export function isAccountSyncEnabled() {
 }
 
 export function isAccountDeletionOnlyEnabled() {
-  return getAccountsMode() === "off" && process.env.ACCOUNT_DELETION_ONLY === "1";
+  return getAccountsMode() === "off" &&
+    canUseAccountFlows() &&
+    process.env.ACCOUNT_DELETION_ONLY === "1";
 }
 
 export function isPilotGoogleSubjectAllowed(subject: string) {

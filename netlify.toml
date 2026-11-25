@@ -1,11 +1,9 @@
 [build]
-  command = "npm run build && node scripts/prepare-static-cdn.mjs --netlify-build"
+  command = "node --test scripts/netlify-build-check.mjs scripts/netlify-writer-preflight-check.mjs && node scripts/netlify-build.mjs"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "22"
-  NEXT_PUBLIC_BRAWLOOP_STAGING = "1"
-  BRAWLOOP_NETLIFY_PRODUCTION = "0"
-  NETLIFY_ACCOUNT_MAINTENANCE = "0"
-  ACCOUNTS_MODE = "off"
-  ACCOUNT_SYNC_ENABLED = "0"
+  # The build wrapper forces staging unless main + production + explicit approval.
+
+# Read-only database connectivity is validated using a Git pull-request Deploy Preview.

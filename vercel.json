@@ -10,7 +10,8 @@
               ],
     "git":  {
                 "deploymentEnabled":  {
-                                          "codex/netlify-deploy-20261123":  false
+                                          "codex/netlify-deploy-20261123":  false,
+                                          "codex/netlify-db-preview-20261124":  false
                                       }
             }
 }

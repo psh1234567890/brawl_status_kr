@@ -1,9 +1,10 @@
 import { runAccountMaintenance } from "../../src/server/accountMaintenance";
+import { canRunNetlifyAccountMaintenance } from "../../src/server/netlifyMaintenanceGate";
 
 export const config = { schedule: "17 4 * * *" };
 
 export default async function scheduledAccountMaintenance() {
-  if (process.env.NETLIFY_ACCOUNT_MAINTENANCE !== "1") return;
+  if (!canRunNetlifyAccountMaintenance()) return;
 
   try {
     const result = await runAccountMaintenance(AbortSignal.timeout(18_000));

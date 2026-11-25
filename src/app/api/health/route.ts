@@ -10,7 +10,7 @@ async function getHealth(request: Request) {
   });
   if (rejected) return rejected;
 
-  const commit = process.env.VERCEL_GIT_COMMIT_SHA;
+  const commit = process.env.VERCEL_GIT_COMMIT_SHA || process.env.BRAWLOOP_NETLIFY_COMMIT_SHA;
   const headers: Record<string, string> = { "Cache-Control": "no-store" };
   if (commit && /^[a-f0-9]{40}$/.test(commit)) headers["X-Deployment-Sha"] = commit;
 

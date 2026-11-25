@@ -19,13 +19,19 @@ export async function runProductionSmoke({
     throw new Error("Expected deployment SHA must be a full commit hash.");
   }
   const results = [];
-  async function check(name, path, validate, { html = false } = {}) {
+  async function check(name, paths, validate, { html = false } = {}) {
     const started = performance.now();
     try {
-      const response = await fetchImpl(new URL(path, origin), {
+      const options = {
         redirect: "manual", signal: AbortSignal.timeout(20_000),
         headers: { "Accept-Language": "en", "User-Agent": "Brawloop-Production-Smoke/1.0" },
-      });
+      };
+      let response;
+      for (const path of Array.isArray(paths) ? paths : [paths]) {
+        response = await fetchImpl(new URL(path, origin), options);
+        if (response.status !== 404) break;
+      }
+      if (!response) throw new Error("Response contract failed");
       if (response.status !== 200) throw new Error(`HTTP ${response.status}`);
       const contentType = response.headers.get("content-type") ?? "";
       if (!contentType.includes(html ? "text/html" : "application/json")) {
@@ -59,14 +65,19 @@ export async function runProductionSmoke({
     check("status-page", "/status", body => /<html[\s>]/i.test(body), { html: true }),
   ]);
 
+  const validTag = /^#[0289PYLQGRJCUV]+$/;
   const rankings = await check("upstream-rankings", "/api/rankings?type=players&country=global", body =>
-    Array.isArray(body?.items) && /^#[0289PYLQGRJCUV]+$/.test(body.items[0]?.tag));
+    Array.isArray(body?.items) && validTag.test(body.items[0]?.tag));
   if (rankings) {
     const tag = encodeURIComponent(rankings.items[0].tag);
+    // A ranked player can have no battle log available upstream.
+    const battleLogPaths = rankings.items.slice(0, 3)
+      .filter(item => validTag.test(item?.tag))
+      .map(item => `/api/player/matches?tag=${encodeURIComponent(item.tag)}`);
     await Promise.all([
       check("player-search", `/api/player?tag=${tag}`, body => body?.tag === rankings.items[0].tag &&
         typeof body.name === "string" && Array.isArray(body.brawlers)),
-      check("recent-battles", `/api/player/matches?tag=${tag}`, body => Array.isArray(body?.items)),
+      check("recent-battles", battleLogPaths, body => Array.isArray(body?.items)),
     ]);
   }
   // Check again so a release changing during this run cannot validate a mix of

@@ -8,7 +8,12 @@ export function getDatabaseConnectionOptions(
   const configuredCa = env.DATABASE_SSL_CA?.trim();
   if (!configuredCa) return { connectionString };
 
-  const ca = configuredCa.replace(/\\n/g, "\n");
+  // Decode escaped line endings before trimming: a trailing literal \\n
+  // survives an initial trim and would otherwise fail the PEM footer check.
+  const ca = configuredCa
+    .replace(/\\r\\n|\\n|\\r/g, "\n")
+    .replace(/\r\n?/g, "\n")
+    .trim();
   if (!ca.startsWith("-----BEGIN CERTIFICATE-----") ||
       !ca.endsWith("-----END CERTIFICATE-----")) {
     throw new Error("DATABASE_SSL_CA must contain a PEM CA certificate.");

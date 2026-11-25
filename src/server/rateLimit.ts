@@ -54,16 +54,28 @@ export function consumeRateLimit(
   };
 }
 
-// Never key abuse limits from caller-controlled X-Forwarded-For/X-Real-IP.
-// Vercel's platform header is the only trusted IP source in production.
-// If unavailable, use one shared bucket rather than letting clients select a key.
+// These sources are set by the hosting platform at runtime.
+export function getTrustedClientIpHeader(
+  onVercel = process.env.VERCEL === "1",
+  onNetlify = Boolean(process.env.SITE_ID && process.env.SITE_NAME),
+) {
+  if (onVercel) return "x-vercel-forwarded-for";
+  if (onNetlify) return "x-nf-client-connection-ip";
+  return undefined;
+}
+
+// Keep a shared fallback bucket if the platform address is unavailable.
 export function getClientAddress(
   request: Request,
   onVercel = process.env.VERCEL === "1",
 ) {
-  if (!onVercel) return "local";
-  const candidate = request.headers.get("x-vercel-forwarded-for")?.split(",", 1)[0]?.trim();
-  return candidate && isIP(candidate) ? candidate : "vercel-ip-unavailable";
+  const header = getTrustedClientIpHeader(onVercel);
+  if (!header) return "local";
+  let candidate = request.headers.get(header);
+  if (onVercel) candidate = candidate?.split(",", 1)[0] ?? null;
+  const address = candidate?.trim();
+  if (address && isIP(address)) return address;
+  return onVercel ? "vercel-ip-unavailable" : "netlify-ip-unavailable";
 }
 
 export function rejectRateLimitedRequest(

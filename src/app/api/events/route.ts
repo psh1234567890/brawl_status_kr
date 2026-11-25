@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getEventRotation } from "../../../server/eventRotation";
+import { getEventRotation, getEventRotationCacheTtl } from "../../../server/eventRotation";
 import { withApiMonitoring } from "../../../server/observability";
 import { rejectRateLimitedRequest } from "../../../server/rateLimit";
 import { rejectSharedPublicRateLimit } from "../../../server/sharedPublicRateLimit";
@@ -15,9 +15,11 @@ async function getEvents(request: Request) {
   if (sharedLimited) return sharedLimited;
 
   try {
-    return NextResponse.json(await getEventRotation(), {
-      headers: { "Cache-Control": "no-store" },
-    });
+    const rotation = await getEventRotation();
+    const ttl = getEventRotationCacheTtl(rotation);
+    const headers = new Headers({ "Cache-Control": "no-store" });
+    if (ttl > 0) headers.set("Netlify-CDN-Cache-Control", `public, durable, max-age=${ttl}, must-revalidate`);
+    return NextResponse.json(rotation, { headers });
   } catch (error) {
     console.warn(JSON.stringify({
       event: "event_rotation_unavailable",

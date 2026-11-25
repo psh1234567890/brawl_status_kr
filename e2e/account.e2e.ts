@@ -215,7 +215,22 @@ test("Mini Game cloud PB writes are monotonic, idempotent, and account scoped", 
   expect(stale.status()).toBe(200);
   expect((await stale.json()).personalBests[0]).toMatchObject({ score: 9, total: 10, revision: 1 });
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+  // Only the fixture needs to alter immutable receipt timestamps. The application
+  // and all API calls still use DATABASE_URL with the restricted writer role.
+  const fixtureAdmin = process.env.NETLIFY_WRITER_TEST_ADMIN_URL;
+  if (fixtureAdmin) {
+    const admin = new URL(fixtureAdmin);
+    const writer = new URL(process.env.DATABASE_URL ?? "");
+    if (process.env.CI !== "1" || admin.hostname !== "127.0.0.1" ||
+        writer.hostname !== "127.0.0.1" || admin.pathname !== "/brawloop_writer_app_test" ||
+        writer.pathname !== admin.pathname || admin.port !== "5432" || writer.port !== admin.port ||
+        admin.username !== "postgres" || writer.username !== "brawl_netlify_writer" ||
+        !["postgres:", "postgresql:"].includes(admin.protocol) ||
+        !["postgres:", "postgresql:"].includes(writer.protocol) || admin.search || writer.search) {
+      throw new Error("Receipt fixture admin requires the isolated writer CI database");
+    }
+  }
+  const pool = new Pool({ connectionString: fixtureAdmin ?? process.env.DATABASE_URL, max: 1 });
   try {
     await pool.query(
       "UPDATE public.account_sync_receipts SET created_at = now() - interval '2 seconds', expires_at = now() - interval '1 second' WHERE user_id = $1 AND operation_id = $2",

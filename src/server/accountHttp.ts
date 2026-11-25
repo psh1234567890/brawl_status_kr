@@ -1,12 +1,12 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
-import { isIP } from "node:net";
 import { AccountError } from "./account";
 import {
   consumeAccountRateLimits,
   getAccountRateLimitResponse,
 } from "./accountRateLimit";
+import { getClientAddress } from "./rateLimit";
 
 export function accountJson(
   body: unknown,
@@ -30,9 +30,8 @@ export function accountErrorResponse(error: unknown) {
 }
 
 export function getTrustedRequestSubject(request: Request) {
-  if (process.env.VERCEL !== "1") return "local-unavailable";
-  const address = request.headers.get("x-vercel-forwarded-for")?.split(",", 1)[0]?.trim();
-  return address && isIP(address) ? address : "vercel-ip-unavailable";
+  const address = getClientAddress(request);
+  return address === "local" ? "local-unavailable" : address;
 }
 
 export async function enforceAccountRateLimit(

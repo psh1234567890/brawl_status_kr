@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// Keep the production server-only guard; mock it only in this server test.
+vi.mock("server-only", () => ({}));
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), save: vi.fn(), sharedLimit: vi.fn() }));
 vi.mock("../../../../server/upstream", async (importOriginal) => ({
   ...await importOriginal<typeof import("../../../../server/upstream")>(),

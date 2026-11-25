@@ -2,9 +2,30 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const query = vi.hoisted(() => vi.fn());
 vi.mock("../db", () => ({ db: { $client: { query } } }));
-import { classifyPlayerSearchFailure, hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, summarizeLifetime, summarizeUsage, summarizeEngagement, summarizeProductFunnel } from "./usageAnalytics";
+import { classifyPlayerSearchFailure, hasUsageAdminAccess, isUsageAdminUser, isUsageKind, isUsageOptedOut, readUsageLifetime, recordUsageEvents, summarizeLifetime, summarizeUsage, summarizeEngagement, summarizeProductFunnel } from "./usageAnalytics";
 
 describe("anonymous usage analytics", () => {
+  it("counts Netlify production page views and suppresses preview and opted-out events", async () => {
+    query.mockClear();
+    vi.stubEnv("VERCEL_ENV", undefined);
+    vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "0");
+    try {
+      await recordUsageEvents(["page_view"]);
+      expect(query).not.toHaveBeenCalled();
+
+      vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "1");
+      await recordUsageEvents(["page_view"], new Request("https://example.com", {
+        headers: { cookie: "brawl_analytics_opt_out=1" },
+      }));
+      expect(query).not.toHaveBeenCalled();
+      await recordUsageEvents(["page_view"]);
+      expect(query).toHaveBeenCalledWith(expect.stringContaining("analytics_private.usage_hourly"), [["page_view"]]);
+    } finally {
+      vi.unstubAllEnvs();
+      query.mockClear();
+    }
+  });
+
   it("keeps product flow counters out of game totals and reports only their own measurement period", () => {
     const rows = [
       { hour: "2026-10-18 09:00", kind: "funnel_session" as const, count: "10" },

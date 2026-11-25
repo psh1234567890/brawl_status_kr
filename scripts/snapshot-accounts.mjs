@@ -35,9 +35,10 @@ async function main() {
     const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z") + "-" + randomUUID();
     const backupExpiresAt = Math.floor(Date.now() / 1000) + config.policy.backupRetentionDays * 86_400;
     const context = { target: config.target, projectRef: config.projectRef };
+    let serverMajor;
     if (kind === "backup") {
       const version = await client.query("SHOW server_version_num");
-      const serverMajor = Math.floor(Number(version.rows[0].server_version_num) / 10000);
+      serverMajor = Math.floor(Number(version.rows[0].server_version_num) / 10000);
       if (!Number.isSafeInteger(serverMajor) || serverMajor < 14 || serverMajor > 30) throw new Error("Unsupported PostgreSQL server version.");
       const dockerTools = process.env.ACCOUNT_PG_TOOLS_DOCKER === "1";
       if (dockerTools && process.platform !== "linux") throw new Error("Docker snapshot tools require a Linux operator runner.");
@@ -82,7 +83,8 @@ async function main() {
     await encryptAccountArtifact(rawManifest, destination, config.encryptionKey, { ...context, kind: "manifest" });
     created.push(destination);
     if (process.env.GITHUB_OUTPUT) {
-      await appendFile(process.env.GITHUB_OUTPUT, "manifestExpiresAt=" + artifactDeadline(manifest) + "\nbackupExpiresAt=" + backupExpiresAt + "\n");
+      await appendFile(process.env.GITHUB_OUTPUT, "manifestExpiresAt=" + artifactDeadline(manifest) + "\nbackupExpiresAt=" + backupExpiresAt + "\n" +
+        (serverMajor ? "postgresMajor=" + serverMajor + "\n" : ""));
     }
     console.log("Encrypted account " + kind + " snapshot completed (" + config.target + ").");
   } catch (error) {

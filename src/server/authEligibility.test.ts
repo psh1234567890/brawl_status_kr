@@ -32,6 +32,8 @@ beforeEach(() => {
   vi.stubEnv("GOOGLE_CLIENT_ID", "unit-only");
   vi.stubEnv("GOOGLE_CLIENT_SECRET", "unit-only");
   vi.stubEnv("SITE_ID", undefined);
+  vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "0");
+  vi.stubEnv("BRAWLOOP_NETLIFY_RELEASE_APPROVED", undefined);
   vi.stubEnv("NEXT_PUBLIC_BRAWLOOP_STAGING", "0");
   vi.stubEnv("ACCOUNT_TERMS_VERSION", "test-terms");
   vi.stubEnv("ACCOUNT_PRIVACY_NOTICE_VERSION", "test-privacy");
@@ -56,8 +58,19 @@ describe("pre-login Google eligibility state", () => {
     expect(auth.areAccountsEnabled()).toBe(false);
     expect(auth.isAccountSyncEnabled()).toBe(false);
     expect(auth.isAccountDeletionOnlyEnabled()).toBe(false);
+    vi.stubEnv("NEXT_PUBLIC_BRAWLOOP_STAGING", undefined);
+    expect(auth.getAccountsMode()).toBe("off");
+    expect(auth.isAccountDeletionOnlyEnabled()).toBe(false);
     vi.stubEnv("NEXT_PUBLIC_BRAWLOOP_STAGING", "0");
+    expect(auth.getAccountsMode()).toBe("off");
+    vi.stubEnv("BRAWLOOP_NETLIFY_PRODUCTION", "1");
+    expect(auth.getAccountsMode()).toBe("off");
+    vi.stubEnv("BRAWLOOP_NETLIFY_RELEASE_APPROVED", "1");
     expect(auth.getAccountsMode()).toBe("on");
+    vi.stubEnv("ACCOUNTS_MODE", "off");
+    expect(auth.isAccountDeletionOnlyEnabled()).toBe(true);
+    vi.stubEnv("BRAWLOOP_NETLIFY_RELEASE_APPROVED", undefined);
+    expect(auth.isAccountDeletionOnlyEnabled()).toBe(false);
   });
   it("requires the sanitized server header and attaches server-owned OAuth state", async () => {
     const auth = await options();

@@ -1,5 +1,39 @@
 # Netlify 전환 안전 게이트 (2026-11-24)
 
+## 2026-11-25 - current cutover inventory and account runtime gate
+
+- Netlify production metadata: DATABASE_URL (secret) and DATABASE_SSL_CA
+  are present; Preview values remain present. Brawl API base URL/key, auth,
+  policy and image-storage production settings are absent. No approval flag
+  exists. Production writer authentication is still untested; prior CI
+  45554068757 for e81afbe passed.
+- Account and deletion-only flows on Netlify now require SITE_ID, embedded
+  BRAWLOOP_NETLIFY_PRODUCTION=1, embedded NEXT_PUBLIC_BRAWLOOP_STAGING=0
+  and Functions-scoped BRAWLOOP_NETLIFY_RELEASE_APPROVED=1. Missing or
+  wrong flags fail closed. Vercel/local behavior is unchanged.
+- Operator handoff: copy existing approved production configuration only
+  through the service dashboards. Never disclose credential values.
+  Preserve BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  ACCOUNT_RATE_LIMIT_SECRET and ACCOUNT_DELETION_MANIFEST_SECRET; do not
+  rotate them as part of migration. Preserve exact existing policy values:
+  ACCOUNT_TERMS_VERSION, ACCOUNT_PRIVACY_NOTICE_VERSION,
+  ACCOUNT_ELIGIBILITY_POLICY_VERSION, ACCOUNT_ELIGIBILITY_POLICY_TEXTS_JSON,
+  ACCOUNT_ELIGIBILITY_RULES_JSON, ACCOUNT_BACKUP_RETENTION_POLICY_VERSION,
+  ACCOUNT_BACKUP_RETENTION_DAYS, ACCOUNT_DELETION_MANIFEST_RETENTION_DAYS.
+  BETTER_AUTH_URL and ACCOUNT_TRUSTED_ORIGINS must use the existing approved
+  HTTPS origins; no wildcard. Transfer BRAWL_STARS_API_BASE_URL and
+  BRAWL_STARS_API_KEY only after checking existing API access restrictions.
+  Keep ACCOUNTS_MODE off, account sync/deletion-only/maintenance disabled and
+  release flags unset until approved. Never copy backup/admin DB URLs into
+  application runtime.
+- Quota investigation: battle_logs retains original JSON text and jsonb;
+  its GIN index is about 78.9 MB. It is not safe to drop based on scan counts
+  alone. History and player statistics use all-time aggregates, not just
+  the meta time window. Any retention or schema compaction needs parity
+  tests, full backup/recovery, space/lock estimates and separate approval.
+  No production data, indexes, billing, DNS or configuration changed here.
+
+
 ## 2026-11-25 ? credential handoff completed; release still blocked
 
 - Operator enabled the restricted writer and entered DATABASE_URL and

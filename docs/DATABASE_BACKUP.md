@@ -128,6 +128,13 @@ repo 변수 `ACCOUNT_SNAPSHOT_AUTOMATION_ENABLED=1`과 환경별
 별도 읽기 DB URL, CA, AES key, 앱과 일치하는 manifest HMAC secret을 설정한다.
 시간당 manifest, 하루 1회 backup을 GitHub artifact로 각각 14일/7일 보관하도록
 구성했다. 공개 repo이므로 raw dump/manifest나 키는 절대 artifact로 업로드하지 않는다.
+
+수동 실행에서 `kind=backup`을 선택하면 새 암호화 백업과 삭제 기록을 업로드한 뒤,
+같은 실행에서 생성한 한 쌍을 임시 PostgreSQL에 복원해 검증한다. 복구 단계에는
+원본 DB 접속 설정을 전달하지 않는다. `Verify account backup in disposable PostgreSQL`
+단계가 성공한 경우에만 해당 백업의 복원, 삭제 기록 재적용, 복구된 인증정보 제거가
+확인된 것으로 기록한다. 검증 범위는 계정 스냅샷에 포함된 테이블이며 전투 데이터와
+Blob 원본 파일은 별도다.
 재-export로 삭제 UUID의 보존 시계가 다시 시작되지 않도록 artifact 이름에는 해당
 manifest에서 가장 먼저 만료되는 삭제 표식의 원래 만료 시각을 넣는다. 예약 작업은
 그 시각이 지난 계정 artifact만 환경별로 제거한다. backup도 생성 시점의 7일 기한을

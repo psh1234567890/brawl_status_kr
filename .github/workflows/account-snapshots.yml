@@ -94,6 +94,16 @@ jobs:
           path: ${{ runner.temp }}/account-snapshots/*.dump.enc
           if-no-files-found: error
           retention-days: 7
+      - name: Verify account backup in disposable PostgreSQL
+        if: github.event_name == 'workflow_dispatch' && steps.gate.outputs.enabled == '1' && steps.gate.outputs.kind == 'backup'
+        env:
+          ACCOUNT_SNAPSHOT_TARGET: ${{ matrix.target }}
+          ACCOUNT_SNAPSHOT_PROJECT_REF: ${{ vars.ACCOUNT_SNAPSHOT_PROJECT_REF }}
+          ACCOUNT_SNAPSHOT_OUTPUT_DIR: ${{ runner.temp }}/account-snapshots
+          ACCOUNT_RESTORE_POSTGRES_MAJOR: ${{ steps.snapshot.outputs.postgresMajor }}
+          ACCOUNT_BACKUP_ENCRYPTION_KEY: ${{ secrets.ACCOUNT_BACKUP_ENCRYPTION_KEY }}
+          ACCOUNT_DELETION_MANIFEST_SECRET: ${{ secrets.ACCOUNT_DELETION_MANIFEST_SECRET }}
+        run: node scripts/verify-account-snapshot-restore.mjs
       - name: Enforce original deletion and backup deadlines
         if: always() && steps.gate.outputs.enabled == '1'
         env:
